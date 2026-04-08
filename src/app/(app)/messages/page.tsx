@@ -22,12 +22,14 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!user) return;
+    console.log("Loading conversations for user:", user.uid);
     loadConversations();
     loadCustomers();
   }, [user]);
 
   useEffect(() => {
     if (selectedConversation) {
+      console.log("Loading messages for conversation:", selectedConversation.id);
       loadMessages(selectedConversation.id);
       markAsRead(selectedConversation.id);
     }
@@ -41,7 +43,9 @@ export default function MessagesPage() {
     if (!user) return;
     setLoading(true);
     try {
+      console.log("Fetching conversations...");
       const data = await messageService.getConversations(user);
+      console.log("Conversations loaded:", data);
       setConversations(data);
     } catch (error) {
       console.error("Error loading conversations:", error);
