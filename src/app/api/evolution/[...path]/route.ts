@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_API_URL = process.env.EVOLUTION_API_URL || "";
+const DEFAULT_API_KEY = process.env.EVOLUTION_API_KEY || "";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
-  const apiKey = req.headers.get("x-api-key") || "";
+  const apiKey = req.headers.get("x-api-key") || DEFAULT_API_KEY;
   const apiUrl = req.nextUrl.searchParams.get("apiUrl") || DEFAULT_API_URL;
   return proxyRequest(path, "GET", apiKey, apiUrl);
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
-  const apiKey = req.headers.get("x-api-key") || "";
+  const apiKey = req.headers.get("x-api-key") || DEFAULT_API_KEY;
   const apiUrl = req.nextUrl.searchParams.get("apiUrl") || DEFAULT_API_URL;
   const body = await req.json();
   return proxyRequest(path, "POST", apiKey, apiUrl, body);
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pat
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
-  const apiKey = req.headers.get("x-api-key") || "";
+  const apiKey = req.headers.get("x-api-key") || DEFAULT_API_KEY;
   const apiUrl = req.nextUrl.searchParams.get("apiUrl") || DEFAULT_API_URL;
   return proxyRequest(path, "DELETE", apiKey, apiUrl);
 }
@@ -42,6 +43,7 @@ async function proxyRequest(path: string[], method: string, apiKey: string, apiU
   const endpoint = path.join("/");
   const url = `${apiUrl.replace(/\/$/, "")}/${endpoint}`;
   console.log(`[Evolution API Proxy] ${method} ${url}`);
+  console.log(`[Evolution API Proxy] Using API Key:`, apiKey.substring(0, 8) + "...");
 
   try {
     const response = await fetch(url, {
