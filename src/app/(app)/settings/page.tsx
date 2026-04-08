@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { settingsService, TenantSettings } from "@/lib/db";
-import { evolutionService } from "@/lib/evolution";
+import WhatsAppConnect from "@/components/WhatsAppConnect";
 
 type ToggleState = {
   autoAccept: boolean;
@@ -77,31 +77,6 @@ export default function SettingsPage() {
     loadSettings();
   }, [user]);
 
-  useEffect(() => {
-    if (!user || !settings?.whatsappInstanceId) return;
-    
-    const interval = setInterval(async () => {
-      if (!settings?.whatsappInstanceId) return;
-      
-      try {
-        const status = await evolutionService.getInstanceStatus(evolutionForm.apiUrl, evolutionForm.apiKey, settings.whatsappInstanceId);
-        const newStatus = status.instance?.state || status.instance?.status || status.state || status.status || "disconnected";
-        
-        if (newStatus !== whatsappStatus.status) {
-          setWhatsappStatus(prev => ({ ...prev, status: newStatus }));
-        }
-        
-        if (newStatus === "connected" || newStatus === "open" || newStatus === "ready") {
-          await settingsService.updateSettings(user, { whatsappConnectionStatus: newStatus });
-        }
-      } catch (e) {
-        console.error("Status check error:", e);
-      }
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, [user, settings?.whatsappInstanceId]);
-
   const loadSettings = async () => {
     if (!user) return;
     setLoading(true);
@@ -152,23 +127,6 @@ export default function SettingsPage() {
     }
   };
 
-  const testEvolutionConnection = async () => {
-    setTestResult(null);
-    setConnecting(true);
-    try {
-      const success = await evolutionService.testConnection(evolutionForm.apiUrl, evolutionForm.apiKey);
-      if (success) {
-        setTestResult({ success: true, message: "Connection successful!" });
-      } else {
-        setTestResult({ success: false, message: "Connection failed. Check your credentials." });
-      }
-    } catch {
-      setTestResult({ success: false, message: "Could not connect to API" });
-    } finally {
-      setConnecting(false);
-    }
-  };
-
   const saveEvolutionSettings = async () => {
     if (!user) return;
     setSaving(true);
@@ -185,108 +143,12 @@ export default function SettingsPage() {
     }
   };
 
-  const connectWhatsApp = async () => {
-    if (!user) return;
-    
-    setConnecting(true);
-    try {
-      const instanceName = `tenant_${user.uid}`;
-      console.log("Creating instance:", instanceName);
-      const result = await evolutionService.createInstance(evolutionForm.apiUrl, evolutionForm.apiKey, instanceName);
-      
-      if (result.instance) {
-        const instanceName = `tenant_${user.uid}`;
-        
-        await settingsService.updateSettings(user, {
-          whatsappInstanceId: instanceName,
-          whatsappConnectionStatus: "connecting",
-        });
-        
-        setWhatsappStatus({
-          status: "connecting",
-          qrCode: null,
-          qrCodeBase64: null,
-        });
-        
-        let qr = null;
-        let connected = false;
-        
-        for (let i = 0; i < 10; i++) {
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          const status = await evolutionService.getInstanceStatus(evolutionForm.apiUrl, evolutionForm.apiKey, instanceName);
-          console.log(`Status check ${i + 1}:`, status);
-          
-          const state = status.instance?.state || status.instance?.status || status.state || status.status;
-          
-          if (state === "connected" || state === "open" || state === "ready") {
-            connected = true;
-            break;
-          }
-          
-          qr = await evolutionService.getQRCode(evolutionForm.apiUrl, evolutionForm.apiKey, instanceName);
-          console.log(`QR attempt ${i + 1}:`, qr);
-          
-          if (qr && (qr.code || qr.base64 || qr.pairingCode)) {
-            break;
-          }
-          if (qr && qr.count && qr.count > 0) {
-            break;
-          }
-        }
-        
-        const finalStatus = connected ? "connected" : "connecting";
-        
-        await settingsService.updateSettings(user, {
-          whatsappConnectionStatus: finalStatus,
-        });
-        
-        setWhatsappStatus({
-          status: finalStatus,
-          qrCode: qr?.code || qr?.pairingCode || null,
-          qrCodeBase64: qr?.base64 || null,
-        });
-      }
-    } catch (error) {
-      console.error("Error connecting WhatsApp:", error);
-      alert("Failed to create instance");
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const checkWhatsAppStatus = async () => {
-    if (!user || !settings?.whatsappInstanceId) return;
-    
-    try {
-      const status = await evolutionService.getInstanceStatus(evolutionForm.apiUrl, evolutionForm.apiKey, settings.whatsappInstanceId);
-      const newStatus = status.instance?.state || status.instance?.status || status.state || status.status || "disconnected";
-      
-      setWhatsappStatus(prev => ({ ...prev, status: newStatus }));
-      
-      if (newStatus === "connecting" || newStatus === "disconnected") {
-        const qr = await evolutionService.getQRCode(evolutionForm.apiUrl, evolutionForm.apiKey, settings.whatsappInstanceId);
-        if (qr && (qr.code || qr.pairingCode)) {
-          setWhatsappStatus(prev => ({
-            ...prev,
-            qrCode: qr.code || qr.pairingCode || null,
-            qrCodeBase64: qr.base64 || null,
-          }));
-        }
-      }
-    } catch (error) {
-      console.error("Error checking WhatsApp status:", error);
-    }
-  };
-
   const disconnectWhatsApp = async () => {
     if (!user || !settings?.whatsappInstanceId) return;
     
     if (!confirm("Disconnect WhatsApp? You'll need to scan QR code again.")) return;
     
-    setConnecting(true);
     try {
-      await evolutionService.logoutInstance(evolutionForm.apiUrl, evolutionForm.apiKey, settings.whatsappInstanceId);
       await settingsService.updateSettings(user, {
         whatsappInstanceId: "",
         whatsappConnectionStatus: "disconnected",
@@ -298,8 +160,6 @@ export default function SettingsPage() {
       });
     } catch (error) {
       console.error("Error disconnecting WhatsApp:", error);
-    } finally {
-      setConnecting(false);
     }
   };
 
@@ -610,60 +470,38 @@ export default function SettingsPage() {
                 {/* Evolution API Settings */}
                 <div className="mt-8 pt-6 border-t border-[#e2e8f0]">
                   <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <i className="fab fa-whatsapp text-[#25D366]"></i>WhatsApp Connection (Evolution API)
+                    <i className="fab fa-whatsapp text-[#25D366]"></i>WhatsApp Connection
                   </h3>
                   
                   <div className="bg-gradient-to-br from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] border-2 border-[#25D366] rounded-2xl p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl ${whatsappStatus.status === "connected" ? "bg-[#25D366]" : whatsappStatus.status === "connecting" ? "bg-[#f59e0b]" : "bg-[#e2e8f0]"} text-white`}>
-                          <i className="fab fa-whatsapp"></i>
-                        </div>
-                        <div>
-                          <div className="font-bold text-lg">
-                            {whatsappStatus.status === "connected" ? "WhatsApp Connected" : 
-                             whatsappStatus.status === "connecting" ? "Connecting..." : "Not Connected"}
+                    {!user ? (
+                      <p className="text-[#64748b]">Please sign in to connect WhatsApp</p>
+                    ) : settings?.whatsappInstanceId && whatsappStatus.status === "connected" ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center text-2xl text-white">
+                            <i className="fab fa-whatsapp"></i>
                           </div>
-                          <div className="text-sm text-[#64748b]">
-                            {whatsappStatus.status === "connected" ? "Ready to send and receive messages" :
-                             whatsappStatus.status === "connecting" ? "Scan QR code to connect" : 
-                             "Connect your WhatsApp to start receiving orders"}
+                          <div>
+                            <div className="font-bold text-lg">WhatsApp Connected</div>
+                            <div className="text-sm text-[#64748b]">Ready to send and receive messages</div>
                           </div>
                         </div>
-                      </div>
-                      {whatsappStatus.status === "connected" && (
                         <button onClick={disconnectWhatsApp} className="px-4 py-2 border-2 border-[#ef4444] text-[#ef4444] rounded-xl font-semibold text-sm hover:bg-[#ef4444] hover:text-white">
                           Disconnect
                         </button>
-                      )}
-                    </div>
-
-                    {/* QR Code Display */}
-                    {whatsappStatus.status === "connecting" && whatsappStatus.qrCodeBase64 && (
-                      <div className="bg-white p-4 rounded-xl text-center">
-                        <img src={whatsappStatus.qrCodeBase64} alt="WhatsApp QR Code" className="w-48 h-48 mx-auto mb-4" />
-                        <p className="text-sm text-[#64748b] mb-2">Scan this QR code with your WhatsApp</p>
-                        <p className="text-xs text-[#64748b]">Open WhatsApp {'>'} Settings {'>'} Linked Devices {'>'} Add Device</p>
-                        <button onClick={checkWhatsAppStatus} className="mt-4 px-4 py-2 bg-[#25D366] text-white rounded-xl font-semibold text-sm">
-                          <i className="fas fa-sync-alt mr-2"></i>Check Status
-                        </button>
                       </div>
-                    )}
-
-                    {whatsappStatus.status === "connecting" && !whatsappStatus.qrCodeBase64 && (
-                      <div className="bg-white p-4 rounded-xl text-center">
-                        <p className="text-sm text-[#64748b] mb-2">Waiting for QR code...</p>
-                        <p className="text-xs text-[#64748b] mb-4">Or use <a href={`${(evolutionForm.apiUrl || "").replace(/\/$/, "")}/manager`} target="_blank" rel="noopener noreferrer" className="text-[#25D366] underline">Evolution Manager</a> to connect</p>
-                        <button onClick={checkWhatsAppStatus} className="px-4 py-2 bg-[#25D366] text-white rounded-xl font-semibold text-sm">
-                          <i className="fas fa-sync-alt mr-2"></i>Check Status
-                        </button>
-                      </div>
-                    )}
-
-                    {whatsappStatus.status !== "connected" && whatsappStatus.status !== "connecting" && (
-                      <button onClick={connectWhatsApp} disabled={connecting || !evolutionForm.apiUrl || !evolutionForm.apiKey} className="w-full py-3 bg-[#25D366] text-white rounded-xl font-bold text-sm disabled:opacity-50">
-                        {connecting ? <><i className="fas fa-circle-notch fa-spin mr-2"></i>Connecting...</> : <><i className="fab fa-whatsapp mr-2"></i>Connect WhatsApp</>}
-                      </button>
+                    ) : (
+                      <WhatsAppConnect
+                        instanceName={`tenant_${user.uid}`}
+                        onConnected={() => {
+                          setWhatsappStatus(prev => ({ ...prev, status: "connected" }));
+                          settingsService.updateSettings(user, {
+                            whatsappInstanceId: `tenant_${user.uid}`,
+                            whatsappConnectionStatus: "connected",
+                          });
+                        }}
+                      />
                     )}
                   </div>
 
@@ -686,9 +524,6 @@ export default function SettingsPage() {
                   )}
 
                   <div className="flex gap-3">
-                    <button onClick={testEvolutionConnection} disabled={connecting || !evolutionForm.apiUrl || !evolutionForm.apiKey} className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] disabled:opacity-50">
-                      <i className="fas fa-plug mr-2"></i>Test Connection
-                    </button>
                     <button onClick={saveEvolutionSettings} disabled={saving} className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm disabled:opacity-50">
                       {saving ? <><i className="fas fa-circle-notch fa-spin mr-2"></i>Saving...</> : <><i className="fas fa-save mr-2"></i>Save API Settings</>}
                     </button>
