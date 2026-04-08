@@ -1,45 +1,54 @@
-export interface EvolutionQRCode {
+interface EvolutionQRCode {
   code?: string;
   base64?: string;
   pairingCode?: string;
   count?: number;
 }
 
-export const createInstance = async (instanceName: string) => {
-  const response = await fetch(`/api/evolution/instance/create`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      instanceName,
-      qrcode: true,
-      integration: "WHATSAPP-BAILEYS",
-    }),
+async function callEvolutionApi(endpoint: string, method: string = "GET", body?: any) {
+  const response = await fetch(`/api/evolution/${endpoint}`, {
+    method,
+    headers: { 
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error);
+  }
+
   return response.json();
+}
+
+export const createInstance = async (instanceName: string) => {
+  return callEvolutionApi("instance/create", "POST", {
+    instanceName,
+    qrcode: true,
+    integration: "WHATSAPP-BAILEYS",
+  });
 };
 
 export const getQRCode = async (instanceName: string): Promise<EvolutionQRCode | null> => {
   try {
-    const response = await fetch(`/api/evolution/instance/connect/${instanceName}`);
-    if (response.ok) {
-      return response.json();
-    }
-    return null;
+    return await callEvolutionApi(`instance/connect/${instanceName}`);
   } catch {
     return null;
   }
 };
 
 export const getConnectionState = async (instanceName: string) => {
-  const response = await fetch(`/api/evolution/instance/connectionState/${instanceName}`);
-  return response.json();
+  return callEvolutionApi(`instance/connectionState/${instanceName}`);
 };
 
 export const sendMessage = async (instanceName: string, phone: string, text: string) => {
-  const response = await fetch(`/api/evolution/message/sendText/${instanceName}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ number: phone, text }),
+  return callEvolutionApi(`message/sendText/${instanceName}`, "POST", {
+    number: phone,
+    text,
   });
-  return response.json();
+};
+
+export const deleteInstance = async (instanceName: string) => {
+  return callEvolutionApi(`instance/delete/${instanceName}`, "DELETE");
 };

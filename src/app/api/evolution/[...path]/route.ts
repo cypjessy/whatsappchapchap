@@ -41,7 +41,7 @@ async function proxyRequest(path: string[], method: string, apiKey: string, apiU
 
   const endpoint = path.join("/");
   const url = `${apiUrl.replace(/\/$/, "")}/${endpoint}`;
-  console.log(`Proxying ${method} request to: ${url}`);
+  console.log(`[Evolution API Proxy] ${method} ${url}`);
 
   try {
     const response = await fetch(url, {
@@ -54,9 +54,10 @@ async function proxyRequest(path: string[], method: string, apiKey: string, apiU
     });
 
     const data = await response.json();
+    console.log(`[Evolution API Proxy] Response:`, data);
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error("Proxy error:", error);
+    console.error("[Evolution API Proxy] Error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Proxy request failed" },
       { status: 500 }

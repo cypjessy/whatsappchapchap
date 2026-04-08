@@ -12,6 +12,45 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   const [status, setStatus] = useState<'loading' | 'qr' | 'connected' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
 
+  const setupInstance = async () => {
+    try {
+      setStatus('loading');
+      setError(null);
+      
+      console.log('Creating instance:', instanceName);
+      const instanceData = await createInstance(instanceName);
+      console.log('Instance created:', instanceData);
+      
+      if (instanceData.instance?.instanceName) {
+        console.log('Instance exists, getting QR code...');
+        const qrData = await getQRCode(instanceName);
+        console.log('QR Code data:', qrData);
+        
+        if (qrData?.base64) {
+          setQrCode(qrData.base64);
+          setStatus('qr');
+        } else if (qrData?.code) {
+          setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData.code)}`);
+          setStatus('qr');
+        } else {
+          const state = await getConnectionState(instanceName);
+          console.log('Connection state:', state);
+          if (state?.instance?.state === 'open') {
+            setStatus('connected');
+            onConnected();
+          } else {
+            setError('No QR code available. Try again or use Evolution Manager.');
+            setStatus('error');
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('Setup error:', err);
+      setError(err.message || 'Failed to setup WhatsApp. Please try again.');
+      setStatus('error');
+    }
+  };
+
   useEffect(() => {
     setupInstance();
   }, [instanceName]);
@@ -22,6 +61,7 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
     const interval = setInterval(async () => {
       try {
         const state = await getConnectionState(instanceName);
+        console.log('Polling state:', state);
         if (state?.instance?.state === 'open') {
           setStatus('connected');
           onConnected();
@@ -34,27 +74,6 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
 
     return () => clearInterval(interval);
   }, [status, instanceName, onConnected]);
-
-  const setupInstance = async () => {
-    try {
-      setStatus('loading');
-      await createInstance(instanceName);
-      const qrData = await getQRCode(instanceName);
-      if (qrData?.base64) {
-        setQrCode(qrData.base64);
-        setStatus('qr');
-      } else {
-        const state = await getConnectionState(instanceName);
-        if (state?.instance?.state === 'open') {
-          setStatus('connected');
-          onConnected();
-        }
-      }
-    } catch (err) {
-      setError('Failed to setup WhatsApp. Please try again.');
-      setStatus('error');
-    }
-  };
 
   if (status === 'loading') return (
     <div className="flex flex-col items-center p-6">
@@ -74,7 +93,7 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   if (status === 'error') return (
     <div className="flex flex-col items-center p-6">
       <div className="text-red-500 text-6xl">❌</div>
-      <p className="text-red-600 mt-4">{error}</p>
+      <p className="text-red-600 mt-4 text-center">{error}</p>
       <button 
         onClick={setupInstance}
         className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
