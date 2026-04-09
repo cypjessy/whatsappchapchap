@@ -20,6 +20,22 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       setStatus('loading');
       setError(null);
       
+      console.log('Checking instance:', instanceName);
+      
+      try {
+        const state = await getConnectionState(instanceName);
+        console.log('Connection state:', state);
+        
+        if (state?.instance?.state === 'open') {
+          console.log('Instance already connected');
+          setStatus('connected');
+          handleConnected();
+          return;
+        }
+      } catch (stateErr) {
+        console.log('Instance does not exist, creating new one');
+      }
+      
       console.log('Creating instance:', instanceName);
       const instanceData = await createInstance(instanceName);
       console.log('Instance created:', instanceData);

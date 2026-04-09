@@ -83,3 +83,12 @@ export const setWebhook = async (instanceName: string, webhookUrl: string) => {
 export const getInstanceDetails = async (instanceName: string) => {
   return callEvolutionApi(`instance/find/${instanceName}`, "GET");
 };
+
+export const checkInstanceExists = async (instanceName: string): Promise<boolean> => {
+  try {
+    await callEvolutionApi(`instance/connectionState/${instanceName}`, "GET");
+    return true;
+  } catch {
+    return false;
+  }
+};
