@@ -23,7 +23,8 @@ function getAdminDb() {
 async function sendWelcomeMessage(
   tenantId: string,
   phoneNumber: string,
-  businessName: string
+  businessName: string,
+  welcomeMessage?: string
 ) {
   try {
     const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
@@ -36,9 +37,11 @@ async function sendWelcomeMessage(
       return;
     }
 
-    const welcomeMessage = `Hello! 👋 Welcome to ${businessName}. We're excited to respond to your messages. How can we help you today?`;
+    const messageText = welcomeMessage 
+      ? welcomeMessage.replace(/\{\{business_name\}\}/g, businessName)
+      : `Hello! 👋 Welcome to ${businessName}. We're excited to respond to your messages. How can we help you today?`;
 
-    console.log(`[Webhook] Sending welcome message to ${phoneNumber}`);
+    console.log(`[Webhook] Sending welcome message to ${phoneNumber}: ${messageText}`);
 
     const response = await fetch(
       `${evolutionApiUrl}/message/sendText/${tenantId}`,
@@ -79,6 +82,31 @@ async function getTenantBusinessName(tenantId: string): Promise<string> {
   } catch (error) {
     console.error("[Webhook] Error fetching tenant business name:", error);
     return "Our Shop";
+  }
+}
+
+async function getTenantSettings(tenantId: string): Promise<{ businessName: string; welcomeMessage: string }> {
+  try {
+    const adminDb = getAdminDb();
+    const settingsDoc = await adminDb.collection("settings").doc(tenantId).get();
+
+    if (settingsDoc.exists) {
+      const data = settingsDoc.data();
+      return {
+        businessName: data?.businessName || "Our Shop",
+        welcomeMessage: data?.welcomeMessage || `Hello! Welcome to our shop. How can we help you today?`
+      };
+    }
+    return {
+      businessName: "Our Shop",
+      welcomeMessage: `Hello! Welcome to our shop. How can we help you today?`
+    };
+  } catch (error) {
+    console.error("[Webhook] Error fetching tenant settings:", error);
+    return {
+      businessName: "Our Shop",
+      welcomeMessage: `Hello! Welcome to our shop. How can we help you today?`
+    };
   }
 }
 
@@ -211,8 +239,8 @@ export async function POST(req: NextRequest) {
     // Send welcome message only on first contact
     if (isNewConversation) {
       console.log("[Webhook] New conversation detected, sending welcome message");
-      const businessName = await getTenantBusinessName(tenantId);
-      await sendWelcomeMessage(tenantId, from, businessName);
+      const settings = await getTenantSettings(tenantId);
+      await sendWelcomeMessage(tenantId, from, settings.businessName, settings.welcomeMessage);
     }
 
     return NextResponse.json({ received: true, status: "saved" });
