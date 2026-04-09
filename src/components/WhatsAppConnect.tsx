@@ -118,41 +118,11 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       console.log('Webhook error (may already be set):', webhookErr?.message);
     }
     
-    setFetchingApiKey(true);
-    try {
-      console.log('Fetching instance details for:', instanceName);
-      
-      let details;
-      try {
-        details = await getInstanceDetails(instanceName);
-      } catch (detailsErr) {
-        console.log('Could not get instance details, trying connection state');
-        details = await getConnectionState(instanceName);
-      }
-      
-      console.log('Instance details:', JSON.stringify(details));
-      
-      let apikey = "";
-      if (details?.instance?.apikey) {
-        apikey = details.instance.apikey;
-      } else if (details?.apikey) {
-        apikey = details.apikey;
-      } else if (details?.instance?.instanceName) {
-        console.log('Instance found but no apikey in response, using instance name');
-        apikey = instanceName;
-      }
-      
-      console.log('API Key found:', apikey);
-      
-      setFetchedApiKey(apikey);
-      setApiKeyFetched(true);
-    } catch (err) {
-      console.error("Error getting instance details:", err);
-      setFetchedApiKey(instanceName);
-      setApiKeyFetched(true);
-    } finally {
-      setFetchingApiKey(false);
-    }
+    const hardcodedApiKey = "A69EDEB8-3C80-4CC1-92F4-20965F0820A5";
+    console.log('Using hardcoded API Key:', hardcodedApiKey);
+    
+    setFetchedApiKey(hardcodedApiKey);
+    setApiKeyFetched(true);
   };
 
   const handleContinue = async () => {
@@ -167,53 +137,19 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       console.log('Webhook error (may already be set):', webhookErr?.message);
     }
     
-    setFetchingApiKey(true);
-    try {
-      console.log('Fetching instance details for:', instanceName);
-      
-      let details;
-      try {
-        details = await getInstanceDetails(instanceName);
-      } catch (detailsErr) {
-        console.log('Could not get instance details, trying connection state');
-        details = await getConnectionState(instanceName);
-      }
-      
-      console.log('Instance details:', JSON.stringify(details));
-      
-      let apikey = "";
-      if (details?.instance?.apikey) {
-        apikey = details.instance.apikey;
-      } else if (details?.apikey) {
-        apikey = details.apikey;
-      } else if (details?.instance?.instanceName) {
-        console.log('Instance found but no apikey in response, using instance name');
-        apikey = instanceName;
-      }
-      
-      console.log('API Key found:', apikey);
-      
-      setFetchedApiKey(apikey);
-      setApiKeyFetched(true);
-      
-      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-      
-      onConnected({ 
-        instanceId: instanceName, 
-        evolutionUrl,
-        evolutionKey: apikey || instanceName
-      });
-    } catch (err) {
-      console.error("Error getting instance details:", err);
-      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-      onConnected({ 
-        instanceId: instanceName, 
-        evolutionUrl,
-        evolutionKey: instanceName
-      });
-    } finally {
-      setFetchingApiKey(false);
-    }
+    const hardcodedApiKey = "A69EDEB8-3C80-4CC1-92F4-20965F0820A5";
+    console.log('Using hardcoded API Key:', hardcodedApiKey);
+    
+    setFetchedApiKey(hardcodedApiKey);
+    setApiKeyFetched(true);
+    
+    const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    
+    onConnected({ 
+      instanceId: instanceName, 
+      evolutionUrl,
+      evolutionKey: hardcodedApiKey
+    });
   };
 
   const refreshWebhook = async () => {
