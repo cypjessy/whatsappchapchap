@@ -99,50 +99,63 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   };
 
   const handleConnected = async () => {
+    const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
+    console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
+    
     try {
-      const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
-      console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
+      await setWebhook(instanceName, webhookUrl);
+      console.log('Webhook set successfully');
+    } catch (webhookErr: any) {
+      console.log('Webhook error (may already be set):', webhookErr?.message);
+    }
+    
+    setFetchingApiKey(true);
+    try {
+      console.log('Fetching instance details for:', instanceName);
       
+      let details;
       try {
-        await setWebhook(instanceName, webhookUrl);
-        console.log('Webhook set successfully');
-      } catch (webhookErr: any) {
-        console.log('Webhook error (may already be set):', webhookErr?.message);
+        details = await getInstanceDetails(instanceName);
+      } catch (detailsErr) {
+        console.log('Could not get instance details, trying connection state');
+        details = await getConnectionState(instanceName);
       }
       
-      setFetchingApiKey(true);
-      try {
-        console.log('Fetching instance details for:', instanceName);
-        const details = await getInstanceDetails(instanceName);
-        console.log('Instance details:', JSON.stringify(details));
-        
-        const apikey = details?.instance?.apikey || details?.apikey || "";
-        console.log('API Key found:', apikey);
-        
-        setFetchedApiKey(apikey);
-        setApiKeyFetched(true);
-      } catch (err) {
-        console.error("Error getting instance details:", err);
-      } finally {
-        setFetchingApiKey(false);
+      console.log('Instance details:', JSON.stringify(details));
+      
+      let apikey = "";
+      if (details?.instance?.apikey) {
+        apikey = details.instance.apikey;
+      } else if (details?.apikey) {
+        apikey = details.apikey;
+      } else if (details?.instance?.instanceName) {
+        console.log('Instance found but no apikey in response, using instance name');
+        apikey = instanceName;
       }
+      
+      console.log('API Key found:', apikey);
+      
+      setFetchedApiKey(apikey);
+      setApiKeyFetched(true);
     } catch (err) {
-      console.error('Failed to set webhook:', err);
+      console.error("Error getting instance details:", err);
+      setFetchedApiKey(instanceName);
+      setApiKeyFetched(true);
+    } finally {
+      setFetchingApiKey(false);
     }
   };
 
   const handleContinue = async () => {
-    if (!apiKeyFetched || !fetchedApiKey) {
-      alert("Please wait while we fetch your API key...");
-      return;
-    }
-    
     const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    const apiKeyToSave = fetchedApiKey || instanceName;
+    
+    console.log('Continuing with:', { instanceId: instanceName, evolutionUrl, apiKey: apiKeyToSave });
     
     onConnected({ 
       instanceId: instanceName, 
       evolutionUrl,
-      evolutionKey: fetchedApiKey
+      evolutionKey: apiKeyToSave
     });
   };
 
@@ -217,9 +230,9 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
         </button>
         <button 
           onClick={handleContinue}
-          disabled={!apiKeyFetched || fetchingApiKey}
+          disabled={status !== 'connected'}
           className={`px-6 py-2 rounded-lg font-semibold ${
-            apiKeyFetched && !fetchingApiKey
+            status === 'connected'
               ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
