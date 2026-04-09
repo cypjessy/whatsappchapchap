@@ -69,6 +69,17 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
     onConnected();
   };
 
+  const refreshWebhook = async () => {
+    try {
+      const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
+      await setWebhook(instanceName, webhookUrl);
+      alert('Webhook registered successfully!');
+    } catch (err) {
+      console.error('Failed to set webhook:', err);
+      alert('Failed to register webhook. Please try again.');
+    }
+  };
+
   useEffect(() => {
     setupInstance();
   }, [instanceName]);
@@ -105,6 +116,12 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       <div className="text-green-500 text-6xl">✅</div>
       <h3 className="mt-4 text-xl font-bold text-green-600">WhatsApp Connected!</h3>
       <p className="text-gray-600 mt-2">Your number is ready to use.</p>
+      <button 
+        onClick={refreshWebhook}
+        className="mt-4 px-4 py-2 text-sm text-green-600 border border-green-500 rounded-lg hover:bg-green-50"
+      >
+        Refresh Webhook
+      </button>
     </div>
   );
 
