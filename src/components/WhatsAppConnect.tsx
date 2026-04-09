@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createInstance, getQRCode, getConnectionState, setWebhook } from '@/lib/evolution';
+import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceDetails } from '@/lib/evolution';
 
 interface Props {
   instanceName: string;
@@ -69,13 +69,26 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   };
 
   const handleContinue = async () => {
-    const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-    const evolutionKey = process.env.EVOLUTION_API_KEY || "lhnGSMQrQmC54PyPUBqILuWWeau20gDn";
-    onConnected({ 
-      instanceId: instanceName, 
-      evolutionUrl,
-      evolutionKey 
-    });
+    try {
+      const details = await getInstanceDetails(instanceName);
+      const apikey = details?.instance?.apikey || "";
+      
+      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+      
+      onConnected({ 
+        instanceId: instanceName, 
+        evolutionUrl,
+        evolutionKey: apikey
+      });
+    } catch (err) {
+      console.error("Error getting instance details:", err);
+      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+      onConnected({ 
+        instanceId: instanceName, 
+        evolutionUrl,
+        evolutionKey: ""
+      });
+    }
   };
 
   const refreshWebhook = async () => {

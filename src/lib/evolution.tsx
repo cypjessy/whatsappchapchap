@@ -24,11 +24,12 @@ async function callEvolutionApi(endpoint: string, method: string = "GET", body?:
 
 export const createInstance = async (instanceName: string) => {
   try {
-    return await callEvolutionApi("instance/create", "POST", {
+    const result = await callEvolutionApi("instance/create", "POST", {
       instanceName,
       qrcode: true,
       integration: "WHATSAPP-BAILEYS",
     });
+    return result;
   } catch (err: any) {
     const message = err?.message?.toString() || "";
     if (/already.*in.*use|already.*exists|duplicate/i.test(message)) {
@@ -77,4 +78,8 @@ export const setWebhook = async (instanceName: string, webhookUrl: string) => {
       ]
     }
   });
+};
+
+export const getInstanceDetails = async (instanceName: string) => {
+  return callEvolutionApi(`instance/find/${instanceName}`, "GET");
 };
