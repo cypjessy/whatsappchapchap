@@ -168,6 +168,7 @@ export async function POST(req: NextRequest) {
 
     // Use instance name as tenant ID (e.g., tenant_USER_ID)
     const tenantId = instanceName;
+    console.log("[Webhook] Tenant ID:", tenantId);
 
     const adminDb = getAdminDb();
 
@@ -239,7 +240,9 @@ export async function POST(req: NextRequest) {
     // Send welcome message only on first contact
     if (isNewConversation) {
       console.log("[Webhook] New conversation detected, sending welcome message");
+      console.log("[Webhook] Tenant ID for settings:", tenantId);
       const settings = await getTenantSettings(tenantId);
+      console.log("[Webhook] Settings found:", settings);
       await sendWelcomeMessage(tenantId, from, settings.businessName, settings.welcomeMessage);
     }
 
