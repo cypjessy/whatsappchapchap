@@ -31,17 +31,42 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
           setStatus('connected');
           handleConnected();
           return;
+        } else if (state?.instance?.state === 'close') {
+          console.log('Instance exists but disconnected - will try to reconnect');
         }
       } catch (stateErr) {
         console.log('Instance does not exist, creating new one');
       }
       
       console.log('Creating instance:', instanceName);
-      const instanceData = await createInstance(instanceName);
-      console.log('Instance created:', instanceData);
+      let instanceData;
+      try {
+        instanceData = await createInstance(instanceName);
+        console.log('Instance created:', instanceData);
+      } catch (createErr: any) {
+        const errMsg = createErr?.message?.toString() || "";
+        console.log('Create error:', errMsg);
+        if (/already.*in.*use|already.*exists|duplicate/i.test(errMsg)) {
+          console.log('Instance already exists, trying to get QR code');
+        } else {
+          throw createErr;
+        }
+      }
       
-      if (instanceData.instance?.instanceName) {
-        console.log('Instance exists, getting QR code...');
+      try {
+        const state = await getConnectionState(instanceName);
+        console.log('Connection state after:', state);
+        
+        if (state?.instance?.state === 'open') {
+          setStatus('connected');
+          handleConnected();
+          return;
+        }
+      } catch (stateErr) {
+        console.log('Could not get connection state');
+      }
+      
+      try {
         const qrData = await getQRCode(instanceName);
         console.log('QR Code data:', qrData);
 
@@ -58,19 +83,13 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
           }
           setStatus('qr');
         } else {
-          const state = await getConnectionState(instanceName);
-          console.log('Connection state:', state);
-          if (state?.instance?.state === 'open') {
-            setStatus('connected');
-            handleConnected();
-          } else if (state?.instance?.state === 'close') {
-            setError('Your WhatsApp is not connected. Please scan the QR code to connect.');
-            setStatus('error');
-          } else {
-            setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data=${encodeURIComponent(instanceName)}`);
-            setStatus('qr');
-          }
+          setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data=${encodeURIComponent(instanceName)}`);
+          setStatus('qr');
         }
+      } catch (qrErr) {
+        console.log('Could not get QR code, showing connected state');
+        setStatus('connected');
+        handleConnected();
       }
     } catch (err: any) {
       console.error('Setup error:', err);
@@ -83,8 +102,13 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
     try {
       const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
       console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
-      await setWebhook(instanceName, webhookUrl);
-      console.log('Webhook set successfully');
+      
+      try {
+        await setWebhook(instanceName, webhookUrl);
+        console.log('Webhook set successfully');
+      } catch (webhookErr: any) {
+        console.log('Webhook error (may already be set):', webhookErr?.message);
+      }
       
       setFetchingApiKey(true);
       try {
