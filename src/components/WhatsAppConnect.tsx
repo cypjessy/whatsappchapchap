@@ -70,8 +70,12 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
 
   const handleContinue = async () => {
     try {
+      console.log('Fetching instance details for:', instanceName);
       const details = await getInstanceDetails(instanceName);
-      const apikey = details?.instance?.apikey || "";
+      console.log('Instance details:', JSON.stringify(details));
+      
+      const apikey = details?.instance?.apikey || details?.apikey || "";
+      console.log('API Key found:', apikey);
       
       const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
       
