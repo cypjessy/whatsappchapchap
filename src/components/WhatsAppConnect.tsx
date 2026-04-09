@@ -10,6 +10,9 @@ interface Props {
 export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'qr' | 'connected' | 'error'>('loading');
+  const [apiKeyFetched, setApiKeyFetched] = useState(false);
+  const [fetchingApiKey, setFetchingApiKey] = useState(false);
+  const [fetchedApiKey, setFetchedApiKey] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const setupInstance = async () => {
@@ -63,36 +66,41 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
       await setWebhook(instanceName, webhookUrl);
       console.log('Webhook set successfully');
+      
+      setFetchingApiKey(true);
+      try {
+        console.log('Fetching instance details for:', instanceName);
+        const details = await getInstanceDetails(instanceName);
+        console.log('Instance details:', JSON.stringify(details));
+        
+        const apikey = details?.instance?.apikey || details?.apikey || "";
+        console.log('API Key found:', apikey);
+        
+        setFetchedApiKey(apikey);
+        setApiKeyFetched(true);
+      } catch (err) {
+        console.error("Error getting instance details:", err);
+      } finally {
+        setFetchingApiKey(false);
+      }
     } catch (err) {
       console.error('Failed to set webhook:', err);
     }
   };
 
   const handleContinue = async () => {
-    try {
-      console.log('Fetching instance details for:', instanceName);
-      const details = await getInstanceDetails(instanceName);
-      console.log('Instance details:', JSON.stringify(details));
-      
-      const apikey = details?.instance?.apikey || details?.apikey || "";
-      console.log('API Key found:', apikey);
-      
-      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-      
-      onConnected({ 
-        instanceId: instanceName, 
-        evolutionUrl,
-        evolutionKey: apikey
-      });
-    } catch (err) {
-      console.error("Error getting instance details:", err);
-      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-      onConnected({ 
-        instanceId: instanceName, 
-        evolutionUrl,
-        evolutionKey: ""
-      });
+    if (!apiKeyFetched || !fetchedApiKey) {
+      alert("Please wait while we fetch your API key...");
+      return;
     }
+    
+    const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    
+    onConnected({ 
+      instanceId: instanceName, 
+      evolutionUrl,
+      evolutionKey: fetchedApiKey
+    });
   };
 
   const refreshWebhook = async () => {
@@ -142,7 +150,21 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       <div className="text-green-500 text-6xl">✅</div>
       <h3 className="mt-4 text-xl font-bold text-green-600">WhatsApp Connected!</h3>
       <p className="text-gray-600 mt-2 text-center">Your number is ready to use.</p>
-      <p className="text-gray-500 text-sm mt-2">Click Continue to save your settings and go to dashboard.</p>
+      
+      {fetchingApiKey && (
+        <div className="mt-4 flex items-center gap-2 text-blue-600">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          <span>Fetching your API key...</span>
+        </div>
+      )}
+      
+      {apiKeyFetched && fetchedApiKey && (
+        <div className="mt-3 px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm">
+          <i className="fas fa-key mr-2"></i>
+          API Key fetched successfully!
+        </div>
+      )}
+      
       <div className="flex gap-3 mt-4">
         <button 
           onClick={refreshWebhook}
@@ -152,7 +174,12 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
         </button>
         <button 
           onClick={handleContinue}
-          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+          disabled={!apiKeyFetched || fetchingApiKey}
+          className={`px-6 py-2 rounded-lg font-semibold ${
+            apiKeyFetched && !fetchingApiKey
+              ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           Continue
         </button>
