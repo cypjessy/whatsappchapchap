@@ -17,7 +17,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { id: "orders", label: "Orders", icon: "fa-shopping-bag", href: "/orders", badge: "12" },
     { id: "products", label: "Products", icon: "fa-box", href: "/products", badge: null },
     { id: "customers", label: "Customers", icon: "fa-users", href: "/customers", badge: null },
-    { id: "messages", label: "Messages", icon: "fa-comment-dots", href: "/messages", badge: "5" },
+    { id: "conversations", label: "Messages", icon: "fa-comment-dots", href: "/conversations", badge: null },
     { id: "ai-assistant", label: "AI Assistant", icon: "fa-robot", href: "/ai-assistant", badge: "PRO", isPro: true },
     { id: "workflows", label: "Workflows", icon: "fa-magic", href: "/workflows", badge: null },
     { id: "analytics", label: "Analytics", icon: "fa-chart-line", href: "/analytics", badge: null },
