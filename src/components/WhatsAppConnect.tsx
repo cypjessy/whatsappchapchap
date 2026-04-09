@@ -53,8 +53,8 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
 
   const handleConnected = async () => {
     try {
-      const webhookUrl = window.location.origin;
-      console.log('Setting webhook for:', instanceName);
+      const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl);
       await setWebhook(instanceName, webhookUrl);
       console.log('Webhook set successfully');
     } catch (err) {
