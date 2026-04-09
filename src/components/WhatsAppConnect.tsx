@@ -63,13 +63,14 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
       await setWebhook(instanceName, webhookUrl);
       console.log('Webhook set successfully');
-      
-      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-      onConnected({ instanceId: instanceName, evolutionUrl });
     } catch (err) {
       console.error('Failed to set webhook:', err);
-      onConnected({ instanceId: instanceName, evolutionUrl: "" });
     }
+  };
+
+  const handleContinue = async () => {
+    const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    onConnected({ instanceId: instanceName, evolutionUrl });
   };
 
   const refreshWebhook = async () => {
@@ -118,13 +119,22 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
     <div className="flex flex-col items-center p-6">
       <div className="text-green-500 text-6xl">✅</div>
       <h3 className="mt-4 text-xl font-bold text-green-600">WhatsApp Connected!</h3>
-      <p className="text-gray-600 mt-2">Your number is ready to use.</p>
-      <button 
-        onClick={refreshWebhook}
-        className="mt-4 px-4 py-2 text-sm text-green-600 border border-green-500 rounded-lg hover:bg-green-50"
-      >
-        Refresh Webhook
-      </button>
+      <p className="text-gray-600 mt-2 text-center">Your number is ready to use.</p>
+      <p className="text-gray-500 text-sm mt-2">Click Continue to save your settings and go to dashboard.</p>
+      <div className="flex gap-3 mt-4">
+        <button 
+          onClick={refreshWebhook}
+          className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          Refresh Webhook
+        </button>
+        <button 
+          onClick={handleContinue}
+          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+        >
+          Continue
+        </button>
+      </div>
     </div>
   );
 
