@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { tenantService, settingsService } from "@/lib/db";
+import WhatsAppConnect from "@/components/WhatsAppConnect";
 import FloatingShapes from "@/components/auth/FloatingShapes";
 import RegisterSidebar from "@/components/auth/RegisterSidebar";
 import { Step1Account, Step2Business, Step3Plan, Step4Verify, SuccessStep } from "@/components/auth/steps";
@@ -27,14 +29,10 @@ export default function RegisterPage() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [yearlyBilling, setYearlyBilling] = useState(false);
+  const [instanceName, setInstanceName] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const router = useRouter();
   const { signUp, user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
-    }
-  }, [user, router]);
 
   const currencyMap: Record<string, string> = {
     KE: "KES (Kenyan Shilling)",
@@ -111,11 +109,22 @@ export default function RegisterPage() {
     setError("");
     
     try {
-      await signUp(formData.email, formData.password);
+      const credential = await signUp(formData.email, formData.password);
+      const user = credential.user;
+      if (!user) {
+        throw new Error("Unable to create user account");
+      }
+
+      const tenantId = `tenant_${user.uid}`;
+      setInstanceName(tenantId);
+      await tenantService.createTenant(user, formData.businessName);
+      await settingsService.updateSettings(user, {
+        whatsappInstanceId: tenantId,
+        whatsappConnectionStatus: "pending",
+      });
+
       setCurrentStep(5);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
+      setIsLoading(false);
     } catch (err: any) {
       setError(err.message || "Failed to create account");
       setIsLoading(false);
@@ -126,6 +135,17 @@ export default function RegisterPage() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleWhatsAppConnected = async () => {
+    if (!user || !instanceName) return;
+
+    setIsConnected(true);
+    await settingsService.updateSettings(user, {
+      whatsappInstanceId: instanceName,
+      whatsappConnectionStatus: "connected",
+    });
+    router.push("/dashboard");
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -181,7 +201,29 @@ export default function RegisterPage() {
             />
           )}
 
-          {currentStep === 5 && <SuccessStep />}
+          {currentStep === 5 && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold">Connect your WhatsApp Business</h2>
+                <p className="text-[#64748b] mt-3">
+                  Scan the QR code below to create your Evolution app instance and connect your WhatsApp number.
+                </p>
+              </div>
+
+              {instanceName ? (
+                <WhatsAppConnect
+                  instanceName={instanceName}
+                  onConnected={handleWhatsAppConnected}
+                />
+              ) : (
+                <div className="p-6 bg-[#f8fafc] rounded-3xl border border-[#e2e8f0] text-center">
+                  <p className="text-[#64748b]">Waiting for your account to initialize. Please try again if this message persists.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 6 && <SuccessStep />}
 
           {currentStep < 4 && (
             <div className="flex justify-between mt-auto pt-8">

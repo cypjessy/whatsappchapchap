@@ -25,12 +25,18 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
         console.log('Instance exists, getting QR code...');
         const qrData = await getQRCode(instanceName);
         console.log('QR Code data:', qrData);
-        
-        if (qrData?.base64) {
-          setQrCode(qrData.base64);
-          setStatus('qr');
-        } else if (qrData?.code) {
-          setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData.code)}`);
+
+        const rawQrData = qrData?.base64 || qrData?.code || qrData?.pairingCode;
+
+        if (rawQrData) {
+          if (qrData?.base64) {
+            const base64Value = qrData.base64.startsWith("data:image")
+              ? qrData.base64
+              : `data:image/png;base64,${qrData.base64}`;
+            setQrCode(base64Value);
+          } else {
+            setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data=${encodeURIComponent(rawQrData)}`);
+          }
           setStatus('qr');
         } else {
           const state = await getConnectionState(instanceName);
@@ -131,6 +137,7 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       <p className="mt-4 text-sm text-gray-500 animate-pulse">
         Waiting for you to scan...
       </p>
+
       <button 
         onClick={setupInstance}
         className="mt-4 px-4 py-2 text-sm text-green-600 border border-green-500 rounded-lg hover:bg-green-50"

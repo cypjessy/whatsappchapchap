@@ -306,14 +306,6 @@ export default function CustomersPage() {
               <div className="text-sm opacity-80">Avg. LTV</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-extrabold">4.8</div>
-              <div className="text-sm opacity-80">Avg. Rating</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-extrabold">68%</div>
-              <div className="text-sm opacity-80">Retention</div>
-            </div>
-            <div className="text-center">
               <div className="text-3xl font-extrabold">{Number(customers.reduce((sum, c) => sum + (c.orderCount || 0), 0) / (customers.length || 1)).toFixed(0)}</div>
               <div className="text-sm opacity-80">Avg. Orders</div>
             </div>
@@ -321,9 +313,6 @@ export default function CustomersPage() {
           <div className="flex gap-3">
             <button className="px-4 py-2 bg-white text-[#8b5cf6] rounded-xl font-semibold text-sm">
               <i className="fas fa-chart-pie mr-2"></i>Segments
-            </button>
-            <button className="px-4 py-2 bg-white/10 text-white rounded-xl font-semibold text-sm border border-white/20">
-              <i className="fas fa-robot mr-2"></i>AI Insights
             </button>
           </div>
         </div>

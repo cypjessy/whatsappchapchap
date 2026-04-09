@@ -23,11 +23,19 @@ async function callEvolutionApi(endpoint: string, method: string = "GET", body?:
 }
 
 export const createInstance = async (instanceName: string) => {
-  return callEvolutionApi("instance/create", "POST", {
-    instanceName,
-    qrcode: true,
-    integration: "WHATSAPP-BAILEYS",
-  });
+  try {
+    return await callEvolutionApi("instance/create", "POST", {
+      instanceName,
+      qrcode: true,
+      integration: "WHATSAPP-BAILEYS",
+    });
+  } catch (err: any) {
+    const message = err?.message?.toString() || "";
+    if (/already.*in.*use|already.*exists|duplicate/i.test(message)) {
+      return { instance: { instanceName } } as any;
+    }
+    throw err;
+  }
 };
 
 export const getQRCode = async (instanceName: string): Promise<EvolutionQRCode | null> => {

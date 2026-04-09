@@ -15,6 +15,7 @@ const getTenantId = (user: User): string => `tenant_${user.uid}`;
 export interface DashboardStats {
   totalSales: number;
   totalOrders: number;
+  pendingOrders: number;
   activeCustomers: number;
   aiResponseRate: number;
   salesChange: number;
@@ -64,11 +65,13 @@ export const dashboardService = {
     
     const totalSales = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
     const totalOrders = orders.length;
+    const pendingOrders = orders.filter((order: any) => order.status === "pending").length;
     const activeCustomers = customers.length;
     
     return {
       totalSales,
       totalOrders,
+      pendingOrders,
       activeCustomers,
       aiResponseRate: 94,
       salesChange: 12.5,

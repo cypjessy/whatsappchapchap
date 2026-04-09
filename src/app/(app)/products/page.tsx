@@ -253,24 +253,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-[#0f172a] to-[#1e293b] rounded-2xl p-6 mb-6 flex items-center justify-between text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(circle,rgba(37,211,102,0.15)_0%,transparent_70%)]"></div>
-        <div className="flex items-center gap-6 relative z-10">
-          <div className="w-16 h-16 bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-2xl flex items-center justify-center text-3xl shadow-xl">
-            <i className="fas fa-robot"></i>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold mb-1">AI Product Optimizer</h3>
-            <p className="text-white/80 text-sm">Smart pricing suggestions, auto-descriptions, and stock forecasting</p>
-          </div>
-        </div>
-        <div className="flex gap-3 relative z-10">
-          <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg">
-            <i className="fas fa-magic mr-2"></i>Optimize Prices
-          </button>
-        </div>
-      </div>
-
       <div className="bg-white rounded-2xl p-4 mb-6 flex flex-wrap gap-4 items-center justify-between border border-[#e2e8f0]">
         <div className="flex gap-4 flex-wrap">
           <div className="relative">
@@ -437,10 +419,6 @@ export default function ProductsPage() {
                       <div className="form-group">
                         <label className="form-label">Description <span>*</span></label>
                         <textarea name="description" value={newProductForm.description} onChange={handleNewInputChange} rows={4} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] resize-none" placeholder="Describe your product..."></textarea>
-                        <div className="bg-gradient-to-r from-[rgba(139,92,246,0.1)] to-[rgba(124,58,237,0.1)] border-2 border-dashed border-[#8b5cf6] rounded-xl p-4 text-center cursor-pointer mt-2" onClick={() => { if(!newProductForm.name) { alert("Please enter product name first"); return; } }}>
-                          <i className="fas fa-magic text-purple-500 text-xl mb-2 block"></i>
-                          <p className="text-sm font-semibold text-purple-600">✨ Generate with AI</p>
-                        </div>
                       </div>
                     </div>
                   </div>

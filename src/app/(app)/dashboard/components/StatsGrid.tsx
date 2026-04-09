@@ -25,6 +25,7 @@ export function StatsGrid({ refreshTrigger }: StatsGridProps) {
         setStats({
           totalSales: 0,
           totalOrders: 0,
+          pendingOrders: 0,
           activeCustomers: 0,
           aiResponseRate: 0,
           salesChange: 0,

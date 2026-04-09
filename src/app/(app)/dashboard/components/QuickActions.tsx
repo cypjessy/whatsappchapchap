@@ -16,7 +16,7 @@ export function QuickActions() {
       setLoading(true);
       try {
         const stats = await dashboardService.getStats(user);
-        setPendingOrders(stats.totalOrders);
+        setPendingOrders(stats.pendingOrders);
       } catch (error) {
         console.error("Error loading quick actions:", error);
       } finally {
@@ -55,7 +55,7 @@ export function QuickActions() {
           <i className="fas fa-shopping-bag"></i>
         </div>
         <div className="font-bold">New Orders</div>
-        <div className="text-xs text-[#64748b]">{pendingOrders} orders total</div>
+        <div className="text-xs text-[#64748b]">{pendingOrders} pending orders</div>
       </Link>
       
       <Link href="/ai-assistant" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">

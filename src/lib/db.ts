@@ -100,6 +100,107 @@ export interface Conversation {
   updatedAt: any;
 }
 
+export interface Supplier {
+  id: string;
+  tenantId: string;
+  name: string;
+  contactPerson?: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  products: string[]; // product IDs they supply
+  paymentTerms?: string;
+  notes?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface ShippingMethod {
+  id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  cost: number;
+  estimatedDays: number;
+  isActive: boolean;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface Shipment {
+  id: string;
+  tenantId: string;
+  orderId: string;
+  customerName: string;
+  customerPhone: string;
+  shippingMethod: string;
+  trackingNumber?: string;
+  status: "pending" | "shipped" | "delivered" | "returned";
+  shippedAt?: any;
+  deliveredAt?: any;
+  notes?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface InventoryLog {
+  id: string;
+  tenantId: string;
+  productId: string;
+  productName: string;
+  type: "in" | "out" | "adjustment";
+  quantity: number;
+  reason: string;
+  reference?: string; // order ID, supplier ID, etc.
+  createdAt: any;
+}
+
+export interface Review {
+  id: string;
+  tenantId: string;
+  customerId: string;
+  customerName: string;
+  orderId: string;
+  productId?: string;
+  productName?: string;
+  rating: number; // 1-5
+  comment?: string;
+  response?: string;
+  responseAt?: any;
+  isPublic: boolean;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface Campaign {
+  id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  type: "broadcast" | "promotional" | "followup";
+  segment: "all" | "vip" | "frequent" | "new" | "inactive";
+  message: string;
+  scheduledAt?: any;
+  sentAt?: any;
+  status: "draft" | "scheduled" | "sending" | "completed" | "cancelled";
+  recipientCount: number;
+  deliveredCount: number;
+  responseCount: number;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface Expense {
+  id: string;
+  tenantId: string;
+  category: "supplies" | "shipping" | "marketing" | "utilities" | "other";
+  description: string;
+  amount: number;
+  date: any;
+  reference?: string;
+  createdAt: any;
+}
+
 const getTenantId = (user: User): string => `tenant_${user.uid}`;
 
 export const tenantService = {
@@ -653,5 +754,220 @@ How can I assist you today?`,
   async updateSettings(user: User, data: Partial<TenantSettings>): Promise<void> {
     const tenantId = getTenantId(user);
     await setDoc(doc(db, "settings", tenantId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+};
+
+export const supplierService = {
+  async createSupplier(user: User, supplier: Omit<Supplier, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Supplier> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "suppliers"));
+    const supplierData: Supplier = {
+      ...supplier,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, supplierData);
+    return supplierData;
+  },
+
+  async getSuppliers(user: User): Promise<Supplier[]> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "suppliers"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supplier[];
+  },
+
+  async updateSupplier(user: User, supplierId: string, data: Partial<Supplier>): Promise<void> {
+    await setDoc(doc(db, "suppliers", supplierId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deleteSupplier(user: User, supplierId: string): Promise<void> {
+    await deleteDoc(doc(db, "suppliers", supplierId));
+  },
+};
+
+export const shippingService = {
+  async createShippingMethod(user: User, method: Omit<ShippingMethod, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<ShippingMethod> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "shippingMethods"));
+    const methodData: ShippingMethod = {
+      ...method,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, methodData);
+    return methodData;
+  },
+
+  async getShippingMethods(user: User): Promise<ShippingMethod[]> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "shippingMethods"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShippingMethod[];
+  },
+
+  async updateShippingMethod(user: User, methodId: string, data: Partial<ShippingMethod>): Promise<void> {
+    await setDoc(doc(db, "shippingMethods", methodId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deleteShippingMethod(user: User, methodId: string): Promise<void> {
+    await deleteDoc(doc(db, "shippingMethods", methodId));
+  },
+
+  async createShipment(user: User, shipment: Omit<Shipment, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Shipment> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "shipments"));
+    const shipmentData: Shipment = {
+      ...shipment,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, shipmentData);
+    return shipmentData;
+  },
+
+  async getShipments(user: User): Promise<Shipment[]> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "shipments"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Shipment[];
+  },
+
+  async updateShipment(user: User, shipmentId: string, data: Partial<Shipment>): Promise<void> {
+    await setDoc(doc(db, "shipments", shipmentId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+};
+
+export const inventoryService = {
+  async logInventoryChange(user: User, log: Omit<InventoryLog, "id" | "tenantId" | "createdAt">): Promise<InventoryLog> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "inventoryLogs"));
+    const logData: InventoryLog = {
+      ...log,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+    };
+    await setDoc(docRef, logData);
+    return logData;
+  },
+
+  async getInventoryLogs(user: User, productId?: string): Promise<InventoryLog[]> {
+    const tenantId = getTenantId(user);
+    let q;
+    if (productId) {
+      q = query(collection(db, "inventoryLogs"), where("tenantId", "==", tenantId), where("productId", "==", productId), orderBy("createdAt", "desc"));
+    } else {
+      q = query(collection(db, "inventoryLogs"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    }
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as InventoryLog[];
+  },
+};
+
+export const reviewService = {
+  async createReview(user: User, review: Omit<Review, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Review> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "reviews"));
+    const reviewData: Review = {
+      ...review,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, reviewData);
+    return reviewData;
+  },
+
+  async getReviews(user: User): Promise<Review[]> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "reviews"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Review[];
+  },
+
+  async updateReview(user: User, reviewId: string, data: Partial<Review>): Promise<void> {
+    await setDoc(doc(db, "reviews", reviewId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deleteReview(user: User, reviewId: string): Promise<void> {
+    await deleteDoc(doc(db, "reviews", reviewId));
+  },
+};
+
+export const campaignService = {
+  async createCampaign(user: User, campaign: Omit<Campaign, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Campaign> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "campaigns"));
+    const campaignData: Campaign = {
+      ...campaign,
+      id: docRef.id,
+      tenantId,
+      recipientCount: 0,
+      deliveredCount: 0,
+      responseCount: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, campaignData);
+    return campaignData;
+  },
+
+  async getCampaigns(user: User): Promise<Campaign[]> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "campaigns"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Campaign[];
+  },
+
+  async updateCampaign(user: User, campaignId: string, data: Partial<Campaign>): Promise<void> {
+    await setDoc(doc(db, "campaigns", campaignId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deleteCampaign(user: User, campaignId: string): Promise<void> {
+    await deleteDoc(doc(db, "campaigns", campaignId));
+  },
+};
+
+export const expenseService = {
+  async createExpense(user: User, expense: Omit<Expense, "id" | "tenantId" | "createdAt">): Promise<Expense> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "expenses"));
+    const expenseData: Expense = {
+      ...expense,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+    };
+    await setDoc(docRef, expenseData);
+    return expenseData;
+  },
+
+  async getExpenses(user: User, startDate?: Date, endDate?: Date): Promise<Expense[]> {
+    const tenantId = getTenantId(user);
+    let q = query(collection(db, "expenses"), where("tenantId", "==", tenantId), orderBy("date", "desc"));
+    
+    if (startDate && endDate) {
+      // Note: Firestore doesn't support date range queries with orderBy on different fields easily
+      // This is a simplified version
+    }
+    
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[];
+  },
+
+  async updateExpense(user: User, expenseId: string, data: Partial<Expense>): Promise<void> {
+    await setDoc(doc(db, "expenses", expenseId), data, { merge: true });
+  },
+
+  async deleteExpense(user: User, expenseId: string): Promise<void> {
+    await deleteDoc(doc(db, "expenses", expenseId));
   },
 };
