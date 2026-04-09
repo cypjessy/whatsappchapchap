@@ -605,6 +605,8 @@ export interface TenantSettings {
   autoReply: boolean;
   smartOrderDetection: boolean;
   orderConfirmations: boolean;
+  evolutionServerUrl: string;
+  evolutionInstanceId: string;
   evolutionApiUrl: string;
   evolutionApiKey: string;
   whatsappInstanceId: string;
@@ -734,6 +736,8 @@ How can I assist you today?`,
       autoReply: true,
       smartOrderDetection: true,
       orderConfirmations: true,
+      evolutionServerUrl: "",
+      evolutionInstanceId: "",
       evolutionApiUrl: "",
       evolutionApiKey: "",
       whatsappInstanceId: "",

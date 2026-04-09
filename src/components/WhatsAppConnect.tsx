@@ -4,7 +4,7 @@ import { createInstance, getQRCode, getConnectionState, setWebhook } from '@/lib
 
 interface Props {
   instanceName: string;
-  onConnected: () => void;
+  onConnected: (data?: { instanceId: string; evolutionUrl: string }) => void;
 }
 
 export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
@@ -63,10 +63,13 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
       await setWebhook(instanceName, webhookUrl);
       console.log('Webhook set successfully');
+      
+      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+      onConnected({ instanceId: instanceName, evolutionUrl });
     } catch (err) {
       console.error('Failed to set webhook:', err);
+      onConnected({ instanceId: instanceName, evolutionUrl: "" });
     }
-    onConnected();
   };
 
   const refreshWebhook = async () => {

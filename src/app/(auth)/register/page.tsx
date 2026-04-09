@@ -137,13 +137,17 @@ export default function RegisterPage() {
     }
   };
 
-  const handleWhatsAppConnected = async () => {
+  const handleWhatsAppConnected = async (data?: { instanceId: string; evolutionUrl: string }) => {
     if (!user || !instanceName) return;
 
     setIsConnected(true);
     await settingsService.updateSettings(user, {
-      whatsappInstanceId: instanceName,
+      whatsappInstanceId: data?.instanceId || instanceName,
       whatsappConnectionStatus: "connected",
+      evolutionServerUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "",
+      evolutionInstanceId: data?.instanceId || instanceName,
+      evolutionApiUrl: process.env.EVOLUTION_API_URL || "",
+      evolutionApiKey: process.env.EVOLUTION_API_KEY || "",
     });
     router.push("/dashboard");
   };
