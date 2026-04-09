@@ -141,14 +141,20 @@ export default function RegisterPage() {
     if (!user || !instanceName) return;
 
     setIsConnected(true);
-    await settingsService.updateSettings(user, {
-      whatsappInstanceId: data?.instanceId || instanceName,
-      whatsappConnectionStatus: "connected",
+    
+    const tenantId = `tenant_${user.uid}`;
+    const { doc, setDoc } = await import("firebase/firestore");
+    const { db } = await import("@/lib/firebase");
+    
+    await setDoc(doc(db, "tenants", tenantId), {
       evolutionServerUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "",
       evolutionInstanceId: data?.instanceId || instanceName,
       evolutionApiUrl: process.env.EVOLUTION_API_URL || "",
       evolutionApiKey: process.env.EVOLUTION_API_KEY || "",
-    });
+      whatsappInstanceId: data?.instanceId || instanceName,
+      whatsappConnectionStatus: "connected",
+    }, { merge: true });
+    
     router.push("/dashboard");
   };
 

@@ -22,6 +22,12 @@ export interface Tenant {
   businessName: string;
   phone?: string;
   plan: "free" | "starter" | "pro" | "enterprise";
+  evolutionServerUrl?: string;
+  evolutionInstanceId?: string;
+  evolutionApiUrl?: string;
+  evolutionApiKey?: string;
+  whatsappInstanceId?: string;
+  whatsappConnectionStatus?: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -605,12 +611,8 @@ export interface TenantSettings {
   autoReply: boolean;
   smartOrderDetection: boolean;
   orderConfirmations: boolean;
-  evolutionServerUrl: string;
-  evolutionInstanceId: string;
-  evolutionApiUrl: string;
-  evolutionApiKey: string;
-  whatsappInstanceId: string;
-  whatsappConnectionStatus: string;
+  whatsappInstanceId?: string;
+  whatsappConnectionStatus?: string;
   notifications: {
     newOrders: { push: boolean; email: boolean; sms: boolean; wa: boolean };
     lowStock: { push: boolean; email: boolean; sms: boolean; wa: boolean };
@@ -736,10 +738,6 @@ How can I assist you today?`,
       autoReply: true,
       smartOrderDetection: true,
       orderConfirmations: true,
-      evolutionServerUrl: "",
-      evolutionInstanceId: "",
-      evolutionApiUrl: "",
-      evolutionApiKey: "",
       whatsappInstanceId: "",
       whatsappConnectionStatus: "disconnected",
       notifications: {
