@@ -35,21 +35,29 @@ export async function GET(req: NextRequest) {
     db.collection("inventory").where("tenantId", "==", tenantId).get(),
   ]);
 
-  let messages = [];
+  let messages: any[] = [];
   if (phone) {
     const phoneNum = phone.replace("@s.whatsapp.net", "");
     const messagesSnap = await db.collection("tenants").doc(tenantId).collection("conversations").doc(phoneNum).collection("messages").limit(20).get();
     messages = messagesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 
+  const settingsData = (settingsSnap as any).exists() ? (settingsSnap as any).data() : null;
+  const productsData = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const customersData = customersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const ordersData = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const reviewsData = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const campaignsData = campaignsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const inventoryData = inventorySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
   return NextResponse.json({
-    settings: settingsSnap.exists() ? settingsSnap.data() : null,
-    products: productsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    customers: customersSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    orders: ordersSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    reviews: reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    campaigns: campaignsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    inventory: inventorySnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    settings: settingsData,
+    products: productsData,
+    customers: customersData,
+    orders: ordersData,
+    reviews: reviewsData,
+    campaigns: campaignsData,
+    inventory: inventoryData,
     messages,
   });
 }
