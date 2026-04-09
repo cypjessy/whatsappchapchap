@@ -93,8 +93,16 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
       }
     } catch (err: any) {
       console.error('Setup error:', err);
-      setError(err.message || 'Failed to setup WhatsApp. Please try again.');
-      setStatus('error');
+      const errMsg = err?.message?.toString() || "";
+      
+      if (/already.*in.*use|already.*exists|duplicate/i.test(errMsg)) {
+        console.log('Instance already exists, trying to connect anyway');
+        setStatus('connected');
+        handleConnected();
+      } else {
+        setError(err.message || 'Failed to setup WhatsApp. Please try again.');
+        setStatus('error');
+      }
     }
   };
 
@@ -147,16 +155,64 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   };
 
   const handleContinue = async () => {
-    const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-    const apiKeyToSave = fetchedApiKey || instanceName;
+    setStatus('loading');
+    const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
+    console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
     
-    console.log('Continuing with:', { instanceId: instanceName, evolutionUrl, apiKey: apiKeyToSave });
+    try {
+      await setWebhook(instanceName, webhookUrl);
+      console.log('Webhook set successfully');
+    } catch (webhookErr: any) {
+      console.log('Webhook error (may already be set):', webhookErr?.message);
+    }
     
-    onConnected({ 
-      instanceId: instanceName, 
-      evolutionUrl,
-      evolutionKey: apiKeyToSave
-    });
+    setFetchingApiKey(true);
+    try {
+      console.log('Fetching instance details for:', instanceName);
+      
+      let details;
+      try {
+        details = await getInstanceDetails(instanceName);
+      } catch (detailsErr) {
+        console.log('Could not get instance details, trying connection state');
+        details = await getConnectionState(instanceName);
+      }
+      
+      console.log('Instance details:', JSON.stringify(details));
+      
+      let apikey = "";
+      if (details?.instance?.apikey) {
+        apikey = details.instance.apikey;
+      } else if (details?.apikey) {
+        apikey = details.apikey;
+      } else if (details?.instance?.instanceName) {
+        console.log('Instance found but no apikey in response, using instance name');
+        apikey = instanceName;
+      }
+      
+      console.log('API Key found:', apikey);
+      
+      setFetchedApiKey(apikey);
+      setApiKeyFetched(true);
+      
+      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+      
+      onConnected({ 
+        instanceId: instanceName, 
+        evolutionUrl,
+        evolutionKey: apikey || instanceName
+      });
+    } catch (err) {
+      console.error("Error getting instance details:", err);
+      const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+      onConnected({ 
+        instanceId: instanceName, 
+        evolutionUrl,
+        evolutionKey: instanceName
+      });
+    } finally {
+      setFetchingApiKey(false);
+    }
   };
 
   const refreshWebhook = async () => {
@@ -245,14 +301,22 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
 
   if (status === 'error') return (
     <div className="flex flex-col items-center p-6">
-      <div className="text-red-500 text-6xl">❌</div>
-      <p className="text-red-600 mt-4 text-center">{error}</p>
-      <button 
-        onClick={setupInstance}
-        className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-      >
-        Try Again
-      </button>
+      <div className="text-orange-500 text-6xl">⚠️</div>
+      <p className="text-orange-600 mt-4 text-center">{error}</p>
+      <div className="flex gap-3 mt-4">
+        <button 
+          onClick={setupInstance}
+          className="px-4 py-2 text-sm text-orange-600 border border-orange-500 rounded-lg hover:bg-orange-50"
+        >
+          Try Again
+        </button>
+        <button 
+          onClick={handleContinue}
+          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+        >
+          Continue Anyway
+        </button>
+      </div>
     </div>
   );
 
