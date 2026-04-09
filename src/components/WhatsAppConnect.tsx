@@ -4,7 +4,7 @@ import { createInstance, getQRCode, getConnectionState, setWebhook } from '@/lib
 
 interface Props {
   instanceName: string;
-  onConnected: (data?: { instanceId: string; evolutionUrl: string }) => void;
+  onConnected: (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string }) => void;
 }
 
 export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
@@ -70,7 +70,12 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
 
   const handleContinue = async () => {
     const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
-    onConnected({ instanceId: instanceName, evolutionUrl });
+    const evolutionKey = process.env.EVOLUTION_API_KEY || "lhnGSMQrQmC54PyPUBqILuWWeau20gDn";
+    onConnected({ 
+      instanceId: instanceName, 
+      evolutionUrl,
+      evolutionKey 
+    });
   };
 
   const refreshWebhook = async () => {

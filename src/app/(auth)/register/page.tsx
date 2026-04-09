@@ -137,7 +137,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleWhatsAppConnected = async (data?: { instanceId: string; evolutionUrl: string }) => {
+  const handleWhatsAppConnected = async (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string }) => {
     if (!user || !instanceName) return;
 
     setIsConnected(true);
@@ -147,10 +147,10 @@ export default function RegisterPage() {
     const { db } = await import("@/lib/firebase");
     
     await setDoc(doc(db, "tenants", tenantId), {
-      evolutionServerUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "",
+      evolutionServerUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       evolutionInstanceId: data?.instanceId || instanceName,
-      evolutionApiUrl: process.env.EVOLUTION_API_URL || "",
-      evolutionApiKey: process.env.EVOLUTION_API_KEY || "",
+      evolutionApiUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+      evolutionApiKey: data?.evolutionKey || process.env.EVOLUTION_API_KEY || "lhnGSMQrQmC54PyPUBqILuWWeau20gDn",
       whatsappInstanceId: data?.instanceId || instanceName,
       whatsappConnectionStatus: "connected",
     }, { merge: true });
