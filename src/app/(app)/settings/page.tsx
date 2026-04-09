@@ -54,13 +54,16 @@ export default function SettingsPage() {
   });
 
   const [whatsAppForm, setWhatsAppForm] = useState({
-    whatsAppNumber: "+254 712 345 678",
-    welcomeMessage: "",
-  });
+    welcomeMessage: `Hello! 👋 Welcome to {{business_name}}.
 
-  const [evolutionForm, setEvolutionForm] = useState({
-    apiUrl: "",
-    apiKey: "",
+We're excited to respond to your messages. How can we help you today?
+
+You can:
+• Browse our products
+• Place an order
+• Get order updates
+
+Just reply here!`,
   });
 
   const [whatsappStatus, setWhatsappStatus] = useState<{
@@ -70,7 +73,6 @@ export default function SettingsPage() {
   }>({ status: "disconnected", qrCode: null, qrCodeBase64: null });
 
   const [connecting, setConnecting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -106,13 +108,16 @@ export default function SettingsPage() {
       });
 
       setWhatsAppForm({
-        whatsAppNumber: data.whatsAppNumber || "+254 712 345 678",
-        welcomeMessage: data.welcomeMessage || "",
-      });
+        welcomeMessage: data.welcomeMessage || `Hello! 👋 Welcome to {{business_name}}.
 
-      setEvolutionForm({
-        apiUrl: data.evolutionApiUrl || "",
-        apiKey: data.evolutionApiKey || "",
+We're excited to respond to your messages. How can we help you today?
+
+You can:
+• Browse our products
+• Place an order
+• Get order updates
+
+Just reply here!`,
       });
 
       setWhatsappStatus({
@@ -124,22 +129,6 @@ export default function SettingsPage() {
       console.error("Error loading settings:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const saveEvolutionSettings = async () => {
-    if (!user) return;
-    setSaving(true);
-    try {
-      await settingsService.updateSettings(user, {
-        evolutionApiUrl: evolutionForm.apiUrl,
-        evolutionApiKey: evolutionForm.apiKey,
-      });
-      alert("Evolution API settings saved!");
-    } catch (error) {
-      console.error("Error saving evolution settings:", error);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -191,13 +180,9 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await settingsService.updateSettings(user, {
-        whatsAppNumber: whatsAppForm.whatsAppNumber,
         welcomeMessage: whatsAppForm.welcomeMessage,
-        autoReply: toggles.autoReply,
-        smartOrderDetection: toggles.smartOrder,
-        orderConfirmations: toggles.orderConfirm,
       });
-      alert("WhatsApp settings saved!");
+      alert("Welcome message saved!");
     } catch (error) {
       console.error("Error saving WhatsApp settings:", error);
     } finally {
@@ -443,125 +428,51 @@ export default function SettingsPage() {
             <div>
               <div className="p-6 border-b border-[#e2e8f0]">
                 <h2 className="text-xl font-bold">WhatsApp Integration</h2>
-                <p className="text-[#64748b]">Connect and manage your WhatsApp Business API</p>
+                <p className="text-[#64748b]">Connect WhatsApp and manage your welcome messages</p>
               </div>
-              <div className="p-6">
-                <div className="bg-gradient-to-br from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] border-2 border-[#25D366] rounded-2xl p-6 text-center mb-6">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-md text-[#25D366]">
-                    <i className="fab fa-whatsapp"></i>
-                  </div>
-                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#10b981] text-white rounded-full text-sm font-bold mb-3"><i className="fas fa-check-circle"></i> Connected</span>
-                  <h3 className="font-bold text-lg mb-1">WhatsApp Business API</h3>
-                  <p className="text-[#64748b] mb-4">{whatsAppForm.whatsAppNumber}</p>
-                  <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm"><i className="fas fa-sync-alt mr-2"></i>Reconnect</button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold mb-2">WhatsApp Business Phone Number</label>
-                    <div className="relative">
-                      <i className="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-[#25D366]"></i>
-                      <input type="tel" value={whatsAppForm.whatsAppNumber} onChange={(e) => setWhatsAppForm({...whatsAppForm, whatsAppNumber: e.target.value})} className="w-full pl-11 pr-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:border-[#25D366] focus:outline-none bg-[#f8fafc]" />
-                    </div>
-                    <p className="text-xs text-[#64748b] mt-2">This is the number customers will message for orders</p>
-                  </div>
-                </div>
-
-                {/* Evolution API Settings */}
-                <div className="mt-8 pt-6 border-t border-[#e2e8f0]">
-                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <i className="fab fa-whatsapp text-[#25D366]"></i>WhatsApp Connection
-                  </h3>
-                  
-                  <div className="bg-gradient-to-br from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] border-2 border-[#25D366] rounded-2xl p-6 mb-6">
-                    {!user ? (
-                      <p className="text-[#64748b]">Please sign in to connect WhatsApp</p>
-                    ) : settings?.whatsappInstanceId && whatsappStatus.status === "connected" ? (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center text-2xl text-white">
-                            <i className="fab fa-whatsapp"></i>
-                          </div>
-                          <div>
-                            <div className="font-bold text-lg">WhatsApp Connected</div>
-                            <div className="text-sm text-[#64748b]">Ready to send and receive messages</div>
-                          </div>
+              <div className="p-6 space-y-6">
+                {/* WhatsApp Connection */}
+                <div className="bg-gradient-to-br from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] border-2 border-[#25D366] rounded-2xl p-6">
+                  {!user ? (
+                    <p className="text-[#64748b]">Please sign in to connect WhatsApp</p>
+                  ) : settings?.whatsappInstanceId && whatsappStatus.status === "connected" ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center text-2xl text-white">
+                          <i className="fab fa-whatsapp"></i>
                         </div>
-                        <button onClick={disconnectWhatsApp} className="px-4 py-2 border-2 border-[#ef4444] text-[#ef4444] rounded-xl font-semibold text-sm hover:bg-[#ef4444] hover:text-white">
-                          Disconnect
-                        </button>
+                        <div>
+                          <div className="font-bold text-lg">WhatsApp Connected</div>
+                          <div className="text-sm text-[#64748b]">Ready to send and receive messages</div>
+                        </div>
                       </div>
-                    ) : (
-                      <WhatsAppConnect
-                        instanceName={`tenant_${user.uid}`}
-                        onConnected={() => {
-                          setWhatsappStatus(prev => ({ ...prev, status: "connected" }));
-                          settingsService.updateSettings(user, {
-                            whatsappInstanceId: `tenant_${user.uid}`,
-                            whatsappConnectionStatus: "connected",
-                          });
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">Evolution API URL</label>
-                      <input type="text" value={evolutionForm.apiUrl} onChange={(e) => setEvolutionForm({...evolutionForm, apiUrl: e.target.value})} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:border-[#25D366] focus:outline-none" placeholder="http://173.249.50.98:8080" />
+                      <button onClick={disconnectWhatsApp} className="px-4 py-2 border-2 border-[#ef4444] text-[#ef4444] rounded-xl font-semibold text-sm hover:bg-[#ef4444] hover:text-white">
+                        Disconnect
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">Evolution API Key</label>
-                      <input type="password" value={evolutionForm.apiKey} onChange={(e) => setEvolutionForm({...evolutionForm, apiKey: e.target.value})} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:border-[#25D366] focus:outline-none" placeholder="Your API Key" />
-                    </div>
-                  </div>
-
-                  {testResult && (
-                    <div className={`p-4 rounded-xl mb-4 ${testResult.success ? "bg-[#10b981]/10 text-[#10b981]" : "bg-[#ef4444]/10 text-[#ef4444]"}`}>
-                      <i className={`fas ${testResult.success ? "fa-check-circle" : "fa-exclamation-circle"} mr-2`}></i>
-                      {testResult.message}
-                    </div>
+                  ) : (
+                    <WhatsAppConnect
+                      instanceName={`tenant_${user.uid}`}
+                      onConnected={() => {
+                        setWhatsappStatus(prev => ({ ...prev, status: "connected" }));
+                        settingsService.updateSettings(user, {
+                          whatsappInstanceId: `tenant_${user.uid}`,
+                          whatsappConnectionStatus: "connected",
+                        });
+                      }}
+                    />
                   )}
-
-                  <div className="flex gap-3">
-                    <button onClick={saveEvolutionSettings} disabled={saving} className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm disabled:opacity-50">
-                      {saving ? <><i className="fas fa-circle-notch fa-spin mr-2"></i>Saving...</> : <><i className="fas fa-save mr-2"></i>Save API Settings</>}
-                    </button>
-                  </div>
                 </div>
 
-                <h3 className="font-bold text-lg mb-4 mt-8">AI Assistant Configuration</h3>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-[#f8fafc] rounded-xl">
-                    <div><div className="font-bold">Auto-Reply to New Messages</div><div className="text-sm text-[#64748b]">AI will automatically respond to customer inquiries</div></div>
-                    <button onClick={() => toggleSwitch("autoReply")} className={`w-13 h-7 rounded-full relative transition-all ${toggles.autoReply ? "bg-[#25D366]" : "bg-[#e2e8f0]"}`}>
-                      <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${toggles.autoReply ? "left-6" : "left-1"}`}></span>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-[#f8fafc] rounded-xl">
-                    <div><div className="font-bold">Smart Order Detection</div><div className="text-sm text-[#64748b]">Automatically detect order intent in messages</div></div>
-                    <button onClick={() => toggleSwitch("smartOrder")} className={`w-13 h-7 rounded-full relative transition-all ${toggles.smartOrder ? "bg-[#25D366]" : "bg-[#e2e8f0]"}`}>
-                      <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${toggles.smartOrder ? "left-6" : "left-1"}`}></span>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-[#f8fafc] rounded-xl">
-                    <div><div className="font-bold">Send Order Confirmations</div><div className="text-sm text-[#64748b]">Automatically send confirmation messages for new orders</div></div>
-                    <button onClick={() => toggleSwitch("orderConfirm")} className={`w-13 h-7 rounded-full relative transition-all ${toggles.orderConfirm ? "bg-[#25D366]" : "bg-[#e2e8f0]"}`}>
-                      <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${toggles.orderConfirm ? "left-6" : "left-1"}`}></span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-6">
+                {/* Welcome Message Template */}
+                <div>
                   <label className="block text-sm font-semibold mb-2">Welcome Message Template</label>
-                  <textarea value={whatsAppForm.welcomeMessage} onChange={(e) => setWhatsAppForm({...whatsAppForm, welcomeMessage: e.target.value})} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:border-[#25D366] focus:outline-none h-40 resize-none" placeholder="Enter welcome message template..."></textarea>
-                  <p className="text-xs text-[#64748b] mt-2">Use {'{{variable_name}}'} for dynamic content</p>
+                  <textarea value={whatsAppForm.welcomeMessage} onChange={(e) => setWhatsAppForm({...whatsAppForm, welcomeMessage: e.target.value})} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:border-[#25D366] focus:outline-none h-48 resize-none" placeholder="Enter welcome message template..."></textarea>
+                  <p className="text-xs text-[#64748b] mt-2">Use {'{{business_name}}'} for your business name</p>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[#e2e8f0]">
-                  <button className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm">Test Connection</button>
-                  <button onClick={saveWhatsAppSettings} disabled={saving} className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm">
+                <div className="flex justify-end gap-3 pt-6 border-t border-[#e2e8f0]">
+                  <button onClick={saveWhatsAppSettings} disabled={saving} className="px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm">
                     {saving ? <><i className="fas fa-circle-notch fa-spin mr-2"></i>Saving...</> : <><i className="fas fa-save mr-2"></i>Save Changes</>}
                   </button>
                 </div>
