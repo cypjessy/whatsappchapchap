@@ -184,10 +184,11 @@ export async function POST(req: NextRequest) {
 
     // Forward to n8n webhook
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+    console.log("[Webhook] N8N URL configured:", !!n8nWebhookUrl);
     if (n8nWebhookUrl && text) {
       try {
-        console.log("[Webhook] Forwarding to n8n...");
-        await fetch(n8nWebhookUrl, {
+        console.log("[Webhook] Forwarding to n8n:", n8nWebhookUrl);
+        const n8nResponse = await fetch(n8nWebhookUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -198,10 +199,13 @@ export async function POST(req: NextRequest) {
             timestamp: timestamp.toISOString(),
           }),
         });
-        console.log("[Webhook] Forwarded to n8n");
+        console.log("[Webhook] n8n response status:", n8nResponse.status);
+        console.log("[Webhook] Forwarded to n8n successfully");
       } catch (error) {
         console.error("[Webhook] Error forwarding to n8n:", error);
       }
+    } else {
+      console.log("[Webhook] N8N_WEBHOOK_URL not set or no text to forward");
     }
 
     // Send welcome message only on first contact
