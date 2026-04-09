@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createInstance, getQRCode, getConnectionState } from '@/lib/evolution';
+import { createInstance, getQRCode, getConnectionState, setWebhook } from '@/lib/evolution';
 
 interface Props {
   instanceName: string;
@@ -51,6 +51,18 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
     }
   };
 
+  const handleConnected = async () => {
+    try {
+      const webhookUrl = window.location.origin;
+      console.log('Setting webhook for:', instanceName);
+      await setWebhook(instanceName, webhookUrl);
+      console.log('Webhook set successfully');
+    } catch (err) {
+      console.error('Failed to set webhook:', err);
+    }
+    onConnected();
+  };
+
   useEffect(() => {
     setupInstance();
   }, [instanceName]);
@@ -64,7 +76,7 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
         console.log('Polling state:', state);
         if (state?.instance?.state === 'open') {
           setStatus('connected');
-          onConnected();
+          handleConnected();
           clearInterval(interval);
         }
       } catch (err) {
@@ -73,7 +85,7 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [status, instanceName, onConnected]);
+  }, [status, instanceName]);
 
   if (status === 'loading') return (
     <div className="flex flex-col items-center p-6">

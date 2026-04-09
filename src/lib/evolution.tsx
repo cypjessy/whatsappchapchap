@@ -52,3 +52,21 @@ export const sendMessage = async (instanceName: string, phone: string, text: str
 export const deleteInstance = async (instanceName: string) => {
   return callEvolutionApi(`instance/delete/${instanceName}`, "DELETE");
 };
+
+export const setWebhook = async (instanceName: string, webhookUrl: string) => {
+  const webhookUrlFinal = `${webhookUrl}/api/webhook/evolution`;
+  return callEvolutionApi(`webhook/set/${instanceName}`, "POST", {
+    webhook: {
+      enabled: true,
+      url: webhookUrlFinal,
+      webhookByEvents: false,
+      webhookBase64: false,
+      events: [
+        "MESSAGES_UPSERT",
+        "MESSAGES_UPDATE",
+        "CONNECTION_UPDATE",
+        "QRCODE_UPDATED"
+      ]
+    }
+  });
+};
