@@ -46,10 +46,13 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
           console.log('Connection state:', state);
           if (state?.instance?.state === 'open') {
             setStatus('connected');
-            onConnected();
-          } else {
-            setError('No QR code available. Try again or use Evolution Manager.');
+            handleConnected();
+          } else if (state?.instance?.state === 'close') {
+            setError('Your WhatsApp is not connected. Please scan the QR code to connect.');
             setStatus('error');
+          } else {
+            setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=10&data=${encodeURIComponent(instanceName)}`);
+            setStatus('qr');
           }
         }
       }
