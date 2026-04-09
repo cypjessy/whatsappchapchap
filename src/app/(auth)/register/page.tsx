@@ -224,6 +224,7 @@ export default function RegisterPage() {
                 <WhatsAppConnect
                   instanceName={instanceName}
                   onConnected={handleWhatsAppConnected}
+                  autoStart={false}
                 />
               ) : (
                 <div className="p-6 bg-[#f8fafc] rounded-3xl border border-[#e2e8f0] text-center">

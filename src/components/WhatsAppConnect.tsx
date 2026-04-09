@@ -5,9 +5,10 @@ import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceD
 interface Props {
   instanceName: string;
   onConnected: (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string }) => void;
+  autoStart?: boolean;
 }
 
-export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
+export default function WhatsAppConnect({ instanceName, onConnected, autoStart = true }: Props) {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'qr' | 'connected' | 'error'>('loading');
   const [apiKeyFetched, setApiKeyFetched] = useState(false);
@@ -227,8 +228,10 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
   };
 
   useEffect(() => {
-    setupInstance();
-  }, [instanceName]);
+    if (autoStart !== false) {
+      setupInstance();
+    }
+  }, [instanceName, autoStart]);
 
   useEffect(() => {
     if (status !== 'qr') return;
@@ -249,6 +252,22 @@ export default function WhatsAppConnect({ instanceName, onConnected }: Props) {
 
     return () => clearInterval(interval);
   }, [status, instanceName]);
+
+  if (status === 'loading' && !autoStart) return (
+    <div className="flex flex-col items-center p-6">
+      <div className="text-blue-500 text-6xl">📱</div>
+      <h3 className="mt-4 text-xl font-bold text-gray-700">Ready to Connect WhatsApp</h3>
+      <p className="text-gray-500 mt-2 text-center">
+        Click the button below to scan the QR code and connect your WhatsApp number.
+      </p>
+      <button 
+        onClick={setupInstance}
+        className="mt-6 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+      >
+        Start Connection
+      </button>
+    </div>
+  );
 
   if (status === 'loading') return (
     <div className="flex flex-col items-center p-6">
