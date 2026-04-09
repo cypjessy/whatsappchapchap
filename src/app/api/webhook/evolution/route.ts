@@ -182,6 +182,28 @@ export async function POST(req: NextRequest) {
 
     console.log("[Webhook] Message saved");
 
+    // Forward to n8n webhook
+    const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+    if (n8nWebhookUrl && text) {
+      try {
+        console.log("[Webhook] Forwarding to n8n...");
+        await fetch(n8nWebhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenantId,
+            phone: from,
+            customerName: message?.pushName || "Customer",
+            message: text,
+            timestamp: timestamp.toISOString(),
+          }),
+        });
+        console.log("[Webhook] Forwarded to n8n");
+      } catch (error) {
+        console.error("[Webhook] Error forwarding to n8n:", error);
+      }
+    }
+
     // Send welcome message only on first contact
     if (isNewConversation) {
       console.log("[Webhook] New conversation detected, sending welcome message");
