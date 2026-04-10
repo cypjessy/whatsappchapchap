@@ -152,17 +152,33 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     const hardcodedApiKey = "A69EDEB8-3C80-4CC1-92F4-20965F0820A5";
     console.log('Using hardcoded API Key:', hardcodedApiKey);
     
-    // Fetch UUID from Evolution API
+    // Fetch UUID from Evolution API - try multiple methods
     let evolutionUUID = (window as any).__evolutionUUID || "";
     if (!evolutionUUID) {
       try {
+        // Try getInstanceDetails first
         const details = await getInstanceDetails(instanceName);
-        evolutionUUID = details?.instance?.id || details?.instance?.instanceId || "";
-        console.log('Evolution UUID from handleContinue:', evolutionUUID);
-      } catch (err) {
-        console.log('Could not get UUID:', err);
+        console.log('getInstanceDetails response:', JSON.stringify(details));
+        evolutionUUID = details?.instance?.id || details?.instance?.instanceId || details?.instance?.owner || "";
+        console.log('Evolution UUID from getInstanceDetails:', evolutionUUID);
+      } catch (err: any) {
+        console.log('getInstanceDetails error:', err?.message);
       }
     }
+    
+    // If still no UUID, try connection state
+    if (!evolutionUUID) {
+      try {
+        const state = await getConnectionState(instanceName);
+        console.log('getConnectionState response:', JSON.stringify(state));
+        evolutionUUID = state?.instance?.id || state?.instance?.instanceId || "";
+        console.log('Evolution UUID from getConnectionState:', evolutionUUID);
+      } catch (err: any) {
+        console.log('getConnectionState error:', err?.message);
+      }
+    }
+    
+    console.log('Final Evolution UUID:', evolutionUUID);
     
     setFetchedApiKey(hardcodedApiKey);
     setApiKeyFetched(true);
