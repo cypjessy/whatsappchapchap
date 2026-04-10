@@ -26,6 +26,7 @@ export interface Tenant {
   evolutionInstanceId?: string;
   evolutionApiUrl?: string;
   evolutionApiKey?: string;
+  evolutionUUID?: string;
   whatsappInstanceId?: string;
   whatsappConnectionStatus?: string;
   createdAt: any;

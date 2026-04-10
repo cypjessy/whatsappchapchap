@@ -4,7 +4,7 @@ import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceD
 
 interface Props {
   instanceName: string;
-  onConnected: (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string }) => void;
+  onConnected: (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string; evolutionUUID?: string }) => void;
   autoStart?: boolean;
 }
 
@@ -140,6 +140,15 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     const hardcodedApiKey = "A69EDEB8-3C80-4CC1-92F4-20965F0820A5";
     console.log('Using hardcoded API Key:', hardcodedApiKey);
     
+    let evolutionUUID = "";
+    try {
+      const details = await getInstanceDetails(instanceName);
+      evolutionUUID = details?.instance?.id || details?.instance?.instanceId || "";
+      console.log('Evolution UUID:', evolutionUUID);
+    } catch (err) {
+      console.log('Could not get UUID, using instance name');
+    }
+    
     setFetchedApiKey(hardcodedApiKey);
     setApiKeyFetched(true);
     
@@ -148,7 +157,8 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     onConnected({ 
       instanceId: instanceName, 
       evolutionUrl,
-      evolutionKey: hardcodedApiKey
+      evolutionKey: hardcodedApiKey,
+      evolutionUUID: evolutionUUID
     });
   };
 

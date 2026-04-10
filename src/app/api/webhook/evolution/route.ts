@@ -167,10 +167,37 @@ export async function POST(req: NextRequest) {
     console.log(`[Webhook] Message from ${from}: ${text}`);
 
     // Use instance name as tenant ID (e.g., tenant_USER_ID)
-    const tenantId = instanceName;
-    console.log("[Webhook] Tenant ID:", tenantId);
+    let tenantId = instanceName;
+    console.log("[Webhook] Instance Name:", instanceName);
 
+    // If instanceName looks like a UUID (not tenant_xxx), find the tenant by evolutionUUID
     const adminDb = getAdminDb();
+    
+    if (!instanceName.startsWith("tenant_")) {
+      console.log("[Webhook] Instance is UUID, searching for tenant...");
+      const tenantsQuery = await adminDb.collection("tenants")
+        .where("evolutionUUID", "==", instanceName)
+        .limit(1)
+        .get();
+      
+      if (!tenantsQuery.empty) {
+        tenantId = tenantsQuery.docs[0].id;
+        console.log("[Webhook] Found tenant by UUID:", tenantId);
+      } else {
+        // Also try finding by evolutionInstanceId
+        const tenantsQuery2 = await adminDb.collection("tenants")
+          .where("evolutionInstanceId", "==", instanceName)
+          .limit(1)
+          .get();
+        
+        if (!tenantsQuery2.empty) {
+          tenantId = tenantsQuery2.docs[0].id;
+          console.log("[Webhook] Found tenant by instanceId:", tenantId);
+        }
+      }
+    }
+    
+    console.log("[Webhook] Final Tenant ID:", tenantId);
 
     // Save to conversations collection - using our tenant structure
     const conversationRef = adminDb
