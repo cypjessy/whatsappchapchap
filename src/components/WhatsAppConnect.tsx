@@ -121,8 +121,20 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     const hardcodedApiKey = "A69EDEB8-3C80-4CC1-92F4-20965F0820A5";
     console.log('Using hardcoded API Key:', hardcodedApiKey);
     
-    setFetchedApiKey(hardcodedApiKey);
-    setApiKeyFetched(true);
+    // Fetch UUID from Evolution API
+    try {
+      const details = await getInstanceDetails(instanceName);
+      const evolutionUUID = details?.instance?.id || details?.instance?.instanceId || "";
+      console.log('Evolution UUID from handleConnected:', evolutionUUID);
+      
+      setFetchedApiKey(hardcodedApiKey);
+      setApiKeyFetched(true);
+      
+      // Store UUID for later use
+      (window as any).__evolutionUUID = evolutionUUID;
+    } catch (err) {
+      console.log('Could not get UUID:', err);
+    }
   };
 
   const handleContinue = async () => {
@@ -140,19 +152,24 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     const hardcodedApiKey = "A69EDEB8-3C80-4CC1-92F4-20965F0820A5";
     console.log('Using hardcoded API Key:', hardcodedApiKey);
     
-    let evolutionUUID = "";
-    try {
-      const details = await getInstanceDetails(instanceName);
-      evolutionUUID = details?.instance?.id || details?.instance?.instanceId || "";
-      console.log('Evolution UUID:', evolutionUUID);
-    } catch (err) {
-      console.log('Could not get UUID, using instance name');
+    // Fetch UUID from Evolution API
+    let evolutionUUID = (window as any).__evolutionUUID || "";
+    if (!evolutionUUID) {
+      try {
+        const details = await getInstanceDetails(instanceName);
+        evolutionUUID = details?.instance?.id || details?.instance?.instanceId || "";
+        console.log('Evolution UUID from handleContinue:', evolutionUUID);
+      } catch (err) {
+        console.log('Could not get UUID:', err);
+      }
     }
     
     setFetchedApiKey(hardcodedApiKey);
     setApiKeyFetched(true);
     
     const evolutionUrl = process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    
+    console.log('Sending to onConnected:', { evolutionUUID });
     
     onConnected({ 
       instanceId: instanceName, 
