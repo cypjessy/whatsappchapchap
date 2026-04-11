@@ -41,6 +41,7 @@ export interface Product {
   price: number;
   category?: string;
   categoryId?: string;
+  categoryName?: string;
   subcategory?: string;
   orderLink?: string;
   filters?: Record<string, string[]>;
@@ -59,65 +60,69 @@ export interface Product {
   weightUnit?: string;
   lowStockAlert?: number;
   status?: string;
+  variants?: Variant[];
   createdAt: any;
   updatedAt: any;
 }
 
-// Category and Subcategory definitions with their filters
-export const categorySubcategories: Record<string, { id: string; name: string; filters: string[] }[]> = {
-  electronics: [
-    { id: "phones", name: "Phones", filters: ["brand", "model", "storage", "ram", "color", "condition", "network", "battery"] },
-    { id: "laptops", name: "Laptops", filters: ["brand", "model", "storage", "ram", "processor", "screen_size", "color", "condition", "os"] },
-    { id: "tablets", name: "Tablets", filters: ["brand", "model", "storage", "ram", "screen_size", "color", "condition", "network"] },
-    { id: "tvs", name: "TVs", filters: ["brand", "screen_size", "resolution", "smart_tv", "color", "condition"] },
-    { id: "earphones", name: "Earphones/Headphones", filters: ["brand", "type", "color", "condition", "noise_cancelling"] },
-    { id: "cameras", name: "Cameras", filters: ["brand", "model", "megapixels", "type", "color", "condition"] },
-    { id: "accessories", name: "Accessories", filters: ["brand", "type", "color", "condition", "compatibility"] },
-  ],
-  footwear: [
-    { id: "sneakers", name: "Shoes/Sneakers", filters: ["sizes", "color", "gender", "brand", "material", "condition"] },
-    { id: "boots", name: "Boots", filters: ["sizes", "color", "gender", "brand", "material", "heel_height", "condition"] },
-    { id: "sandals", name: "Sandals/Slippers", filters: ["sizes", "color", "gender", "brand", "material", "condition"] },
-  ],
-  clothing: [
-    { id: "tops", name: "Tops/T-shirts", filters: ["sizes", "color", "gender", "brand", "material", "style", "condition"] },
-    { id: "trousers", name: "Trousers/Jeans", filters: ["sizes", "color", "gender", "brand", "material", "fit", "condition"] },
-    { id: "dresses", name: "Dresses", filters: ["sizes", "color", "brand", "material", "style", "occasion", "condition"] },
-    { id: "jackets", name: "Jackets/Coats", filters: ["sizes", "color", "gender", "brand", "material", "condition"] },
-    { id: "sportswear", name: "Sportswear", filters: ["sizes", "color", "gender", "brand", "sport_type", "condition"] },
-  ],
-  beauty: [
-    { id: "skincare", name: "Skincare", filters: ["brand", "skin_type", "volume_ml", "ingredients", "condition"] },
-    { id: "makeup", name: "Makeup", filters: ["brand", "shade", "type", "condition"] },
-    { id: "haircare", name: "Hair Products", filters: ["brand", "hair_type", "volume_ml", "type", "condition"] },
-    { id: "perfumes", name: "Perfumes", filters: ["brand", "gender", "volume_ml", "scent_type", "condition"] },
-  ],
-  furniture: [
-    { id: "sofas", name: "Sofas/Chairs", filters: ["material", "color", "seating_capacity", "brand", "condition"] },
-    { id: "beds", name: "Beds", filters: ["size", "material", "color", "condition"] },
-    { id: "tables", name: "Tables/Desks", filters: ["material", "color", "dimensions", "brand", "condition"] },
-    { id: "storage", name: "Wardrobes/Shelves", filters: ["material", "color", "dimensions", "brand", "condition"] },
-  ],
-  food: [
-    { id: "fresh", name: "Fresh Produce", filters: ["weight_kg", "unit", "origin", "organic"] },
-    { id: "packaged", name: "Packaged Food", filters: ["brand", "weight_g", "expiry_date", "ingredients", "dietary"] },
-    { id: "beverages", name: "Beverages", filters: ["brand", "volume_ml", "type", "flavor", "sugar_free"] },
-  ],
-  sports: [
-    { id: "equipment", name: "Equipment", filters: ["brand", "weight_kg", "material", "color", "condition"] },
-    { id: "supplements", name: "Supplements", filters: ["brand", "weight_g", "flavor", "type", "servings"] },
-  ],
-  toys: [
-    { id: "toys", name: "Toys", filters: ["age_range", "brand", "material", "color", "condition", "safety_certified"] },
-    { id: "baby", name: "Baby Products", filters: ["age_range", "brand", "size", "color", "material", "condition"] },
-  ],
-  automotive: [
-    { id: "parts", name: "Car Parts", filters: ["brand", "compatibility", "condition", "material"] },
-    { id: "accessories", name: "Accessories", filters: ["brand", "compatibility", "color", "material", "condition"] },
-  ],
-  realestate: [
-    { id: "properties", name: "Properties", filters: ["type", "bedrooms", "bathrooms", "location", "price_per_month", "furnished", "parking"] },
-  ],
+export interface Variant {
+  id: number;
+  specs: Record<string, string>;
+  sku: string;
+  price: number;
+  stock: number;
+}
+
+// Category and Subcategory definitions with their filters and options
+export const categorySubcategories: Record<string, { id: string; name: string; specs: Record<string, { label: string; options: string[]; icon: string }> }> = {
+  electronics: {
+    phones: { name: 'Phones', specs: { brand: { label: 'Brand', options: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Tecno', 'Infinix'], icon: 'fa-mobile-alt' }, storage: { label: 'Storage', options: ['64GB', '128GB', '256GB', '512GB', '1TB'], icon: 'fa-hdd' }, ram: { label: 'RAM', options: ['4GB', '6GB', '8GB', '12GB', '16GB'], icon: 'fa-memory' }, color: { label: 'Color', options: ['Black', 'White', 'Blue', 'Red', 'Gold', 'Silver', 'Green'], icon: 'fa-palette' }, condition: { label: 'Condition', options: ['New', 'Used', 'Refurbished'], icon: 'fa-check-circle' } } },
+    laptops: { name: 'Laptops', specs: { brand: { label: 'Brand', options: ['Apple', 'Dell', 'HP', 'Lenovo', 'Asus', 'Acer'], icon: 'fa-laptop' }, processor: { label: 'Processor', options: ['Intel i3', 'Intel i5', 'Intel i7', 'Intel i9', 'AMD Ryzen 5', 'AMD Ryzen 7', 'M1', 'M2', 'M3'], icon: 'fa-microchip' }, ram: { label: 'RAM', options: ['8GB', '16GB', '32GB', '64GB'], icon: 'fa-memory' }, storage: { label: 'Storage', options: ['256GB SSD', '512GB SSD', '1TB SSD', '2TB SSD'], icon: 'fa-hdd' }, screen_size: { label: 'Screen', options: ['13"', '14"', '15.6"', '16"', '17.3"'], icon: 'fa-expand' }, color: { label: 'Color', options: ['Silver', 'Gray', 'Black', 'Gold', 'Blue'], icon: 'fa-palette' } } },
+    tablets: { name: 'Tablets', specs: { brand: { label: 'Brand', options: ['Apple', 'Samsung', 'Lenovo', 'Huawei'], icon: 'fa-tablet-alt' }, screen_size: { label: 'Screen', options: ['7"', '8"', '10"', '11"', '12.9"'], icon: 'fa-expand' }, storage: { label: 'Storage', options: ['32GB', '64GB', '128GB', '256GB'], icon: 'fa-hdd' }, ram: { label: 'RAM', options: ['2GB', '4GB', '6GB', '8GB'], icon: 'fa-memory' }, color: { label: 'Color', options: ['Black', 'Silver', 'Gold', 'Blue'], icon: 'fa-palette' } } },
+    tvs: { name: 'TVs', specs: { brand: { label: 'Brand', options: ['Samsung', 'LG', 'Sony', 'Hisense', 'Philips'], icon: 'fa-tv' }, screen_size: { label: 'Screen', options: ['32"', '40"', '43"', '50"', '55"', '65"', '75"'], icon: 'fa-expand' }, resolution: { label: 'Resolution', options: ['HD', 'Full HD', '4K', '8K'], icon: 'fa-eye' }, smart_tv: { label: 'Smart TV', options: ['Yes', 'No'], icon: 'fa-wifi' }, color: { label: 'Color', options: ['Black', 'Silver', 'Gray'], icon: 'fa-palette' } } },
+    earphones: { name: 'Earphones/Headphones', specs: { brand: { label: 'Brand', options: ['Apple', 'Samsung', 'Sony', 'JBL', 'Bose', 'Audio-Technica'], icon: 'fa-headphones' }, type: { label: 'Type', options: ['In-ear', 'Over-ear', 'On-ear', 'Earbuds'], icon: 'fa-headphones-alt' }, color: { label: 'Color', options: ['Black', 'White', 'Blue', 'Red', 'Gold'], icon: 'fa-palette' }, noise_cancelling: { label: 'Noise Cancelling', options: ['Yes', 'No'], icon: 'fa-volume-mute' } } },
+    cameras: { name: 'Cameras', specs: { brand: { label: 'Brand', options: ['Canon', 'Nikon', 'Sony', 'Fujifilm', 'Panasonic'], icon: 'fa-camera' }, megapixels: { label: 'Megapixels', options: ['12MP', '20MP', '24MP', '30MP', '45MP', '50MP'], icon: 'fa-camera-retro' }, type: { label: 'Type', options: ['DSLR', 'Mirrorless', 'Point & Shoot', 'Action Camera'], icon: 'fa-video' }, color: { label: 'Color', options: ['Black', 'Silver', 'White'], icon: 'fa-palette' } } }
+  },
+  footwear: {
+    shoes: { name: 'Shoes/Sneakers', specs: { brand: { label: 'Brand', options: ['Nike', 'Adidas', 'Puma', 'New Balance', 'Converse', 'Vans', 'Reebok'], icon: 'fa-shoe-prints' }, sizes: { label: 'Size', options: ['6', '7', '8', '9', '10', '11', '12'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Black', 'White', 'Red', 'Blue', 'Gray', 'Brown', 'Green', 'Pink'], icon: 'fa-palette' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex', 'Kids'], icon: 'fa-venus-mars' }, material: { label: 'Material', options: ['Leather', 'Synthetic', 'Canvas', 'Mesh', 'Suede'], icon: 'fa-layer-group' } } },
+    boots: { name: 'Boots', specs: { brand: { label: 'Brand', options: ['Timberland', 'Dr. Martens', 'Caterpillar', 'Columbia'], icon: 'fa-shoe-prints' }, sizes: { label: 'Size', options: ['6', '7', '8', '9', '10', '11', '12'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Brown', 'Black', 'Tan', 'Gray', 'Red'], icon: 'fa-palette' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex'], icon: 'fa-venus-mars' }, material: { label: 'Material', options: ['Leather', 'Suede', 'Rubber', 'Synthetic'], icon: 'fa-layer-group' } } },
+    sandals: { name: 'Sandals/Slippers', specs: { brand: { label: 'Brand', options: ['Crocs', 'Fitflop', 'Birkenstock', 'Havaianas'], icon: 'fa-shoe-prints' }, sizes: { label: 'Size', options: ['6', '7', '8', '9', '10', '11'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Black', 'Brown', 'Navy', 'Beige', 'Pink'], icon: 'fa-palette' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex'], icon: 'fa-venus-mars' }, material: { label: 'Material', options: ['Rubber', 'Leather', 'Fabric', 'Cork'], icon: 'fa-layer-group' } } }
+  },
+  clothing: {
+    tops: { name: 'Tops/T-shirts', specs: { brand: { label: 'Brand', options: ['Adidas', 'Nike', 'Puma', 'H&M', 'Zara', 'Uniqlo'], icon: 'fa-tshirt' }, sizes: { label: 'Size', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Black', 'White', 'Gray', 'Navy', 'Red', 'Blue', 'Green', 'Pink', 'Yellow'], icon: 'fa-palette' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex'], icon: 'fa-venus-mars' }, material: { label: 'Material', options: ['Cotton', 'Polyester', 'Linen', 'Silk', 'Wool', 'Blend'], icon: 'fa-layer-group' }, style: { label: 'Style', options: ['Casual', 'Formal', 'Sport', 'Vintage', 'Graphic'], icon: 'fa-tshirt' } } },
+    trousers: { name: 'Trousers/Jeans', specs: { brand: { label: 'Brand', options: ['Levi\'s', 'Wrangler', 'Gap', 'Zara', 'H&M'], icon: 'fa-tshirt' }, sizes: { label: 'Size', options: ['28', '30', '32', '34', '36', '38', '40'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Blue', 'Black', 'Gray', 'Khaki', 'White', 'Navy'], icon: 'fa-palette' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex'], icon: 'fa-venus-mars' }, fit: { label: 'Fit', options: ['Slim', 'Regular', 'Relaxed', 'Skinny', 'Bootcut'], icon: 'fa-arrows-alt-h' }, material: { label: 'Material', options: ['Denim', 'Cotton', 'Polyester', 'Chino', 'Corduroy'], icon: 'fa-layer-group' } } },
+    dresses: { name: 'Dresses', specs: { brand: { label: 'Brand', options: ['Zara', 'H&M', 'Mango', 'ASOS', 'Reiss'], icon: 'fa-tshirt' }, sizes: { label: 'Size', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Black', 'White', 'Red', 'Blue', 'Pink', 'Green', 'Navy', 'Beige'], icon: 'fa-palette' }, material: { label: 'Material', options: ['Cotton', 'Silk', 'Polyester', 'Linen', 'Chiffon'], icon: 'fa-layer-group' }, style: { label: 'Style', options: ['Casual', 'Evening', 'Cocktail', 'Maxi', 'Mini', 'Midi'], icon: 'fa-tshirt' }, occasion: { label: 'Occasion', options: ['Daily', 'Party', 'Wedding', 'Work', 'Beach'], icon: 'fa-calendar' } } },
+    jackets: { name: 'Jackets/Coats', specs: { brand: { label: 'Brand', options: ['Zara', 'H&M', 'Uniqlo', 'North Face', 'Columbia'], icon: 'fa-tshirt' }, sizes: { label: 'Size', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], icon: 'fa-ruler' }, color: { label: 'Color', options: ['Black', 'Gray', 'Navy', 'Brown', 'Beige', 'Olive'], icon: 'fa-palette' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex'], icon: 'fa-venus-mars' }, material: { label: 'Material', options: ['Leather', 'Denim', 'Wool', 'Polyester', 'Cotton', 'Fleece'], icon: 'fa-layer-group' }, style: { label: 'Style', options: ['Bomber', 'Parka', 'Blazer', 'Windbreaker', 'Denim Jacket'], icon: 'fa-tshirt' } } }
+  },
+  beauty: {
+    skincare: { name: 'Skincare', specs: { brand: { label: 'Brand', options: ['CeraVe', 'Neutrogena', 'The Ordinary', 'La Roche-Posay', 'Simple', 'Olay'], icon: 'fa-pump-soap' }, skin_type: { label: 'Skin Type', options: ['Normal', 'Dry', 'Oily', 'Combination', 'Sensitive'], icon: 'fa-hand-sparkles' }, volume_ml: { label: 'Volume', options: ['30ml', '50ml', '100ml', '150ml', '200ml'], icon: 'fa-flask' }, ingredients: { label: 'Ingredients', options: ['Vitamin C', 'Retinol', 'Hyaluronic Acid', 'Niacinamide', 'AHA/BHA', 'Squalane'], icon: 'fa-flask' } } },
+    makeup: { name: 'Makeup', specs: { brand: { label: 'Brand', options: ['Maybelline', 'L\'Oréal', 'MAC', 'Revlon', 'Charlotte Tilbury'], icon: 'fa-magic' }, type: { label: 'Type', options: ['Foundation', 'Lipstick', 'Mascara', 'Eyeliner', 'Blush', 'Concealer'], icon: 'fa-lips' }, shade: { label: 'Shade', options: ['Fair', 'Light', 'Medium', 'Tan', 'Deep', 'Dark'], icon: 'fa-palette' } } },
+    haircare: { name: 'Hair Products', specs: { brand: { label: 'Brand', options: ['Pantene', 'Head & Shoulders', 'L\'Oréal', 'Tresemme', 'Schwarzkopf'], icon: 'fa-pump-soap' }, hair_type: { label: 'Hair Type', options: ['Normal', 'Oily', 'Dry', 'Color-treated', 'Curly', 'Straight'], icon: 'fa-wave-square' }, volume_ml: { label: 'Volume', options: ['100ml', '200ml', '250ml', '300ml', '400ml', '500ml'], icon: 'fa-flask' }, type: { label: 'Type', options: ['Shampoo', 'Conditioner', 'Hair Mask', 'Hair Oil', 'Serum'], icon: 'fa-bottle' } } },
+    perfumes: { name: 'Perfumes', specs: { brand: { label: 'Brand', options: ['Chanel', 'Dior', 'Gucci', 'Versace', 'Calvin Klein', 'Davidoff'], icon: 'fa-spray-can' }, gender: { label: 'Gender', options: ['Men', 'Women', 'Unisex'], icon: 'fa-venus-mars' }, volume_ml: { label: 'Volume', options: ['30ml', '50ml', '75ml', '100ml', '150ml'], icon: 'fa-flask' }, scent_type: { label: 'Scent Type', options: ['Floral', 'Woody', 'Fresh', 'Spicy', 'Fruity', 'Oriental'], icon: 'fa-wind' } } }
+  },
+  furniture: {
+    sofas: { name: 'Sofas/Chairs', specs: { material: { label: 'Material', options: ['Leather', 'Fabric', 'Velvet', 'Microfiber', 'Suede'], icon: 'fa-couch' }, color: { label: 'Color', options: ['Gray', 'Beige', 'Brown', 'Black', 'White', 'Navy', 'Green'], icon: 'fa-palette' }, seating: { label: 'Seating', options: ['1 Seater', '2 Seater', '3 Seater', '4 Seater', 'L-Shape', 'U-Shape'], icon: 'fa-users' }, brand: { label: 'Brand', options: ['IKEA', 'Ashley', 'Wayfair', 'West Elm', 'Pottery Barn'], icon: 'fa-couch' } } },
+    beds: { name: 'Beds', specs: { size: { label: 'Size', options: ['Single', 'Double', 'Queen', 'King', 'Super King'], icon: 'fa-bed' }, material: { label: 'Material', options: ['Wood', 'Metal', 'Upholstered', 'Leather', 'MDF'], icon: 'fa-tree' }, color: { label: 'Color', options: ['White', 'Brown', 'Black', 'Gray', 'Oak', 'Walnut'], icon: 'fa-palette' }, brand: { label: 'Brand', options: ['IKEA', 'Ashley', 'Wayfair', 'Sleep Number'], icon: 'fa-bed' } } },
+    tables: { name: 'Tables/Desks', specs: { material: { label: 'Material', options: ['Wood', 'Glass', 'Metal', 'MDF', 'Marble'], icon: 'fa-table' }, color: { label: 'Color', options: ['White', 'Black', 'Brown', 'Gray', 'Oak'], icon: 'fa-palette' }, dimensions: { label: 'Dimensions', options: ['Small', 'Medium', 'Large', 'XL'], icon: 'fa-ruler-combined' }, brand: { label: 'Brand', options: ['IKEA', 'Wayfair', 'Amazon Basics'], icon: 'fa-table' } } },
+    storage: { name: 'Wardrobes/Shelves', specs: { material: { label: 'Material', options: ['Wood', 'MDF', 'Metal', 'Glass'], icon: 'fa-archive' }, color: { label: 'Color', options: ['White', 'Brown', 'Black', 'Gray', 'Oak'], icon: 'fa-palette' }, doors: { label: 'Doors', options: ['1 Door', '2 Door', '3 Door', '4 Door', 'Sliding'], icon: 'fa-door-open' }, brand: { label: 'Brand', options: ['IKEA', 'Wayfair', 'ClosetMaid'], icon: 'fa-archive' } } }
+  },
+  food: {
+    fresh: { name: 'Fresh Produce', specs: { weight_kg: { label: 'Weight', options: ['0.5kg', '1kg', '2kg', '5kg', '10kg'], icon: 'fa-weight' }, unit: { label: 'Unit', options: ['per kg', 'per piece', 'per bunch', 'per pack'], icon: 'fa-balance-scale' }, organic: { label: 'Organic', options: ['Organic', 'Conventional'], icon: 'fa-leaf' }, origin: { label: 'Origin', options: ['Local', 'Imported', 'Kenyan', 'Tanzanian', 'South African'], icon: 'fa-globe-africa' } } },
+    packaged: { name: 'Packaged Food', specs: { brand: { label: 'Brand', options: ['Nestlé', 'Unilever', 'Kellogg\'s', 'Heinz', 'Cadbury'], icon: 'fa-box' }, weight_g: { label: 'Weight', options: ['50g', '100g', '200g', '250g', '500g', '1kg'], icon: 'fa-weight' }, dietary: { label: 'Dietary', options: ['Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Sugar-Free', 'Organic'], icon: 'fa-utensils' }, expiry_date: { label: 'Shelf Life', options: ['3 Months', '6 Months', '1 Year', '2 Years'], icon: 'fa-calendar' } } },
+    beverages: { name: 'Beverages', specs: { brand: { label: 'Brand', options: ['Coca-Cola', 'Pepsi', 'Red Bull', 'Monster', 'Fanta'], icon: 'fa-glass-cheers' }, volume_ml: { label: 'Volume', options: ['250ml', '330ml', '500ml', '1L', '1.5L', '2L'], icon: 'fa-wine-bottle' }, type: { label: 'Type', options: ['Soft Drink', 'Energy Drink', 'Juice', 'Water', 'Coffee', 'Tea'], icon: 'fa-mug-hot' }, flavor: { label: 'Flavor', options: ['Original', 'Cola', 'Orange', 'Lemon', 'Grape', 'Mixed Berry'], icon: 'fa-ice-cream' }, sugar_free: { label: 'Sugar', options: ['Regular', 'Sugar-Free', 'Diet', 'Zero'], icon: 'fa-tint' } } }
+  },
+  sports: {
+    equipment: { name: 'Equipment', specs: { brand: { label: 'Brand', options: ['Nike', 'Adidas', 'Under Armour', 'Puma', 'Reebok'], icon: 'fa-dumbbell' }, color: { label: 'Color', options: ['Black', 'White', 'Blue', 'Red', 'Green', 'Gray'], icon: 'fa-palette' }, material: { label: 'Material', options: ['Steel', 'Rubber', 'Plastic', 'Carbon Fiber', 'Aluminum'], icon: 'fa-layer-group' }, type: { label: 'Type', options: ['Dumbbells', 'Kettlebells', 'Resistance Bands', 'Barbells', 'Plates'], icon: 'fa-dumbbell' } } },
+    supplements: { name: 'Supplements', specs: { brand: { label: 'Brand', options: ['Optimum Nutrition', 'BSN', 'MuscleTech', 'MyProtein', 'Cellucor'], icon: 'fa-capsules' }, flavor: { label: 'Flavor', options: ['Chocolate', 'Vanilla', 'Strawberry', 'Banana', 'Unflavored', 'Cookies & Cream'], icon: 'fa-ice-cream' }, type: { label: 'Type', options: ['Whey Protein', 'Creatine', 'BCAA', 'Pre-Workout', 'Mass Gainer', 'Casein'], icon: 'fa-bolt' }, servings: { label: 'Servings', options: ['30 servings', '60 servings', '90 servings', '120 servings'], icon: 'fa-pills' } } }
+  },
+  toys: {
+    toys: { name: 'Toys', specs: { age_range: { label: 'Age', options: ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'], icon: 'fa-baby' }, brand: { label: 'Brand', options: ['LEGO', 'Mattel', 'Hasbro', 'Playmobil', 'Bandai'], icon: 'fa-puzzle-piece' }, material: { label: 'Material', options: ['Plastic', 'Wood', 'Fabric', 'Metal', 'Rubber'], icon: 'fa-shapes' }, safety_certified: { label: 'Safety', options: ['ASTM Certified', 'EN71', 'ISO Certified', 'BPA Free'], icon: 'fa-shield-alt' } } },
+    baby: { name: 'Baby Products', specs: { age_range: { label: 'Age', options: ['Newborn', '0-3 months', '3-6 months', '6-12 months', '1-2 years', '2-3 years'], icon: 'fa-baby' }, brand: { label: 'Brand', options: ['Pampers', 'Huggies', 'Johnson\'s', 'Gerber', 'Burt\'s Bees'], icon: 'fa-baby-carriage' }, size: { label: 'Size', options: ['Newborn', 'Small', 'Medium', 'Large', 'XL', 'XXL'], icon: 'fa-ruler' }, material: { label: 'Material', options: ['Cotton', 'Bamboo', 'Silicone', 'Plastic'], icon: 'fa-layer-group' } } }
+  },
+  automotive: {
+    parts: { name: 'Car Parts', specs: { brand: { label: 'Brand', options: ['Toyota', 'Honda', 'Nissan', 'Mazda', 'Hyundai', 'Generic'], icon: 'fa-car' }, compatibility: { label: 'Car Model', options: ['Toyota', 'Honda', 'Nissan', 'Mazda', 'Hyundai', 'Kia', 'VW', 'Ford'], icon: 'fa-car-side' }, condition: { label: 'Condition', options: ['New', 'Used', 'Refurbished'], icon: 'fa-check-circle' }, material: { label: 'Material', options: ['OEM', 'Aftermarket', 'Genuine'], icon: 'fa-cogs' } } },
+    accessories: { name: 'Car Accessories', specs: { brand: { label: 'Brand', options: ['Baseus', 'Anker', 'Xiaomi', 'Samsung'], icon: 'fa-car' }, compatibility: { label: 'Type', options: ['Phone Mount', 'Charger', 'Dash Cam', 'Seat Cover', 'Floor Mat', 'Steering Cover'], icon: 'fa-box' }, color: { label: 'Color', options: ['Black', 'Gray', 'Beige', 'Brown'], icon: 'fa-palette' }, material: { label: 'Material', options: ['Leather', 'Silicone', 'Plastic', 'Metal'], icon: 'fa-layer-group' } } }
+  }
 };
 
 export const universalFilters = ["brand", "condition"];
