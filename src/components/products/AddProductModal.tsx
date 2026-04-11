@@ -74,8 +74,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [productFilters, setProductFilters] = useState<Record<string, string>>({});
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  
+  // Tag-based color input
+  const [colorTags, setColorTags] = useState<string[]>([]);
+  const [colorInput, setColorInput] = useState("");
+  // Tag-based size input
+  const [sizeTags, setSizeTags] = useState<string[]>([]);
+  const [sizeInput, setSizeInput] = useState("");
+  
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
   const [formData, setFormData] = useState<FormData>({
@@ -124,8 +130,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       setSelectedCategory("");
       setSelectedSubcategory("");
       setProductFilters({});
-      setSelectedSizes([]);
-      setSelectedColors([]);
+      setColorTags([]);
+      setColorInput("");
+      setSizeTags([]);
+      setSizeInput("");
       setSelectedMaterial("");
       setSelectedGender("");
       setFormData({
@@ -204,14 +212,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const selectCategory = (catId: string) => {
     setSelectedCategory(catId);
     setFormData(prev => ({ ...prev, category: catId }));
-  };
-
-  const toggleSize = (size: string) => {
-    setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]);
-  };
-
-  const toggleColor = (color: string) => {
-    setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,12 +308,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         }
       });
       
-      // Add sizes and colors to filters
-      if (selectedSizes.length > 0) {
-        filters.sizes = selectedSizes;
+      // Add sizes and colors to filters from tag inputs
+      if (sizeTags.length > 0) {
+        filters.sizes = sizeTags;
       }
-      if (selectedColors.length > 0) {
-        filters.colors = selectedColors;
+      if (colorTags.length > 0) {
+        filters.colors = colorTags;
       }
       
       const newProduct = await productService.createProduct(user, {
@@ -508,20 +508,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                           <option value="refurbished">Refurbished</option>
                         </select>
                       </div>
-                      <div>
-                        <label className="block font-bold text-sm mb-2 text-[#1e293b]">Color</label>
-                        <div className="flex flex-wrap gap-2">
-                          {colors.map(color => (
-                            <button
-                              key={color}
-                              className={`px-5 py-2.5 rounded-[12px] font-semibold text-sm cursor-pointer transition-all hover:border-[#25D366] ${selectedColors.includes(color) ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white border-[#25D366]" : "bg-white border-2 border-[#e2e8f0] text-[#1e293b] hover:text-[#25D366] hover:border-[#25D366]"}`}
-                              onClick={() => toggleColor(color)}
-                            >
-                              {color}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -571,6 +557,62 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <div>
                     <label className="block font-bold text-sm mb-2 text-[#1e293b]">Barcode (ISBN, UPC, etc.)</label>
                     <input type="text" className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366]" placeholder="Scan or enter barcode" />
+                  </div>
+                </div>
+
+                {/* Sizes Tag Input */}
+                <div className="mt-6">
+                  <label className="block font-bold text-sm mb-2 text-[#1e293b]">Sizes (add one at a time)</label>
+                  <div className="border-2 border-[#e2e8f0] rounded-[12px] p-3 flex flex-wrap gap-2 min-h-[50px]">
+                    {sizeTags.map((tag, i) => (
+                      <span key={i} className="bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1">
+                        {tag}
+                        <button type="button" onClick={() => setSizeTags(prev => prev.filter((_, idx) => idx !== i))} className="ml-1">×</button>
+                      </span>
+                    ))}
+                    <input
+                      value={sizeInput}
+                      onChange={(e) => setSizeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          if (sizeInput.trim()) {
+                            setSizeTags(prev => [...prev, sizeInput.trim()]);
+                            setSizeInput('');
+                          }
+                        }
+                      }}
+                      placeholder={sizeTags.length === 0 ? "Type size and press Enter" : ""}
+                      className="outline-none flex-1 min-w-24 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Colors Tag Input */}
+                <div className="mt-6">
+                  <label className="block font-bold text-sm mb-2 text-[#1e293b]">Colors (add one at a time)</label>
+                  <div className="border-2 border-[#e2e8f0] rounded-[12px] p-3 flex flex-wrap gap-2 min-h-[50px]">
+                    {colorTags.map((tag, i) => (
+                      <span key={i} className="bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1">
+                        {tag}
+                        <button type="button" onClick={() => setColorTags(prev => prev.filter((_, idx) => idx !== i))} className="ml-1">×</button>
+                      </span>
+                    ))}
+                    <input
+                      value={colorInput}
+                      onChange={(e) => setColorInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          if (colorInput.trim()) {
+                            setColorTags(prev => [...prev, colorInput.trim()]);
+                            setColorInput('');
+                          }
+                        }
+                      }}
+                      placeholder={colorTags.length === 0 ? "Type color and press Enter" : ""}
+                      className="outline-none flex-1 min-w-24 text-sm"
+                    />
                   </div>
                 </div>
 
