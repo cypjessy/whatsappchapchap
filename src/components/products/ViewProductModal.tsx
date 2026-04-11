@@ -415,20 +415,47 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                     </div>
                   )}
 
-                  {/* Category Specific */}
-                  {product.categorySpecific && Object.keys(product.categorySpecific).length > 0 && (
+                  {/* Product Specs (Filters) */}
+                  {product.filters && Object.keys(product.filters).length > 0 && (
                     <div className="bg-gradient-to-br from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)] rounded-[12px] p-4 border border-[rgba(139,92,246,0.2)] mt-4">
-                      <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Category-Specific Details</div>
+                      <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Product Specifications</div>
                       <div className="grid grid-cols-3 gap-3">
-                        {Object.entries(product.categorySpecific).map(([key, value]) => (
+                        {Object.entries(product.filters).map(([key, value]) => (
                           <div key={key} className="bg-white rounded-[8px] p-3">
-                            <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">{key}</div>
+                            <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">{key.replace(/_/g, ' ')}</div>
                             <div className="font-bold text-[#1e293b]">
                               {Array.isArray(value) ? value.join(", ") : String(value)}
                             </div>
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Sizes & Colors */}
+                  {((product.sizes?.length ?? 0) > 0 || (product.colors?.length ?? 0) > 0) && (
+                    <div className="bg-[#f8fafc] rounded-[12px] p-4 border border-[#e2e8f0] mt-4">
+                      <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Available Options</div>
+                      {product.sizes && product.sizes.length > 0 && (
+                        <div className="mb-3">
+                          <div className="text-xs text-[#64748b] mb-2">Sizes</div>
+                          <div className="flex flex-wrap gap-2">
+                            {product.sizes.map(size => (
+                              <span key={size} className="px-3 py-1 bg-white border border-[#e2e8f0] rounded-full text-sm font-semibold">{size}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {product.colors && product.colors.length > 0 && (
+                        <div>
+                          <div className="text-xs text-[#64748b] mb-2">Colors</div>
+                          <div className="flex flex-wrap gap-2">
+                            {product.colors.map(color => (
+                              <span key={color} className="px-3 py-1 bg-white border border-[#e2e8f0] rounded-full text-sm font-semibold">{color}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -555,14 +582,14 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   )}
                 </div>
 
-                {/* Category Specific */}
-                {product.categorySpecific && Object.keys(product.categorySpecific).length > 0 && (
+                {/* Product Specs (Filters) */}
+                {product.filters && Object.keys(product.filters).length > 0 && (
                   <div className="bg-gradient-to-br from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)] rounded-[16px] p-6 border border-[rgba(139,92,246,0.2)]">
-                    <h3 className="font-bold text-[#1e293b] mb-4">Category-Specific Details</h3>
+                    <h3 className="font-bold text-[#1e293b] mb-4">Product Specifications</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(product.categorySpecific).map(([key, value]) => (
+                      {Object.entries(product.filters).map(([key, value]) => (
                         <div key={key} className="bg-white rounded-[8px] p-3">
-                          <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">{key}</div>
+                          <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">{key.replace(/_/g, ' ')}</div>
                           <div className="font-bold text-[#1e293b]">
                             {Array.isArray(value) ? value.join(", ") : String(value)}
                           </div>

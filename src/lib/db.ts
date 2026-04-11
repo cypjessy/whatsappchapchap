@@ -40,9 +40,12 @@ export interface Product {
   description?: string;
   price: number;
   category?: string;
+  categoryName?: string;
   subcategory?: string;
   orderLink?: string;
-  filters?: Record<string, string>;
+  filters?: Record<string, string | string[]>;
+  sizes?: string[];
+  colors?: string[];
   stock?: number;
   image?: string;
   // Additional fields from AddProductModal
@@ -52,8 +55,6 @@ export interface Product {
   barcode?: string;
   brand?: string;
   condition?: string;
-  colors?: string[];
-  sizes?: string[];
   material?: string;
   gender?: string;
   taxRate?: string;
@@ -61,7 +62,6 @@ export interface Product {
   weightUnit?: string;
   lowStockAlert?: number;
   status?: string;
-  categorySpecific?: Record<string, any>;
   createdAt: any;
   updatedAt: any;
 }

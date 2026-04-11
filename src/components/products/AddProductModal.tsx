@@ -301,6 +301,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         name: formData.name,
         description: formData.description,
         category: selectedCategory,
+        categoryName: categories.find(c => c.id === selectedCategory)?.name || selectedCategory,
         subcategory: selectedSubcategory || undefined,
         filters: Object.keys(productFilters).length > 0 ? productFilters : undefined,
         price: formData.price,
@@ -318,14 +319,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         status: publishOption === "draft" ? "draft" : "active",
         colors: selectedColors.length > 0 ? selectedColors : undefined,
         sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
-        material: selectedMaterial || undefined,
-        gender: selectedGender || undefined,
-        categorySpecific: selectedCategory ? {
-          sizes: selectedSizes,
-          colors: selectedColors,
-          material: selectedMaterial,
-          gender: selectedGender,
-        } : undefined,
       });
       
       // Update product with order link
@@ -379,12 +372,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
         material: selectedMaterial || undefined,
         gender: selectedGender || undefined,
-        categorySpecific: selectedCategory ? {
-          sizes: selectedSizes,
-          colors: selectedColors,
-          material: selectedMaterial,
-          gender: selectedGender,
-        } : undefined,
       });
       showToast("success", "Draft saved successfully!");
       onSuccess();
