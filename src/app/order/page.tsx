@@ -32,6 +32,7 @@ interface CartItem {
   variant: string;
   emoji: string;
   image?: string;
+  filters?: Record<string, string>;
 }
 
 function OrderStorePage() {
@@ -189,7 +190,8 @@ function OrderStorePage() {
       quantity: selectedQty,
       variant: selectedVariant,
       emoji: getCategoryEmoji(selectedProduct.category),
-      image: selectedProduct.image
+      image: selectedProduct.image,
+      filters: selectedProduct.filters || undefined
     });
     
     setShowProductModal(false);
@@ -235,7 +237,8 @@ function OrderStorePage() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          variant: item.variant
+          variant: item.variant,
+          filters: item.filters
         })),
         subtotal,
         shipping: delivery,
@@ -506,6 +509,24 @@ function OrderStorePage() {
                         style={{ padding: "12px 24px", background: selectedVariant === color ? "#25D366" : "#f0f2f5", border: "2px solid", borderColor: selectedVariant === color ? "#25D366" : "#e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: selectedVariant === color ? "white" : "#1e293b" }}
                       >
                         {color}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dynamic Filters from Product Specs */}
+              {selectedProduct.filters && Object.keys(selectedProduct.filters).length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                    <i className="fas fa-sliders-h" style={{ color: "#8b5cf6" }}></i>
+                    Product Specifications
+                  </div>
+                  <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                    {Object.entries(selectedProduct.filters || {}).map(([key, value]) => (
+                      <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 14, color: "#64748b", textTransform: "capitalize" }}>{key.replace(/_/g, ' ')}</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{(value as string) || "-"}</span>
                       </div>
                     ))}
                   </div>
