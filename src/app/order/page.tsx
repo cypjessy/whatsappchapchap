@@ -41,6 +41,7 @@ function OrderStorePage() {
   const productIdsParam = searchParams.get("product") || "";
   const urlPhone = searchParams.get("phone") || "";
   const preSelectedQty = parseInt(searchParams.get("quantity") || "1", 10);
+  const preSelectedSize = searchParams.get("size") || "";
 
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
@@ -113,12 +114,13 @@ function OrderStorePage() {
         for (const id of ids) {
           const product = productsData.find((p: any) => p.id === id);
           if (product) {
+            const variant = preSelectedSize || product.sizes?.[0] || product.colors?.[0] || "Default";
             addToCart({
               id: product.id,
               name: product.name,
               price: product.price || 0,
               quantity: preSelectedQty,
-              variant: product.sizes?.[0] || "Default",
+              variant,
               emoji: getCategoryEmoji(product.category),
               image: product.image
             });
