@@ -71,6 +71,7 @@ function OrderStorePage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedQty, setSelectedQty] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState("");
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [showProductModal, setShowProductModal] = useState(false);
 
   useEffect(() => {
@@ -177,6 +178,7 @@ function OrderStorePage() {
     setSelectedProduct(product);
     setSelectedQty(1);
     setSelectedVariant(product.sizes?.[0] || product.colors?.[0] || "Default");
+    setSelectedFilters({});
     setShowProductModal(true);
   };
 
@@ -191,7 +193,7 @@ function OrderStorePage() {
       variant: selectedVariant,
       emoji: getCategoryEmoji(selectedProduct.category),
       image: selectedProduct.image,
-      filters: selectedProduct.filters || undefined
+      filters: Object.keys(selectedFilters).length > 0 ? selectedFilters : undefined
     });
     
     setShowProductModal(false);
@@ -515,20 +517,54 @@ function OrderStorePage() {
                 </div>
               )}
 
-              {/* Dynamic Filters from Product Specs */}
+              {/* Dynamic Filters - Converted to Clickable Buttons */}
               {selectedProduct.filters && Object.keys(selectedProduct.filters).length > 0 && (
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
                     <i className="fas fa-sliders-h" style={{ color: "#8b5cf6" }}></i>
-                    Product Specifications
+                    Select Specifications
                   </div>
-                  <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                    {Object.entries(selectedProduct.filters || {}).map(([key, value]) => (
-                      <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 14, color: "#64748b", textTransform: "capitalize" }}>{key.replace(/_/g, ' ')}</span>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{(value as string) || "-"}</span>
-                      </div>
-                    ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {Object.entries(selectedProduct.filters).map(([key, value]) => {
+                      const filterValue = value as string;
+                      const filterOptions = filterValue.split(',').map(v => v.trim()).filter(v => v);
+                      const isMultiSelect = filterOptions.length > 1;
+                      
+                      return (
+                        <div key={key}>
+                          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8, textTransform: "capitalize" }}>
+                            {key.replace(/_/g, ' ')} {isMultiSelect ? "(select one)" : ""}
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                            {isMultiSelect ? (
+                              filterOptions.map(option => (
+                                <div
+                                  key={option}
+                                  onClick={() => setSelectedFilters({...selectedFilters, [key]: option})}
+                                  style={{ 
+                                    padding: "10px 18px", 
+                                    background: selectedFilters[key] === option ? "#25D366" : "#f0f2f5", 
+                                    border: "2px solid", 
+                                    borderColor: selectedFilters[key] === option ? "#25D366" : "#e2e8f0", 
+                                    borderRadius: 8, 
+                                    fontSize: 13, 
+                                    fontWeight: 600, 
+                                    cursor: "pointer", 
+                                    color: selectedFilters[key] === option ? "white" : "#1e293b" 
+                                  }}
+                                >
+                                  {option}
+                                </div>
+                              ))
+                            ) : (
+                              <div style={{ padding: "10px 18px", background: "#f0f2f5", borderRadius: 8, fontSize: 13, color: "#64748b" }}>
+                                {filterValue || "Not specified"}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
