@@ -37,12 +37,12 @@ interface CartItem {
 function OrderStorePage() {
   const searchParams = useSearchParams();
   
-  const tenantId = searchParams.get("tenant") || "";
-  const productIdsParam = searchParams.get("product") || "";
+  const tenantIdParam = searchParams.get("tenant") || "";
+  const productIdParam = searchParams.get("product") || "";
   const urlPhone = searchParams.get("phone") || "";
   const preSelectedQty = parseInt(searchParams.get("quantity") || "1", 10);
-  const preSelectedSize = searchParams.get("size") || "";
-
+  
+  const [tenantId, setTenantId] = useState(tenantIdParam);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -108,23 +108,19 @@ function OrderStorePage() {
       
       setProducts(productsData);
       
-      // If product IDs are passed in URL, add them to cart
-      if (productIdsParam) {
-        const ids = productIdsParam.split(",");
-        for (const id of ids) {
-          const product = productsData.find((p: any) => p.id === id);
-          if (product) {
-            const variant = preSelectedSize || product.sizes?.[0] || product.colors?.[0] || "Default";
-            addToCart({
-              id: product.id,
-              name: product.name,
-              price: product.price || 0,
-              quantity: preSelectedQty,
-              variant,
-              emoji: getCategoryEmoji(product.category),
-              image: product.image
-            });
-          }
+      // If product ID is passed in URL, add it to cart
+      if (productIdParam) {
+        const product = productsData.find((p: any) => p.id === productIdParam);
+        if (product) {
+          addToCart({
+            id: product.id,
+            name: product.name,
+            price: product.price || 0,
+            quantity: preSelectedQty,
+            variant: product.sizes?.[0] || product.colors?.[0] || "Default",
+            emoji: getCategoryEmoji(product.category),
+            image: product.image
+          });
         }
       }
       

@@ -701,6 +701,54 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                     Generate Description
                   </button>
                 </div>
+
+                {/* Order Link */}
+                <div className="bg-gradient-to-br from-[rgba(37,211,102,0.08)] to-[rgba(18,140,126,0.08)] rounded-[16px] p-6 border border-[rgba(37,211,102,0.2)]">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center text-white">
+                      <i className="fas fa-link"></i>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-[#1e293b]">Order Page Link</h3>
+                      <p className="text-sm text-[#64748b]">Direct link for customers to order this product</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={product.orderLink || ""} 
+                      className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm bg-white"
+                      placeholder="Link will be generated after saving"
+                    />
+                    <button 
+                      onClick={() => {
+                        if (product.orderLink) {
+                          navigator.clipboard.writeText(product.orderLink);
+                          showToast("success", "Link copied to clipboard!");
+                        }
+                      }}
+                      className="px-4 py-3 bg-[#25D366] text-white rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-[#128C7E]"
+                    >
+                      <i className="fas fa-copy"></i>
+                      Copy
+                    </button>
+                    {product.orderLink && (
+                      <a 
+                        href={product.orderLink} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-3 bg-[#1e293b] text-white rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-[#0f172a]"
+                      >
+                        <i className="fas fa-external-link-alt"></i>
+                        Open
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#64748b] mt-3">
+                    Share this link with customers on WhatsApp. They'll see this product pre-added in their cart.
+                  </p>
+                </div>
               </div>
             )}
           </div>

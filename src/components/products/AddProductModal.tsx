@@ -308,7 +308,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         }
       }
       
-      await productService.createProduct(user, {
+      const newProduct = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description,
         category: selectedCategory,
@@ -335,6 +335,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           material: selectedMaterial,
           gender: selectedGender,
         } : undefined,
+      });
+      
+      // Update product with order link
+      const baseUrl = window.location.origin;
+      await productService.updateProduct(user, newProduct.id, {
+        orderLink: `${baseUrl}/order?tenant=${user.uid}&product=${newProduct.id}`
       });
       showToast("success", "Product published successfully!");
       setTimeout(() => {

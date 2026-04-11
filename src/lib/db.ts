@@ -42,6 +42,7 @@ export interface Product {
   category?: string;
   stock?: number;
   image?: string;
+  orderLink?: string; // Generated order page link for this product
   // Additional fields from AddProductModal
   salePrice?: number;
   costPrice?: number;
