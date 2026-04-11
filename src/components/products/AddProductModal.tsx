@@ -631,20 +631,43 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     <div className="grid grid-cols-2 gap-4">
                       {Object.entries(categorySubcategories).flatMap(([catKey, subs]) => 
                         subs.filter(s => s.id === selectedSubcategory).map(sub => 
-                          sub.filters.map(filter => (
-                            <div key={filter}>
-                              <label className="block font-bold text-sm mb-2 text-[#1e293b] capitalize">
-                                {filter.replace(/_/g, ' ')} {["brand", "condition"].includes(filter) && "(Optional)"}
-                              </label>
-                              <input 
-                                type="text" 
-                                value={productFilters[filter] || ""}
-                                onChange={(e) => setProductFilters({...productFilters, [filter]: e.target.value})}
-                                className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366]"
-                                placeholder={`Enter ${filter.replace(/_/g, ' ')}`}
-                              />
-                            </div>
-                          ))
+                          sub.filters.map(filter => {
+                            const currentTags = (productFilters[filter] || "").split(",").map(t => t.trim()).filter(t => t);
+                            return (
+                              <div key={filter}>
+                                <label className="block font-bold text-sm mb-2 text-[#1e293b] capitalize">
+                                  {filter.replace(/_/g, ' ')} {["brand", "condition"].includes(filter) && "(Optional)"}
+                                </label>
+                                <div className="border-2 border-[#e2e8f0] rounded-[12px] p-2 flex flex-wrap gap-2 min-h-[50px]">
+                                  {currentTags.map((tag, i) => (
+                                    <span key={i} className="bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                                      {tag}
+                                      <button type="button" onClick={() => {
+                                        const newTags = currentTags.filter((_, idx) => idx !== i);
+                                        setProductFilters({...productFilters, [filter]: newTags.join(",")});
+                                      }} className="ml-1">×</button>
+                                    </span>
+                                  ))}
+                                  <input
+                                    type="text"
+                                    value={productFilters[filter] || ""}
+                                    onChange={(e) => setProductFilters({...productFilters, [filter]: e.target.value})}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ',') {
+                                        e.preventDefault();
+                                        const val = e.currentTarget.value.trim();
+                                        if (val && !currentTags.includes(val)) {
+                                          setProductFilters({...productFilters, [filter]: [...currentTags, val].join(",")});
+                                        }
+                                      }
+                                    }}
+                                    placeholder={currentTags.length === 0 ? `Add and press Enter` : ""}
+                                    className="outline-none flex-1 min-w-20 text-sm"
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })
                         )
                       )}
                     </div>
