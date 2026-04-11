@@ -108,19 +108,11 @@ function OrderStorePage() {
       
       setProducts(productsData);
       
-      // If product ID is passed in URL, add it to cart
+      // If product ID is passed in URL, open product modal for selection
       if (productIdParam) {
         const product = productsData.find((p: any) => p.id === productIdParam);
         if (product) {
-          addToCart({
-            id: product.id,
-            name: product.name,
-            price: product.price || 0,
-            quantity: preSelectedQty,
-            variant: product.sizes?.[0] || product.colors?.[0] || "Default",
-            emoji: getCategoryEmoji(product.category),
-            image: product.image
-          });
+          openProductModal(product);
         }
       }
       
@@ -424,12 +416,6 @@ function OrderStorePage() {
                 ) : (
                   getCategoryEmoji(product.category)
                 )}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); addToCart({ id: product.id, name: product.name, price: product.price || 0, quantity: 1, variant: product.sizes?.[0] || "Default", emoji: getCategoryEmoji(product.category) }); }}
-                  style={{ position: "absolute", bottom: 8, right: 8, width: 36, height: 36, borderRadius: "50%", background: "#25D366", color: "white", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(37,211,102,0.4)" }}
-                >
-                  <i className="fas fa-plus"></i>
-                </button>
               </div>
               <div style={{ padding: 16 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.name}</div>
@@ -490,18 +476,36 @@ function OrderStorePage() {
               <div style={{ fontSize: 24, fontWeight: 800, color: "#25D366", marginBottom: 16 }}>{CURRENCY_SYMBOL}{(selectedProduct.price || 0).toLocaleString()}</div>
               <p style={{ color: "#64748b", fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>{selectedProduct.description || "No description available."}</p>
 
-              {/* Size/Color Variants */}
+              {/* Size Selection */}
               {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Size</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Select Size</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {selectedProduct.sizes.map((size: string) => (
                       <div 
                         key={size}
                         onClick={() => setSelectedVariant(size)}
-                        style={{ padding: "10px 20px", background: selectedVariant === size ? "#25D366" : "#f0f2f5", border: "2px solid", borderColor: selectedVariant === size ? "#25D366" : "#e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: selectedVariant === size ? "white" : "#1e293b" }}
+                        style={{ padding: "12px 24px", background: selectedVariant === size ? "#25D366" : "#f0f2f5", border: "2px solid", borderColor: selectedVariant === size ? "#25D366" : "#e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: selectedVariant === size ? "white" : "#1e293b" }}
                       >
                         {size}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Color Selection */}
+              {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Select Color</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {selectedProduct.colors.map((color: string) => (
+                      <div 
+                        key={color}
+                        onClick={() => setSelectedVariant(color)}
+                        style={{ padding: "12px 24px", background: selectedVariant === color ? "#25D366" : "#f0f2f5", border: "2px solid", borderColor: selectedVariant === color ? "#25D366" : "#e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: selectedVariant === color ? "white" : "#1e293b" }}
+                      >
+                        {color}
                       </div>
                     ))}
                   </div>
