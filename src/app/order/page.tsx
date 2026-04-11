@@ -208,8 +208,8 @@ function OrderStorePage() {
 
   const placeOrder = async () => {
     if (cart.length === 0) return;
-    if (!customerName || !deliveryAddress) {
-      alert("Please fill in your name and delivery address");
+    if (!customerName || !deliveryAddress || !checkoutPhone) {
+      alert("Please fill in your name, phone, and delivery address");
       return;
     }
 
@@ -237,7 +237,7 @@ function OrderStorePage() {
         tenantId,
         customerId: user.uid,
         customerName,
-        customerPhone,
+        customerPhone: checkoutPhone,
         customerEmail: "",
         customerAddress: deliveryAddress,
         products: cart.map(item => ({
@@ -266,7 +266,7 @@ function OrderStorePage() {
       // Build WhatsApp message for seller
       let message = `*New Order ${orderNum}*\n\n`;
       message += `*Customer:* ${customerName}\n`;
-      message += `*Phone:* ${customerPhone}\n`;
+      message += `*Phone:* ${checkoutPhone}\n`;
       message += `*Address:* ${deliveryAddress}\n\n`;
       message += `*Order Items:*\n`;
       
@@ -280,7 +280,7 @@ function OrderStorePage() {
       message += `*Total:* ${CURRENCY_SYMBOL}${total.toLocaleString()}\n\n`;
       message += `Payment: ${paymentMethod}`;
       
-      setWhatsappLink(`https://wa.me/${customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`);
+      setWhatsappLink(`https://wa.me/${checkoutPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`);
       setShowCheckout(false);
       setShowSuccess(true);
       
@@ -644,8 +644,8 @@ function OrderStorePage() {
                 <label style={{ display: "block", fontWeight: 700, fontSize: 14, marginBottom: 8 }}>WhatsApp Number *</label>
                 <input 
                   type="tel" 
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  value={checkoutPhone}
+                  onChange={(e) => setCheckoutPhone(e.target.value)}
                   placeholder="+254 712 345 678"
                   style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, outline: "none" }}
                 />
