@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { dashboardService, OrderData } from "@/lib/dashboard";
+import { formatCurrency } from "@/lib/currency";
 import Link from "next/link";
 
 interface RecentOrdersProps {
@@ -46,13 +47,6 @@ export function RecentOrders({ refreshTrigger }: RecentOrdersProps) {
       default:
         return { bg: "rgba(245,158,11,0.1)", color: "#f59e0b", label: "Pending" };
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
   };
 
   const formatTime = (createdAt: any) => {

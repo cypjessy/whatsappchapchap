@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { orderService, Order, productService, Product, customerService, Customer } from "@/lib/db";
+import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -306,7 +307,7 @@ export default function OrdersPage() {
       delivered: "Your order has been delivered. Thank you!"
     };
     const message = encodeURIComponent(
-      `Hi ${name}! 👋\n\nOrder #${order.id.substring(0, 8)}\nStatus: ${statusMessages[order.status] || "Updated"}\n\nTotal: $${order.total}\n\nThank you for shopping with us!`
+      `Hi ${name}! 👋\n\nOrder #${order.id.substring(0, 8)}\nStatus: ${statusMessages[order.status] || "Updated"}\n\nTotal: ${CURRENCY_SYMBOL}${order.total}\n\nThank you for shopping with us!`
     );
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, "_blank");
@@ -375,10 +376,6 @@ export default function OrdersPage() {
     return styles[status] || styles.pending;
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
-
   const formatDate = (createdAt: any) => {
     if (!createdAt) return "N/A";
     try {
@@ -425,6 +422,9 @@ export default function OrdersPage() {
           <p className="text-[#64748b]">Track, manage, and fulfill all your WhatsApp orders</p>
         </div>
         <div className="flex gap-3">
+          <a href={`/order?tenant=${user?.uid}`} target="_blank" className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] flex items-center">
+            <i className="fas fa-store mr-2"></i>View Store
+          </a>
           <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366]" onClick={exportToCSV}>
             <i className="fas fa-download mr-2"></i>Export
           </button>

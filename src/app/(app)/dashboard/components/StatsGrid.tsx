@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { dashboardService, DashboardStats } from "@/lib/dashboard";
+import { formatCurrency } from "@/lib/currency";
 
 interface StatsGridProps {
   refreshTrigger?: number;
@@ -38,15 +39,6 @@ export function StatsGrid({ refreshTrigger }: StatsGridProps) {
     };
     loadStats();
   }, [user, refreshTrigger]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   if (loading) {
     return (

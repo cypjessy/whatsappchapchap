@@ -42,6 +42,23 @@ export interface Product {
   category?: string;
   stock?: number;
   image?: string;
+  // Additional fields from AddProductModal
+  salePrice?: number;
+  costPrice?: number;
+  sku?: string;
+  barcode?: string;
+  brand?: string;
+  condition?: string;
+  colors?: string[];
+  sizes?: string[];
+  material?: string;
+  gender?: string;
+  taxRate?: string;
+  weight?: number;
+  weightUnit?: string;
+  lowStockAlert?: number;
+  status?: string;
+  categorySpecific?: Record<string, any>; // For category-specific fields
   createdAt: any;
   updatedAt: any;
 }
@@ -140,6 +157,7 @@ export interface Shipment {
   orderId: string;
   customerName: string;
   customerPhone: string;
+  shippingAddress?: string;
   shippingMethod: string;
   trackingNumber?: string;
   status: "pending" | "shipped" | "delivered" | "returned";
@@ -184,12 +202,12 @@ export interface Campaign {
   tenantId: string;
   name: string;
   description?: string;
-  type: "broadcast" | "promotional" | "followup";
-  segment: "all" | "vip" | "frequent" | "new" | "inactive";
+  type: "broadcast" | "promotional" | "followup" | "automated" | "promo" | "sequence";
+  segment: "all" | "vip" | "frequent" | "new" | "inactive" | "custom";
   message: string;
   scheduledAt?: any;
   sentAt?: any;
-  status: "draft" | "scheduled" | "sending" | "completed" | "cancelled";
+  status: "draft" | "scheduled" | "sending" | "running" | "completed" | "cancelled" | "paused";
   recipientCount: number;
   deliveredCount: number;
   responseCount: number;
@@ -206,6 +224,18 @@ export interface Expense {
   date: any;
   reference?: string;
   createdAt: any;
+}
+
+export interface ProductCategory {
+  id: string;
+  tenantId: string;
+  name: string;
+  icon: string;
+  color: string;
+  description?: string;
+  isDefault: boolean; // true for default categories
+  createdAt: any;
+  updatedAt: any;
 }
 
 const getTenantId = (user: User): string => `tenant_${user.uid}`;
@@ -244,13 +274,18 @@ export const productService = {
   async createProduct(user: User, product: Omit<Product, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Product> {
     const tenantId = getTenantId(user);
     const docRef = doc(collection(db, "products"));
-    const productData: Product = {
-      ...product,
+    
+    const cleanProduct = Object.fromEntries(
+      Object.entries(product).filter(([_, value]) => value !== undefined && value !== "" && value !== null)
+    );
+    
+    const productData = {
+      ...cleanProduct,
       id: docRef.id,
       tenantId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    };
+    } as Product;
     
     await setDoc(docRef, productData);
     return productData;
@@ -264,7 +299,10 @@ export const productService = {
   },
 
   async updateProduct(user: User, productId: string, data: Partial<Product>): Promise<void> {
-    await setDoc(doc(db, "products", productId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined && value !== "" && value !== null)
+    );
+    await setDoc(doc(db, "products", productId), { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
   },
 
   async deleteProduct(user: User, productId: string): Promise<void> {
@@ -310,13 +348,18 @@ export const orderService = {
   async createOrder(user: User, order: Omit<Order, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Order> {
     const tenantId = getTenantId(user);
     const docRef = doc(collection(db, "orders"));
-    const orderData: Order = {
-      ...order,
+    
+    const cleanOrder = Object.fromEntries(
+      Object.entries(order).filter(([_, value]) => value !== undefined && value !== "" && value !== null)
+    );
+    
+    const orderData = {
+      ...cleanOrder,
       id: docRef.id,
       tenantId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    };
+    } as Order;
     
     await setDoc(docRef, orderData);
     return orderData;
@@ -340,10 +383,13 @@ export const orderService = {
   },
 
   async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<void> {
-    await setDoc(doc(db, "orders", orderId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined && value !== "" && value !== null)
+    );
+    await setDoc(doc(db, "orders", orderId), { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
   },
 
-async getOrderCounts(user: User): Promise<{all: number, pending: number, processing: number, completed: number, cancelled: number}> {
+  async getOrderCounts(user: User): Promise<{all: number, pending: number, processing: number, completed: number, cancelled: number}> {
     const tenantId = getTenantId(user);
     const allQ = query(collection(db, "orders"), where("tenantId", "==", tenantId));
     const pendingQ = query(collection(db, "orders"), where("tenantId", "==", tenantId), where("status", "==", "pending"));
@@ -974,3 +1020,44 @@ export const expenseService = {
     await deleteDoc(doc(db, "expenses", expenseId));
   },
 };
+
+export const categoryService = {
+  async createCategory(user: User, category: Omit<ProductCategory, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<ProductCategory> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "productCategories"));
+    const categoryData: ProductCategory = {
+      ...category,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, categoryData);
+    return categoryData;
+  },
+
+  async getCategories(user: User): Promise<ProductCategory[]> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "productCategories"), where("tenantId", "==", tenantId), orderBy("name", "asc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ProductCategory[];
+  },
+
+  async updateCategory(user: User, categoryId: string, data: Partial<ProductCategory>): Promise<void> {
+    await setDoc(doc(db, "productCategories", categoryId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deleteCategory(user: User, categoryId: string): Promise<void> {
+    await deleteDoc(doc(db, "productCategories", categoryId));
+  },
+};
+
+// Default categories that will be used if user hasn't created custom ones
+export const defaultProductCategories = [
+  { id: "footwear", name: "Footwear", icon: "👟", color: "#ec4899", description: "Shoes, Sandals, Boots" },
+  { id: "clothing", name: "Clothing", icon: "👕", color: "#3b82f6", description: "T-shirts, Dresses, Jackets" },
+  { id: "electronics", name: "Electronics", icon: "📱", color: "#8b5cf6", description: "Phones, Laptops, Gadgets" },
+  { id: "furniture", name: "Furniture", icon: "🛋️", color: "#f59e0b", description: "Tables, Chairs, Storage" },
+  { id: "beauty", name: "Beauty & Care", icon: "💄", color: "#ec4899", description: "Skincare, Makeup, Personal" },
+  { id: "other", name: "Other", icon: "📦", color: "#64748b", description: "General products" },
+];

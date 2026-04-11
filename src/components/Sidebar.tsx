@@ -27,7 +27,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { id: "products", label: "Products", icon: "fa-box", href: "/products", badge: null },
     { id: "customers", label: "Customers", icon: "fa-users", href: "/customers", badge: null },
     { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers", badge: null },
-    { id: "inventory", label: "Inventory", icon: "fa-warehouse", href: "/inventory", badge: null },
     { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping", badge: null },
     { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
     { id: "reviews", label: "Reviews", icon: "fa-star", href: "/reviews", badge: null },
