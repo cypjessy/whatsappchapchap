@@ -30,11 +30,9 @@ interface Product {
   price: number;
   image?: string;
   category?: string;
-  categoryName?: string;
+  categoryId?: string;
   subcategory?: string;
-  sizes?: string[];
-  colors?: string[];
-  filters?: Record<string, string>;
+  filters?: Record<string, string[]>;
 }
 
 function OrderPageContent() {
@@ -98,12 +96,12 @@ function OrderPageContent() {
   const handleOrder = async () => {
     if (!product) return;
     
-    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+    if (product.filters?.sizes && product.filters.sizes.length > 0 && !selectedSize) {
       alert("Please select a size");
       return;
     }
     
-    if (product.colors && product.colors.length > 0 && !selectedColor) {
+    if (product.filters?.colors && product.filters.colors.length > 0 && !selectedColor) {
       alert("Please select a color");
       return;
     }
@@ -228,9 +226,9 @@ function OrderPageContent() {
       
       {/* Product Info */}
       <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 20 }}>
-        {product?.categoryName && (
+        {product?.category && (
           <div style={{ fontSize: 12, color: "#25D366", fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>
-            {product.categoryName} {product.subcategory ? `• ${product.subcategory}` : ""}
+            {product.category} {product.subcategory ? `• ${product.subcategory}` : ""}
           </div>
         )}
         <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{product?.name}</h1>
@@ -243,11 +241,11 @@ function OrderPageContent() {
       </div>
 
       {/* Size Filter */}
-      {product?.sizes && product.sizes.length > 0 && (
+      {product?.filters?.sizes && product.filters.sizes.length > 0 && (
         <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
           <p style={{ fontWeight: 700, marginBottom: 12 }}>Select Size:</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {product.sizes.map((size) => (
+            {product.filters.sizes.map((size) => (
               <button
                 key={size}
                 onClick={() => setSelectedSize(size)}
@@ -271,11 +269,11 @@ function OrderPageContent() {
       )}
 
       {/* Color Filter */}
-      {product?.colors && product.colors.length > 0 && (
+      {product?.filters?.colors && product.filters.colors.length > 0 && (
         <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
           <p style={{ fontWeight: 700, marginBottom: 12 }}>Select Color:</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {product.colors.map((color) => (
+            {product.filters.colors.map((color) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
@@ -305,7 +303,7 @@ function OrderPageContent() {
           <p style={{ fontWeight: 700, marginBottom: 12 }}>Select Options:</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {Object.entries(product.filters).map(([key, value]) => {
-              const options = String(value).split(",").map(v => v.trim()).filter(v => v);
+              const options = Array.isArray(value) ? value : String(value).split(",").map(v => v.trim()).filter(v => v);
               if (options.length <= 1) return null;
               
               return (

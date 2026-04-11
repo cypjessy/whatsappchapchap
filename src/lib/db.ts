@@ -40,24 +40,21 @@ export interface Product {
   description?: string;
   price: number;
   category?: string;
-  categoryName?: string;
+  categoryId?: string;
   subcategory?: string;
   orderLink?: string;
-  filters?: Record<string, string | string[]>;
-  sizes?: string[];
-  colors?: string[];
+  filters?: Record<string, string[]>;
   stock?: number;
   image?: string;
-  // Additional fields from AddProductModal
+  // Additional fields
   salePrice?: number;
   costPrice?: number;
   sku?: string;
   barcode?: string;
   brand?: string;
   condition?: string;
-  material?: string;
-  gender?: string;
-  taxRate?: string;
+  taxEnabled?: boolean;
+  taxRate?: number;
   weight?: number;
   weightUnit?: string;
   lowStockAlert?: number;

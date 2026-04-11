@@ -203,28 +203,24 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   </div>
 
                   {/* Colors & Sizes */}
-                  {(product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0) ? (
+                  {(product.filters?.colors && product.filters.colors.length > 0) || (product.filters?.sizes && product.filters.sizes.length > 0) ? (
                     <div className="pb-5 border-b border-[#e2e8f0]">
-                      {product.colors && product.colors.length > 0 && (
+                      {product.filters?.colors && product.filters.colors.length > 0 && (
                         <div className="mb-4">
-                          <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Available Colors</div>
+                          <div className="text-xs font-bold text-[#64748b] uppercase mb-2">Colors</div>
                           <div className="flex flex-wrap gap-2">
-                            {product.colors.map((color, i) => (
-                              <span key={i} className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm font-semibold">
-                                {color}
-                              </span>
+                            {product.filters.colors.map((color, i) => (
+                              <span key={i} className="px-3 py-1.5 bg-[#f0f2f5] rounded-full text-sm font-semibold capitalize">{color}</span>
                             ))}
                           </div>
                         </div>
                       )}
-                      {product.sizes && product.sizes.length > 0 && (
-                        <div>
-                          <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Available Sizes</div>
+                      {product.filters?.sizes && product.filters.sizes.length > 0 && (
+                        <div className="mb-4">
+                          <div className="text-xs font-bold text-[#64748b] uppercase mb-2">Sizes</div>
                           <div className="flex flex-wrap gap-2">
-                            {product.sizes.map((size, i) => (
-                              <span key={i} className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm font-semibold">
-                                {size}
-                              </span>
+                            {product.filters.sizes.map((size, i) => (
+                              <span key={i} className="px-3 py-1.5 bg-[#f0f2f5] rounded-full text-sm font-semibold">{size}</span>
                             ))}
                           </div>
                         </div>
@@ -248,12 +244,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                       <div className="bg-[#f8fafc] rounded-[12px] p-4">
                         <div className="text-xs text-[#64748b] font-semibold">Condition</div>
                         <div className="font-bold text-[#1e293b] capitalize">{product.condition}</div>
-                      </div>
-                    )}
-                    {product.gender && (
-                      <div className="bg-[#f8fafc] rounded-[12px] p-4">
-                        <div className="text-xs text-[#64748b] font-semibold">Gender</div>
-                        <div className="font-bold text-[#1e293b] capitalize">{product.gender}</div>
                       </div>
                     )}
                   </div>
@@ -313,7 +303,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                             </div>
                           </div>
                         )}
-                        {product.taxRate && product.taxRate !== "no" && (
+                        {product.taxEnabled && product.taxRate && product.taxRate > 0 && (
                           <div>
                             <div className="text-xs text-[#94a3b8]">Tax Rate</div>
                             <div className="font-semibold text-[#1e293b]">{product.taxRate}%</div>
@@ -366,39 +356,24 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                         <div className="font-semibold text-[#1e293b] capitalize">{product.condition}</div>
                       </div>
                     )}
-                    {product.material && (
-                      <div className="bg-white rounded-[12px] p-4 border border-[#e2e8f0]">
-                        <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-2">Material</div>
-                        <div className="font-semibold text-[#1e293b] capitalize">{product.material}</div>
-                      </div>
-                    )}
-                    {product.gender && (
-                      <div className="bg-white rounded-[12px] p-4 border border-[#e2e8f0]">
-                        <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-2">Gender</div>
-                        <div className="font-semibold text-[#1e293b] capitalize">{product.gender}</div>
-                      </div>
-                    )}
                   </div>
 
                   {/* Colors & Sizes */}
-                  {(product.colors && product.colors.length > 0) && (
-                    <div className="bg-white rounded-[12px] p-4 border border-[#e2e8f0] mt-4">
-                      <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Available Colors</div>
+                  {(product.filters?.colors && product.filters.colors.length > 0) && (
+                    <div className="bg-[#f8fafc] rounded-[12px] p-4 border border-[#e2e8f0]">
+                      <div className="text-xs font-bold text-[#64748b] uppercase mb-2">Available Colors</div>
                       <div className="flex flex-wrap gap-2">
-                        {product.colors.map((color, i) => (
-                          <span key={i} className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm font-semibold">
-                            {color}
-                          </span>
+                        {product.filters.colors.map((color, i) => (
+                          <span key={i} className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-full text-sm font-semibold capitalize">{color}</span>
                         ))}
                       </div>
                     </div>
                   )}
-
-                  {(product.sizes && product.sizes.length > 0) && (
+                  {(product.filters?.sizes && product.filters.sizes.length > 0) && (
                     <div className="bg-white rounded-[12px] p-4 border border-[#e2e8f0] mt-4">
                       <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Available Sizes</div>
                       <div className="flex flex-wrap gap-2">
-                        {product.sizes.map((size, i) => (
+                        {product.filters.sizes.map((size, i) => (
                           <span key={i} className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm font-semibold">
                             {size}
                           </span>
@@ -433,24 +408,24 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   )}
 
                   {/* Sizes & Colors */}
-                  {((product.sizes?.length ?? 0) > 0 || (product.colors?.length ?? 0) > 0) && (
-                    <div className="bg-[#f8fafc] rounded-[12px] p-4 border border-[#e2e8f0] mt-4">
+                  {((product.filters?.sizes?.length ?? 0) > 0 || (product.filters?.colors?.length ?? 0) > 0) && (
+                    <div className="bg-[#f8fafc] rounded-[12px] p-4 border border-[#e2e8f0]">
                       <div className="text-xs font-bold text-[#64748b] uppercase tracking-wide mb-3">Available Options</div>
-                      {product.sizes && product.sizes.length > 0 && (
+                      {product.filters?.sizes && product.filters.sizes.length > 0 && (
                         <div className="mb-3">
                           <div className="text-xs text-[#64748b] mb-2">Sizes</div>
                           <div className="flex flex-wrap gap-2">
-                            {product.sizes.map(size => (
+                            {product.filters.sizes.map(size => (
                               <span key={size} className="px-3 py-1 bg-white border border-[#e2e8f0] rounded-full text-sm font-semibold">{size}</span>
                             ))}
                           </div>
                         </div>
                       )}
-                      {product.colors && product.colors.length > 0 && (
+                      {product.filters?.colors && product.filters.colors.length > 0 && (
                         <div>
                           <div className="text-xs text-[#64748b] mb-2">Colors</div>
                           <div className="flex flex-wrap gap-2">
-                            {product.colors.map(color => (
+                            {product.filters.colors.map(color => (
                               <span key={color} className="px-3 py-1 bg-white border border-[#e2e8f0] rounded-full text-sm font-semibold">{color}</span>
                             ))}
                           </div>
@@ -529,7 +504,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                       </div>
                     )}
                   </div>
-                  {product.taxRate && product.taxRate !== "no" && (
+                  {product.taxEnabled && product.taxRate && product.taxRate > 0 && (
                     <div className="mt-4 pt-4 border-t border-[#e2e8f0]">
                       <span className="text-sm text-[#64748b]">Tax Rate: </span>
                       <span className="font-semibold">{product.taxRate}%</span>
@@ -560,18 +535,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                     <div className="bg-[#f8fafc] rounded-[12px] p-4">
                       <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">Condition</div>
                       <div className="font-bold text-[#1e293b] capitalize">{product.condition}</div>
-                    </div>
-                  )}
-                  {product.material && (
-                    <div className="bg-[#f8fafc] rounded-[12px] p-4">
-                      <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">Material</div>
-                      <div className="font-bold text-[#1e293b] capitalize">{product.material}</div>
-                    </div>
-                  )}
-                  {product.gender && (
-                    <div className="bg-[#f8fafc] rounded-[12px] p-4">
-                      <div className="text-xs text-[#64748b] font-semibold uppercase mb-1">Gender</div>
-                      <div className="font-bold text-[#1e293b] capitalize">{product.gender}</div>
                     </div>
                   )}
                   {product.weight && (

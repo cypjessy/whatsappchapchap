@@ -297,13 +297,32 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         }
       }
       
+      // Build filters object - convert comma strings to arrays
+      const filters: Record<string, string[]> = {};
+      Object.entries(productFilters).forEach(([key, value]) => {
+        if (value) {
+          const arr = value.split(",").map(v => v.trim()).filter(v => v);
+          if (arr.length > 0) {
+            filters[key] = arr;
+          }
+        }
+      });
+      
+      // Add sizes and colors to filters
+      if (selectedSizes.length > 0) {
+        filters.sizes = selectedSizes;
+      }
+      if (selectedColors.length > 0) {
+        filters.colors = selectedColors;
+      }
+      
       const newProduct = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description,
-        category: selectedCategory,
-        categoryName: categories.find(c => c.id === selectedCategory)?.name || selectedCategory,
+        category: selectedSubcategory || selectedCategory || "",
+        categoryId: selectedCategory || undefined,
         subcategory: selectedSubcategory || undefined,
-        filters: Object.keys(productFilters).length > 0 ? productFilters : undefined,
+        filters: Object.keys(filters).length > 0 ? filters : undefined,
         price: formData.price,
         stock: formData.stock,
         image: imageUrl || undefined,
@@ -312,19 +331,18 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         sku: formData.sku || undefined,
         brand: formData.brand || undefined,
         condition: formData.condition || undefined,
-        taxRate: formData.taxRate || undefined,
+        taxEnabled: formData.taxRate !== "no" && formData.taxRate ? true : false,
+        taxRate: formData.taxRate !== "no" ? parseFloat(formData.taxRate) || 0 : 0,
         weight: formData.weight || undefined,
         weightUnit: formData.weightUnit || undefined,
         lowStockAlert: formData.lowStockAlert || undefined,
         status: publishOption === "draft" ? "draft" : "active",
-        colors: selectedColors.length > 0 ? selectedColors : undefined,
-        sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
       });
       
-      // Update product with order link
+      // Update product with order link (phone will be added when AI sends link)
       const baseUrl = window.location.origin;
       await productService.updateProduct(user, newProduct.id, {
-        orderLink: `${baseUrl}/order?tenant=${user.uid}&product=${newProduct.id}`
+        orderLink: `${baseUrl}/order?tenant=${user.uid}&product=${newProduct.id}&phone=`
       });
       showToast("success", "Product published successfully!");
       setTimeout(() => {
@@ -363,15 +381,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         sku: formData.sku || undefined,
         brand: formData.brand || undefined,
         condition: formData.condition || undefined,
-        taxRate: formData.taxRate || undefined,
+        taxEnabled: formData.taxRate !== "no" && formData.taxRate ? true : false,
+        taxRate: formData.taxRate !== "no" ? parseFloat(formData.taxRate) || 0 : 0,
         weight: formData.weight || undefined,
         weightUnit: formData.weightUnit || undefined,
         lowStockAlert: formData.lowStockAlert || undefined,
         status: "draft",
-        colors: selectedColors.length > 0 ? selectedColors : undefined,
-        sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
-        material: selectedMaterial || undefined,
-        gender: selectedGender || undefined,
       });
       showToast("success", "Draft saved successfully!");
       onSuccess();
