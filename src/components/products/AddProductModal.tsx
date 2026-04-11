@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { productService, Product, categoryService, defaultProductCategories } from "@/lib/db";
+import { productService, Product, categoryService, categorySubcategories, universalFilters } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import CategoriesModal from "@/components/categories/CategoriesModal";
@@ -72,6 +72,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [productFilters, setProductFilters] = useState<Record<string, string>>({});
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState("");
@@ -120,6 +122,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     if (isOpen) {
       setCurrentStep(1);
       setSelectedCategory("");
+      setSelectedSubcategory("");
+      setProductFilters({});
       setSelectedSizes([]);
       setSelectedColors([]);
       setSelectedMaterial("");
@@ -297,6 +301,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         name: formData.name,
         description: formData.description,
         category: selectedCategory,
+        subcategory: selectedSubcategory || undefined,
+        filters: Object.keys(productFilters).length > 0 ? productFilters : undefined,
         price: formData.price,
         stock: formData.stock,
         image: imageUrl || undefined,
@@ -535,6 +541,24 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366] resize-none" placeholder="Describe your product..."></textarea>
                   </div>
 
+                  {/* Subcategory Selection */}
+                  {selectedCategory && categorySubcategories[selectedCategory] && (
+                    <div className="col-span-2">
+                      <label className="block font-bold text-sm mb-2 text-[#1e293b]">Product Type <span className="text-[#ef4444]">*</span></label>
+                      <select 
+                        value={selectedSubcategory}
+                        onChange={(e) => { setSelectedSubcategory(e.target.value); setProductFilters({}); }}
+                        className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366] bg-white"
+                      >
+                        <option value="">Select product type</option>
+                        {categorySubcategories[selectedCategory].map(sub => (
+                          <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                      </select>
+                      <span className="text-xs text-[#64748b] mt-1 block">Choosing a type will show relevant filter fields below</span>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block font-bold text-sm mb-2 text-[#1e293b]">SKU (Stock Keeping Unit)</label>
                     <input type="text" name="sku" value={formData.sku} onChange={handleInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366]" placeholder="e.g., PRD-001" />
@@ -546,55 +570,33 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   </div>
                 </div>
 
-                {/* Dynamic Filters */}
-                {selectedCategory && sizesByCategory[selectedCategory]?.length > 0 && (
+                {/* Dynamic Filters based on Subcategory */}
+                {selectedSubcategory && (
                   <div className="bg-[#f8fafc] rounded-[16px] p-6 border-2 border-[#e2e8f0] mt-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-[12px] bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] flex items-center justify-center text-white text-xl">
                         {categories.find(c => c.id === selectedCategory)?.icon}
                       </div>
                       <div>
-                        <div className="font-bold text-lg">{selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Specifications</div>
-                        <div className="text-sm text-[#64748b]">Specific details for {selectedCategory}</div>
+                        <div className="font-bold text-lg">Product Specifications</div>
+                        <div className="text-sm text-[#64748b]">Fill in details for {selectedSubcategory}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-bold text-sm mb-2 text-[#1e293b]">Size</label>
-                        <div className="flex flex-wrap gap-2">
-                          {sizesByCategory[selectedCategory].map(size => (
-                            <button
-                              key={size}
-                              className={`px-5 py-2.5 rounded-[12px] font-semibold text-sm cursor-pointer transition-all hover:border-[#25D366] ${selectedSizes.includes(size) ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white border-[#25D366]" : "bg-white border-2 border-[#e2e8f0] text-[#1e293b] hover:text-[#25D366] hover:border-[#25D366]"}`}
-                              onClick={() => toggleSize(size)}
-                            >
-                              {size}
-                            </button>
-                          ))}
+                      {categorySubcategories[selectedCategory]?.find(s => s.id === selectedSubcategory)?.filters.map(filter => (
+                        <div key={filter}>
+                          <label className="block font-bold text-sm mb-2 text-[#1e293b] capitalize">
+                            {filter.replace(/_/g, ' ')} {["brand", "condition"].includes(filter) && "(Optional)"}
+                          </label>
+                          <input 
+                            type="text" 
+                            value={productFilters[filter] || ""}
+                            onChange={(e) => setProductFilters({...productFilters, [filter]: e.target.value})}
+                            className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366]"
+                            placeholder={`Enter ${filter.replace(/_/g, ' ')}`}
+                          />
                         </div>
-                      </div>
-                      {materialsByCategory[selectedCategory]?.length > 0 && (
-                        <div>
-                          <label className="block font-bold text-sm mb-2 text-[#1e293b]">Material</label>
-                          <select name="material" value={formData.material} onChange={handleInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366] bg-white">
-                            <option value="">Select material</option>
-                            {materialsByCategory[selectedCategory].map(m => (
-                              <option key={m} value={m.toLowerCase()}>{m}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                      {genders.length > 0 && (
-                        <div>
-                          <label className="block font-bold text-sm mb-2 text-[#1e293b]">Gender</label>
-                          <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366] bg-white">
-                            <option value="">Select gender</option>
-                            {genders.map(g => (
-                              <option key={g} value={g.toLowerCase()}>{g}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
+                      ))}
                     </div>
                   </div>
                 )}

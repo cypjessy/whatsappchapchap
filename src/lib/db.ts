@@ -40,9 +40,11 @@ export interface Product {
   description?: string;
   price: number;
   category?: string;
+  subcategory?: string;
+  orderLink?: string;
+  filters?: Record<string, string>;
   stock?: number;
   image?: string;
-  orderLink?: string; // Generated order page link for this product
   // Additional fields from AddProductModal
   salePrice?: number;
   costPrice?: number;
@@ -59,10 +61,69 @@ export interface Product {
   weightUnit?: string;
   lowStockAlert?: number;
   status?: string;
-  categorySpecific?: Record<string, any>; // For category-specific fields
+  categorySpecific?: Record<string, any>;
   createdAt: any;
   updatedAt: any;
 }
+
+// Category and Subcategory definitions with their filters
+export const categorySubcategories: Record<string, { id: string; name: string; filters: string[] }[]> = {
+  electronics: [
+    { id: "phones", name: "Phones", filters: ["brand", "model", "storage", "ram", "color", "condition", "network", "battery"] },
+    { id: "laptops", name: "Laptops", filters: ["brand", "model", "storage", "ram", "processor", "screen_size", "color", "condition", "os"] },
+    { id: "tablets", name: "Tablets", filters: ["brand", "model", "storage", "ram", "screen_size", "color", "condition", "network"] },
+    { id: "tvs", name: "TVs", filters: ["brand", "screen_size", "resolution", "smart_tv", "color", "condition"] },
+    { id: "earphones", name: "Earphones/Headphones", filters: ["brand", "type", "color", "condition", "noise_cancelling"] },
+    { id: "cameras", name: "Cameras", filters: ["brand", "model", "megapixels", "type", "color", "condition"] },
+    { id: "accessories", name: "Accessories", filters: ["brand", "type", "color", "condition", "compatibility"] },
+  ],
+  footwear: [
+    { id: "sneakers", name: "Shoes/Sneakers", filters: ["sizes", "color", "gender", "brand", "material", "condition"] },
+    { id: "boots", name: "Boots", filters: ["sizes", "color", "gender", "brand", "material", "heel_height", "condition"] },
+    { id: "sandals", name: "Sandals/Slippers", filters: ["sizes", "color", "gender", "brand", "material", "condition"] },
+  ],
+  clothing: [
+    { id: "tops", name: "Tops/T-shirts", filters: ["sizes", "color", "gender", "brand", "material", "style", "condition"] },
+    { id: "trousers", name: "Trousers/Jeans", filters: ["sizes", "color", "gender", "brand", "material", "fit", "condition"] },
+    { id: "dresses", name: "Dresses", filters: ["sizes", "color", "brand", "material", "style", "occasion", "condition"] },
+    { id: "jackets", name: "Jackets/Coats", filters: ["sizes", "color", "gender", "brand", "material", "condition"] },
+    { id: "sportswear", name: "Sportswear", filters: ["sizes", "color", "gender", "brand", "sport_type", "condition"] },
+  ],
+  beauty: [
+    { id: "skincare", name: "Skincare", filters: ["brand", "skin_type", "volume_ml", "ingredients", "condition"] },
+    { id: "makeup", name: "Makeup", filters: ["brand", "shade", "type", "condition"] },
+    { id: "haircare", name: "Hair Products", filters: ["brand", "hair_type", "volume_ml", "type", "condition"] },
+    { id: "perfumes", name: "Perfumes", filters: ["brand", "gender", "volume_ml", "scent_type", "condition"] },
+  ],
+  furniture: [
+    { id: "sofas", name: "Sofas/Chairs", filters: ["material", "color", "seating_capacity", "brand", "condition"] },
+    { id: "beds", name: "Beds", filters: ["size", "material", "color", "condition"] },
+    { id: "tables", name: "Tables/Desks", filters: ["material", "color", "dimensions", "brand", "condition"] },
+    { id: "storage", name: "Wardrobes/Shelves", filters: ["material", "color", "dimensions", "brand", "condition"] },
+  ],
+  food: [
+    { id: "fresh", name: "Fresh Produce", filters: ["weight_kg", "unit", "origin", "organic"] },
+    { id: "packaged", name: "Packaged Food", filters: ["brand", "weight_g", "expiry_date", "ingredients", "dietary"] },
+    { id: "beverages", name: "Beverages", filters: ["brand", "volume_ml", "type", "flavor", "sugar_free"] },
+  ],
+  sports: [
+    { id: "equipment", name: "Equipment", filters: ["brand", "weight_kg", "material", "color", "condition"] },
+    { id: "supplements", name: "Supplements", filters: ["brand", "weight_g", "flavor", "type", "servings"] },
+  ],
+  toys: [
+    { id: "toys", name: "Toys", filters: ["age_range", "brand", "material", "color", "condition", "safety_certified"] },
+    { id: "baby", name: "Baby Products", filters: ["age_range", "brand", "size", "color", "material", "condition"] },
+  ],
+  automotive: [
+    { id: "parts", name: "Car Parts", filters: ["brand", "compatibility", "condition", "material"] },
+    { id: "accessories", name: "Accessories", filters: ["brand", "compatibility", "color", "material", "condition"] },
+  ],
+  realestate: [
+    { id: "properties", name: "Properties", filters: ["type", "bedrooms", "bathrooms", "location", "price_per_month", "furnished", "parking"] },
+  ],
+};
+
+export const universalFilters = ["brand", "condition"];
 
 export interface Customer {
   id: string;
