@@ -74,7 +74,7 @@ export interface Variant {
 }
 
 // Category and Subcategory definitions with their filters and options
-export const categorySubcategories: Record<string, { id: string; name: string; specs: Record<string, { label: string; options: string[]; icon: string }> }> = {
+export const categorySubcategories: Record<string, Record<string, { name: string; specs: Record<string, { label: string; options: string[]; icon: string }> }>> = {
   electronics: {
     phones: { name: 'Phones', specs: { brand: { label: 'Brand', options: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Tecno', 'Infinix'], icon: 'fa-mobile-alt' }, storage: { label: 'Storage', options: ['64GB', '128GB', '256GB', '512GB', '1TB'], icon: 'fa-hdd' }, ram: { label: 'RAM', options: ['4GB', '6GB', '8GB', '12GB', '16GB'], icon: 'fa-memory' }, color: { label: 'Color', options: ['Black', 'White', 'Blue', 'Red', 'Gold', 'Silver', 'Green'], icon: 'fa-palette' }, condition: { label: 'Condition', options: ['New', 'Used', 'Refurbished'], icon: 'fa-check-circle' } } },
     laptops: { name: 'Laptops', specs: { brand: { label: 'Brand', options: ['Apple', 'Dell', 'HP', 'Lenovo', 'Asus', 'Acer'], icon: 'fa-laptop' }, processor: { label: 'Processor', options: ['Intel i3', 'Intel i5', 'Intel i7', 'Intel i9', 'AMD Ryzen 5', 'AMD Ryzen 7', 'M1', 'M2', 'M3'], icon: 'fa-microchip' }, ram: { label: 'RAM', options: ['8GB', '16GB', '32GB', '64GB'], icon: 'fa-memory' }, storage: { label: 'Storage', options: ['256GB SSD', '512GB SSD', '1TB SSD', '2TB SSD'], icon: 'fa-hdd' }, screen_size: { label: 'Screen', options: ['13"', '14"', '15.6"', '16"', '17.3"'], icon: 'fa-expand' }, color: { label: 'Color', options: ['Silver', 'Gray', 'Black', 'Gold', 'Blue'], icon: 'fa-palette' } } },

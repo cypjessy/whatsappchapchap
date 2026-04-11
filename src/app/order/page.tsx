@@ -28,6 +28,7 @@ interface Product {
   name: string;
   description?: string;
   price: number;
+  stock?: number;
   image?: string;
   category?: string;
   categoryName?: string;
@@ -88,7 +89,7 @@ function OrderPageContent() {
         
         if (productSnap.exists()) {
           const data = productSnap.data() as Product;
-          setProduct({ id: productSnap.id, ...data });
+          setProduct({ ...data, id: productSnap.id } as Product);
         } else {
           setError("Product not found");
         }

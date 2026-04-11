@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 
+type StringSet = Set<string>;
+
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -24,16 +26,19 @@ interface Variant {
   stock: string;
 }
 
+interface SpecOptions {
+  label: string;
+  options: string[];
+  icon: string;
+}
+
+interface CategorySubData {
+  name: string;
+  specs: Record<string, SpecOptions>;
+}
+
 interface CategoryData {
-  subcategories: Record<string, {
-    name: string;
-    specs: Record<string, {
-      label: string;
-      options: string[];
-      icon: string;
-    };
-  }>;
-  }>;
+  subcategories: Record<string, CategorySubData>;
 }
 
 const categoryData: Record<string, CategoryData> = {
@@ -332,7 +337,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, Set<string>>({});
+  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, StringSet>>({});
   const [customSpecOptions, setCustomSpecOptions] = useState<Record<string, string[]>>({});
   const [variants, setVariants] = useState<Variant[]>([]);
   
@@ -554,9 +559,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const allSpecs = getCurrentSpecs();
       const allOptionsFilters: Record<string, string[]> = {};
       Object.entries(allSpecs).forEach(([key, spec]) => {
-        const defaultOptions = spec.options || [];
-        const customOptions = customSpecOptions[key] || [];
-        const allOptions = [...new Set([...defaultOptions, ...customOptions])];
+        const defaultOptions: string[] = spec.options || [];
+        const customOptions: string[] = customSpecOptions[key] || [];
+        const allOptions: string[] = [...new Set([...defaultOptions, ...customOptions])];
         allOptionsFilters[key] = allOptions;
       });
 
@@ -582,12 +587,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         price: minPrice,
         stock: totalStock,
         image: imageUrl,
-        status: "active",
+        status: "active" as const,
         variants: variantsWithPrice,
-        createdAt: undefined,
-        updatedAt: undefined,
-        id: undefined,
-        tenantId: undefined,
       });
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
