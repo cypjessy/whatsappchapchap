@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, setDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
-import { getAuth, signInAnonymously, onAuthStateChanged, User } from "firebase/auth";
+import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 
 const firebaseConfig = {
@@ -24,266 +23,140 @@ function getFirebaseApp() {
   return getApp();
 }
 
-interface CartItem {
+interface Product {
   id: string;
   name: string;
+  description?: string;
   price: number;
-  quantity: number;
-  variant: string;
-  emoji: string;
   image?: string;
+  category?: string;
+  categoryName?: string;
+  subcategory?: string;
+  sizes?: string[];
+  colors?: string[];
   filters?: Record<string, string>;
 }
 
-function OrderStorePage() {
+function OrderPageContent() {
   const searchParams = useSearchParams();
   
-  const tenantIdParam = searchParams.get("tenant") || "";
-  const productIdParam = searchParams.get("product") || "";
-  const urlPhone = searchParams.get("phone") || "";
-  const preSelectedQty = parseInt(searchParams.get("quantity") || "1", 10);
+  const tenantId = searchParams.get("tenant") || "";
+  const productId = searchParams.get("product") || "";
+  const phone = searchParams.get("phone") || "";
   
-  const [tenantId, setTenantId] = useState(tenantIdParam);
-  const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [error, setError] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState(urlPhone);
-  
-  // Cart state
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [showCart, setShowCart] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [orderNumber, setOrderNumber] = useState("");
-  const [whatsappLink, setWhatsappLink] = useState("");
-  
-  // Customer form
+  const [product, setProduct] = useState<Product | null>(null);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
-  const [placingOrder, setPlacingOrder] = useState(false);
-  const [checkoutPhone, setCheckoutPhone] = useState(urlPhone);
-  
-  // Product modal
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [selectedQty, setSelectedQty] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
-  const [showProductModal, setShowProductModal] = useState(false);
+  const [address, setAddress] = useState("");
+  const [customerPhone, setCustomerPhone] = useState(phone);
+  const [loading, setLoading] = useState(true);
+  const [ordering, setOrdering] = useState(false);
+  const [ordered, setOrdered] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!tenantId) {
-      setError("Invalid store link");
-      setLoading(false);
-      return;
-    }
-    loadProducts();
-  }, [tenantId]);
-
-  const loadProducts = async () => {
-    try {
-      const app = getFirebaseApp();
-      if (!app) {
-        setError("Unable to connect. Please try again.");
+    const fetchProduct = async () => {
+      if (!productId || !tenantId) {
+        setError("Invalid product link");
         setLoading(false);
         return;
       }
 
-      const db = getFirestore(app);
-      
-      // Get all products for this tenant
-      const productsRef = collection(db, "products");
-      const q = query(productsRef, where("tenantId", "==", tenantId));
-      const snapshot = await getDocs(q);
-      
-      const productsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as any));
-      
-      // Extract unique categories
-      const uniqueCategories = [...new Set(productsData.map((p: any) => p.category || "other"))];
-      setCategories(uniqueCategories);
-      
-      setProducts(productsData);
-      
-      // If product ID is passed in URL, open product modal for selection
-      if (productIdParam) {
-        const product = productsData.find((p: any) => p.id === productIdParam);
-        if (product) {
-          openProductModal(product);
+      try {
+        const app = getFirebaseApp();
+        if (!app) {
+          setError("Unable to connect. Please try again.");
+          setLoading(false);
+          return;
         }
-      }
-      
-      setLoading(false);
-    } catch (err: any) {
-      console.error("Error loading products:", err);
-      setError("Failed to load products");
-      setLoading(false);
-    }
-  };
 
-  const getCategoryEmoji = (category: string) => {
-    const emojis: Record<string, string> = {
-      footwear: "👟",
-      clothing: "👕",
-      electronics: "📱",
-      furniture: "🛋️",
-      beauty: "💄",
-      other: "📦"
+        const db = getFirestore(app);
+        const productRef = doc(db, "products", productId);
+        const productSnap = await getDoc(productRef);
+        
+        if (productSnap.exists()) {
+          const { id: _, ...rest } = productSnap.data() as Product & { id: string };
+          setProduct({ id: productSnap.id, ...rest });
+        } else {
+          setError("Product not found");
+        }
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError("Failed to load product");
+      } finally {
+        setLoading(false);
+      }
     };
-    return emojis[category] || "📦";
-  };
 
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === "all" || p.category === activeCategory;
-    const matchesSearch = !searchTerm || 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+    fetchProduct();
+  }, [productId, tenantId]);
 
-  const addToCart = (item: CartItem) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === item.id && i.variant === item.variant);
-      if (existing) {
-        return prev.map(i => 
-          i.id === item.id && i.variant === item.variant
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        );
-      }
-      return [...prev, item];
-    });
-  };
-
-  const updateCartQty = (index: number, delta: number) => {
-    setCart(prev => prev.map((item, i) => 
-      i === index 
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-        : item
-    ));
-  };
-
-  const removeFromCart = (index: number) => {
-    setCart(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-  const openProductModal = (product: any) => {
-    setSelectedProduct(product);
-    setSelectedQty(1);
-    setSelectedVariant(product.sizes?.[0] || product.colors?.[0] || "Default");
-    setSelectedFilters({});
-    setShowProductModal(true);
-  };
-
-  const handleAddToCart = () => {
-    if (!selectedProduct) return;
+  const handleOrder = async () => {
+    if (!product) return;
     
-    addToCart({
-      id: selectedProduct.id,
-      name: selectedProduct.name,
-      price: selectedProduct.price || 0,
-      quantity: selectedQty,
-      variant: selectedVariant,
-      emoji: getCategoryEmoji(selectedProduct.category),
-      image: selectedProduct.image,
-      filters: Object.keys(selectedFilters).length > 0 ? selectedFilters : undefined
-    });
-    
-    setShowProductModal(false);
-    setSelectedProduct(null);
-  };
-
-  const placeOrder = async () => {
-    if (cart.length === 0) return;
-    if (!customerName || !deliveryAddress || !checkoutPhone) {
-      alert("Please fill in your name, phone, and delivery address");
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert("Please select a size");
       return;
     }
-
-    setPlacingOrder(true);
+    
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert("Please select a color");
+      return;
+    }
+    
+    if (!customerName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+    
+    if (!address.trim()) {
+      alert("Please enter delivery address");
+      return;
+    }
+    
+    setOrdering(true);
     
     try {
       const app = getFirebaseApp()!;
       const db = getFirestore(app);
-      const auth = getAuth(app);
       
-      let user = auth.currentUser;
-      if (!user) {
-        const result = await signInAnonymously(auth);
-        user = result.user;
-      }
-
       const orderNum = "ORD-" + Math.floor(1000 + Math.random() * 9000);
-      const subtotal = cartTotal;
-      const delivery = 0;
-      const tax = Math.round(subtotal * 0.16);
-      const total = subtotal + delivery + tax;
-
-      const orderData = {
-        id: orderNum,
+      const total = product.price * quantity;
+      const tax = Math.round(total * 0.16);
+      const grandTotal = total + tax;
+      
+      await addDoc(collection(db, "orders"), {
         tenantId,
-        customerId: user.uid,
-        customerName,
-        customerPhone: checkoutPhone,
-        customerEmail: "",
-        customerAddress: deliveryAddress,
-        products: cart.map(item => ({
-          productId: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          variant: item.variant,
-          filters: item.filters
-        })),
-        subtotal,
-        shipping: delivery,
+        productId: product.id,
+        productName: product.name,
+        productImage: product.image,
+        price: product.price,
+        selectedSize: selectedSize || null,
+        selectedColor: selectedColor || null,
+        selectedOptions,
+        quantity,
+        customerPhone: customerPhone,
+        customerName: customerName.trim(),
+        deliveryAddress: address.trim(),
+        subtotal: total,
         tax,
-        discount: 0,
-        total,
-        paymentMethod,
+        total: grandTotal,
         status: "pending",
-        notes: "",
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      await setDoc(doc(collection(db, "orders")), orderData);
-      
-      setOrderNumber(orderNum);
-      
-      // Build WhatsApp message for seller
-      let message = `*New Order ${orderNum}*\n\n`;
-      message += `*Customer:* ${customerName}\n`;
-      message += `*Phone:* ${checkoutPhone}\n`;
-      message += `*Address:* ${deliveryAddress}\n\n`;
-      message += `*Order Items:*\n`;
-      
-      cart.forEach(item => {
-        message += `• ${item.emoji} ${item.name} (${item.variant}) x${item.quantity} - ${CURRENCY_SYMBOL}${(item.price * item.quantity).toLocaleString()}\n`;
+        updatedAt: serverTimestamp()
       });
       
-      message += `\n*Subtotal:* ${CURRENCY_SYMBOL}${subtotal.toLocaleString()}\n`;
-      message += `*Delivery:* ${CURRENCY_SYMBOL}${delivery}\n`;
-      message += `*Tax:* ${CURRENCY_SYMBOL}${tax.toLocaleString()}\n`;
-      message += `*Total:* ${CURRENCY_SYMBOL}${total.toLocaleString()}\n\n`;
-      message += `Payment: ${paymentMethod}`;
-      
-      setWhatsappLink(`https://wa.me/${checkoutPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`);
-      setShowCheckout(false);
-      setShowSuccess(true);
-      
+      setOrderNumber(orderNum);
+      setOrdered(true);
     } catch (err: any) {
       console.error("Error placing order:", err);
       alert("Failed to place order. Please try again.");
     } finally {
-      setPlacingOrder(false);
+      setOrdering(false);
     }
   };
 
@@ -292,7 +165,7 @@ function OrderStorePage() {
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ width: 60, height: 60, border: "4px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }}></div>
-          <p style={{ color: "white", fontWeight: 600 }}>Loading store...</p>
+          <p style={{ color: "white", fontWeight: 600 }}>Loading product...</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -313,15 +186,15 @@ function OrderStorePage() {
     );
   }
 
-  if (showSuccess) {
+  if (ordered) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "#f0f2f5" }}>
         <div style={{ background: "white", borderRadius: 16, padding: 32, textAlign: "center", maxWidth: 400, width: "100%", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-          <div style={{ width: 80, height: 80, background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 36, color: "white", animation: "pulse 2s infinite" }}>
+          <div style={{ width: 80, height: 80, background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 36, color: "white" }}>
             <i className="fas fa-check"></i>
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Order Placed!</h2>
-          <p style={{ color: "#64748b", marginBottom: 20 }}>Your order has been sent to the seller</p>
+          <p style={{ color: "#64748b", marginBottom: 20 }}>We will contact you on WhatsApp shortly</p>
           
           <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 20 }}>
             <div style={{ fontSize: 14, color: "#64748b", marginBottom: 4 }}>Order Number</div>
@@ -329,449 +202,254 @@ function OrderStorePage() {
           </div>
 
           <button 
-            onClick={() => window.open(whatsappLink, "_blank")}
-            style={{ width: "100%", padding: 14, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}
-          >
-            <i className="fab fa-whatsapp"></i>
-            Chat with Seller
-          </button>
-          
-          <button 
-            onClick={() => { setCart([]); setShowSuccess(false); }}
+            onClick={() => { setOrdered(false); setCustomerName(""); setAddress(""); setQuantity(1); }}
             style={{ width: "100%", padding: 14, background: "#f8fafc", color: "#1e293b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer" }}
           >
-            Continue Shopping
+            Place Another Order
           </button>
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: "#f0f2f5", minHeight: "100vh", paddingBottom: 100 }}>
-      {/* Store Header */}
-      <header style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: "1.5rem", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.2)", padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: "uppercase", marginBottom: 12, backdropFilter: "blur(10px)" }}>
-            <i className="fas fa-store"></i> Official Store
-          </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 4 }}>
-            Chap Chap Store
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "white", color: "#25D366", padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, marginLeft: 8 }}>
-              <i className="fas fa-check"></i> Verified
-            </span>
-          </h1>
-          <p style={{ fontSize: 14, opacity: 0.9 }}>Quality products delivered to your doorstep</p>
-        </div>
-      </header>
-
-      {/* Search */}
-      <div style={{ padding: "1rem 1.5rem", background: "white", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ position: "relative" }}>
-          <i className="fas fa-search" style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "#64748b" }}></i>
-          <input 
-            type="text" 
-            placeholder="Search products..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: "100%", padding: "14px 16px 14px 48px", border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, background: "#f0f2f5", outline: "none" }}
+    <div style={{ minHeight: "100vh", background: "#f0f2f5", padding: "20px", maxWidth: 500, margin: "0 auto" }}>
+      
+      {/* Product Image */}
+      {product?.image && (
+        <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 20 }}>
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            style={{ width: "100%", height: 280, objectFit: "cover" }} 
           />
         </div>
+      )}
+      
+      {/* Product Info */}
+      <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 20 }}>
+        {product?.categoryName && (
+          <div style={{ fontSize: 12, color: "#25D366", fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>
+            {product.categoryName} {product.subcategory ? `• ${product.subcategory}` : ""}
+          </div>
+        )}
+        <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{product?.name}</h1>
+        <p style={{ fontSize: 26, fontWeight: 800, color: "#25D366", marginBottom: 8 }}>
+          {CURRENCY_SYMBOL}{(product?.price || 0).toLocaleString()}
+        </p>
+        {product?.description && (
+          <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.6 }}>{product.description}</p>
+        )}
       </div>
 
-      {/* Categories */}
-      <div style={{ padding: "1rem 1.5rem", background: "white", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
-        <div style={{ display: "flex", gap: 12, paddingBottom: 8 }}>
-          <div 
-            onClick={() => setActiveCategory("all")}
-            style={{ padding: "10px 20px", background: activeCategory === "all" ? "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" : "#f0f2f5", border: "2px solid", borderColor: activeCategory === "all" ? "#25D366" : "#e2e8f0", borderRadius: 24, fontSize: 14, fontWeight: 600, color: activeCategory === "all" ? "white" : "#64748b", cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8 }}
-          >
-            <i className="fas fa-th-large"></i> All
+      {/* Size Filter */}
+      {product?.sizes && product.sizes.length > 0 && (
+        <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
+          <p style={{ fontWeight: 700, marginBottom: 12 }}>Select Size:</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {product.sizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                style={{ 
+                  padding: "12px 20px", 
+                  borderRadius: 24, 
+                  border: `2px solid ${selectedSize === size ? "#25D366" : "#e2e8f0"}`,
+                  background: selectedSize === size ? "#25D366" : "white",
+                  color: selectedSize === size ? "white" : "#1e293b",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                {size}
+              </button>
+            ))}
           </div>
-          {categories.map(cat => (
-            <div 
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              style={{ padding: "10px 20px", background: activeCategory === cat ? "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" : "#f0f2f5", border: "2px solid", borderColor: activeCategory === cat ? "#25D366" : "#e2e8f0", borderRadius: 24, fontSize: 14, fontWeight: 600, color: activeCategory === cat ? "white" : "#64748b", cursor: "pointer", whiteSpace: "nowrap", textTransform: "capitalize" }}
-            >
-              {cat}
-            </div>
-          ))}
         </div>
-      </div>
+      )}
 
-      {/* Products Grid */}
-      <section style={{ padding: "1.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <span style={{ fontSize: 18, fontWeight: 700 }}>Products</span>
-          <span style={{ fontSize: 14, color: "#64748b" }}>{filteredProducts.length} items</span>
-        </div>
-        
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-          {filteredProducts.map(product => (
-            <div 
-              key={product.id}
-              onClick={() => openProductModal(product)}
-              style={{ background: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", border: "2px solid transparent", transition: "all 0.2s", cursor: "pointer" }}
-            >
-              <div style={{ aspectRatio: "1", background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, position: "relative" }}>
-                {product.image ? (
-                  <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  getCategoryEmoji(product.category)
-                )}
-              </div>
-              <div style={{ padding: 16 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.name}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#25D366" }}>{CURRENCY_SYMBOL}{(product.price || 0).toLocaleString()}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Cart Bar */}
-      {cart.length > 0 && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "white", borderTop: "1px solid #e2e8f0", padding: "1rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 -4px 20px rgba(0,0,0,0.1)", zIndex: 100 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 8, background: "#DCF8C6", display: "flex", alignItems: "center", justifyContent: "center", color: "#25D366", fontSize: 20, position: "relative" }}>
-              <i className="fas fa-shopping-cart"></i>
-              <span style={{ position: "absolute", top: -4, right: -4, width: 20, height: 20, borderRadius: "50%", background: "#ef4444", color: "white", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>{cartCount}</span>
-            </div>
-            <div>
-              <div style={{ fontSize: 12, color: "#64748b" }}>Total</div>
-              <div style={{ fontSize: 20, fontWeight: 800 }}>{CURRENCY_SYMBOL}{cartTotal.toLocaleString()}</div>
-            </div>
+      {/* Color Filter */}
+      {product?.colors && product.colors.length > 0 && (
+        <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
+          <p style={{ fontWeight: 700, marginBottom: 12 }}>Select Color:</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {product.colors.map((color) => (
+              <button
+                key={color}
+                onClick={() => setSelectedColor(color)}
+                style={{ 
+                  padding: "12px 20px", 
+                  borderRadius: 24, 
+                  border: `2px solid ${selectedColor === color ? "#25D366" : "#e2e8f0"}`,
+                  background: selectedColor === color ? "#25D366" : "white",
+                  color: selectedColor === color ? "white" : "#1e293b",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                  transition: "all 0.2s"
+                }}
+              >
+                {color}
+              </button>
+            ))}
           </div>
+        </div>
+      )}
+
+      {/* Dynamic Filters from product spec fields */}
+      {product?.filters && Object.keys(product.filters).length > 0 && (
+        <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
+          <p style={{ fontWeight: 700, marginBottom: 12 }}>Select Options:</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {Object.entries(product.filters).map(([key, value]) => {
+              const options = String(value).split(",").map(v => v.trim()).filter(v => v);
+              if (options.length <= 1) return null;
+              
+              return (
+                <div key={key}>
+                  <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8, textTransform: "capitalize" }}>
+                    {key.replace(/_/g, " ")}:
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => setSelectedOptions({...selectedOptions, [key]: option})}
+                        style={{ 
+                          padding: "10px 16px", 
+                          borderRadius: 20, 
+                          border: `2px solid ${selectedOptions[key] === option ? "#25D366" : "#e2e8f0"}`,
+                          background: selectedOptions[key] === option ? "#25D366" : "white",
+                          color: selectedOptions[key] === option ? "white" : "#1e293b",
+                          fontWeight: 600,
+                          fontSize: 13,
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Quantity */}
+      <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
+        <p style={{ fontWeight: 700, marginBottom: 12 }}>Quantity:</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <button 
-            onClick={() => setShowCart(true)}
-            style={{ padding: "14px 24px", background: "#1a1a2e", color: "white", border: "none", borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            style={{ width: 44, height: 44, borderRadius: "50%", border: "2px solid #e2e8f0", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
           >
-            View Cart <i className="fas fa-arrow-right"></i>
+            <i className="fas fa-minus"></i>
+          </button>
+          <span style={{ fontSize: 22, fontWeight: 800, minWidth: 40, textAlign: "center" }}>{quantity}</span>
+          <button 
+            onClick={() => setQuantity(quantity + 1)}
+            style={{ width: 44, height: 44, borderRadius: "50%", border: "2px solid #e2e8f0", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
+          >
+            <i className="fas fa-plus"></i>
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Product Modal */}
-      {showProductModal && selectedProduct && (
-        <div 
-          onClick={() => setShowProductModal(false)}
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "white", width: "100%", maxWidth: 500, maxHeight: "90vh", borderRadius: "16px 16px 0 0", overflow: "auto", animation: "slideUp 0.3s" }}
-          >
-            <div style={{ aspectRatio: "1", background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 96, position: "relative" }}>
-              {selectedProduct.image ? (
-                <img src={selectedProduct.image} alt={selectedProduct.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                getCategoryEmoji(selectedProduct.category)
-              )}
-              <button 
-                onClick={() => setShowProductModal(false)}
-                style={{ position: "absolute", top: 16, right: 16, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            <div style={{ padding: 24 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{selectedProduct.name}</h2>
-              <div style={{ fontSize: 24, fontWeight: 800, color: "#25D366", marginBottom: 16 }}>{CURRENCY_SYMBOL}{(selectedProduct.price || 0).toLocaleString()}</div>
-              <p style={{ color: "#64748b", fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>{selectedProduct.description || "No description available."}</p>
+      {/* Customer Details */}
+      <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        <input
+          type="text"
+          placeholder="Your name *"
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, outline: "none" }}
+        />
+        <input
+          type="tel"
+          placeholder="WhatsApp number"
+          value={customerPhone}
+          onChange={(e) => setCustomerPhone(e.target.value)}
+          style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, outline: "none" }}
+        />
+        <textarea
+          placeholder="Delivery address *"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, outline: "none", minHeight: 80, resize: "none" }}
+        />
+      </div>
 
-              {/* Size Selection */}
-              {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Select Size</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {selectedProduct.sizes.map((size: string) => (
-                      <div 
-                        key={size}
-                        onClick={() => setSelectedVariant(size)}
-                        style={{ padding: "12px 24px", background: selectedVariant === size ? "#25D366" : "#f0f2f5", border: "2px solid", borderColor: selectedVariant === size ? "#25D366" : "#e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: selectedVariant === size ? "white" : "#1e293b" }}
-                      >
-                        {size}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Color Selection */}
-              {selectedProduct.colors && selectedProduct.colors.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Select Color</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {selectedProduct.colors.map((color: string) => (
-                      <div 
-                        key={color}
-                        onClick={() => setSelectedVariant(color)}
-                        style={{ padding: "12px 24px", background: selectedVariant === color ? "#25D366" : "#f0f2f5", border: "2px solid", borderColor: selectedVariant === color ? "#25D366" : "#e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", color: selectedVariant === color ? "white" : "#1e293b" }}
-                      >
-                        {color}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Dynamic Filters - Converted to Clickable Buttons */}
-              {selectedProduct.filters && Object.keys(selectedProduct.filters).length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                    <i className="fas fa-sliders-h" style={{ color: "#8b5cf6" }}></i>
-                    Select Specifications
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {Object.entries(selectedProduct.filters).map(([key, value]) => {
-                      const filterValue = value as string;
-                      const filterOptions = filterValue.split(',').map(v => v.trim()).filter(v => v);
-                      const isMultiSelect = filterOptions.length > 1;
-                      
-                      return (
-                        <div key={key}>
-                          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8, textTransform: "capitalize" }}>
-                            {key.replace(/_/g, ' ')} {isMultiSelect ? "(select one)" : ""}
-                          </div>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                            {isMultiSelect ? (
-                              filterOptions.map(option => (
-                                <div
-                                  key={option}
-                                  onClick={() => setSelectedFilters({...selectedFilters, [key]: option})}
-                                  style={{ 
-                                    padding: "10px 18px", 
-                                    background: selectedFilters[key] === option ? "#25D366" : "#f0f2f5", 
-                                    border: "2px solid", 
-                                    borderColor: selectedFilters[key] === option ? "#25D366" : "#e2e8f0", 
-                                    borderRadius: 8, 
-                                    fontSize: 13, 
-                                    fontWeight: 600, 
-                                    cursor: "pointer", 
-                                    color: selectedFilters[key] === option ? "white" : "#1e293b" 
-                                  }}
-                                >
-                                  {option}
-                                </div>
-                              ))
-                            ) : (
-                              <div style={{ padding: "10px 18px", background: "#f0f2f5", borderRadius: 8, fontSize: 13, color: "#64748b" }}>
-                                {filterValue || "Not specified"}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", marginBottom: 24 }}>
-                <span style={{ fontWeight: 700 }}>Quantity</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <button 
-                    onClick={() => setSelectedQty(Math.max(1, selectedQty - 1))}
-                    style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid #e2e8f0", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-                  >
-                    <i className="fas fa-minus"></i>
-                  </button>
-                  <span style={{ fontSize: 20, fontWeight: 800, minWidth: 40, textAlign: "center" }}>{selectedQty}</span>
-                  <button 
-                    onClick={() => setSelectedQty(selectedQty + 1)}
-                    style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid #e2e8f0", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-                  >
-                    <i className="fas fa-plus"></i>
-                  </button>
-                </div>
-              </div>
-
-              <button 
-                onClick={handleAddToCart}
-                style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 8, fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 4px 12px rgba(37,211,102,0.4)" }}
-              >
-                <i className="fas fa-shopping-cart"></i>
-                Add to Cart - {CURRENCY_SYMBOL}{((selectedProduct.price || 0) * selectedQty).toLocaleString()}
-              </button>
-            </div>
-          </div>
-          <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
+      {/* Order Summary */}
+      <div style={{ background: "white", borderRadius: 16, padding: 20, marginBottom: 16 }}>
+        <h3 style={{ fontWeight: 700, marginBottom: 12 }}>Order Summary</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ color: "#64748b" }}>{product?.name} x{quantity}</span>
+          <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{((product?.price || 0) * quantity).toLocaleString()}</span>
         </div>
-      )}
-
-      {/* Cart Modal */}
-      {showCart && (
-        <div 
-          onClick={() => setShowCart(false)}
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 1100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "white", width: "100%", maxWidth: 500, maxHeight: "85vh", borderRadius: "16px 16px 0 0", display: "flex", flexDirection: "column", animation: "slideUp 0.3s" }}
-          >
-            <div style={{ padding: "1.5rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: 20, fontWeight: 800 }}>Your Cart</h3>
-              <button 
-                onClick={() => setShowCart(false)}
-                style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: "#f0f2f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div style={{ flex: 1, overflow: "auto", padding: "1rem 1.5rem" }}>
-              {cart.map((item, index) => (
-                <div key={index} style={{ display: "flex", gap: 16, padding: "1rem 0", borderBottom: "1px solid #e2e8f0" }}>
-                  <div style={{ width: 80, height: 80, borderRadius: 8, background: "#f0f2f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0 }}>
-                    {item.emoji}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, marginBottom: 4 }}>{item.name}</div>
-                    <div style={{ fontSize: 14, color: "#64748b", marginBottom: 8 }}>Size: {item.variant}</div>
-                    <div style={{ fontWeight: 800, color: "#25D366" }}>{CURRENCY_SYMBOL}{(item.price * item.quantity).toLocaleString()}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f0f2f5", padding: 4, borderRadius: 20 }}>
-                        <button onClick={() => updateCartQty(index, -1)} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>-</button>
-                        <span style={{ minWidth: 24, textAlign: "center", fontWeight: 600 }}>{item.quantity}</span>
-                        <button onClick={() => updateCartQty(index, 1)} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>+</button>
-                      </div>
-                      <span onClick={() => removeFromCart(index)} style={{ color: "#ef4444", fontSize: 14, cursor: "pointer", marginLeft: "auto" }}>
-                        <i className="fas fa-trash"></i> Remove
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ padding: "1.5rem", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 15 }}>
-                <span>Subtotal</span>
-                <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{cartTotal.toLocaleString()}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 15, fontWeight: 700, borderTop: "2px solid #e2e8f0", paddingTop: 16, marginTop: 8 }}>
-                <span>Total</span>
-                <span style={{ fontSize: 20, color: "#25D366" }}>{CURRENCY_SYMBOL}{cartTotal.toLocaleString()}</span>
-              </div>
-              <button 
-                onClick={() => { setShowCart(false); setShowCheckout(true); }}
-                style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 8, fontSize: 18, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 16 }}
-              >
-                Proceed to Checkout <i className="fas fa-arrow-right"></i>
-              </button>
-            </div>
+        {selectedSize && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#64748b" }}>
+            <span>Size:</span>
+            <span>{selectedSize}</span>
           </div>
-        </div>
-      )}
-
-      {/* Checkout Modal */}
-      {showCheckout && (
-        <div 
-          onClick={() => setShowCheckout(false)}
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 1100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "white", width: "100%", maxWidth: 500, maxHeight: "95vh", borderRadius: "16px 16px 0 0", overflow: "auto", animation: "slideUp 0.3s" }}
-          >
-            <div style={{ padding: "1.5rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: 20, fontWeight: 800 }}>Checkout</h3>
-              <button 
-                onClick={() => setShowCheckout(false)}
-                style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: "#f0f2f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div style={{ padding: "1.5rem" }}>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontWeight: 700, fontSize: 14, marginBottom: 8 }}>Full Name *</label>
-                <input 
-                  type="text" 
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter your full name"
-                  style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, outline: "none" }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontWeight: 700, fontSize: 14, marginBottom: 8 }}>WhatsApp Number *</label>
-                <input 
-                  type="tel" 
-                  value={checkoutPhone}
-                  onChange={(e) => setCheckoutPhone(e.target.value)}
-                  placeholder="+254 712 345 678"
-                  style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, outline: "none" }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontWeight: 700, fontSize: 14, marginBottom: 8 }}>Delivery Address *</label>
-                <input 
-                  type="text" 
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  placeholder="Street, Building, House No."
-                  style={{ width: "100%", padding: 14, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, outline: "none" }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Payment Method</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div 
-                    onClick={() => setPaymentMethod("Cash on Delivery")}
-                    style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, border: "2px solid", borderColor: paymentMethod === "Cash on Delivery" ? "#25D366" : "#e2e8f0", borderRadius: 8, cursor: "pointer", background: paymentMethod === "Cash on Delivery" ? "rgba(37,211,102,0.05)" : "white" }}
-                  >
-                    <input type="radio" checked={paymentMethod === "Cash on Delivery"} style={{ width: 20, height: 20, accentColor: "#25D366" }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700 }}>Cash on Delivery</div>
-                      <div style={{ fontSize: 14, color: "#64748b" }}>Pay when you receive</div>
-                    </div>
-                  </div>
-                  <div 
-                    onClick={() => setPaymentMethod("M-Pesa")}
-                    style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, border: "2px solid", borderColor: paymentMethod === "M-Pesa" ? "#25D366" : "#e2e8f0", borderRadius: 8, cursor: "pointer", background: paymentMethod === "M-Pesa" ? "rgba(37,211,102,0.05)" : "white" }}
-                  >
-                    <input type="radio" checked={paymentMethod === "M-Pesa"} style={{ width: 20, height: 20, accentColor: "#25D366" }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700 }}>M-Pesa</div>
-                      <div style={{ fontSize: 14, color: "#64748b" }}>Pay via WhatsApp</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button 
-                onClick={placeOrder}
-                disabled={placingOrder}
-                style={{ width: "100%", padding: 20, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 8, fontSize: 18, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, opacity: placingOrder ? 0.7 : 1 }}
-              >
-                {placingOrder ? (
-                  <>
-                    <div style={{ width: 20, height: 20, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-paper-plane"></i>
-                    Place Order
-                  </>
-                )}
-              </button>
-            </div>
+        )}
+        {selectedColor && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#64748b" }}>
+            <span>Color:</span>
+            <span style={{ textTransform: "capitalize" }}>{selectedColor}</span>
           </div>
+        )}
+        <div style={{ borderTop: "2px solid #e2e8f0", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 18 }}>
+          <span>Total</span>
+          <span style={{ color: "#25D366" }}>{CURRENCY_SYMBOL}{((product?.price || 0) * quantity * 1.16).toLocaleString()}</span>
         </div>
-      )}
+      </div>
+
+      {/* Order Button */}
+      <button
+        onClick={handleOrder}
+        disabled={ordering}
+        style={{ 
+          width: "100%", 
+          padding: 18, 
+          background: ordering ? "#94a3b8" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+          color: "white", 
+          border: "none", 
+          borderRadius: 16, 
+          fontSize: 18, 
+          fontWeight: 700, 
+          cursor: ordering ? "not-allowed" : "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          boxShadow: "0 4px 12px rgba(37,211,102,0.4)"
+        }}
+      >
+        {ordering ? (
+          <>
+            <div style={{ width: 20, height: 20, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+            Processing...
+          </>
+        ) : (
+          <>
+            <i className="fas fa-shopping-bag"></i>
+            Place Order - {CURRENCY_SYMBOL}{((product?.price || 0) * quantity * 1.16).toLocaleString()}
+          </>
+        )}
+      </button>
+
+      <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 13, marginTop: 16, marginBottom: 40 }}>
+        We will confirm your order via WhatsApp
+      </p>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
       `}</style>
     </div>
   );
@@ -784,7 +462,7 @@ export default function OrderPage() {
         <div style={{ width: 60, height: 60, border: "4px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
       </div>
     }>
-      <OrderStorePage />
+      <OrderPageContent />
     </Suspense>
   );
 }
