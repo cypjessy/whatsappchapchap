@@ -542,22 +542,24 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   </div>
 
                   {/* Subcategory Selection */}
-                  {selectedCategory && categorySubcategories[selectedCategory] && (
-                    <div className="col-span-2">
-                      <label className="block font-bold text-sm mb-2 text-[#1e293b]">Product Type <span className="text-[#ef4444]">*</span></label>
-                      <select 
-                        value={selectedSubcategory}
-                        onChange={(e) => { setSelectedSubcategory(e.target.value); setProductFilters({}); }}
-                        className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366] bg-white"
-                      >
-                        <option value="">Select product type</option>
-                        {categorySubcategories[selectedCategory].map(sub => (
-                          <option key={sub.id} value={sub.id}>{sub.name}</option>
-                        ))}
-                      </select>
-                      <span className="text-xs text-[#64748b] mt-1 block">Choosing a type will show relevant filter fields below</span>
-                    </div>
-                  )}
+                  <div className="col-span-2">
+                    <label className="block font-bold text-sm mb-2 text-[#1e293b]">Product Type (Subcategory)</label>
+                    <select 
+                      value={selectedSubcategory}
+                      onChange={(e) => { setSelectedSubcategory(e.target.value); setProductFilters({}); }}
+                      className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366] bg-white"
+                    >
+                      <option value="">Select product type (optional)</option>
+                      {Object.entries(categorySubcategories).map(([catKey, subs]) => (
+                        <optgroup key={catKey} label={catKey.charAt(0).toUpperCase() + catKey.slice(1)}>
+                          {subs.map(sub => (
+                            <option key={sub.id} value={sub.id}>{sub.name}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <span className="text-xs text-[#64748b] mt-1 block">Selecting a type will show relevant filter fields below</span>
+                  </div>
 
                   <div>
                     <label className="block font-bold text-sm mb-2 text-[#1e293b]">SKU (Stock Keeping Unit)</label>
@@ -575,28 +577,32 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <div className="bg-[#f8fafc] rounded-[16px] p-6 border-2 border-[#e2e8f0] mt-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-[12px] bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] flex items-center justify-center text-white text-xl">
-                        {categories.find(c => c.id === selectedCategory)?.icon}
+                        <i className="fas fa-sliders-h"></i>
                       </div>
                       <div>
                         <div className="font-bold text-lg">Product Specifications</div>
-                        <div className="text-sm text-[#64748b]">Fill in details for {selectedSubcategory}</div>
+                        <div className="text-sm text-[#64748b]">Fill in details for {selectedSubcategory.replace(/_/g, ' ')}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      {categorySubcategories[selectedCategory]?.find(s => s.id === selectedSubcategory)?.filters.map(filter => (
-                        <div key={filter}>
-                          <label className="block font-bold text-sm mb-2 text-[#1e293b] capitalize">
-                            {filter.replace(/_/g, ' ')} {["brand", "condition"].includes(filter) && "(Optional)"}
-                          </label>
-                          <input 
-                            type="text" 
-                            value={productFilters[filter] || ""}
-                            onChange={(e) => setProductFilters({...productFilters, [filter]: e.target.value})}
-                            className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366]"
-                            placeholder={`Enter ${filter.replace(/_/g, ' ')}`}
-                          />
-                        </div>
-                      ))}
+                      {Object.entries(categorySubcategories).flatMap(([catKey, subs]) => 
+                        subs.filter(s => s.id === selectedSubcategory).map(sub => 
+                          sub.filters.map(filter => (
+                            <div key={filter}>
+                              <label className="block font-bold text-sm mb-2 text-[#1e293b] capitalize">
+                                {filter.replace(/_/g, ' ')} {["brand", "condition"].includes(filter) && "(Optional)"}
+                              </label>
+                              <input 
+                                type="text" 
+                                value={productFilters[filter] || ""}
+                                onChange={(e) => setProductFilters({...productFilters, [filter]: e.target.value})}
+                                className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-[12px] text-sm focus:outline-none focus:border-[#25D366]"
+                                placeholder={`Enter ${filter.replace(/_/g, ' ')}`}
+                              />
+                            </div>
+                          ))
+                        )
+                      )}
                     </div>
                   </div>
                 )}
