@@ -69,19 +69,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
         productCounts[cat] = (productCounts[cat] || 0) + 1;
       });
 
-      // Map default categories with product counts
-      const defaultCats: Category[] = defaultProductCategories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        color: cat.color,
-        productCount: productCounts[cat.id] || 0,
-        views: 0,
-        status: "active" as const,
-        isCustom: false,
-      }));
-
-      // Map custom categories
+      // Map custom categories with product counts
       const customCats: Category[] = customCategories.map(cat => ({
         id: cat.id,
         name: cat.name,
@@ -93,10 +81,10 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
         isCustom: true,
       }));
 
-      // Combine: defaults first, then custom
-      setCategories([...defaultCats, ...customCats]);
+      setCategories(customCats);
     } catch (error) {
       console.error("Error loading categories:", error);
+      setCategories([]);
     } finally {
       setLoading(false);
     }

@@ -50,12 +50,11 @@ export default function ProductsPage() {
     setLoadingCategories(true);
     try {
       const customCategories = await categoryService.getCategories(user);
-      const defaultCats = defaultProductCategories.map(cat => ({ id: cat.id, name: cat.name, icon: cat.icon }));
       const customCats = customCategories.map(cat => ({ id: cat.id, name: cat.name, icon: cat.icon }));
-      setProductCategories([...defaultCats, ...customCats]);
+      setProductCategories(customCats);
     } catch (error) {
       console.error("Error loading categories:", error);
-      setProductCategories(defaultProductCategories.map(cat => ({ id: cat.id, name: cat.name, icon: cat.icon })));
+      setProductCategories([]);
     } finally {
       setLoadingCategories(false);
     }
@@ -106,12 +105,19 @@ export default function ProductsPage() {
   };
 
   const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      footwear: "from-[#fce7f3] to-[#fbcfe8]", clothing: "from-[#e0e7ff] to-[#c7d2fe]",
-      electronics: "from-[#e0e7ff] to-[#c7d2fe]", furniture: "from-[#fef3c7] to-[#fde68a]",
-      beauty: "from-[#fce7f3] to-[#fbcfe8]", other: "from-[#f1f5f9] to-[#e2e8f0]"
-    };
-    return colors[category] || "from-[#f1f5f9] to-[#e2e8f0]";
+    const categoryIndex = productCategories.findIndex(c => c.id === category);
+    const colors = [
+      "from-[#fce7f3] to-[#fbcfe8]",
+      "from-[#e0e7ff] to-[#c7d2fe]",
+      "from-[#dcfce7] to-[#bbf7d0]",
+      "from-[#fef3c7] to-[#fde68a]",
+      "from-[#e0f2fe] to-[#bae6fd]",
+      "from-[#f3e8ff] to-[#e9d5ff]",
+      "from-[#ffedd5] to-[#fed7aa]",
+      "from-[#f1f5f9] to-[#e2e8f0]",
+    ];
+    const colorIndex = categoryIndex >= 0 ? categoryIndex % colors.length : 0;
+    return colors[colorIndex];
   };
 
   const getBadgeStyle = (stock: number) => {

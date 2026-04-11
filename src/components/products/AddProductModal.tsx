@@ -159,14 +159,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       // Get custom categories from database
       const customCategories = await categoryService.getCategories(user);
       
-      // Map default categories to the format we need
-      const defaultCats: CategoryOption[] = defaultProductCategories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        desc: cat.description || "",
-      }));
-
       // Map custom categories
       const customCats: CategoryOption[] = customCategories.map(cat => ({
         id: cat.id,
@@ -175,17 +167,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         desc: cat.description || "",
       }));
 
-      // Combine: defaults first, then custom
-      setCategories([...defaultCats, ...customCats]);
+      setCategories(customCats);
     } catch (error) {
       console.error("Error loading categories:", error);
-      // Fall back to defaults
-      setCategories(defaultProductCategories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        desc: cat.description || "",
-      })));
+      setCategories([]);
     } finally {
       setLoadingCategories(false);
     }
