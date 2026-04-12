@@ -150,12 +150,18 @@ function OrderPageContent() {
   const validateForm = () => {
     const newErrors: Record<string, boolean> = {};
     
-    if (Object.keys(product?.filters || {}).length > 0) {
-      const hasAllSpecs = Object.keys(product!.filters!).every(key => {
-        const options = product!.filters![key];
-        return options && options.length > 0 ? selectedSpecs[key] : true;
-      });
-      if (!hasAllSpecs) newErrors.specs = true;
+    const requiredFilters = Object.keys(product?.filters || {}).filter(key => {
+      const options = product?.filters?.[key];
+      return options && options.length > 1;
+    });
+    
+    const hasAnySelectedSpecs = Object.values(selectedSpecs).some(val => val && val.trim() !== "");
+    
+    if (requiredFilters.length > 0 && hasAnySelectedSpecs) {
+      const missingSpecs = requiredFilters.filter(key => !selectedSpecs[key] || selectedSpecs[key].trim() === "");
+      if (missingSpecs.length > 0) {
+        newErrors.specs = true;
+      }
     }
     
     if (!customerName.trim()) newErrors.name = true;
