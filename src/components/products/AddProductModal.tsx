@@ -706,13 +706,18 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         }
       }
 
+      const filters: Record<string, string[]> = {};
+      Object.entries(selectedSpecs).forEach(([key, set]) => {
+        filters[key] = Array.from(set);
+      });
+
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
         categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || selectedSubcategory,
         subcategory: selectedSubcategory,
-        filters: allOptionsFilters,
+        filters: filters,
         price: minPrice,
         stock: stock,
         weight: parseFloat(formData.weight) || undefined,

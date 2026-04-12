@@ -119,8 +119,12 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                 {/* Left: Image */}
                 <div className="flex flex-col gap-4">
                   <div className="aspect-square bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-[16px] flex items-center justify-center text-[8rem] relative border-2 border-[#e2e8f0] overflow-hidden">
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    {(product.images && product.images.length > 0) || product.image ? (
+                      <img 
+                        src={(product.images && product.images[selectedImage]) || product.image} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover" 
+                      />
                     ) : (
                       getCategoryEmoji(product.category || "other")
                     )}
@@ -128,11 +132,25 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                       <span className="absolute top-4 left-4 px-4 py-2 bg-[#ef4444] text-white rounded-[20px] text-sm font-bold">-{discount}% OFF</span>
                     )}
                   </div>
-                  {product.image ? (
+                  {(product.images && product.images.length > 1) || product.image ? (
                     <div className="flex gap-3">
-                      <div className="w-20 h-20 rounded-[12px] border-2 border-[#25D366] flex items-center justify-center text-3xl bg-[#f8fafc]">
-                        <img src={product.image} alt="Main" className="w-full h-full object-cover rounded-[10px]" />
-                      </div>
+                      {product.image && (
+                        <button 
+                          className={`w-20 h-20 rounded-[12px] border-2 flex items-center justify-center bg-[#f8fafc] overflow-hidden ${selectedImage === -1 ? "border-[#25D366]" : "border-[#e2e8f0]"}`}
+                          onClick={() => setSelectedImage(-1)}
+                        >
+                          <img src={product.image} alt="Main" className="w-full h-full object-cover rounded-[10px]" />
+                        </button>
+                      )}
+                      {product.images?.map((img, idx) => (
+                        <button 
+                          key={idx}
+                          className={`w-20 h-20 rounded-[12px] border-2 flex items-center justify-center bg-[#f8fafc] overflow-hidden ${selectedImage === idx ? "border-[#25D366]" : "border-[#e2e8f0]"}`}
+                          onClick={() => setSelectedImage(idx)}
+                        >
+                          <img src={img} alt={`Variant ${idx + 1}`} className="w-full h-full object-cover rounded-[10px]" />
+                        </button>
+                      ))}
                     </div>
                   ) : (
                     <div className="flex gap-3">
