@@ -499,6 +499,17 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       (acc, curr) => acc.flatMap(a => curr.map(c => [...a, c])), 
       [[]]
     );
+
+    if (combinations.length > 12) {
+      setVariants([]);
+      showToast("warning", `Too many combinations (${combinations.length}). Maximum 12 variants allowed. Please reduce selected options.`);
+      return;
+    }
+    
+    if (combinations.length === 0) {
+      setVariants([]);
+      return;
+    }
     
     const newVariants: Variant[] = combinations.map((combo, index) => {
       const variantSpecs: Record<string, string> = {};
