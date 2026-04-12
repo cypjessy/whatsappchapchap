@@ -40,7 +40,6 @@ export interface Product {
   description?: string;
   price: number;
   category?: string;
-  categoryId?: string;
   categoryName?: string;
   subcategory?: string;
   orderLink?: string;

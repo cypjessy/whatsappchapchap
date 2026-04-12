@@ -599,7 +599,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
-        categoryId: selectedCategory,
         categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || selectedSubcategory,
         subcategory: selectedSubcategory,
         filters: allOptionsFilters,
