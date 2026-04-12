@@ -363,6 +363,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [customSubcategories, setCustomSubcategories] = useState<Record<string, string>>({});
+  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
+  const [customSubcategoryInput, setCustomSubcategoryInput] = useState("");
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, StringSet>>({});
   const [customSpecOptions, setCustomSpecOptions] = useState<Record<string, string[]>>({});
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -404,6 +407,16 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedImage(null);
     setCustomInputKey(null);
     setCustomInputValue("");
+    setCustomSubcategories({});
+  };
+
+  const addCustomSubcategory = () => {
+    if (!selectedCategory || !customSubcategoryInput.trim()) return;
+    const key = customSubcategoryInput.trim().toLowerCase().replace(/\s+/g, "_");
+    setCustomSubcategories(prev => ({ ...prev, [key]: customSubcategoryInput.trim() }));
+    setSelectedSubcategory(key);
+    setCustomSubcategoryInput("");
+    setShowCustomSubcategory(false);
   };
 
   const showToast = (type: string, message: string) => {
@@ -514,6 +527,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedSubcategory(null);
     setSelectedSpecs({});
     setVariants([]);
+    setCustomSubcategories({});
   };
 
   const selectSubcategory = (subcategory: string) => {
@@ -711,7 +725,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
-        categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || selectedSubcategory,
+        categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || customSubcategories[selectedSubcategory!] || selectedSubcategory,
         subcategory: selectedSubcategory,
         filters: filters,
         price: minPrice,
@@ -985,7 +999,47 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                         {value.name}
                       </button>
                     ))}
+                    {Object.entries(customSubcategories).map(([key, value]) => (
+                      <button
+                        key={key}
+                        onClick={() => selectSubcategory(key)}
+                        className={`px-5 py-2.5 border-2 border-slate-200 rounded-full bg-white cursor-pointer font-semibold text-sm transition-all ${selectedSubcategory === key ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-lg" : "hover:border-green-500 hover:text-green-500"}`}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setShowCustomSubcategory(true)}
+                      className="px-5 py-2.5 border-2 border-dashed border-green-500 rounded-full bg-white cursor-pointer font-semibold text-sm text-green-500 hover:bg-green-50 transition-all flex items-center gap-2"
+                    >
+                      <i className="fas fa-plus"></i> Add Custom
+                    </button>
                   </div>
+                  
+                  {showCustomSubcategory && (
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        type="text"
+                        value={customSubcategoryInput}
+                        onChange={(e) => setCustomSubcategoryInput(e.target.value)}
+                        placeholder="Enter custom subcategory name"
+                        className="flex-1 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500"
+                        onKeyPress={(e) => e.key === "Enter" && addCustomSubcategory()}
+                      />
+                      <button
+                        onClick={addCustomSubcategory}
+                        className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-semibold text-sm"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => { setShowCustomSubcategory(false); setCustomSubcategoryInput(""); }}
+                        className="px-4 py-2.5 border-2 border-slate-200 rounded-xl font-semibold text-sm hover:bg-slate-100"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
