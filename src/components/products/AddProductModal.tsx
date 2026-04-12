@@ -119,7 +119,7 @@ const categoryData: Record<string, CategoryData> = {
         name: "Shoes/Sneakers",
         specs: {
           brand: { label: "Brand", options: ["Nike", "Adidas", "Puma", "New Balance", "Converse", "Vans", "Reebok"], icon: "fa-shoe-prints" },
-          sizes: { label: "Size (US)", options: ["6", "7", "8", "9", "10", "11", "12", "13"], icon: "fa-ruler" },
+          size: { label: "Size (US)", options: ["6", "7", "8", "9", "10", "11", "12", "13"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Black", "White", "Red", "Blue", "Green", "Yellow", "Multi"], icon: "fa-palette" },
           gender: { label: "Gender", options: ["Men", "Women", "Unisex", "Kids"], icon: "fa-venus-mars" },
           material: { label: "Material", options: ["Leather", "Canvas", "Mesh", "Synthetic", "Suede"], icon: "fa-layer-group" }
@@ -129,7 +129,7 @@ const categoryData: Record<string, CategoryData> = {
         name: "Boots",
         specs: {
           brand: { label: "Brand", options: ["Timberland", "Dr. Martens", "Caterpillar", "Red Wing"], icon: "fa-shoe-prints" },
-          sizes: { label: "Size", options: ["6", "7", "8", "9", "10", "11", "12"], icon: "fa-ruler" },
+          size: { label: "Size", options: ["6", "7", "8", "9", "10", "11", "12"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Brown", "Black", "Tan", "Gray"], icon: "fa-palette" },
           gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
           heel_height: { label: "Heel Height", options: ["Flat", "Low (1-2\")", "Mid (2-3\")", "High (3\"+)"], icon: "fa-arrows-alt-v" }
@@ -139,7 +139,7 @@ const categoryData: Record<string, CategoryData> = {
         name: "Sandals/Slippers",
         specs: {
           brand: { label: "Brand", options: ["Birkenstock", "Crocs", "Havaianas", "Nike"], icon: "fa-shoe-prints" },
-          sizes: { label: "Size", options: ["5", "6", "7", "8", "9", "10", "11", "12"], icon: "fa-ruler" },
+          size: { label: "Size", options: ["5", "6", "7", "8", "9", "10", "11", "12"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Black", "Brown", "White", "Blue", "Pink"], icon: "fa-palette" },
           gender: { label: "Gender", options: ["Men", "Women", "Kids"], icon: "fa-venus-mars" }
         }
@@ -151,7 +151,7 @@ const categoryData: Record<string, CategoryData> = {
       tops: {
         name: "Tops/T-shirts",
         specs: {
-          sizes: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], icon: "fa-ruler" },
+          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Black", "White", "Gray", "Navy", "Red", "Blue", "Green", "Yellow", "Pink"], icon: "fa-palette" },
           gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
           material: { label: "Material", options: ["Cotton", "Polyester", "Linen", "Silk", "Wool"], icon: "fa-layer-group" },
@@ -161,7 +161,7 @@ const categoryData: Record<string, CategoryData> = {
       trousers: {
         name: "Trousers/Jeans",
         specs: {
-          sizes: { label: "Size", options: ["28", "30", "32", "34", "36", "38", "40", "42"], icon: "fa-ruler" },
+          size: { label: "Size", options: ["28", "30", "32", "34", "36", "38", "40", "42"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Blue", "Black", "Gray", "Khaki", "White"], icon: "fa-palette" },
           gender: { label: "Gender", options: ["Men", "Women"], icon: "fa-venus-mars" },
           fit: { label: "Fit", options: ["Slim", "Regular", "Relaxed", "Skinny", "Bootcut"], icon: "fa-arrows-alt-h" }
@@ -170,7 +170,7 @@ const categoryData: Record<string, CategoryData> = {
       dresses: {
         name: "Dresses",
         specs: {
-          sizes: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL"], icon: "fa-ruler" },
+          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Black", "Red", "Blue", "White", "Pink", "Floral", "Green"], icon: "fa-palette" },
           style: { label: "Style", options: ["Casual", "Evening", "Cocktail", "Maxi", "Midi"], icon: "fa-female" },
           occasion: { label: "Occasion", options: ["Party", "Wedding", "Office", "Casual", "Beach"], icon: "fa-glass-cheers" }
@@ -179,7 +179,7 @@ const categoryData: Record<string, CategoryData> = {
       jackets: {
         name: "Jackets/Coats",
         specs: {
-          sizes: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], icon: "fa-ruler" },
+          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], icon: "fa-ruler" },
           color: { label: "Color", options: ["Black", "Brown", "Navy", "Gray", "Beige", "Olive"], icon: "fa-palette" },
           gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
           material: { label: "Material", options: ["Leather", "Denim", "Wool", "Polyester", "Down"], icon: "fa-layer-group" }
