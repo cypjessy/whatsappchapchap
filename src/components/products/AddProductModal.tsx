@@ -23,6 +23,20 @@ interface FormData {
   lowStockAlert: string;
 }
 
+interface ShippingMethod {
+  id: string;
+  name: string;
+  price: string;
+  enabled: boolean;
+}
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  details: string;
+  enabled: boolean;
+}
+
 interface ProductImage {
   id: number;
   url: string;
@@ -363,6 +377,16 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [imagePreview, setImagePreview] = useState<string>("");
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([
+    { id: "standard", name: "Standard Delivery", price: "500", enabled: true },
+    { id: "express", name: "Express Delivery", price: "1000", enabled: true },
+    { id: "pickup", name: "Store Pickup", price: "0", enabled: true },
+  ]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
+    { id: "mpesa", name: "M-Pesa", details: "Enter your M-Pesa number for payment instructions", enabled: true },
+    { id: "cod", name: "Cash on Delivery", details: "Pay when you receive", enabled: true },
+    { id: "bank", name: "Bank Transfer", details: "Bank: Example Bank\nAccount: 1234567890", enabled: true },
+  ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customInputKey, setCustomInputKey] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
@@ -696,6 +720,16 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         lowStockAlert: parseInt(formData.lowStockAlert) || 5,
         image: imageUrl,
         images: images.length > 1 ? images : undefined,
+        shippingMethods: shippingMethods.filter(m => m.enabled).map(m => ({
+          id: m.id,
+          name: m.name,
+          price: parseInt(m.price) || 0,
+        })),
+        paymentMethods: paymentMethods.filter(m => m.enabled).map(m => ({
+          id: m.id,
+          name: m.name,
+          details: m.details,
+        })),
         status: "active" as const,
         variants: variantsWithPrice,
       });
@@ -853,6 +887,94 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     placeholder="5"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* SECTION 1.6: Shipping Methods */}
+            <div className="mb-8 pb-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
+                <i className="fas fa-shipping-fast"></i>
+                Shipping Methods
+              </div>
+              <div className="space-y-4">
+                {shippingMethods.map((method) => (
+                  <div key={method.id} className="flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl">
+                    <input
+                      type="checkbox"
+                      checked={method.enabled}
+                      onChange={(e) => {
+                        const updated = shippingMethods.map(m => 
+                          m.id === method.id ? { ...m, enabled: e.target.checked } : m
+                        );
+                        setShippingMethods(updated);
+                      }}
+                      className="w-5 h-5 text-green-500 rounded focus:ring-green-500"
+                    />
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm">{method.name}</div>
+                      {method.id !== "pickup" && (
+                        <input
+                          type="number"
+                          value={method.price}
+                          onChange={(e) => {
+                            const updated = shippingMethods.map(m =>
+                              m.id === method.id ? { ...m, price: e.target.value } : m
+                            );
+                            setShippingMethods(updated);
+                          }}
+                          disabled={!method.enabled}
+                          className="mt-2 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm w-32"
+                          placeholder="Price (KES)"
+                        />
+                      )}
+                      {method.id === "pickup" && (
+                        <div className="text-xs text-green-500 mt-1">Free - Customer picks up from store</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 1.7: Payment Methods */}
+            <div className="mb-8 pb-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
+                <i className="fas fa-credit-card"></i>
+                Payment Methods
+              </div>
+              <div className="space-y-4">
+                {paymentMethods.map((method) => (
+                  <div key={method.id} className="p-4 border-2 border-slate-200 rounded-xl">
+                    <div className="flex items-center gap-4 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={method.enabled}
+                        onChange={(e) => {
+                          const updated = paymentMethods.map(m =>
+                            m.id === method.id ? { ...m, enabled: e.target.checked } : m
+                          );
+                          setPaymentMethods(updated);
+                        }}
+                        className="w-5 h-5 text-green-500 rounded focus:ring-green-500"
+                      />
+                      <div className="font-semibold text-sm">{method.name}</div>
+                    </div>
+                    {method.enabled && (
+                      <textarea
+                        value={method.details}
+                        onChange={(e) => {
+                          const updated = paymentMethods.map(m =>
+                            m.id === method.id ? { ...m, details: e.target.value } : m
+                          );
+                          setPaymentMethods(updated);
+                        }}
+                        rows={method.id === "bank" ? 3 : 2}
+                        className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm"
+                        placeholder={method.id === "mpesa" ? "Enter M-Pesa instructions..." : method.id === "bank" ? "Bank: Example Bank\nAccount: 1234567890" : "COD instructions..."}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 

@@ -36,6 +36,8 @@ interface Product {
   categoryName?: string;
   subcategory?: string;
   filters?: Record<string, string[]>;
+  shippingMethods?: Array<{ id: string; name: string; price: number }>;
+  paymentMethods?: Array<{ id: string; name: string; details: string }>;
   variants?: Array<{
     id: number;
     specs: Record<string, string>;
@@ -62,6 +64,7 @@ function OrderPageContent() {
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [deliveryCost, setDeliveryCost] = useState(500);
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
+  const [paymentDetails, setPaymentDetails] = useState("");
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
   const [ordered, setOrdered] = useState(false);
@@ -200,6 +203,7 @@ function OrderPageContent() {
         deliveryMethod,
         deliveryCost,
         paymentMethod,
+        paymentDetails: paymentDetails.trim() || null,
         orderNotes: orderNotes.trim() || null,
         subtotal,
         total,
@@ -537,11 +541,11 @@ function OrderPageContent() {
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Delivery Method</div>
           
-          {[
-            { id: "standard", name: "Standard Delivery", time: "3-5 business days", price: 500 },
-            { id: "express", name: "Express Delivery", time: "1-2 business days", price: 1000 },
-            { id: "pickup", name: "Store Pickup", time: "Available today after 2PM", price: 0 }
-          ].map((option) => (
+          {(product?.shippingMethods?.length ? product.shippingMethods : [
+            { id: "standard", name: "Standard Delivery", price: 500 },
+            { id: "express", name: "Express Delivery", price: 1000 },
+            { id: "pickup", name: "Store Pickup", price: 0 }
+          ]).map((option) => (
             <div 
               key={option.id}
               onClick={() => { setDeliveryMethod(option.id); setDeliveryCost(option.price); }}
@@ -565,7 +569,9 @@ function OrderPageContent() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
-                <div style={{ fontSize: 14, color: "#64748b" }}>{option.time}</div>
+                <div style={{ fontSize: 14, color: "#64748b" }}>
+                  {option.id === "pickup" ? "Available today after 2PM" : option.id === "express" ? "1-2 business days" : "3-5 business days"}
+                </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: 18, color: option.price === 0 ? "#10b981" : "#25D366" }}>
                 {option.price === 0 ? "FREE" : CURRENCY_SYMBOL + option.price.toLocaleString()}
@@ -578,11 +584,11 @@ function OrderPageContent() {
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Payment Method</div>
           
-          {[
-            { id: "mpesa", name: "M-Pesa", desc: "Pay via M-Pesa mobile money", icon: "fa-mobile-alt", color: "#00A650" },
-            { id: "cod", name: "Cash on Delivery", desc: "Pay when you receive the item", icon: "fa-money-bill-wave", color: "#64748b" },
-            { id: "bank", name: "Bank Transfer", desc: "Direct bank transfer", icon: "fa-university", color: "#64748b" }
-          ].map((option) => (
+          {(product?.paymentMethods?.length ? product.paymentMethods : [
+            { id: "mpesa", name: "M-Pesa", details: "Pay via M-Pesa mobile money" },
+            { id: "cod", name: "Cash on Delivery", details: "Pay when you receive the item" },
+            { id: "bank", name: "Bank Transfer", details: "Direct bank transfer" }
+          ]).map((option) => (
             <div 
               key={option.id}
               onClick={() => setPaymentMethod(option.id)}
@@ -601,15 +607,45 @@ function OrderPageContent() {
               <div style={{ width: 24, height: 24, border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: paymentMethod === option.id ? "#25D366" : "white" }}>
                 {paymentMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
               </div>
-              <div style={{ width: 48, height: 48, background: option.color, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
-                <i className={`fas ${option.icon}`}></i>
+              <div style={{ width: 48, height: 48, background: option.id === "mpesa" ? "#00A650" : option.id === "bank" ? "#64748b" : "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
+                <i className={`fas ${option.id === "mpesa" ? "fa-mobile-alt" : option.id === "bank" ? "fa-university" : "fa-money-bill-wave"}`}></i>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
-                <div style={{ fontSize: 14, color: "#64748b" }}>{option.desc}</div>
+                <div style={{ fontSize: 14, color: "#64748b" }}>{option.details}</div>
               </div>
             </div>
           ))}
+
+          {/* Payment Details & Message */}
+          {paymentMethod !== "cod" && (
+            <div style={{ marginTop: 16, padding: 16, background: "#f8fafc", borderRadius: 12, border: "2px solid #e2e8f0" }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12, color: "#1e293b" }}>
+                {paymentMethod === "mpesa" ? "M-Pesa Payment Instructions" : "Bank Transfer Details"}
+              </div>
+              <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap", marginBottom: 16 }}>
+                {product?.paymentMethods?.find(p => p.id === paymentMethod)?.details || 
+                 (paymentMethod === "mpesa" ? "Enter your M-Pesa number and follow prompts" : "Bank: Example Bank\nAccount: 1234567890")}
+              </div>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>
+                Enter Payment Details <span className="text-red-500">*</span>
+              </div>
+              <input
+                type="text"
+                placeholder={paymentMethod === "mpesa" ? "Enter M-Pesa transaction ID" : "Enter transaction/reference number"}
+                value={paymentDetails}
+                onChange={(e) => setPaymentDetails(e.target.value)}
+                style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, marginBottom: 12 }}
+              />
+              <textarea
+                placeholder="Add a message to the seller (optional)"
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                rows={2}
+                style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, resize: "none" }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Order Notes */}

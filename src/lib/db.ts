@@ -47,6 +47,8 @@ export interface Product {
   stock?: number;
   image?: string;
   images?: string[];
+  shippingMethods?: Array<{ id: string; name: string; price: number }>;
+  paymentMethods?: Array<{ id: string; name: string; details: string }>;
   shippingFee?: number;
   weight?: number;
   lowStockAlert?: number;
