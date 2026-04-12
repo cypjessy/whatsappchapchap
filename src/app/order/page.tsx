@@ -54,6 +54,7 @@ function OrderPageContent() {
   const phoneParam = searchParams.get("phone") || "";
   
   const [product, setProduct] = useState<Product | null>(null);
+  const [tenantData, setTenantData] = useState<{evolutionServerUrl?: string; evolutionApiKey?: string; evolutionInstanceId?: string} | null>(null);
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
@@ -95,6 +96,19 @@ function OrderPageContent() {
         if (productSnap.exists()) {
           const data = productSnap.data() as Product;
           setProduct({ ...data, id: productSnap.id } as Product);
+          
+          // Fetch tenant data for Evolution credentials
+          const tenantIdWithoutPrefix = tenantId.replace('tenant_', '');
+          const tenantRef = doc(db, "tenants", tenantIdWithoutPrefix);
+          const tenantSnap = await getDoc(tenantRef);
+          if (tenantSnap.exists()) {
+            const tenantData = tenantSnap.data();
+            setTenantData({
+              evolutionServerUrl: tenantData.evolutionServerUrl,
+              evolutionApiKey: tenantData.evolutionApiKey,
+              evolutionInstanceId: tenantData.evolutionInstanceId
+            });
+          }
         } else {
           setError("Product not found");
         }
@@ -108,12 +122,6 @@ function OrderPageContent() {
 
     fetchProduct();
   }, [productId, tenantId]);
-
-  useEffect(() => {
-    if (product?.shippingFee !== undefined && product.shippingFee > 0) {
-      setDeliveryCost(product.shippingFee);
-    }
-  }, [product?.shippingFee]);
 
   const getBasePrice = () => {
     if (!product) return 0;
@@ -236,7 +244,10 @@ function OrderPageContent() {
           deliveryCost: deliveryCost,
           paymentMethod: paymentMethod,
           total: total,
-          tenantId: tenantId
+          tenantId: tenantId,
+          evolutionServerUrl: tenantData?.evolutionServerUrl || null,
+          evolutionApiKey: tenantData?.evolutionApiKey || null,
+          evolutionInstanceId: tenantData?.evolutionInstanceId || null
         })
       }).catch(err => console.error('Webhook error:', err));
       
