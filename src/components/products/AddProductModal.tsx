@@ -561,6 +561,18 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       return;
     }
 
+    const hasValidVariants = variants.some(v => v.price && parseFloat(v.price) > 0 && v.stock && parseInt(v.stock) > 0);
+    if (!hasValidVariants) {
+      showToast("error", "Please add price and stock for at least one variant");
+      return;
+    }
+
+    const hasPrice = formData.price && parseFloat(formData.price) > 0;
+    if (!hasPrice) {
+      showToast("error", "Please enter a base price for the product");
+      return;
+    }
+
     setSaving(true);
     
     try {
@@ -591,9 +603,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       }));
 
       const totalStock = variantsWithPrice.reduce((sum, v) => sum + v.stock, 0);
-      const minPrice = variantsWithPrice.length > 0 
-        ? Math.min(...variantsWithPrice.map(v => v.price)) 
-        : 0;
+      const minPrice = variantsWithPrice.length > 0 && variantsWithPrice.some(v => v.price > 0)
+        ? Math.min(...variantsWithPrice.filter(v => v.price > 0).map(v => v.price))
+        : parseFloat(formData.price) || 0;
 
       const newProduct = await productService.createProduct(user, {
         name: formData.name,
@@ -602,7 +614,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || selectedSubcategory,
         subcategory: selectedSubcategory,
         filters: allOptionsFilters,
-        price: minPrice || parseFloat(formData.price) || 0,
+        price: minPrice,
         stock: totalStock,
         shippingFee: parseFloat(formData.shippingFee) || 0,
         weight: parseFloat(formData.weight) || undefined,
