@@ -44,7 +44,7 @@ export interface ShippingStatsProps {
   onTimeRate: number;
   avgDays: number;
   activeDrivers: number;
-  todayRevenue: number;
+  todayRevenue?: number;
 }
 
 export const carrierOptions = [

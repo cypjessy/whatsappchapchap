@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { ShippingFormData } from "./types";
+import { Order } from "@/lib/db";
 
 interface CreateShipmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => void;
+  orders?: Order[];
 }
 
-export function CreateShipmentModal({ isOpen, onClose, onSubmit }: CreateShipmentModalProps) {
+export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: CreateShipmentModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
@@ -122,13 +123,6 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit }: CreateShipmen
     onSubmit(shipmentData);
     onClose();
   };
-
-  const mockOrders = [
-    { id: "1234", customer: "Alice Johnson", items: "Nike Air Max, Leather Bag + 2 more", destination: "Nairobi, Kenya" },
-    { id: "1233", customer: "Bob Smith", items: "Premium Leather Handbag x2", destination: "Mombasa, Kenya" },
-    { id: "1232", customer: "Carol White", items: "Smart Watch Pro", destination: "Kisumu, Kenya" },
-    { id: "1231", customer: "David Miller", items: "Wireless Headphones, Keyboard", destination: "Nakuru, Kenya" },
-  ];
 
   const carriers = [
     { value: "g4s", name: "G4S Logistics", price: 12.00, time: "1-2 business days", color: "#1e40af", icon: "G4" },
@@ -402,28 +396,35 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit }: CreateShipmen
                   <input type="text" placeholder="Search by order ID, customer name, or product..." />
                 </div>
                 <div className="order-list">
-                  {mockOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className={`order-item ${selectedOrders.has(order.id) ? 'selected' : ''}`}
-                      onClick={() => toggleOrder(order.id)}
-                    >
-                      <div className="order-checkbox">
-                        {selectedOrders.has(order.id) && <i className="fas fa-check"></i>}
-                      </div>
-                      <div className="order-info">
-                        <div className="order-id">#{order.id}</div>
-                        <div className="order-customer">{order.customer}</div>
-                        <div className="order-items">{order.items}</div>
-                      </div>
-                      <div className="order-destination">
-                        <span className="destination-badge">
-                          <i className="fas fa-map-marker-alt"></i>
-                          {order.destination}
-                        </span>
-                      </div>
+                  {orders.length === 0 ? (
+                    <div style={{ padding: "2rem", textAlign: "center", color: "#64748b" }}>
+                      <i className="fas fa-box-open" style={{ fontSize: "2rem", marginBottom: "1rem" }}></i>
+                      <p>No pending orders available for shipment</p>
                     </div>
-                  ))}
+                  ) : (
+                    orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className={`order-item ${selectedOrders.has(order.id) ? 'selected' : ''}`}
+                        onClick={() => toggleOrder(order.id)}
+                      >
+                        <div className="order-checkbox">
+                          {selectedOrders.has(order.id) && <i className="fas fa-check"></i>}
+                        </div>
+                        <div className="order-info">
+                          <div className="order-id">#{order.orderNumber || order.id.substring(0, 8)}</div>
+                          <div className="order-customer">{order.customerName || "Unknown"}</div>
+                          <div className="order-items">{order.productName || "Product"}</div>
+                        </div>
+                        <div className="order-destination">
+                          <span className="destination-badge">
+                            <i className="fas fa-map-marker-alt"></i>
+                            {order.customerAddress || "No address"}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="input-hint">

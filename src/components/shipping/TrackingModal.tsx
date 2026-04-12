@@ -7,9 +7,10 @@ interface TrackingModalProps {
   isOpen: boolean;
   shipment: Shipment | null;
   onClose: () => void;
+  onUpdateStatus?: (shipment: Shipment, newStatus: string) => void;
 }
 
-export function TrackingModal({ isOpen, shipment, onClose }: TrackingModalProps) {
+export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: TrackingModalProps) {
   if (!isOpen || !shipment) return null;
 
   const getDateString = (date: any) => {

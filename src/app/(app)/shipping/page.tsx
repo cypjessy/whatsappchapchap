@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { shippingService, Shipment } from "@/lib/db";
+import { shippingService, orderService, Shipment, Order } from "@/lib/db";
 import {
   ShippingOverview,
   ShippingToolbar,
@@ -14,6 +14,7 @@ import {
 export default function ShippingPage() {
   const { user } = useAuth();
   const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -25,6 +26,7 @@ export default function ShippingPage() {
   useEffect(() => {
     if (!user) return;
     loadShipments();
+    loadPendingOrders();
   }, [user]);
 
   const loadShipments = async () => {
@@ -38,6 +40,18 @@ export default function ShippingPage() {
       setShipments([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPendingOrders = async () => {
+    if (!user) return;
+    try {
+      const allOrders = await orderService.getOrders(user);
+      const pending = allOrders.filter(o => o.status === "pending" || o.status === "processing");
+      setPendingOrders(pending);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      setPendingOrders([]);
     }
   };
 
@@ -55,13 +69,53 @@ export default function ShippingPage() {
   };
 
   const handleAssignCourier = (shipment: Shipment) => {
-    alert(`Assigning courier for ${shipment.orderId}`);
+    setSelectedShipment(shipment);
+    setShowTrackingModal(true);
   };
 
   const handleCreateShipment = async (data: any) => {
-    console.log("Creating shipment with data:", data);
-    alert(`Shipment created successfully! Tracking: ${data.trackingNumber}`);
-    loadShipments();
+    if (!user || !data.orders || data.orders.length === 0) return;
+    
+    try {
+      for (const orderId of data.orders) {
+        const order = pendingOrders.find(o => o.id === orderId);
+        if (!order) continue;
+        
+        await shippingService.createShipment(user, {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          customerName: order.customerName || "Unknown",
+          customerPhone: order.customerPhone || "",
+          shippingAddress: order.customerAddress,
+          shippingMethod: data.shipping?.speed || "standard",
+          carrier: data.carrier,
+          trackingNumber: data.trackingNumber,
+          status: "pending",
+          notes: data.shipping?.instructions,
+        });
+        
+        await orderService.updateOrder(user, orderId, { status: "shipped" });
+      }
+      
+      loadShipments();
+      loadPendingOrders();
+      alert(`Shipment created successfully! Tracking: ${data.trackingNumber}`);
+    } catch (error) {
+      console.error("Error creating shipment:", error);
+      alert("Failed to create shipment");
+    }
+  };
+
+  const handleUpdateStatus = async (shipment: Shipment, newStatus: string) => {
+    if (!user) return;
+    try {
+      await shippingService.updateShipment(user, shipment.id, { 
+        status: newStatus as Shipment["status"]
+      });
+      loadShipments();
+    } catch (error) {
+      console.error("Error updating shipment:", error);
+    }
   };
 
   const filteredShipments = shipments.filter((shipment) => {
@@ -82,10 +136,9 @@ export default function ShippingPage() {
     inTransit: shipments.filter(s => s.status === "shipped").length,
     delivered: shipments.filter(s => s.status === "delivered").length,
     returns: shipments.filter(s => s.status === "returned").length,
-    onTimeRate: 89,
+    onTimeRate: shipments.length > 0 ? Math.round((shipments.filter(s => s.status === "delivered").length / shipments.length) * 100) : 0,
     avgDays: 2.3,
-    activeDrivers: 8,
-    todayRevenue: 2400,
+    activeDrivers: shipments.filter(s => s.status === "shipped").length,
   };
 
   return (
@@ -149,11 +202,7 @@ export default function ShippingPage() {
           </div>
           <div className="stat-card-mini">
             <div className="stat-value-mini info">{stats.activeDrivers}</div>
-            <div className="stat-label-mini">Active</div>
-          </div>
-          <div className="stat-card-mini">
-            <div className="stat-value-mini indigo">${stats.todayRevenue}</div>
-            <div className="stat-label-mini">Today</div>
+            <div className="stat-label-mini">In Transit</div>
           </div>
         </div>
         <div className="header-actions">
@@ -227,12 +276,14 @@ export default function ShippingPage() {
         isOpen={showTrackingModal}
         shipment={selectedShipment}
         onClose={() => { setShowTrackingModal(false); setSelectedShipment(null); }}
+        onUpdateStatus={handleUpdateStatus}
       />
 
       <CreateShipmentModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateShipment}
+        orders={pendingOrders}
       />
     </div>
   );
