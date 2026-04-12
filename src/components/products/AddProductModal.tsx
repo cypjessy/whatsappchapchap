@@ -17,6 +17,7 @@ interface FormData {
   name: string;
   description: string;
   price: string;
+  initialStock: string;
   shippingFee: string;
   weight: string;
   lowStockAlert: string;
@@ -338,6 +339,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     name: "",
     description: "",
     price: "",
+    initialStock: "",
     shippingFee: "",
     weight: "",
     lowStockAlert: "",
@@ -370,7 +372,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedSpecs({});
     setCustomSpecOptions({});
     setVariants([]);
-    setFormData({ name: "", description: "", price: "", shippingFee: "", weight: "", lowStockAlert: "" });
+    setFormData({ name: "", description: "", price: "", initialStock: "", shippingFee: "", weight: "", lowStockAlert: "" });
     setImagePreview("");
     setSelectedImage(null);
     setCustomInputKey(null);
@@ -573,6 +575,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       return;
     }
 
+    const hasStock = formData.initialStock && parseInt(formData.initialStock) > 0;
+    if (!hasStock) {
+      showToast("error", "Please enter initial stock quantity");
+      return;
+    }
+
     setSaving(true);
     
     try {
@@ -603,6 +611,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       }));
 
       const totalStock = variantsWithPrice.reduce((sum, v) => sum + v.stock, 0);
+      const stock = totalStock > 0 ? totalStock : parseInt(formData.initialStock) || 0;
       const minPrice = variantsWithPrice.length > 0 && variantsWithPrice.some(v => v.price > 0)
         ? Math.min(...variantsWithPrice.filter(v => v.price > 0).map(v => v.price))
         : parseFloat(formData.price) || 0;
@@ -615,7 +624,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         subcategory: selectedSubcategory,
         filters: allOptionsFilters,
         price: minPrice,
-        stock: totalStock,
+        stock: stock,
         shippingFee: parseFloat(formData.shippingFee) || 0,
         weight: parseFloat(formData.weight) || undefined,
         lowStockAlert: parseInt(formData.lowStockAlert) || 5,
@@ -708,12 +717,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             <div className="mb-8 pb-6 border-b border-slate-200">
               <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
                 <i className="fas fa-dollar-sign"></i>
-                Pricing & Shipping
+                Pricing, Stock & Shipping
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Base Price (KES)
+                    Base Price (KES) <span className="text-red-500">*</span>
                   </label>
                   <input 
                     type="number" 
@@ -722,6 +731,19 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     onChange={handleInputChange}
                     className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
                     placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-sm mb-2 text-slate-700">
+                    Initial Stock <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    name="initialStock" 
+                    value={formData.initialStock || ""} 
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    placeholder="e.g., 100"
                   />
                 </div>
                 <div>
@@ -751,9 +773,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     step="0.1"
                   />
                 </div>
-                <div>
+                <div className="col-span-2">
                   <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Low Stock Alert
+                    Low Stock Alert (notify when stock falls below)
                   </label>
                   <input 
                     type="number" 
