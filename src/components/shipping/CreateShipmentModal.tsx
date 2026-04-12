@@ -3,14 +3,21 @@
 import { useState } from "react";
 import { Order } from "@/lib/db";
 
+interface ShippingMethod {
+  id: string;
+  name: string;
+  price: number;
+}
+
 interface CreateShipmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => void;
   orders?: Order[];
+  shippingMethods?: ShippingMethod[];
 }
 
-export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: CreateShipmentModalProps) {
+export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], shippingMethods = [] }: CreateShipmentModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
@@ -124,7 +131,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: 
     onClose();
   };
 
-  const carriers = [
+  const defaultCarriers = [
     { value: "g4s", name: "G4S Logistics", price: 12.00, time: "1-2 business days", color: "#1e40af", icon: "G4" },
     { value: "sendy", name: "Sendy", price: 8.50, time: "Same day delivery", color: "#00d384", icon: "S" },
     { value: "aramex", name: "Aramex", price: 15.00, time: "2-3 business days", color: "#e31937", icon: "A" },
@@ -132,6 +139,17 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: 
     { value: "bolt", name: "Bolt Delivery", price: 10.00, time: "Within 4 hours", color: "#34d186", icon: "B" },
     { value: "pickup", name: "Customer Pickup", price: 0.00, time: "Flexible", color: "#8b5cf6", icon: "PH" },
   ];
+
+  const displayCarriers = shippingMethods.length > 0 
+    ? shippingMethods.map((sm, idx) => ({
+        value: sm.id,
+        name: sm.name,
+        price: sm.price,
+        time: "Standard delivery",
+        color: ["#1e40af", "#00d384", "#e31937", "#ff6b00", "#34d186", "#8b5cf6"][idx % 6],
+        icon: sm.name.substring(0, 2).toUpperCase()
+      }))
+    : defaultCarriers;
 
   if (!isOpen) return null;
 
@@ -439,7 +457,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: 
             <h3 className="section-title"><i className="fas fa-truck"></i> Select Shipping Carrier</h3>
             <div className="form-group full">
               <div className="carrier-grid">
-                {carriers.map((carrier) => (
+                {displayCarriers.map((carrier) => (
                   <label key={carrier.value} className="carrier-option">
                     <input
                       type="radio"
@@ -604,7 +622,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: 
               <div className="summary-body">
                 <div className="summary-row">
                   <span className="summary-label">Carrier</span>
-                  <span className="summary-value">{carriers.find(c => c.value === formData.carrier)?.name || "Not selected"}</span>
+                  <span className="summary-value">{displayCarriers.find(c => c.value === formData.carrier)?.name || "Not selected"}</span>
                 </div>
                 <div className="summary-row">
                   <span className="summary-label">Service</span>
@@ -630,7 +648,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [] }: 
               </div>
               <div className="summary-total">
                 <span className="summary-total-label">Total Shipping Cost</span>
-                <span className="summary-total-value">${(carriers.find(c => c.value === formData.carrier)?.price || 0).toFixed(2)}</span>
+                <span className="summary-total-value">${(displayCarriers.find(c => c.value === formData.carrier)?.price || 0).toFixed(2)}</span>
               </div>
             </div>
 

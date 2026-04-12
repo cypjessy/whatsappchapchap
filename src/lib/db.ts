@@ -29,6 +29,7 @@ export interface Tenant {
   evolutionUUID?: string;
   whatsappInstanceId?: string;
   whatsappConnectionStatus?: string;
+  shippingMethods?: Array<{ id: string; name: string; price: number }>;
   createdAt: any;
   updatedAt: any;
 }

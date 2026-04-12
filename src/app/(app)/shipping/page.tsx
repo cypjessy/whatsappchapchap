@@ -2,19 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { shippingService, orderService, Shipment, Order } from "@/lib/db";
+import { shippingService, orderService, tenantService, Shipment, Order } from "@/lib/db";
 import {
   ShippingOverview,
   ShippingToolbar,
   ShippingTable,
   TrackingModal,
   CreateShipmentModal,
+  ShippingMethodsModal,
 } from "@/components/shipping";
+
+interface ShippingMethod {
+  id: string;
+  name: string;
+  price: number;
+}
 
 export default function ShippingPage() {
   const { user } = useAuth();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([
+    { id: "standard", name: "Standard Delivery", price: 500 },
+    { id: "express", name: "Express Delivery", price: 1000 },
+    { id: "pickup", name: "Store Pickup", price: 0 }
+  ]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -22,11 +34,13 @@ export default function ShippingPage() {
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showShippingMethodsModal, setShowShippingMethodsModal] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     loadShipments();
     loadPendingOrders();
+    loadShippingMethods();
   }, [user]);
 
   const loadShipments = async () => {
@@ -52,6 +66,30 @@ export default function ShippingPage() {
     } catch (error) {
       console.error("Error loading orders:", error);
       setPendingOrders([]);
+    }
+  };
+
+  const loadShippingMethods = async () => {
+    if (!user) return;
+    try {
+      const tenantData = await tenantService.getTenant(user);
+      if (tenantData?.shippingMethods && tenantData.shippingMethods.length > 0) {
+        setShippingMethods(tenantData.shippingMethods);
+      }
+    } catch (error) {
+      console.error("Error loading shipping methods:", error);
+    }
+  };
+
+  const handleSaveShippingMethods = async (methods: ShippingMethod[]) => {
+    if (!user) return;
+    try {
+      await tenantService.updateTenant(user, { shippingMethods: methods });
+      setShippingMethods(methods);
+      alert("Shipping methods saved!");
+    } catch (error) {
+      console.error("Error saving shipping methods:", error);
+      alert("Failed to save shipping methods");
     }
   };
 
@@ -206,30 +244,12 @@ export default function ShippingPage() {
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn btn-secondary"><i className="fas fa-print"></i> Manifest</button>
+          <button className="btn btn-secondary" onClick={() => setShowShippingMethodsModal(true)}><i className="fas fa-truck"></i> Shipping Methods</button>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><i className="fas fa-plus"></i> New Shipment</button>
         </div>
       </div>
 
       <ShippingOverview stats={stats} />
-
-      <div className="map-section">
-        <div className="map-header">
-          <div className="map-title"><i className="fas fa-map-marked-alt" style={{ color: "#6366f1" }}></i> Live Delivery Tracking</div>
-          <button className="btn btn-secondary btn-sm" onClick={loadShipments}><i className="fas fa-sync-alt"></i> Refresh</button>
-        </div>
-        <div className="map-container">
-          <div className="map-placeholder">
-            <i className="fas fa-map"></i>
-            <p>Live Map Integration</p>
-            <small>Google Maps or Mapbox would display here</small>
-          </div>
-          <div className="live-drivers">
-            <div className="live-indicator"></div>
-            <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{stats.activeDrivers} Drivers Active</span>
-          </div>
-        </div>
-      </div>
 
       <ShippingToolbar
         searchTerm={searchTerm}
@@ -284,6 +304,14 @@ export default function ShippingPage() {
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateShipment}
         orders={pendingOrders}
+        shippingMethods={shippingMethods}
+      />
+
+      <ShippingMethodsModal
+        isOpen={showShippingMethodsModal}
+        onClose={() => setShowShippingMethodsModal(false)}
+        methods={shippingMethods}
+        onSave={handleSaveShippingMethods}
       />
     </div>
   );
