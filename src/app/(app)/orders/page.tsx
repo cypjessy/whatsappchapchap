@@ -198,6 +198,7 @@ export default function OrdersPage() {
         total: totals.total
       });
       await orderService.createOrder(user, {
+        orderNumber: "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
         customerId: "",
         customerName: newOrderForm.customerName,
         customerPhone: newOrderForm.customerPhone,
@@ -235,13 +236,13 @@ export default function OrdersPage() {
   };
 
   const exportToCSV = () => {
-    const headers = ["Order ID", "Customer Name", "Phone", "Email", "Products", "Total", "Status", "Date"];
+    const headers = ["Order Number", "Customer Name", "Phone", "Email", "Products", "Total", "Status", "Date"];
     const rows = orders.map(order => [
-      order.id.substring(0, 8),
+      order.orderNumber || order.id.substring(0, 8),
       order.customerName,
       order.customerPhone,
       order.customerEmail,
-      order.products?.map(p => `${p.name} x${p.quantity}`).join(", "),
+      order.products?.map(p => `${p.name} x${p.quantity}`).join(", ") || order.productName,
       order.total,
       order.status,
       formatDate(order.createdAt)
@@ -306,8 +307,9 @@ export default function OrdersPage() {
       shipped: "Your order has been shipped!",
       delivered: "Your order has been delivered. Thank you!"
     };
+    const orderStatus = order.status || "pending";
     const message = encodeURIComponent(
-      `Hi ${name}! 👋\n\nOrder #${order.id.substring(0, 8)}\nStatus: ${statusMessages[order.status] || "Updated"}\n\nTotal: ${CURRENCY_SYMBOL}${order.total}\n\nThank you for shopping with us!`
+      `Hi ${name}! 👋\n\nOrder #${order.orderNumber || order.id.substring(0, 8)}\nStatus: ${statusMessages[orderStatus] || "Updated"}\n\nTotal: ${CURRENCY_SYMBOL}${order.total}\n\nThank you for shopping with us!`
     );
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, "_blank");
@@ -365,7 +367,7 @@ export default function OrdersPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
     const styles: Record<string, { bg: string; color: string; label: string }> = {
       pending: { bg: "bg-[rgba(245,158,11,0.1)]", color: "text-[#f59e0b]", label: "Pending" },
       processing: { bg: "bg-[rgba(59,130,246,0.1)]", color: "text-[#3b82f6]", label: "Processing" },
@@ -373,7 +375,7 @@ export default function OrdersPage() {
       delivered: { bg: "bg-[rgba(37,211,102,0.1)]", color: "text-[#25D366]", label: "Completed" },
       cancelled: { bg: "bg-[rgba(239,68,68,0.1)]", color: "text-[#ef4444]", label: "Cancelled" },
     };
-    return styles[status] || styles.pending;
+    return styles[status || "pending"] || styles.pending;
   };
 
   const formatDate = (createdAt: any) => {
@@ -397,7 +399,10 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter(order => {
-    if (searchTerm && !order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) && 
+    const searchLower = searchTerm.toLowerCase();
+    if (searchTerm && 
+        !order.customerName?.toLowerCase().includes(searchLower) && 
+        !order.orderNumber?.toLowerCase().includes(searchLower) &&
         !order.id.includes(searchTerm)) {
       return false;
     }
@@ -508,7 +513,7 @@ export default function OrdersPage() {
                             {selectedOrders.has(order.id) && <i className="fas fa-check text-white text-xs"></i>}
                           </div>
                         </td>
-                        <td className="p-4 font-bold text-[#25D366] cursor-pointer" onClick={() => openOrderModal(order)}>#{order.id.substring(0, 8)}</td>
+                        <td className="p-4 font-bold text-[#25D366] cursor-pointer" onClick={() => openOrderModal(order)}>#{order.orderNumber || order.id.substring(0, 8)}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center font-bold text-sm">
@@ -529,7 +534,7 @@ export default function OrdersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-4 font-bold text-lg">{formatCurrency(order.total)}<div className="text-xs text-[#64748b] font-normal">{order.paymentMethod || "N/A"}</div></td>
+                        <td className="p-4 font-bold text-lg">{formatCurrency(order.total || 0)}<div className="text-xs text-[#64748b] font-normal">{order.paymentMethod || "N/A"}</div></td>
                         <td className="p-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-1 w-fit ${statusStyle.bg} ${statusStyle.color}`}>
                             <i className="fas fa-circle text-[0.5rem]"></i>{statusStyle.label}
@@ -576,7 +581,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-extrabold flex items-center gap-2">
-                    Order <span className="text-[#25D366]">#{selectedOrder.id.substring(0, 8)}</span>
+                    Order <span className="text-[#25D366]">#{selectedOrder.orderNumber || selectedOrder.id.substring(0, 8)}</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-2 ${selectedOrder.status === "pending" ? "bg-[rgba(245,158,11,0.1)] text-[#f59e0b]" : selectedOrder.status === "processing" ? "bg-[rgba(59,130,246,0.1)] text-[#3b82f6]" : selectedOrder.status === "delivered" ? "bg-[rgba(37,211,102,0.1)] text-[#10b981]" : "bg-[rgba(239,68,68,0.1)] text-[#ef4444]"}`}>
                       <span className="w-2 h-2 rounded-full bg-current"></span>
                       {selectedOrder.status === "pending" ? "Pending" : selectedOrder.status === "processing" ? "Processing" : selectedOrder.status === "delivered" ? "Completed" : "Cancelled"}
@@ -651,21 +656,21 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
                       <span className="text-[#64748b]">Shipping</span>
-                      <span className="font-semibold">{formatCurrency(selectedOrder.shipping || 0)}</span>
+                      <span className="font-semibold">{selectedOrder.deliveryMethod ? `${selectedOrder.deliveryMethod} - ${formatCurrency(selectedOrder.deliveryCost || 0)}` : formatCurrency(selectedOrder.deliveryCost || 0)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
                       <span className="text-[#64748b]">Tax (16%)</span>
                       <span className="font-semibold">{formatCurrency(selectedOrder.tax || 0)}</span>
                     </div>
-                    {selectedOrder.discount > 0 && (
+                    {(selectedOrder.discount || 0) > 0 && (
                       <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0] text-[#10b981]">
                         <span><i className="fas fa-tag mr-2"></i>Discount</span>
-                        <span className="font-semibold">-{formatCurrency(selectedOrder.discount)}</span>
+                        <span className="font-semibold">-{formatCurrency(selectedOrder.discount || 0)}</span>
                       </div>
                     )}
                     <div className="flex justify-between pt-3 mt-2 border-t-2 border-[#e2e8f0] text-xl font-extrabold">
                       <span>Total</span>
-                      <span className="text-[#25D366]">{formatCurrency(selectedOrder.total)}</span>
+                      <span className="text-[#25D366]">{formatCurrency(selectedOrder.total || 0)}</span>
                     </div>
                   </div>
 
@@ -682,7 +687,7 @@ export default function OrdersPage() {
                             <span className="font-bold text-sm">Order Placed</span>
                             <span className="text-xs text-[#64748b]">{formatTime(selectedOrder.createdAt)}</span>
                           </div>
-                          <p className="text-xs text-[#64748b]">Order #{selectedOrder.id.substring(0, 8)} created</p>
+                          <p className="text-xs text-[#64748b]">Order #{selectedOrder.orderNumber || selectedOrder.id.substring(0, 8)} created</p>
                         </div>
                       </div>
                       <div className="relative pb-6">
@@ -749,8 +754,8 @@ export default function OrdersPage() {
                   <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] mb-6">
                     <div className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-4">Order Information</div>
                     <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
-                      <span className="text-[#64748b]">Order ID</span>
-                      <span className="font-semibold">#{selectedOrder.id.substring(0, 8)}</span>
+                      <span className="text-[#64748b]">Order Number</span>
+                      <span className="font-semibold">#{selectedOrder.orderNumber || selectedOrder.id.substring(0, 8)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
                       <span className="text-[#64748b]">Date</span>
@@ -762,6 +767,18 @@ export default function OrdersPage() {
                         <i className="fas fa-money-bill-wave text-[#10b981]"></i> {selectedOrder.paymentMethod || "COD"}
                       </span>
                     </div>
+                    {selectedOrder.paymentDetails && (
+                      <div className="py-2 border-b border-[#e2e8f0] text-sm">
+                        <span className="text-[#64748b]">Payment Details: </span>
+                        <span className="font-semibold">{selectedOrder.paymentDetails}</span>
+                      </div>
+                    )}
+                    {selectedOrder.orderNotes && (
+                      <div className="py-2 border-b border-[#e2e8f0] text-sm">
+                        <span className="text-[#64748b]">Order Notes: </span>
+                        <span className="font-semibold">{selectedOrder.orderNotes}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
                       <span className="text-[#64748b]">Source</span>
                       <span className="font-semibold">

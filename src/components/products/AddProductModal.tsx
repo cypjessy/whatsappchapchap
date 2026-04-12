@@ -18,8 +18,6 @@ interface FormData {
   description: string;
   price: string;
   initialStock: string;
-  shippingFee: string;
-  weight: string;
   lowStockAlert: string;
 }
 
@@ -360,8 +358,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     description: "",
     price: "",
     initialStock: "",
-    shippingFee: "",
-    weight: "",
     lowStockAlert: "",
   });
   
@@ -403,7 +399,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedSpecs({});
     setCustomSpecOptions({});
     setVariants([]);
-    setFormData({ name: "", description: "", price: "", initialStock: "", shippingFee: "", weight: "", lowStockAlert: "" });
+    setFormData({ name: "", description: "", price: "", initialStock: "", lowStockAlert: "" });
     setProductImages([]);
     setSelectedImage(null);
     setCustomInputKey(null);
@@ -720,8 +716,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         filters: filters,
         price: minPrice,
         stock: stock,
-        weight: parseFloat(formData.weight) || undefined,
-        weightUnit: "kg",
         lowStockAlert: parseInt(formData.lowStockAlert) || 5,
         image: imageUrl,
         images: images.length > 1 ? images : undefined,
@@ -850,33 +844,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     onChange={handleInputChange}
                     className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
                     placeholder="e.g., 100"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Shipping Fee (KES)
-                  </label>
-                  <input 
-                    type="number" 
-                    name="shippingFee" 
-                    value={formData.shippingFee || ""} 
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Weight (kg)
-                  </label>
-                  <input 
-                    type="number" 
-                    name="weight" 
-                    value={formData.weight || ""} 
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
-                    placeholder="0.0"
-                    step="0.1"
                   />
                 </div>
                 <div className="col-span-2">

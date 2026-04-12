@@ -187,11 +187,12 @@ function OrderPageContent() {
       const app = getFirebaseApp()!;
       const db = getFirestore(app);
       
-      const orderNum = "ORD-" + new Date().getFullYear() + "-" + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const orderNum = "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
       const subtotal = getBasePrice() * quantity;
       const total = subtotal + deliveryCost;
       
       await addDoc(collection(db, "orders"), {
+        orderNumber: orderNum,
         tenantId,
         productId: product.id,
         productName: product.name,
@@ -242,6 +243,10 @@ function OrderPageContent() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
+  const goToTrackOrder = () => {
+    window.location.href = `/track?tenant=${tenantId}&orderNumber=${orderNumber}`;
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", padding: 16 }}>
@@ -285,10 +290,18 @@ function OrderPageContent() {
 
           <button 
             onClick={continueToWhatsApp}
-            style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}
+            style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(37,211,102,0.3)", marginBottom: 12 }}
           >
             <i className="fab fa-whatsapp"></i>
             Continue to WhatsApp
+          </button>
+
+          <button 
+            onClick={goToTrackOrder}
+            style={{ width: "100%", padding: 16, background: "white", color: "#1e293b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            <i className="fas fa-search"></i>
+            Track My Order
           </button>
         </div>
       </div>
