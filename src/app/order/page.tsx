@@ -223,8 +223,16 @@ function OrderPageContent() {
   };
 
   const contactSeller = () => {
-    const phone = tenantId.replace(/[^0-9]/g, '');
+    const cleanTenantId = tenantId.replace('tenant_', '');
+    const phone = cleanTenantId.replace(/[^0-9]/g, '');
     const message = `Hi, I'm interested in ${product?.name}`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const continueToWhatsApp = () => {
+    const cleanTenantId = tenantId.replace('tenant_', '');
+    const phone = cleanTenantId.replace(/[^0-9]/g, '');
+    const message = `Hi, I just placed order ${orderNumber}. Here's my details:\n\nName: ${customerName}\nPhone: ${customerPhone}\nAddress: ${address}\n\nOrder Total: ${CURRENCY_SYMBOL}${total.toLocaleString()}\nPayment: ${paymentMethod}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -270,7 +278,7 @@ function OrderPageContent() {
           </div>
 
           <button 
-            onClick={contactSeller}
+            onClick={continueToWhatsApp}
             style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}
           >
             <i className="fab fa-whatsapp"></i>
