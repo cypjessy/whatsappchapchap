@@ -29,6 +29,7 @@ interface Product {
   description?: string;
   price: number;
   stock?: number;
+  shippingFee?: number;
   image?: string;
   category?: string;
   categoryName?: string;
@@ -103,6 +104,12 @@ function OrderPageContent() {
 
     fetchProduct();
   }, [productId, tenantId]);
+
+  useEffect(() => {
+    if (product?.shippingFee !== undefined && product.shippingFee > 0) {
+      setDeliveryCost(product.shippingFee);
+    }
+  }, [product?.shippingFee]);
 
   const getBasePrice = () => {
     if (!product) return 0;

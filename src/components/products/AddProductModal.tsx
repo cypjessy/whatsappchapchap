@@ -16,6 +16,10 @@ interface AddProductModalProps {
 interface FormData {
   name: string;
   description: string;
+  price: string;
+  shippingFee: string;
+  weight: string;
+  lowStockAlert: string;
 }
 
 interface Variant {
@@ -333,6 +337,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
+    price: "",
+    shippingFee: "",
+    weight: "",
+    lowStockAlert: "",
   });
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -362,7 +370,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedSpecs({});
     setCustomSpecOptions({});
     setVariants([]);
-    setFormData({ name: "", description: "" });
+    setFormData({ name: "", description: "", price: "", shippingFee: "", weight: "", lowStockAlert: "" });
     setImagePreview("");
     setSelectedImage(null);
     setCustomInputKey(null);
@@ -595,8 +603,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || selectedSubcategory,
         subcategory: selectedSubcategory,
         filters: allOptionsFilters,
-        price: minPrice,
+        price: minPrice || parseFloat(formData.price) || 0,
         stock: totalStock,
+        shippingFee: parseFloat(formData.shippingFee) || 0,
+        weight: parseFloat(formData.weight) || undefined,
+        lowStockAlert: parseInt(formData.lowStockAlert) || 5,
         image: imageUrl,
         status: "active" as const,
         variants: variantsWithPrice,
@@ -677,6 +688,69 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     rows={3}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50 resize-none"
                     placeholder="Describe your product..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 1.5: Pricing & Shipping */}
+            <div className="mb-8 pb-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
+                <i className="fas fa-dollar-sign"></i>
+                Pricing & Shipping
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block font-semibold text-sm mb-2 text-slate-700">
+                    Base Price (KES)
+                  </label>
+                  <input 
+                    type="number" 
+                    name="price" 
+                    value={formData.price} 
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-sm mb-2 text-slate-700">
+                    Shipping Fee (KES)
+                  </label>
+                  <input 
+                    type="number" 
+                    name="shippingFee" 
+                    value={formData.shippingFee || ""} 
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-sm mb-2 text-slate-700">
+                    Weight (kg)
+                  </label>
+                  <input 
+                    type="number" 
+                    name="weight" 
+                    value={formData.weight || ""} 
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    placeholder="0.0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-sm mb-2 text-slate-700">
+                    Low Stock Alert
+                  </label>
+                  <input 
+                    type="number" 
+                    name="lowStockAlert" 
+                    value={formData.lowStockAlert || ""} 
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    placeholder="5"
                   />
                 </div>
               </div>

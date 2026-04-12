@@ -47,6 +47,9 @@ export interface Product {
   filters?: Record<string, string[]>;
   stock?: number;
   image?: string;
+  shippingFee?: number;
+  weight?: number;
+  lowStockAlert?: number;
   // Additional fields
   salePrice?: number;
   costPrice?: number;
@@ -56,9 +59,7 @@ export interface Product {
   condition?: string;
   taxEnabled?: boolean;
   taxRate?: number;
-  weight?: number;
   weightUnit?: string;
-  lowStockAlert?: number;
   status?: string;
   variants?: Variant[];
   createdAt: any;
