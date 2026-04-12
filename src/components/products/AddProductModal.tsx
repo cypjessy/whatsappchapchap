@@ -625,8 +625,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         filters: allOptionsFilters,
         price: minPrice,
         stock: stock,
-        shippingFee: parseFloat(formData.shippingFee) || 0,
         weight: parseFloat(formData.weight) || undefined,
+        weightUnit: "kg",
         lowStockAlert: parseInt(formData.lowStockAlert) || 5,
         image: imageUrl,
         status: "active" as const,
@@ -635,7 +635,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
       await productService.updateProduct(user, newProduct.id, {
-        orderLink: `${baseUrl}/order?tenant=${user.uid}&product=${newProduct.id}`,
+        orderLink: `${baseUrl}/order?tenant=tenant_${user.uid}&product=${newProduct.id}`,
       });
 
       showToast("success", `Product "${formData.name}" with ${variants.length} variants saved!`);
