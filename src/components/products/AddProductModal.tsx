@@ -23,6 +23,12 @@ interface FormData {
   lowStockAlert: string;
 }
 
+interface ProductImage {
+  id: number;
+  url: string;
+  isMain: boolean;
+}
+
 interface Variant {
   id: number;
   specs: Record<string, string>;
@@ -355,6 +361,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [toasts, setToasts] = useState<{ id: number; type: string; message: string }[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customInputKey, setCustomInputKey] = useState<string | null>(null);
@@ -373,7 +380,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setCustomSpecOptions({});
     setVariants([]);
     setFormData({ name: "", description: "", price: "", initialStock: "", shippingFee: "", weight: "", lowStockAlert: "" });
-    setImagePreview("");
+    setProductImages([]);
     setSelectedImage(null);
     setCustomInputKey(null);
     setCustomInputValue("");
@@ -391,16 +398,76 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("error", "Image must be less than 5MB");
-      return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const newImages: ProductImage[] = [];
+    
+    Array.from(files).forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("error", "Image must be less than 5MB");
+        return;
+      }
+      
+      const id = Date.now() + Math.random();
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProductImages(prev => [...prev, {
+          id,
+          url: reader.result as string,
+          isMain: prev.length === 0 && newImages.length === 0
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (id: number) => {
+    setProductImages(prev => {
+      const filtered = prev.filter(img => img.id !== id);
+      if (filtered.length > 0 && !filtered.some(img => img.isMain)) {
+        filtered[0].isMain = true;
+      }
+      return filtered;
+    });
+  };
+
+  const setMainImage = (id: number) => {
+    setProductImages(prev => prev.map(img => ({
+      ...img,
+      isMain: img.id === id
+    })));
+  };
+
+  const uploadAllImages = async (): Promise<string[]> => {
+    if (productImages.length === 0 || !user) return [];
+    
+    setUploadingImage(true);
+    const uploadedUrls: string[] = [];
+    
+    try {
+      for (const img of productImages) {
+        if (img.url.startsWith('data:')) {
+          const base64Response = await fetch(img.url);
+          const blob = await base64Response.blob();
+          const file = new File([blob], `image_${img.id}.jpg`, { type: 'image/jpeg' });
+          
+          const result = await bunnyStorage.uploadFile(user, file, "products");
+          if (result.success && result.url) {
+            uploadedUrls.push(result.url);
+          }
+        } else {
+          uploadedUrls.push(img.url);
+        }
+      }
+      return uploadedUrls;
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      showToast("error", "Failed to upload images");
+      return [];
+    } finally {
+      setUploadingImage(false);
     }
-    setSelectedImage(file);
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
   };
 
   const uploadImageFile = async () => {
@@ -585,16 +652,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     
     try {
       let imageUrl: string | undefined;
-      if (selectedImage) {
-        const uploaded = await uploadImageFile();
-        if (uploaded) imageUrl = uploaded;
-      }
-
-      const filters: Record<string, string[]> = {};
-      Object.entries(selectedSpecs).forEach(([key, set]) => {
-        filters[key] = Array.from(set);
-      });
-
+      let images: string[] = [];
+      
       const allSpecs = getCurrentSpecs();
       const allOptionsFilters: Record<string, string[]> = {};
       Object.entries(allSpecs).forEach(([key, spec]) => {
@@ -615,8 +674,15 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const minPrice = variantsWithPrice.length > 0 && variantsWithPrice.some(v => v.price > 0)
         ? Math.min(...variantsWithPrice.filter(v => v.price > 0).map(v => v.price))
         : parseFloat(formData.price) || 0;
+      
+      if (productImages.length > 0) {
+        images = await uploadAllImages();
+        if (images.length > 0) {
+          imageUrl = images[0];
+        }
+      }
 
-      const newProduct = await productService.createProduct(user, {
+      const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
@@ -629,13 +695,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         weightUnit: "kg",
         lowStockAlert: parseInt(formData.lowStockAlert) || 5,
         image: imageUrl,
+        images: images.length > 1 ? images : undefined,
         status: "active" as const,
         variants: variantsWithPrice,
       });
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-      await productService.updateProduct(user, newProduct.id, {
-        orderLink: `${baseUrl}/order?tenant=tenant_${user.uid}&product=${newProduct.id}`,
+      await productService.updateProduct(user, productToSave.id, {
+        orderLink: `${baseUrl}/order?tenant=tenant_${user.uid}&product=${productToSave.id}`,
       });
 
       showToast("success", `Product "${formData.name}" with ${variants.length} variants saved!`);
@@ -987,39 +1054,52 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             <div className="mb-4">
               <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
                 <i className="fas fa-images"></i>
-                Product Images
+                Product Images <span className="text-slate-400 font-normal normal-case">(select multiple)</span>
               </div>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all"
-              >
-                {imagePreview ? (
-                  <div className="relative inline-block">
-                    <img src={imagePreview} alt="Preview" className="max-h-48 rounded-lg" />
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setImagePreview(""); setSelectedImage(null); }}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-4xl text-slate-400 mb-3">
-                      <i className="fas fa-cloud-upload-alt"></i>
+              
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                {productImages.map((img) => (
+                  <div key={img.id} className={`relative rounded-xl overflow-hidden border-2 ${img.isMain ? "border-green-500" : "border-slate-200"}`}>
+                    <img src={img.url} alt="Product" className="w-full h-24 object-cover" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 flex justify-between">
+                      <button 
+                        onClick={() => setMainImage(img.id)}
+                        className={`text-xs px-2 py-1 rounded ${img.isMain ? "bg-green-500 text-white" : "bg-white/20 text-white hover:bg-white/30"}`}
+                      >
+                        {img.isMain ? "✓ Main" : "Set Main"}
+                      </button>
+                      <button 
+                        onClick={() => removeImage(img.id)}
+                        className="text-white hover:text-red-400"
+                      >
+                        <i className="fas fa-trash text-xs"></i>
+                      </button>
                     </div>
-                    <div className="font-semibold text-slate-700 mb-1">Click to upload images</div>
-                    <div className="text-sm text-slate-500">or drag and drop files here</div>
-                  </>
-                )}
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
+                    {img.isMain && (
+                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        Main
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                <label className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all flex flex-col items-center justify-center h-24">
+                  <i className="fas fa-plus text-slate-400 text-xl mb-1"></i>
+                  <span className="text-xs text-slate-500">Add More</span>
+                  <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </label>
               </div>
+              
+              <p className="text-xs text-slate-500">
+                Click on an image to set it as the main product image. You can add multiple images to show different variants or angles.
+              </p>
             </div>
           </div>
 

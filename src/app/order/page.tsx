@@ -31,6 +31,7 @@ interface Product {
   stock?: number;
   shippingFee?: number;
   image?: string;
+  images?: string[];
   category?: string;
   categoryName?: string;
   subcategory?: string;

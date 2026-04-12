@@ -46,6 +46,7 @@ export interface Product {
   filters?: Record<string, string[]>;
   stock?: number;
   image?: string;
+  images?: string[];
   shippingFee?: number;
   weight?: number;
   lowStockAlert?: number;
