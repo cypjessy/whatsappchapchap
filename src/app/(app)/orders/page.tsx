@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { orderService, Order, productService, Product, customerService, Customer } from "@/lib/db";
+import { orderService, Order, productService, Product, customerService, Customer, tenantService } from "@/lib/db";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
+import { app as firebaseApp } from "@/lib/firebase";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -257,10 +259,14 @@ export default function OrdersPage() {
   };
 
   const bulkUpdateStatus = async (status: Order["status"]) => {
-    if (!user || selectedOrders.size === 0) return;
+    if (!user || selectedOrders.size === 0 || !status) return;
     try {
       for (const orderId of selectedOrders) {
+        const order = orders.find(o => o.id === orderId);
         await orderService.updateOrder(user, orderId, { status });
+        if (order) {
+          await sendOrderUpdate(order, status);
+        }
       }
       loadOrders();
       loadCounts();
@@ -275,6 +281,7 @@ export default function OrdersPage() {
     try {
       const nextStatus = selectedOrder.status === "pending" ? "processing" : "delivered";
       await orderService.updateOrder(user, selectedOrder.id, { status: nextStatus });
+      await sendOrderUpdate(selectedOrder, nextStatus);
       loadOrders();
       loadCounts();
       setModalOpen(false);
@@ -315,10 +322,42 @@ export default function OrdersPage() {
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, "_blank");
   };
 
+  const sendOrderUpdate = async (order: Order, newStatus: string) => {
+    try {
+      if (!firebaseApp) return;
+      const db = getFirestore(firebaseApp);
+      
+      const tenantId = order.tenantId || `tenant_${user?.uid}`;
+      const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
+      const tenant = tenantDoc.data();
+
+      await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          customerPhone: order.customerPhone,
+          customerName: order.customerName,
+          productName: order.productName,
+          status: newStatus,
+          deliveryAddress: order.customerAddress || "",
+          tenantId: order.tenantId,
+          evolutionServerUrl: tenant?.evolutionServerUrl,
+          evolutionApiKey: tenant?.evolutionApiKey,
+          evolutionInstanceId: tenant?.evolutionInstanceId
+        })
+      });
+    } catch (err) {
+      console.error('Order update webhook error:', err);
+    }
+  };
+
   const updateOrderStatus = async (newStatus: Order["status"]) => {
-    if (!user || !selectedOrder) return;
+    if (!user || !selectedOrder || !newStatus) return;
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: newStatus });
+      await sendOrderUpdate(selectedOrder, newStatus);
       loadOrders();
       loadCounts();
       setShowStatusMenu(false);
