@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 
 const firebaseConfig = {
@@ -210,6 +210,8 @@ function OrderPageContent() {
       const subtotal = getBasePrice() * quantity;
       const total = subtotal + deliveryCost;
       
+      const now = new Date();
+      
       await addDoc(collection(db, "orders"), {
         orderNumber: orderNum,
         tenantId,
@@ -222,7 +224,7 @@ function OrderPageContent() {
           Object.entries(selectedSpecs).every(([key, value]) => v.specs[key] === value)
         ) || null,
         quantity,
-        customerPhone: customerPhone,
+        customerPhone: customerPhone.replace(/^\+/, ''),
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim() || null,
         deliveryAddress: address.trim(),
@@ -230,12 +232,18 @@ function OrderPageContent() {
         deliveryCost,
         paymentMethod,
         paymentDetails: paymentDetails.trim() || null,
-        orderNotes: orderNotes.trim() || null,
+        orderNotes: orderNotes.trim() || "",
         subtotal,
         total,
         status: "pending",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        statusHistory: {
+          pending: now.toISOString()
+        },
+        evolutionInstanceId: tenantData?.evolutionInstanceId || null,
+        createdAt: now,
+        updatedAt: now
+      }).then((docRef) => {
+        updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
       });
 
       await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {
@@ -244,7 +252,7 @@ function OrderPageContent() {
         body: JSON.stringify({
           orderId: orderNum,
           orderNumber: orderNum,
-          customerPhone: customerPhone,
+          customerPhone: customerPhone.replace(/^\+/, ''),
           customerName: customerName.trim(),
           productName: product.name,
           price: getBasePrice(),

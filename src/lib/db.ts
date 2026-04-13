@@ -174,7 +174,8 @@ export interface Order {
   paymentDetails?: string;
   orderNotes?: string;
   deliveryMethod?: string;
-  status?: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status?: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+  statusHistory?: Record<string, string>;
   notes?: string;
   createdAt: any;
   updatedAt: any;
@@ -243,6 +244,7 @@ export interface Shipment {
   carrier?: string;
   trackingNumber?: string;
   status: "pending" | "shipped" | "delivered" | "returned" | "cancelled";
+  statusHistory?: Record<string, string>;
   carrierName?: string;
   driverName?: string;
   driverPhone?: string;
@@ -470,10 +472,29 @@ export const orderService = {
   },
 
   async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<void> {
-    const cleanData = Object.fromEntries(
+    let finalData: any = Object.fromEntries(
       Object.entries(data).filter(([_, value]) => value !== undefined && value !== "" && value !== null)
     );
-    await setDoc(doc(db, "orders", orderId), { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
+    
+    // If status is being updated, also update statusHistory
+    if (data.status) {
+      const orderDoc = await getDoc(doc(db, "orders", orderId));
+      const existingOrder = orderDoc.exists() ? orderDoc.data() as Order : null;
+      const existingHistory = existingOrder?.statusHistory || {};
+      
+      finalData = {
+        ...finalData,
+        updatedAt: serverTimestamp(),
+        statusHistory: {
+          ...existingHistory,
+          [data.status]: new Date().toISOString()
+        }
+      };
+    } else {
+      finalData.updatedAt = serverTimestamp();
+    }
+    
+    await setDoc(doc(db, "orders", orderId), finalData, { merge: true });
   },
 
   async getOrderCounts(user: User): Promise<{all: number, pending: number, processing: number, completed: number, cancelled: number}> {
@@ -976,7 +997,24 @@ export const shippingService = {
   },
 
   async updateShipment(user: User, shipmentId: string, data: Partial<Shipment>): Promise<void> {
-    await setDoc(doc(db, "shipments", shipmentId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    let finalData = { ...data, updatedAt: serverTimestamp() };
+    
+    // If status is being updated, also update statusHistory
+    if (data.status) {
+      const shipmentDoc = await getDoc(doc(db, "shipments", shipmentId));
+      const existingShipment = shipmentDoc.exists() ? shipmentDoc.data() : null;
+      const existingHistory = existingShipment?.statusHistory || {};
+      
+      finalData = {
+        ...finalData,
+        statusHistory: {
+          ...existingHistory,
+          [data.status]: new Date().toISOString()
+        }
+      };
+    }
+    
+    await setDoc(doc(db, "shipments", shipmentId), finalData, { merge: true });
   },
 };
 
