@@ -38,7 +38,13 @@ export const sendEvolutionWhatsAppMessage = async (
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
     
-    const evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
+    // Convert http to https for Evolution server URL
+    let evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
+    if (evolutionUrl.startsWith('http://')) {
+      evolutionUrl = evolutionUrl.replace('http://', 'https://');
+      console.log("Converted HTTP to HTTPS for Evolution server");
+    }
+    
     const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
 
     console.log("Sending WhatsApp to:", fullPhone);
