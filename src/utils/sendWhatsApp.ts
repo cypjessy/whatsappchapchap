@@ -15,7 +15,6 @@ export const sendEvolutionWhatsAppMessage = async (
     const { getFirestore } = await import('firebase/firestore');
     const db = getFirestore(app);
     
-    console.log("Fetching tenant:", tenantId);
     const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
     
     if (!tenantDoc.exists()) {
@@ -24,66 +23,64 @@ export const sendEvolutionWhatsAppMessage = async (
     }
     
     const tenant = tenantDoc.data();
-    console.log("Tenant evolution config:", {
-      serverUrl: tenant?.evolutionServerUrl,
-      hasApiKey: !!tenant?.evolutionApiKey,
-      instanceId: tenant?.evolutionInstanceId
-    });
     
-    if (!tenant?.evolutionServerUrl || !tenant?.evolutionApiKey || !tenant?.evolutionInstanceId) {
-      console.error('Missing Evolution credentials for tenant:', tenantId);
-      return;
+    // Try Evolution API first
+    let evolutionWorked = false;
+    
+    if (tenant?.evolutionServerUrl && tenant?.evolutionApiKey && tenant?.evolutionInstanceId) {
+      try {
+        const cleanPhone = phone.replace(/[^0-9]/g, "");
+        const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+        
+        let evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
+        if (evolutionUrl.startsWith('http://')) {
+          evolutionUrl = evolutionUrl.replace('http://', 'https://');
+        }
+        
+        const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': tenant.evolutionApiKey
+          },
+          body: JSON.stringify({
+            number: fullPhone,
+            text: message
+          })
+        });
+
+        if (response.ok) {
+          console.log("WhatsApp sent via Evolution API");
+          evolutionWorked = true;
+          return;
+        }
+      } catch (e) {
+        console.log("Evolution API failed, trying alternatives...");
+      }
     }
 
-    const cleanPhone = phone.replace(/[^0-9]/g, "");
-    const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
-    
-    // Convert http to https for Evolution server URL
-    let evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
-    if (evolutionUrl.startsWith('http://')) {
-      evolutionUrl = evolutionUrl.replace('http://', 'https://');
-      console.log("Converted HTTP to HTTPS for Evolution server");
-    }
-    
-    const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
-
-    console.log("Sending WhatsApp to:", fullPhone);
-    console.log("API URL:", apiUrl);
-    console.log("API Key length:", tenant.evolutionApiKey?.length);
-
-    let response: Response;
-    
+    // Try n8n fallback
     try {
-      response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': tenant.evolutionApiKey
-        },
-        body: JSON.stringify({
-          number: fullPhone,
-          text: message
-        })
-      });
-    } catch (fetchError) {
-      console.log("Evolution API failed, trying n8n fallback...");
-      // Fallback to n8n webhook
-      response = await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
+      await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerPhone: fullPhone,
-          message: message,
-          tenantId: tenantId
-        })
+        body: JSON.stringify({ customerPhone: phone, message, tenantId })
       });
+      console.log("WhatsApp sent via n8n fallback");
+      return;
+    } catch (e) {
+      console.log("n8n fallback failed");
     }
 
-    const result = await response.text();
-    console.log("WhatsApp response:", response.status, result);
+    // Final fallback: Open wa.me link (simplest, works without any API)
+    const cleanPhone = phone.replace(/[^0-9]/g, "");
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    console.log("Opening WhatsApp Web:", waUrl);
+    window.open(waUrl, '_blank');
     
-    return result;
-  } catch (err: any) {
-    console.error('sendEvolutionWhatsAppMessage error:', err.message || err);
+  } catch (err) {
+    console.error('sendEvolutionWhatsAppMessage error:', err);
   }
 };
