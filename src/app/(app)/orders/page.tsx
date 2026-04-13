@@ -7,6 +7,7 @@ import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
+import { getOrderStatusMessage } from "@/utils/orderMessages";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -335,15 +336,13 @@ export default function OrdersPage() {
         return;
       }
 
-      const statusMessages: Record<string, string> = {
-        pending: "Your order is pending payment.",
-        processing: "Your order is being processed and will be shipped soon.",
-        shipped: "Your order has been shipped! Track it using your order number.",
-        delivered: "Your order has been delivered. Thank you for shopping with us!",
-        cancelled: "Your order has been cancelled. Please contact us for more info."
-      };
-
-      const message = `Hi ${order.customerName || 'Customer'}! 👋\n\nYour order #${order.orderNumber || order.id.substring(0, 8)} has been updated.\n\nStatus: *${statusMessages[newStatus] || newStatus}*\n\nProduct: ${order.productName}\nTotal: KES ${(order.total || 0).toLocaleString()}\n\nThank you for shopping with us!`;
+      const message = getOrderStatusMessage(
+        newStatus,
+        order.customerName || "Customer",
+        order.orderNumber || order.id.substring(0, 8),
+        order.productName || "Your order",
+        order.customerAddress
+      );
 
       await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId);
     } catch (err) {

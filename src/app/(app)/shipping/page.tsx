@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { shippingService, orderService, tenantService, Shipment, Order } from "@/lib/db";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
+import { getShipmentMessage } from "@/utils/orderMessages";
 import {
   ShippingOverview,
   ShippingToolbar,
@@ -170,7 +171,13 @@ export default function ShippingPage() {
       
       if (!tenantId) return;
 
-      const message = `Hi ${order.customerName || 'Customer'}! 📦\n\nGreat news! Your order #${order.orderNumber || order.id.substring(0, 8)} has been shipped!\n\nProduct: ${order.productName}\nShipping Method: ${order.deliveryMethod || 'Standard Delivery'}\nTracking: Use order number #${order.orderNumber || order.id.substring(0, 8)}\n\nWe'll notify you when it arrives. Thank you!`;
+      const message = getShipmentMessage(
+        order.customerName || "Customer",
+        order.orderNumber || order.id.substring(0, 8),
+        order.productName || "Your order",
+        order.deliveryMethod || "Standard Delivery",
+        order.orderNumber || order.id.substring(0, 8)
+      );
 
       await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId);
     } catch (err) {
