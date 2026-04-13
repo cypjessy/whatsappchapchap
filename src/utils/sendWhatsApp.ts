@@ -51,27 +51,39 @@ export const sendEvolutionWhatsAppMessage = async (
     console.log("API URL:", apiUrl);
     console.log("API Key length:", tenant.evolutionApiKey?.length);
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': tenant.evolutionApiKey
-      },
-      body: JSON.stringify({
-        number: fullPhone,
-        text: message
-      })
-    });
+    let response: Response;
+    
+    try {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': tenant.evolutionApiKey
+        },
+        body: JSON.stringify({
+          number: fullPhone,
+          text: message
+        })
+      });
+    } catch (fetchError) {
+      console.log("Evolution API failed, trying n8n fallback...");
+      // Fallback to n8n webhook
+      response = await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerPhone: fullPhone,
+          message: message,
+          tenantId: tenantId
+        })
+      });
+    }
 
     const result = await response.text();
     console.log("WhatsApp response:", response.status, result);
     
     return result;
   } catch (err: any) {
-    console.error('sendEvolutionWhatsAppMessage error:', err.message);
-    if (err.message.includes('Failed to fetch')) {
-      console.error("Network error - check if Evolution server is accessible");
-    }
-    throw err;
+    console.error('sendEvolutionWhatsAppMessage error:', err.message || err);
   }
 };
