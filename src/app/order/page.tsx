@@ -460,6 +460,7 @@ function OrderPageContent() {
 
   const productEmoji = product?.image ? "" : (product?.category === "electronics" ? "📱" : product?.category === "footwear" ? "👟" : product?.category === "clothing" ? "👕" : product?.category === "beauty" ? "💄" : product?.category === "furniture" ? "🛋️" : product?.category === "food" ? "🍎" : product?.category === "sports" ? "🏋️" : product?.category === "toys" ? "🧸" : "📦");
   const currentStock = getVariantStock();
+  const maxQuantity = Math.min(Math.max(currentStock, 1), 100);
   const total = getBasePrice() * quantity + deliveryCost;
 
   return (
@@ -823,14 +824,14 @@ function OrderPageContent() {
               </button>
               <span style={{ fontSize: 20, fontWeight: 700, minWidth: 30, textAlign: "center" }}>{quantity}</span>
               <button 
-                onClick={() => setQuantity(Math.min(10, currentStock, quantity + 1))}
-                disabled={quantity >= Math.min(10, currentStock)}
-                style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: quantity >= Math.min(10, currentStock) ? "#f1f5f9" : "white", color: quantity >= Math.min(10, currentStock) ? "#cbd5e1" : "#1e293b", fontSize: 16, cursor: quantity >= Math.min(10, currentStock) ? "not-allowed" : "pointer", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+                onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
+                disabled={quantity >= maxQuantity}
+                style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: quantity >= maxQuantity ? "#f1f5f9" : "white", color: quantity >= maxQuantity ? "#cbd5e1" : "#1e293b", fontSize: 16, cursor: quantity >= maxQuantity ? "not-allowed" : "pointer", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
               >
                 <i className="fas fa-plus"></i>
               </button>
             </div>
-            <span style={{ fontSize: 14, color: "#64748b" }}>Max: 10</span>
+            <span style={{ fontSize: 14, color: "#64748b" }}>Max: {maxQuantity}</span>
           </div>
         </div>
 
