@@ -24,22 +24,21 @@ export const sendEvolutionWhatsAppMessage = async (
     
     const tenant = tenantDoc.data();
     
-    // Send via n8n webhook
-    await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
+    // Clean phone number
+    const cleanPhone = phone.replace(/[^0-9]/g, "");
+    const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+    
+    // Send directly to Evolution webhook
+    await fetch('http://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/whatsapp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        customerPhone: phone,
-        customerName: "Customer",
-        message: message,
-        tenantId: tenantId,
-        evolutionServerUrl: tenant?.evolutionServerUrl,
-        evolutionApiKey: tenant?.evolutionApiKey,
-        evolutionInstanceId: tenant?.evolutionInstanceId
+        number: fullPhone,
+        text: message
       })
     });
     
-    console.log("WhatsApp notification sent via n8n");
+    console.log("WhatsApp sent to:", fullPhone);
     
   } catch (err) {
     console.error('sendEvolutionWhatsAppMessage error:', err);
