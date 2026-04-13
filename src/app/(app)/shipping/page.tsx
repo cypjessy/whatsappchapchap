@@ -179,9 +179,11 @@ export default function ShippingPage() {
         order.orderNumber || order.id.substring(0, 8)
       );
 
-      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId);
-    } catch (err) {
-      console.error('Shipment notification error:', err);
+      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId).catch(err => {
+        console.error('WhatsApp send failed:', err);
+      });
+    } catch (err: any) {
+      console.error('Shipment notification error:', err.message || err);
     }
   };
 

@@ -344,9 +344,11 @@ export default function OrdersPage() {
         order.customerAddress
       );
 
-      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId);
-    } catch (err) {
-      console.error('Order update error:', err);
+      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId).catch(err => {
+        console.error('WhatsApp send failed:', err);
+      });
+    } catch (err: any) {
+      console.error('Order update error:', err.message || err);
     }
   };
 
