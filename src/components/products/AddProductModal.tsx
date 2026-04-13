@@ -363,7 +363,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [customSubcategories, setCustomSubcategories] = useState<Record<string, string>>({});
+  const [customSubcategories, setCustomSubcategories] = useState<Record<string, { name: string; specs: Record<string, { label: string; options: string[]; icon: string }> }>>({});
   const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
   const [customSubcategoryInput, setCustomSubcategoryInput] = useState("");
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, StringSet>>({});
@@ -413,7 +413,29 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const addCustomSubcategory = () => {
     if (!selectedCategory || !customSubcategoryInput.trim()) return;
     const key = customSubcategoryInput.trim().toLowerCase().replace(/\s+/g, "_");
-    setCustomSubcategories(prev => ({ ...prev, [key]: customSubcategoryInput.trim() }));
+    
+    // Get default specs from the first subcategory of the parent category
+    const subcategories = categoryData[selectedCategory]?.subcategories || {};
+    const firstSubcategoryKey = Object.keys(subcategories)[0];
+    const firstSubcategory = subcategories[firstSubcategoryKey];
+    const parentCategorySpecs = firstSubcategory?.specs || {};
+    
+    // Use parent category's specs as default for custom subcategory
+    const defaultSpecs: Record<string, { label: string; options: string[]; icon: string }> = {};
+    Object.keys(parentCategorySpecs).forEach(specKey => {
+      defaultSpecs[specKey] = {
+        ...parentCategorySpecs[specKey],
+        options: [...parentCategorySpecs[specKey].options]
+      };
+    });
+    
+    setCustomSubcategories(prev => ({ 
+      ...prev, 
+      [key]: { 
+        name: customSubcategoryInput.trim(),
+        specs: defaultSpecs
+      } 
+    }));
     setSelectedSubcategory(key);
     setCustomSubcategoryInput("");
     setShowCustomSubcategory(false);
@@ -538,7 +560,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   const getCurrentSpecs = () => {
     if (!selectedCategory || !selectedSubcategory) return {};
-    return categoryData[selectedCategory]?.subcategories[selectedSubcategory]?.specs || {};
+    
+    // Check if it's a custom subcategory
+    if (customSubcategories[selectedSubcategory]) {
+      return customSubcategories[selectedSubcategory].specs || {};
+    }
+    
+    // Otherwise get from predefined category data
+    return categoryData[selectedCategory]?.subcategories?.[selectedSubcategory]?.specs || {};
   };
 
   const toggleSpec = (specKey: string, option: string) => {
@@ -725,7 +754,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
-        categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || customSubcategories[selectedSubcategory!] || selectedSubcategory,
+        categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || customSubcategories[selectedSubcategory!]?.name || selectedSubcategory,
         subcategory: selectedSubcategory,
         filters: filters,
         price: minPrice,
@@ -1005,7 +1034,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                         onClick={() => selectSubcategory(key)}
                         className={`px-5 py-2.5 border-2 border-slate-200 rounded-full bg-white cursor-pointer font-semibold text-sm transition-all ${selectedSubcategory === key ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-lg" : "hover:border-green-500 hover:text-green-500"}`}
                       >
-                        {value}
+                        {value.name}
                       </button>
                     ))}
                     <button
