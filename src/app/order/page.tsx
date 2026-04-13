@@ -173,9 +173,7 @@ function OrderPageContent() {
       return options && options.length > 1;
     });
     
-    const hasAnySelectedSpecs = Object.values(selectedSpecs).some(val => val && val.trim() !== "");
-    
-    if (requiredFilters.length > 0 && hasAnySelectedSpecs) {
+    if (requiredFilters.length > 0) {
       const missingSpecs = requiredFilters.filter(key => !selectedSpecs[key] || selectedSpecs[key].trim() === "");
       if (missingSpecs.length > 0) {
         newErrors.specs = true;
@@ -239,6 +237,7 @@ function OrderPageContent() {
           pending: now.toISOString()
         },
         evolutionInstanceId: tenantId,
+        notificationSent: false,
         createdAt: now,
         updatedAt: now
       }).then((docRef) => {
