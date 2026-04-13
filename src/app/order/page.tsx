@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
@@ -48,11 +49,13 @@ interface Product {
 
 function OrderPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   
   const tenantId = searchParams.get("tenant") || "";
   const productId = searchParams.get("product") || "";
   const phoneParam = searchParams.get("phone") || "";
   
+  const [activeTab, setActiveTab] = useState<"order" | "track">("order");
   const [product, setProduct] = useState<Product | null>(null);
   const [tenantData, setTenantData] = useState<{evolutionServerUrl?: string; evolutionApiKey?: string; evolutionInstanceId?: string} | null>(null);
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>({});
@@ -72,6 +75,14 @@ function OrderPageContent() {
   const [orderNumber, setOrderNumber] = useState("");
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  
+  // Track order state
+  const [trackOrder, setTrackOrder] = useState<any>(null);
+  const [trackLoading, setTrackLoading] = useState(false);
+  const [trackError, setTrackError] = useState("");
+  const [trackSearched, setTrackSearched] = useState(false);
+  const [trackOrderNumber, setTrackOrderNumber] = useState("");
+  const [trackPhone, setTrackPhone] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -276,8 +287,96 @@ function OrderPageContent() {
   };
 
   const goToTrackOrder = () => {
-    window.location.href = `/track?tenant=${tenantId}&orderNumber=${orderNumber}`;
+    setActiveTab("track");
+    setTrackOrderNumber(orderNumber);
+    setTrackPhone(customerPhone);
+    setTrackSearched(false);
+    setTrackOrder(null);
   };
+
+  const formatTrackDate = (createdAt: any) => {
+    if (!createdAt) return "N/A";
+    try {
+      const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return "N/A";
+    }
+  };
+
+  const getTrackStatusInfo = (status: string) => {
+    const statusMap: Record<string, { label: string; color: string; bg: string; icon: string; message: string }> = {
+      pending: { label: "Pending", color: "#f59e0b", bg: "rgba(245,158,11,0.1)", icon: "fa-clock", message: "Awaiting payment confirmation" },
+      processing: { label: "Processing", color: "#3b82f6", bg: "rgba(59,130,246,0.1)", icon: "fa-cog", message: "Your order is being prepared" },
+      shipped: { label: "Shipped", color: "#8b5cf6", bg: "rgba(139,92,246,0.1)", icon: "fa-shipping-fast", message: "Your order is on its way" },
+      delivered: { label: "Delivered", color: "#10b981", bg: "rgba(16,185,129,0.1)", icon: "fa-check-circle", message: "Order delivered successfully" },
+      cancelled: { label: "Cancelled", color: "#ef4444", bg: "rgba(239,68,68,0.1)", icon: "fa-times-circle", message: "Order has been cancelled" },
+      refunded: { label: "Refunded", color: "#6366f1", bg: "rgba(99,102,241,0.1)", icon: "fa-undo", message: "Refund has been processed" }
+    };
+    return statusMap[status] || statusMap.pending;
+  };
+
+  const searchTrackOrder = async () => {
+    if (!trackOrderNumber.trim() || !trackPhone.trim()) {
+      setTrackError("Please enter both order number and phone number");
+      return;
+    }
+
+    setTrackLoading(true);
+    setTrackError("");
+    setTrackOrder(null);
+
+    try {
+      const app = getFirebaseApp();
+      if (!app) {
+        setTrackError("Unable to connect. Please try again.");
+        setTrackLoading(false);
+        return;
+      }
+
+      const db = getFirestore(app);
+      const { getDocs, query, collection, where } = await import("firebase/firestore");
+      
+      const q = query(
+        collection(db, "orders"),
+        where("tenantId", "==", tenantId),
+        where("orderNumber", "==", trackOrderNumber.trim())
+      );
+      const querySnap = await getDocs(q);
+
+      if (!querySnap.empty) {
+        const orderDoc = querySnap.docs[0];
+        const orderData = orderDoc.data();
+        
+        if (orderData.customerPhone === trackPhone.trim() || 
+            orderData.customerPhone.includes(trackPhone.trim().slice(-9))) {
+          setTrackOrder({ ...orderData, id: orderDoc.id });
+          setTrackSearched(true);
+        } else {
+          setTrackError("Order found but phone number doesn't match.");
+          setTrackSearched(true);
+        }
+      } else {
+        setTrackError("Order not found. Please check your order number.");
+        setTrackSearched(true);
+      }
+    } catch (err: any) {
+      console.error("Error searching order:", err);
+      setTrackError("Failed to search order. Please try again.");
+    } finally {
+      setTrackLoading(false);
+    }
+  };
+
+  const contactSellerTrack = () => {
+    const cleanTenantId = tenantId.replace('tenant_', '');
+    const phone = cleanTenantId.replace(/[^0-9]/g, '');
+    const message = `Hi, I want to check on my order ${trackOrderNumber}`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const switchToOrder = () => setActiveTab("order");
+  const switchToTrack = () => setActiveTab("track");
 
   if (loading) {
     return (
@@ -348,8 +447,201 @@ function OrderPageContent() {
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", padding: 16, display: "flex", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: 480, background: "white", borderRadius: 20, overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", animation: "slideUp 0.4s ease" }}>
         
-        {/* Header */}
-        <div style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: 24, textAlign: "center" }}>
+        {/* Tab Navigation */}
+        {productId && (
+          <div style={{ display: "flex", background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+            <button
+              onClick={switchToOrder}
+              style={{ 
+                flex: 1, 
+                padding: 16, 
+                border: "none", 
+                background: activeTab === "order" ? "white" : "transparent",
+                color: activeTab === "order" ? "#25D366" : "#64748b",
+                fontWeight: 700,
+                fontSize: 15,
+                cursor: "pointer",
+                borderBottom: activeTab === "order" ? "3px solid #25D366" : "3px solid transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8
+              }}
+            >
+              <i className="fas fa-shopping-cart"></i>
+              Order Now
+            </button>
+            <button
+              onClick={switchToTrack}
+              style={{ 
+                flex: 1, 
+                padding: 16, 
+                border: "none", 
+                background: activeTab === "track" ? "white" : "transparent",
+                color: activeTab === "track" ? "#25D366" : "#64748b",
+                fontWeight: 700,
+                fontSize: 15,
+                cursor: "pointer",
+                borderBottom: activeTab === "track" ? "3px solid #25D366" : "3px solid transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8
+              }}
+            >
+              <i className="fas fa-search"></i>
+              Track Order
+            </button>
+          </div>
+        )}
+
+        {activeTab === "track" ? (
+          /* Track Order Tab */
+          <div>
+            <div style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: 24, textAlign: "center" }}>
+              <div style={{ width: 64, height: 64, background: "rgba(255,255,255,0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 28 }}>
+                <i className="fas fa-truck"></i>
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Track Your Order</h2>
+              <p style={{ opacity: 0.9, fontSize: 14 }}>Enter your order details to check status</p>
+            </div>
+
+            {trackSearched && trackOrder ? (
+              <div style={{ padding: 24 }}>
+                {(() => {
+                  const statusInfo = getTrackStatusInfo(trackOrder.status);
+                  return (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: 20, background: statusInfo.bg, borderRadius: 12, marginBottom: 24 }}>
+                        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: statusInfo.color }}>
+                          <i className={`fas ${statusInfo.icon}`}></i>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: "#1e293b" }}>{statusInfo.label}</div>
+                          <div style={{ fontSize: 14, color: "#64748b" }}>{statusInfo.message}</div>
+                        </div>
+                      </div>
+
+                      <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 24 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>Order Details</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 14 }}>
+                          <span style={{ color: "#64748b" }}>Order #</span>
+                          <span style={{ fontWeight: 600, color: "#1e293b" }}>{trackOrder.orderNumber}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 14 }}>
+                          <span style={{ color: "#64748b" }}>Product</span>
+                          <span style={{ fontWeight: 600, color: "#1e293b" }}>{trackOrder.productName}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 14 }}>
+                          <span style={{ color: "#64748b" }}>Quantity</span>
+                          <span style={{ fontWeight: 600, color: "#1e293b" }}>{trackOrder.quantity}</span>
+                        </div>
+                        <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 700 }}>
+                          <span style={{ color: "#1e293b" }}>Total</span>
+                          <span style={{ color: "#25D366" }}>{CURRENCY_SYMBOL}{trackOrder.total?.toLocaleString() || trackOrder.total}</span>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={contactSellerTrack}
+                        style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}
+                      >
+                        <i className="fab fa-whatsapp"></i>
+                        Contact Seller
+                      </button>
+                      
+                      <button 
+                        onClick={() => { setTrackSearched(false); setTrackOrder(null); setTrackOrderNumber(""); setTrackPhone(""); }}
+                        style={{ width: "100%", padding: 16, background: "white", color: "#64748b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                      >
+                        <i className="fas fa-search"></i>
+                        Track Another Order
+                      </button>
+                    </>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div style={{ padding: 24 }}>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Order Number <span style={{ color: "#ef4444" }}>*</span></label>
+                  <input 
+                    type="text" 
+                    value={trackOrderNumber}
+                    onChange={(e) => setTrackOrderNumber(e.target.value)}
+                    placeholder="ORD-123456"
+                    style={{ width: "100%", padding: 16, border: `2px solid ${trackError && !trackOrderNumber.trim() ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Phone Number <span style={{ color: "#ef4444" }}>*</span></label>
+                  <input 
+                    type="tel" 
+                    value={trackPhone}
+                    onChange={(e) => setTrackPhone(e.target.value)}
+                    placeholder="+254 712 345 678"
+                    style={{ width: "100%", padding: 16, border: `2px solid ${trackError && !trackPhone.trim() ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+                  />
+                </div>
+
+                {trackError && (
+                  <div style={{ background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, padding: 12, marginBottom: 16, color: "#dc2626", fontSize: 14 }}>
+                    <i className="fas fa-exclamation-circle"></i> {trackError}
+                  </div>
+                )}
+
+                <button 
+                  onClick={searchTrackOrder}
+                  disabled={trackLoading}
+                  style={{ 
+                    width: "100%", 
+                    padding: 16, 
+                    background: trackLoading ? "#94a3b8" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: 12, 
+                    fontSize: 16, 
+                    fontWeight: 700, 
+                    cursor: trackLoading ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8
+                  }}
+                >
+                  {trackLoading ? (
+                    <>
+                      <div style={{ width: 20, height: 20, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-search"></i>
+                      Track Order
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {productId && (
+              <div style={{ padding: "0 24px 24px" }}>
+                <button 
+                  onClick={switchToOrder}
+                  style={{ width: "100%", padding: 16, background: "white", color: "#25D366", border: "2px solid #25D366", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  <i className="fas fa-shopping-bag"></i>
+                  Want to Order Instead?
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Order Tab */
+          <>
+            {/* Header */}
+            <div style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: 24, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 16 }}>
             <div style={{ width: 50, height: 50, background: "white", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
               {productEmoji || "📦"}
@@ -776,6 +1068,9 @@ function OrderPageContent() {
             )}
           </button>
         </div>
+
+        </>
+        )}
 
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
