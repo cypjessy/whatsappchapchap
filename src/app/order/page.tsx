@@ -106,7 +106,14 @@ function OrderPageContent() {
         
         if (productSnap.exists()) {
           const data = productSnap.data() as Product;
-          setProduct({ ...data, id: productSnap.id } as Product);
+          const loadedProduct = { ...data, id: productSnap.id } as Product;
+          setProduct(loadedProduct);
+          
+          // Set default delivery cost from product's shipping methods
+          if (loadedProduct.shippingMethods && loadedProduct.shippingMethods.length > 0) {
+            setDeliveryMethod(loadedProduct.shippingMethods[0].id);
+            setDeliveryCost(loadedProduct.shippingMethods[0].price);
+          }
           
           // Fetch tenant data for Evolution credentials
           const tenantRef = doc(db, "tenants", tenantId);
