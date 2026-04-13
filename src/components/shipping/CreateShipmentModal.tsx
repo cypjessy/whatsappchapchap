@@ -15,17 +15,15 @@ interface CreateShipmentModalProps {
   onSubmit: (data: any) => void;
   orders?: Order[];
   shippingMethods?: ShippingMethod[];
+  selectedOrder?: Order | null;
 }
 
-export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], shippingMethods = [] }: CreateShipmentModalProps) {
+export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], shippingMethods = [], selectedOrder = null }: CreateShipmentModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     carrier: "",
     weight: "",
-    length: "",
-    width: "",
-    height: "",
     packages: "1",
     fragile: "no",
     insurance: "",
@@ -36,7 +34,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
     confirm: false,
   });
 
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   const toggleOrder = (orderId: string) => {
     const newSelected = new Set(selectedOrders);
@@ -104,17 +102,14 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
       alert("Please confirm the shipment details");
       return;
     }
+    const selectedOrderData = selectedOrder || orders.find(o => selectedOrders.has(o.id));
     
     const shipmentData = {
       orders: Array.from(selectedOrders),
-      carrier: formData.carrier,
+      carrier: formData.carrier || selectedOrderData?.deliveryMethod || "",
+      shippingMethod: selectedOrderData?.deliveryMethod || formData.carrier || "",
       package: {
         weight: parseFloat(formData.weight),
-        dimensions: {
-          length: parseInt(formData.length) || 0,
-          width: parseInt(formData.width) || 0,
-          height: parseInt(formData.height) || 0,
-        },
         fragile: formData.fragile === "yes",
         insurance: parseFloat(formData.insurance) || 0,
       },
@@ -124,7 +119,12 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
         timeWindow: formData.timeWindow,
         instructions: formData.instructions,
       },
-      trackingNumber: generateTrackingNumber(),
+      trackingNumber: selectedOrderData?.orderNumber || generateTrackingNumber(),
+      orderId: selectedOrderData?.id,
+      customerName: selectedOrderData?.customerName,
+      customerPhone: selectedOrderData?.customerPhone,
+      customerAddress: selectedOrderData?.customerAddress,
+      total: selectedOrderData?.total,
     };
     
     onSubmit(shipmentData);
@@ -469,7 +469,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
                     <div className="carrier-card">
                       <div className="carrier-logo" style={{ background: carrier.color, color: "white" }}>{carrier.icon}</div>
                       <div className="carrier-name">{carrier.name}</div>
-                      <div className="carrier-price">${carrier.price.toFixed(2)}</div>
+                      <div className="carrier-price">KES {carrier.price.toLocaleString()}</div>
                       <div className="carrier-time"><i className="fas fa-clock"></i> {carrier.time}</div>
                       <div className="carrier-features">
                         {carrier.value === "g4s" && <><span className="feature-tag">Insured</span><span className="feature-tag">Tracking</span></>}
@@ -488,29 +488,8 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
           <div className={`form-section ${currentStep === 3 ? 'active' : ''}`}>
             <h3 className="section-title"><i className="fas fa-box-open"></i> Package Information</h3>
             <div className="form-grid">
-              <div className="form-group full">
-                <div className="package-visual">
-                  <div className="package-icon"><i className="fas fa-cube"></i></div>
-                  <div style={{ fontWeight: 700, color: "#1e293b", marginBottom: "0.5rem" }}>Package Dimensions</div>
-                  <div style={{ fontSize: "0.875rem", color: "#64748b" }}>Enter measurements in centimeters</div>
-                  <div className="package-dimensions">
-                    <div className="dimension-input">
-                      <label>Length (cm)</label>
-                      <input type="number" className="form-input" placeholder="0" min="1" value={formData.length} onChange={(e) => updateField("length", e.target.value)} />
-                    </div>
-                    <div className="dimension-input">
-                      <label>Width (cm)</label>
-                      <input type="number" className="form-input" placeholder="0" min="1" value={formData.width} onChange={(e) => updateField("width", e.target.value)} />
-                    </div>
-                    <div className="dimension-input">
-                      <label>Height (cm)</label>
-                      <input type="number" className="form-input" placeholder="0" min="1" value={formData.height} onChange={(e) => updateField("height", e.target.value)} />
-                    </div>
-                  </div>
-                </div>
-              </div>
               <div className="form-group">
-                <label className="form-label">Total Weight (kg) <span className="required">*</span></label>
+                <label className="form-label">Total Weight (kg)</label>
                 <div className="input-with-icon">
                   <i className="fas fa-weight-hanging"></i>
                   <input type="number" className="form-input" placeholder="0.00" step="0.01" min="0.1" value={formData.weight} onChange={(e) => updateField("weight", e.target.value)} />
@@ -528,10 +507,10 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Insurance Value ($)</label>
+                <label className="form-label">Insurance Value (KES)</label>
                 <div className="input-with-icon">
                   <i className="fas fa-shield-alt"></i>
-                  <input type="number" className="form-input" placeholder="0.00" value={formData.insurance} onChange={(e) => updateField("insurance", e.target.value)} />
+                  <input type="number" className="form-input" placeholder="0" value={formData.insurance} onChange={(e) => updateField("insurance", e.target.value)} />
                 </div>
               </div>
             </div>
@@ -560,7 +539,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
                     </div>
                     <div className="shipping-option-desc">Priority handling and faster delivery</div>
                   </div>
-                  <div className="shipping-option-price">+$5.00</div>
+                  <div className="shipping-option-price">+KES 500</div>
                 </label>
                 <label className="shipping-option">
                   <input type="radio" name="speed" value="overnight" checked={formData.speed === "overnight"} onChange={(e) => updateField("speed", e.target.value)} />
@@ -568,7 +547,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
                     <div className="shipping-option-title"><i className="fas fa-bolt" style={{ color: "#10b981" }}></i> Overnight Delivery</div>
                     <div className="shipping-option-desc">Next business day guaranteed</div>
                   </div>
-                  <div className="shipping-option-price">+$12.00</div>
+                  <div className="shipping-option-price">+KES 1,200</div>
                 </label>
               </div>
             </div>
@@ -593,8 +572,8 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
             </div>
           </div>
 
-          {/* Step 5: Review & Confirm */}
-          <div className={`form-section ${currentStep === 5 ? 'active' : ''}`}>
+          {/* Step 4: Review & Confirm */}
+          <div className={`form-section ${currentStep === 4 ? 'active' : ''}`}>
             <h3 className="section-title"><i className="fas fa-clipboard-check"></i> Review Shipment Details</h3>
             
             <div className="summary-card">
@@ -638,24 +617,24 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
               </div>
               <div className="summary-body">
                 <div className="summary-row">
-                  <span className="summary-label">Dimensions</span>
-                  <span className="summary-value">{formData.length || 0} x {formData.width || 0} x {formData.height || 0} cm</span>
-                </div>
-                <div className="summary-row">
                   <span className="summary-label">Weight</span>
                   <span className="summary-value">{formData.weight || 0} kg</span>
                 </div>
+                <div className="summary-row">
+                  <span className="summary-label">Packages</span>
+                  <span className="summary-value">{formData.packages || 1}</span>
+                </div>
               </div>
               <div className="summary-total">
-                <span className="summary-total-label">Total Shipping Cost</span>
-                <span className="summary-total-value">${(displayCarriers.find(c => c.value === formData.carrier)?.price || 0).toFixed(2)}</span>
+                <span className="summary-total-label">Order Total</span>
+                <span className="summary-total-value">KES {selectedOrder?.total?.toLocaleString() || "0"}</span>
               </div>
             </div>
 
             <div className="tracking-preview">
               <div className="tracking-icon"><i className="fas fa-qrcode"></i></div>
-              <div className="tracking-number">{generateTrackingNumber()}</div>
-              <div className="tracking-label">Tracking Number (Auto-generated)</div>
+              <div className="tracking-number">{selectedOrder?.orderNumber || generateTrackingNumber()}</div>
+              <div className="tracking-label">Tracking Number (Order Number)</div>
             </div>
 
             <div className="form-group full" style={{ marginTop: "1.5rem" }}>
@@ -672,7 +651,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
         <div className="modal-footer">
           <div className="footer-info">
             <i className="fas fa-shield-alt" style={{ color: "#10b981" }}></i>
-            <span>Insured shipping up to $1,000</span>
+            <span>Secure shipping with tracking</span>
           </div>
           <div className="footer-actions">
             <button className="btn btn-secondary" onClick={prevStep} style={{ display: currentStep === 1 ? "none" : "inline-flex" }}>

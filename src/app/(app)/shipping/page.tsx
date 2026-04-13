@@ -35,6 +35,7 @@ export default function ShippingPage() {
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showShippingMethodsModal, setShowShippingMethodsModal] = useState(false);
+  const [selectedOrderForShipment, setSelectedOrderForShipment] = useState<Order | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -98,6 +99,11 @@ export default function ShippingPage() {
     setShowTrackingModal(true);
   };
 
+  const handleCreateFromOrder = (order: Order) => {
+    setSelectedOrderForShipment(order);
+    setShowCreateModal(true);
+  };
+
   const handlePrintLabel = (shipment: Shipment) => {
     alert(`Printing shipping label for ${shipment.orderId}`);
   };
@@ -112,32 +118,39 @@ export default function ShippingPage() {
   };
 
   const handleCreateShipment = async (data: any) => {
-    if (!user || !data.orders || data.orders.length === 0) return;
+    if (!user) return;
+    
+    const orderId = data.orderId || (data.orders && data.orders[0]);
+    if (!orderId) {
+      alert("No order selected");
+      return;
+    }
     
     try {
-      for (const orderId of data.orders) {
-        const order = pendingOrders.find(o => o.id === orderId);
-        if (!order) continue;
-        
-        await shippingService.createShipment(user, {
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          customerName: order.customerName || "Unknown",
-          customerPhone: order.customerPhone || "",
-          shippingAddress: order.customerAddress,
-          shippingMethod: data.shipping?.speed || "standard",
-          carrier: data.carrier,
-          trackingNumber: data.trackingNumber,
-          status: "pending",
-          notes: data.shipping?.instructions,
-        });
-        
-        await orderService.updateOrder(user, orderId, { status: "shipped" });
+      const order = pendingOrders.find(o => o.id === orderId);
+      if (!order) {
+        alert("Order not found");
+        return;
       }
+      
+      await shippingService.createShipment(user, {
+        orderId: order.id,
+        orderNumber: order.orderNumber || data.trackingNumber,
+        customerName: order.customerName || "Unknown",
+        customerPhone: order.customerPhone || "",
+        shippingAddress: order.customerAddress,
+        shippingMethod: order.deliveryMethod || data.shippingMethod || "standard",
+        carrier: order.deliveryMethod || data.carrier,
+        trackingNumber: order.orderNumber || data.trackingNumber,
+        status: "pending",
+        notes: data.shipping?.instructions,
+      });
+      
+      await orderService.updateOrder(user, orderId, { status: "shipped" });
       
       loadShipments();
       loadPendingOrders();
-      alert(`Shipment created successfully! Tracking: ${data.trackingNumber}`);
+      alert(`Shipment created for order ${order.orderNumber || orderId}!`);
     } catch (error) {
       console.error("Error creating shipment:", error);
       alert("Failed to create shipment");
@@ -301,10 +314,11 @@ export default function ShippingPage() {
 
       <CreateShipmentModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => { setShowCreateModal(false); setSelectedOrderForShipment(null); }}
         onSubmit={handleCreateShipment}
         orders={pendingOrders}
         shippingMethods={shippingMethods}
+        selectedOrder={selectedOrderForShipment}
       />
 
       <ShippingMethodsModal
