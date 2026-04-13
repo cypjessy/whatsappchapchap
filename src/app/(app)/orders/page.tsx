@@ -331,6 +331,9 @@ export default function OrdersPage() {
       const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
       const tenant = tenantDoc.data();
 
+      console.log("Tenant data:", tenant);
+      console.log("Tenant ID used:", tenantId);
+
       const statusMessages: Record<string, string> = {
         pending: "Your order is pending payment.",
         processing: "Your order is being processed and will be shipped soon.",
@@ -346,7 +349,14 @@ export default function OrdersPage() {
         const cleanPhone = (order.customerPhone || "").replace(/[^0-9]/g, "");
         const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
         
-        await fetch(`${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`, {
+        const evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
+        const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
+        
+        console.log("Calling Evolution API:", apiUrl);
+        console.log("API Key:", tenant.evolutionApiKey ? "present" : "missing");
+        console.log("Phone:", fullPhone);
+        
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -357,8 +367,15 @@ export default function OrdersPage() {
             text: message
           })
         });
-        console.log('Direct Evolution message sent to:', fullPhone);
+        
+        const responseData = await response.text();
+        console.log('Evolution API response:', response.status, responseData);
+        
+        if (!response.ok) {
+          console.error('Evolution API error:', responseData);
+        }
       } else {
+        console.log("Evolution credentials not configured, using n8n fallback");
         // Fallback to n8n webhook
         await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
           method: 'POST',

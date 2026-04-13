@@ -171,13 +171,20 @@ export default function ShippingPage() {
       const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
       const tenant = tenantDoc.data();
 
+      console.log("Shipment - Tenant data:", tenant);
+
       const message = `Hi ${order.customerName || 'Customer'}! 📦\n\nGreat news! Your order #${order.orderNumber || order.id.substring(0, 8)} has been shipped!\n\nProduct: ${order.productName}\nShipping Method: ${order.deliveryMethod || 'Standard Delivery'}\nTracking: Use order number #${order.orderNumber || order.id.substring(0, 8)}\n\nWe'll notify you when it arrives. Thank you!`;
 
       if (tenant?.evolutionServerUrl && tenant?.evolutionApiKey && tenant?.evolutionInstanceId) {
         const cleanPhone = (order.customerPhone || "").replace(/[^0-9]/g, "");
         const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
         
-        await fetch(`${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`, {
+        const evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
+        const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
+        
+        console.log("Shipment - Calling Evolution API:", apiUrl);
+        
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -188,7 +195,9 @@ export default function ShippingPage() {
             text: message
           })
         });
-        console.log('Shipment notification sent to:', fullPhone);
+        
+        const responseData = await response.text();
+        console.log('Shipment - Evolution API response:', response.status, responseData);
       }
     } catch (err) {
       console.error('Shipment notification error:', err);
