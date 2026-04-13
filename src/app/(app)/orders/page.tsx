@@ -6,6 +6,7 @@ import { orderService, Order, productService, Product, customerService, Customer
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -324,36 +325,15 @@ export default function OrdersPage() {
 
   const sendOrderUpdate = async (order: Order, newStatus: string) => {
     try {
-      if (!firebaseApp) {
-        console.log("No firebase app");
-        return;
-      }
-      const db = getFirestore(firebaseApp);
-      
-      // Try order's tenantId first, then fall back to user's tenant
       let tenantId = order.tenantId;
       if (!tenantId && user?.uid) {
         tenantId = `tenant_${user.uid}`;
       }
       
-      console.log("Looking for tenant with ID:", tenantId);
-      console.log("Order tenantId:", order.tenantId);
-      console.log("User uid:", user?.uid);
-      
-      const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
-      
-      if (!tenantDoc.exists()) {
-        console.log("Tenant document not found for ID:", tenantId);
+      if (!tenantId) {
+        console.log("No tenant ID");
         return;
       }
-      
-      const tenant = tenantDoc.data();
-      console.log("Tenant data found:", tenant ? "yes" : "no");
-      console.log("Evolution config:", {
-        hasServerUrl: !!tenant?.evolutionServerUrl,
-        hasApiKey: !!tenant?.evolutionApiKey,
-        hasInstanceId: !!tenant?.evolutionInstanceId
-      });
 
       const statusMessages: Record<string, string> = {
         pending: "Your order is pending payment.",
@@ -365,57 +345,7 @@ export default function OrdersPage() {
 
       const message = `Hi ${order.customerName || 'Customer'}! 👋\n\nYour order #${order.orderNumber || order.id.substring(0, 8)} has been updated.\n\nStatus: *${statusMessages[newStatus] || newStatus}*\n\nProduct: ${order.productName}\nTotal: KES ${(order.total || 0).toLocaleString()}\n\nThank you for shopping with us!`;
 
-      // Call Evolution API directly
-      if (tenant?.evolutionServerUrl && tenant?.evolutionApiKey && tenant?.evolutionInstanceId) {
-        const cleanPhone = (order.customerPhone || "").replace(/[^0-9]/g, "");
-        const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
-        
-        const evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
-        const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
-        
-        console.log("Calling Evolution API:", apiUrl);
-        console.log("API Key:", tenant.evolutionApiKey ? "present" : "missing");
-        console.log("Phone:", fullPhone);
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': tenant.evolutionApiKey
-          },
-          body: JSON.stringify({
-            number: fullPhone,
-            text: message
-          })
-        });
-        
-        const responseData = await response.text();
-        console.log('Evolution API response:', response.status, responseData);
-        
-        if (!response.ok) {
-          console.error('Evolution API error:', responseData);
-        }
-      } else {
-        console.log("Evolution credentials not configured, using n8n fallback");
-        // Fallback to n8n webhook
-        await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId: order.id,
-            orderNumber: order.orderNumber,
-            customerPhone: order.customerPhone,
-            customerName: order.customerName,
-            productName: order.productName,
-            status: newStatus,
-            deliveryAddress: order.customerAddress || "",
-            tenantId: order.tenantId,
-            evolutionServerUrl: tenant?.evolutionServerUrl,
-            evolutionApiKey: tenant?.evolutionApiKey,
-            evolutionInstanceId: tenant?.evolutionInstanceId
-          })
-        });
-      }
+      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId);
     } catch (err) {
       console.error('Order update error:', err);
     }

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { shippingService, orderService, tenantService, Shipment, Order } from "@/lib/db";
-import { app as firebaseApp } from "@/lib/firebase";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import {
   ShippingOverview,
   ShippingToolbar,
@@ -164,41 +163,16 @@ export default function ShippingPage() {
 
   const sendShipmentNotification = async (order: Order) => {
     try {
-      if (!firebaseApp) return;
-      const db = getFirestore(firebaseApp);
+      let tenantId = order.tenantId;
+      if (!tenantId && user?.uid) {
+        tenantId = `tenant_${user.uid}`;
+      }
       
-      const tenantId = order.tenantId || `tenant_${user?.uid}`;
-      const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
-      const tenant = tenantDoc.data();
-
-      console.log("Shipment - Tenant data:", tenant);
+      if (!tenantId) return;
 
       const message = `Hi ${order.customerName || 'Customer'}! 📦\n\nGreat news! Your order #${order.orderNumber || order.id.substring(0, 8)} has been shipped!\n\nProduct: ${order.productName}\nShipping Method: ${order.deliveryMethod || 'Standard Delivery'}\nTracking: Use order number #${order.orderNumber || order.id.substring(0, 8)}\n\nWe'll notify you when it arrives. Thank you!`;
 
-      if (tenant?.evolutionServerUrl && tenant?.evolutionApiKey && tenant?.evolutionInstanceId) {
-        const cleanPhone = (order.customerPhone || "").replace(/[^0-9]/g, "");
-        const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
-        
-        const evolutionUrl = tenant.evolutionServerUrl.replace(/\/$/, '');
-        const apiUrl = `${evolutionUrl}/api/message/sendText/${tenant.evolutionInstanceId}`;
-        
-        console.log("Shipment - Calling Evolution API:", apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': tenant.evolutionApiKey
-          },
-          body: JSON.stringify({
-            number: fullPhone,
-            text: message
-          })
-        });
-        
-        const responseData = await response.text();
-        console.log('Shipment - Evolution API response:', response.status, responseData);
-      }
+      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId);
     } catch (err) {
       console.error('Shipment notification error:', err);
     }
