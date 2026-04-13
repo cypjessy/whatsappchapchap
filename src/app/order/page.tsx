@@ -294,6 +294,15 @@ function OrderPageContent() {
     setTrackOrder(null);
   };
 
+  const copyOrderNumber = () => {
+    navigator.clipboard.writeText(orderNumber);
+    // Save to localStorage
+    const recentOrders = JSON.parse(localStorage.getItem('recentOrders') || '[]');
+    const newOrder = { orderNumber, phone: customerPhone, productName: product?.name, date: new Date().toISOString() };
+    const updatedOrders = [newOrder, ...recentOrders.filter((o: any) => o.orderNumber !== orderNumber)].slice(0, 5);
+    localStorage.setItem('recentOrders', JSON.stringify(updatedOrders));
+  };
+
   const formatTrackDate = (createdAt: any) => {
     if (!createdAt) return "N/A";
     try {
@@ -416,7 +425,17 @@ function OrderPageContent() {
           
           <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 20, border: "2px dashed #25D366" }}>
             <div style={{ fontSize: 14, color: "#64748b", marginBottom: 4 }}>Order Number</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: "#25D366" }}>#{orderNumber}</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#25D366" }}>#{orderNumber}</div>
+              <button 
+                onClick={copyOrderNumber}
+                style={{ padding: "8px 12px", background: "#25D366", color: "white", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <i className="fas fa-copy"></i>
+                Copy
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>Save your order number to track your order</p>
           </div>
 
           <button 

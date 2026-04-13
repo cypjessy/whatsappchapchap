@@ -55,6 +55,15 @@ function TrackOrderContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Load recent orders from localStorage
+    const saved = localStorage.getItem('recentOrders');
+    if (saved) {
+      setRecentOrders(JSON.parse(saved));
+    }
+  }, []);
 
   useEffect(() => {
     if (initialOrderNumber && initialPhone) {
@@ -426,6 +435,25 @@ function TrackOrderContent() {
             )}
           </button>
         </div>
+
+        {recentOrders.length > 0 && (
+          <div style={{ padding: "0 24px 24px" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>Recent Orders</div>
+            {recentOrders.map((order, idx) => (
+              <div 
+                key={idx}
+                onClick={() => { setOrderNumber(order.orderNumber); setCustomerPhone(order.phone); }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 12, background: "#f8fafc", borderRadius: 8, marginBottom: 8, cursor: "pointer", border: "1px solid #e2e8f0" }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, color: "#1e293b" }}>{order.orderNumber}</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>{order.productName}</div>
+                </div>
+                <i className="fas fa-chevron-right" style={{ color: "#64748b" }}></i>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ padding: 16, background: "#f8fafc", textAlign: "center", fontSize: 13, color: "#64748b" }}>
           Need help? <a href="#" onClick={(e) => { e.preventDefault(); contactSeller(); }} style={{ color: "#25D366", textDecoration: "none", fontWeight: 600 }}>Contact Seller</a>
