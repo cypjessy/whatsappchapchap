@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { shippingService, orderService, tenantService, Shipment, Order } from "@/lib/db";
+import { app as firebaseApp } from "@/lib/firebase";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import {
   ShippingOverview,
   ShippingToolbar,
@@ -148,12 +150,48 @@ export default function ShippingPage() {
       
       await orderService.updateOrder(user, orderId, { status: "shipped" });
       
+      // Send WhatsApp notification directly via Evolution API
+      await sendShipmentNotification(order);
+      
       loadShipments();
       loadPendingOrders();
       alert(`Shipment created for order ${order.orderNumber || orderId}!`);
     } catch (error) {
       console.error("Error creating shipment:", error);
       alert("Failed to create shipment");
+    }
+  };
+
+  const sendShipmentNotification = async (order: Order) => {
+    try {
+      if (!firebaseApp) return;
+      const db = getFirestore(firebaseApp);
+      
+      const tenantId = order.tenantId || `tenant_${user?.uid}`;
+      const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
+      const tenant = tenantDoc.data();
+
+      const message = `Hi ${order.customerName || 'Customer'}! 📦\n\nGreat news! Your order #${order.orderNumber || order.id.substring(0, 8)} has been shipped!\n\nProduct: ${order.productName}\nShipping Method: ${order.deliveryMethod || 'Standard Delivery'}\nTracking: Use order number #${order.orderNumber || order.id.substring(0, 8)}\n\nWe'll notify you when it arrives. Thank you!`;
+
+      if (tenant?.evolutionServerUrl && tenant?.evolutionApiKey && tenant?.evolutionInstanceId) {
+        const cleanPhone = (order.customerPhone || "").replace(/[^0-9]/g, "");
+        const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+        
+        await fetch(`${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': tenant.evolutionApiKey
+          },
+          body: JSON.stringify({
+            number: fullPhone,
+            text: message
+          })
+        });
+        console.log('Shipment notification sent to:', fullPhone);
+      }
+    } catch (err) {
+      console.error('Shipment notification error:', err);
     }
   };
 

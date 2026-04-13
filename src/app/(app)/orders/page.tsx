@@ -331,25 +331,55 @@ export default function OrdersPage() {
       const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
       const tenant = tenantDoc.data();
 
-      await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          customerPhone: order.customerPhone,
-          customerName: order.customerName,
-          productName: order.productName,
-          status: newStatus,
-          deliveryAddress: order.customerAddress || "",
-          tenantId: order.tenantId,
-          evolutionServerUrl: tenant?.evolutionServerUrl,
-          evolutionApiKey: tenant?.evolutionApiKey,
-          evolutionInstanceId: tenant?.evolutionInstanceId
-        })
-      });
+      const statusMessages: Record<string, string> = {
+        pending: "Your order is pending payment.",
+        processing: "Your order is being processed and will be shipped soon.",
+        shipped: "Your order has been shipped! Track it using your order number.",
+        delivered: "Your order has been delivered. Thank you for shopping with us!",
+        cancelled: "Your order has been cancelled. Please contact us for more info."
+      };
+
+      const message = `Hi ${order.customerName || 'Customer'}! 👋\n\nYour order #${order.orderNumber || order.id.substring(0, 8)} has been updated.\n\nStatus: *${statusMessages[newStatus] || newStatus}*\n\nProduct: ${order.productName}\nTotal: KES ${(order.total || 0).toLocaleString()}\n\nThank you for shopping with us!`;
+
+      // Call Evolution API directly
+      if (tenant?.evolutionServerUrl && tenant?.evolutionApiKey && tenant?.evolutionInstanceId) {
+        const cleanPhone = (order.customerPhone || "").replace(/[^0-9]/g, "");
+        const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+        
+        await fetch(`${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': tenant.evolutionApiKey
+          },
+          body: JSON.stringify({
+            number: fullPhone,
+            text: message
+          })
+        });
+        console.log('Direct Evolution message sent to:', fullPhone);
+      } else {
+        // Fallback to n8n webhook
+        await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            customerPhone: order.customerPhone,
+            customerName: order.customerName,
+            productName: order.productName,
+            status: newStatus,
+            deliveryAddress: order.customerAddress || "",
+            tenantId: order.tenantId,
+            evolutionServerUrl: tenant?.evolutionServerUrl,
+            evolutionApiKey: tenant?.evolutionApiKey,
+            evolutionInstanceId: tenant?.evolutionInstanceId
+          })
+        });
+      }
     } catch (err) {
-      console.error('Order update webhook error:', err);
+      console.error('Order update error:', err);
     }
   };
 
