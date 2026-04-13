@@ -238,7 +238,7 @@ function OrderPageContent() {
         statusHistory: {
           pending: now.toISOString()
         },
-        evolutionInstanceId: tenantData?.evolutionInstanceId || null,
+        evolutionInstanceId: tenantId,
         createdAt: now,
         updatedAt: now
       }).then((docRef) => {
@@ -265,7 +265,7 @@ function OrderPageContent() {
           tenantId: tenantId,
           evolutionServerUrl: tenantData?.evolutionServerUrl || null,
           evolutionApiKey: tenantData?.evolutionApiKey || null,
-          evolutionInstanceId: tenantData?.evolutionInstanceId || null
+          evolutionInstanceId: tenantId
         })
       }).catch(err => console.error('Webhook error:', err));
       
