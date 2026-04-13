@@ -324,15 +324,36 @@ export default function OrdersPage() {
 
   const sendOrderUpdate = async (order: Order, newStatus: string) => {
     try {
-      if (!firebaseApp) return;
+      if (!firebaseApp) {
+        console.log("No firebase app");
+        return;
+      }
       const db = getFirestore(firebaseApp);
       
-      const tenantId = order.tenantId || `tenant_${user?.uid}`;
+      // Try order's tenantId first, then fall back to user's tenant
+      let tenantId = order.tenantId;
+      if (!tenantId && user?.uid) {
+        tenantId = `tenant_${user.uid}`;
+      }
+      
+      console.log("Looking for tenant with ID:", tenantId);
+      console.log("Order tenantId:", order.tenantId);
+      console.log("User uid:", user?.uid);
+      
       const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
+      
+      if (!tenantDoc.exists()) {
+        console.log("Tenant document not found for ID:", tenantId);
+        return;
+      }
+      
       const tenant = tenantDoc.data();
-
-      console.log("Tenant data:", tenant);
-      console.log("Tenant ID used:", tenantId);
+      console.log("Tenant data found:", tenant ? "yes" : "no");
+      console.log("Evolution config:", {
+        hasServerUrl: !!tenant?.evolutionServerUrl,
+        hasApiKey: !!tenant?.evolutionApiKey,
+        hasInstanceId: !!tenant?.evolutionInstanceId
+      });
 
       const statusMessages: Record<string, string> = {
         pending: "Your order is pending payment.",
