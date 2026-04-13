@@ -109,8 +109,7 @@ function OrderPageContent() {
           setProduct({ ...data, id: productSnap.id } as Product);
           
           // Fetch tenant data for Evolution credentials
-          const tenantIdWithoutPrefix = tenantId.replace('tenant_', '');
-          const tenantRef = doc(db, "tenants", tenantIdWithoutPrefix);
+          const tenantRef = doc(db, "tenants", tenantId);
           const tenantSnap = await getDoc(tenantRef);
           if (tenantSnap.exists()) {
             const tenantData = tenantSnap.data();
