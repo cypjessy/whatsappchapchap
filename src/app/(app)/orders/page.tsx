@@ -940,11 +940,13 @@ export default function OrdersPage() {
                   <div>
                     <label className="block text-sm font-semibold text-[#1e293b] mb-2">Order Status</label>
                     <select name="status" value={editForm.status} onChange={handleEditInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366] bg-white">
-                      <option value="pending">Pending</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Completed</option>
-                      <option value="cancelled">Cancelled</option>
+                      <option value="pending">⏳ Pending</option>
+                      <option value="confirmed">✅ Confirmed</option>
+                      <option value="processing">🔄 Processing</option>
+                      <option value="shipped">🚚 Shipped</option>
+                      <option value="delivered">🎉 Delivered</option>
+                      <option value="cancelled">❌ Cancelled</option>
+                      <option value="refunded">💰 Refunded</option>
                     </select>
                   </div>
                   <div>
