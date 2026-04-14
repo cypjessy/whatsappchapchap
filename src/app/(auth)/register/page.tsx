@@ -146,7 +146,14 @@ export default function RegisterPage() {
     const { doc, setDoc } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
     
-    await setDoc(doc(db, "tenants", tenantId), {
+    console.log('[Register] Saving tenant Evolution data:', {
+      tenantId,
+      evolutionKey: data?.evolutionKey,
+      evolutionUUID: data?.evolutionUUID,
+      instanceId: data?.instanceId,
+    });
+    
+    const tenantUpdate = {
       evolutionServerUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       evolutionInstanceId: data?.instanceId || instanceName,
       evolutionApiUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
@@ -154,7 +161,13 @@ export default function RegisterPage() {
       evolutionUUID: data?.evolutionUUID || "",
       whatsappInstanceId: data?.instanceId || instanceName,
       whatsappConnectionStatus: "connected",
-    }, { merge: true });
+    };
+    
+    console.log('[Register] Firestore update payload:', tenantUpdate);
+    
+    await setDoc(doc(db, "tenants", tenantId), tenantUpdate, { merge: true });
+    
+    console.log('[Register] Tenant saved successfully with evolutionApiKey:', tenantUpdate.evolutionApiKey);
     
     router.push("/dashboard");
   };

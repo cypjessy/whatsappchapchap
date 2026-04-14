@@ -14,6 +14,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   const [apiKeyFetched, setApiKeyFetched] = useState(false);
   const [fetchingApiKey, setFetchingApiKey] = useState(false);
   const [fetchedApiKey, setFetchedApiKey] = useState("");
+  const [createApiKey, setCreateApiKey] = useState(""); // API key from create instance response
   const [error, setError] = useState<string | null>(null);
 
   const setupInstance = async () => {
@@ -43,7 +44,19 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       let instanceData;
       try {
         instanceData = await createInstance(instanceName);
-        console.log('Instance created:', instanceData);
+        console.log('Instance created:', JSON.stringify(instanceData));
+        
+        // Capture API key from create response
+        // Evolution API returns it as: hash: "key" (string) or hash: { apikey: "key" } (object)
+        if (instanceData?.hash) {
+          const keyFromCreate = typeof instanceData.hash === 'string' 
+            ? instanceData.hash 
+            : instanceData.hash?.apikey || instanceData.hash?.token || "";
+          if (keyFromCreate) {
+            console.log('Got API key from create instance response:', keyFromCreate);
+            setCreateApiKey(keyFromCreate);
+          }
+        }
       } catch (createErr: any) {
         const errMsg = createErr?.message?.toString() || "";
         console.log('Create error:', errMsg);
@@ -124,34 +137,53 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       const instanceKey = await fetchInstanceApiKey(instanceName);
       if (instanceKey) {
         actualApiKey = instanceKey;
-        console.log('Got instance API key from Evolution:', actualApiKey);
+        console.log('Got instance API key from fetchInstanceApiKey:', actualApiKey);
+      } else {
+        console.warn('fetchInstanceApiKey returned null/empty for:', instanceName);
       }
-      setFetchedApiKey(actualApiKey);
-      setApiKeyFetched(true);
     } catch (err) {
-      console.log('Could not fetch instance API key:', err);
+      console.error('Could not fetch instance API key:', err);
     }
     
+    // Fallback: use API key captured from create instance response
+    if (!actualApiKey && createApiKey) {
+      actualApiKey = createApiKey;
+      console.log('Using API key from create instance response:', actualApiKey);
+    }
+    
+    setFetchedApiKey(actualApiKey);
+    setApiKeyFetched(true);
+    
     // Fetch UUID from Evolution API
+    let evolutionUUID = "";
     try {
       const details = await getInstanceDetails(instanceName);
-      const evolutionUUID = details?.instance?.id || details?.instance?.instanceId || "";
+      console.log('getInstanceDetails full response:', JSON.stringify(details));
+      evolutionUUID = details?.instance?.instanceId || details?.instance?.id || "";
       console.log('Evolution UUID from handleConnected:', evolutionUUID);
+      
+      // Also try to get apikey from details if we still don't have one
+      if (!actualApiKey && details?.instance?.apikey) {
+        actualApiKey = details.instance.apikey;
+        console.log('Got API key from getInstanceDetails:', actualApiKey);
+        setFetchedApiKey(actualApiKey);
+      }
       
       // Store UUID for later use
       (window as any).__evolutionUUID = evolutionUUID;
-      
-      // Call onConnected with actual API key
-      if (onConnected) {
-        onConnected({
-          instanceId: instanceName,
-          evolutionUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
-          evolutionKey: actualApiKey,
-          evolutionUUID: evolutionUUID
-        });
-      }
     } catch (err) {
-      console.log('Could not get UUID:', err);
+      console.error('Could not get UUID:', err);
+    }
+    
+    // Always call onConnected even if UUID fetch failed - API key is the critical piece
+    if (onConnected) {
+      console.log('Calling onConnected with evolutionKey:', actualApiKey, 'UUID:', evolutionUUID);
+      onConnected({
+        instanceId: instanceName,
+        evolutionUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+        evolutionKey: actualApiKey,
+        evolutionUUID: evolutionUUID
+      });
     }
   };
 
@@ -173,10 +205,16 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       const instanceKey = await fetchInstanceApiKey(instanceName);
       if (instanceKey) {
         actualApiKey = instanceKey;
-        console.log('Got instance API key from Evolution:', actualApiKey);
+        console.log('Got instance API key from fetchInstanceApiKey:', actualApiKey);
       }
     } catch (err) {
       console.log('Could not fetch instance API key:', err);
+    }
+    
+    // Fallback: use API key captured from create instance response
+    if (!actualApiKey && createApiKey) {
+      actualApiKey = createApiKey;
+      console.log('Using API key from create instance response:', actualApiKey);
     }
     
     // Fetch UUID from Evolution API - try multiple methods
@@ -186,8 +224,14 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         // Try getInstanceDetails first
         const details = await getInstanceDetails(instanceName);
         console.log('getInstanceDetails response:', JSON.stringify(details));
-        evolutionUUID = details?.instance?.id || details?.instance?.instanceId || details?.instance?.owner || "";
+        evolutionUUID = details?.instance?.instanceId || details?.instance?.id || details?.instance?.owner || "";
         console.log('Evolution UUID from getInstanceDetails:', evolutionUUID);
+        
+        // Also try to get apikey from details if we still don't have one
+        if (!actualApiKey && details?.instance?.apikey) {
+          actualApiKey = details.instance.apikey;
+          console.log('Got API key from getInstanceDetails:', actualApiKey);
+        }
       } catch (err: any) {
         console.log('getInstanceDetails error:', err?.message);
       }
@@ -212,7 +256,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     
     const evolutionUrl = "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
     
-    console.log('Sending to onConnected:', { evolutionUUID });
+    console.log('Sending to onConnected:', { evolutionKey: actualApiKey, evolutionUUID });
     
     onConnected({ 
       instanceId: instanceName, 

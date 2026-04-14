@@ -7,7 +7,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
   const { path } = await params;
   const apiKey = req.headers.get("x-api-key") || DEFAULT_API_KEY;
   const apiUrl = req.nextUrl.searchParams.get("apiUrl") || DEFAULT_API_URL;
-  return proxyRequest(path, "GET", apiKey, apiUrl);
+  // Forward query params (except apiUrl which is for the proxy)
+  const queryParams = new URLSearchParams();
+  req.nextUrl.searchParams.forEach((value, key) => {
+    if (key !== "apiUrl") queryParams.set(key, value);
+  });
+  return proxyRequest(path, "GET", apiKey, apiUrl, undefined, queryParams);
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
@@ -25,7 +30,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
   return proxyRequest(path, "DELETE", apiKey, apiUrl);
 }
 
-async function proxyRequest(path: string[], method: string, apiKey: string, apiUrl: string, body?: any) {
+async function proxyRequest(path: string[], method: string, apiKey: string, apiUrl: string, body?: any, queryParams?: URLSearchParams) {
   if (!apiUrl) {
     return NextResponse.json(
       { error: "Evolution API URL not configured" },
@@ -41,7 +46,8 @@ async function proxyRequest(path: string[], method: string, apiKey: string, apiU
   }
 
   const endpoint = path.join("/");
-  const url = `${apiUrl.replace(/\/$/, "")}/${endpoint}`;
+  const queryString = queryParams && queryParams.toString() ? `?${queryParams.toString()}` : "";
+  const url = `${apiUrl.replace(/\/$/, "")}/${endpoint}${queryString}`;
   console.log(`[Evolution API Proxy] ${method} ${url}`);
   console.log(`[Evolution API Proxy] Using API Key:`, apiKey.substring(0, 8) + "...");
 
