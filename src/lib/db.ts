@@ -488,6 +488,7 @@ async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<vo
       finalData = {
         ...finalData,
         updatedAt: serverTimestamp(),
+        lastNotifiedStatus: data.status,
         statusHistory: {
           ...existingHistory,
           [data.status]: new Date().toISOString()
