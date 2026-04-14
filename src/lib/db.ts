@@ -174,11 +174,23 @@ export interface Order {
   paymentDetails?: string;
   orderNotes?: string;
   deliveryMethod?: string;
-  status?: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+  status?: OrderStatus;
   statusHistory?: Record<string, string>;
   notes?: string;
   createdAt: any;
   updatedAt: any;
+}
+
+export type OrderStatus =  pending | processing | shipped | delivered | cancelled | refunded;
+
+export interface OrderUpdate {
+  id?: string;
+  orderId: string;
+  orderNumber: string;
+  tenantId: string;
+  previousStatus?: string;
+  newStatus: string;
+  timestamp: any;
 }
 
 export interface Message {
@@ -471,16 +483,19 @@ export const orderService = {
     return snap.exists() ? { id: snap.id, ...snap.data() } as Order : null;
   },
 
-  async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<void> {
+async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<void> {
     let finalData: any = Object.fromEntries(
-      Object.entries(data).filter(([_, value]) => value !== undefined && value !== "" && value !== null)
+      Object.entries(data).filter(([_, value]) => value !== undefined && value !== '' && value !== null)
     );
     
-    // If status is being updated, also update statusHistory
+    let previousStatus: string | undefined;
+    
+    // If status is being updated, also update statusHistory and create OrderUpdate
     if (data.status) {
-      const orderDoc = await getDoc(doc(db, "orders", orderId));
+      const orderDoc = await getDoc(doc(db, 'orders', orderId));
       const existingOrder = orderDoc.exists() ? orderDoc.data() as Order : null;
       const existingHistory = existingOrder?.statusHistory || {};
+      previousStatus = existingOrder?.status;
       
       finalData = {
         ...finalData,
@@ -490,11 +505,21 @@ export const orderService = {
           [data.status]: new Date().toISOString()
         }
       };
+      
+      // Create OrderUpdate record for AI notification
+      await addDoc(collection(db, 'orderUpdates'), {
+        orderId,
+        orderNumber: existingOrder?.orderNumber || '',
+        tenantId: existingOrder?.tenantId || getTenantId(user),
+        previousStatus: previousStatus || null,
+        newStatus: data.status,
+        timestamp: serverTimestamp()
+      });
     } else {
       finalData.updatedAt = serverTimestamp();
     }
     
-    await setDoc(doc(db, "orders", orderId), finalData, { merge: true });
+    await setDoc(doc(db, 'orders', orderId), finalData, { merge: true });
   },
 
   async getOrderCounts(user: User): Promise<{all: number, pending: number, processing: number, completed: number, cancelled: number}> {
