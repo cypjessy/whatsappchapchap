@@ -281,7 +281,7 @@ export default function OrdersPage() {
   const markOrderComplete = async () => {
     if (!user || !selectedOrder) return;
     try {
-      const nextStatus = selectedOrder.status === "pending" ? "processing" : "delivered";
+      const nextStatus = selectedOrder.status === "pending" ? "processing" : selectedOrder.status === "processing" ? "shipped" : "delivered";
       await orderService.updateOrder(user, selectedOrder.id, { status: nextStatus });
       await sendOrderUpdate(selectedOrder, nextStatus);
       loadOrders();
@@ -377,7 +377,7 @@ export default function OrdersPage() {
 
   const processOrder = async () => {
     if (!user || !selectedOrder) return;
-    const nextStatus = selectedOrder.status === "pending" ? "processing" : "delivered";
+    const nextStatus = selectedOrder.status === "pending" ? "processing" : selectedOrder.status === "processing" ? "shipped" : "delivered";
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: nextStatus });
       loadOrders();
@@ -968,7 +968,7 @@ export default function OrdersPage() {
               <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#ef4444] hover:text-[#ef4444]" onClick={() => setModalOpen(false)}><i className="fas fa-times mr-2"></i>Cancel Order</button>
               <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={() => openEditModal(selectedOrder)}><i className="fas fa-edit mr-2"></i>Edit</button>
               <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg" onClick={markOrderComplete}>
-                <i className="fas fa-check mr-2"></i>Mark {selectedOrder.status === "pending" ? "Processing" : "Complete"}
+                <i className="fas fa-check mr-2"></i>Mark {selectedOrder.status === "pending" ? "Processing" : selectedOrder.status === "processing" ? "Shipped" : "Delivered"}
               </button>
             </div>
           </div>
