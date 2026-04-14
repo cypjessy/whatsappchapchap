@@ -23,11 +23,12 @@ async function getEvolutionConfig() {
 
 async function callEvolutionApi(endpoint: string, method: string = "GET", body?: any) {
   const config = await getEvolutionConfig();
+  const apiKey = config?.apiKey || "lhnGSMQrQmC54PyPUBqILuWWeau20gDn";
   const response = await fetch(`/api/evolution/${endpoint}`, {
     method,
     headers: { 
       "Content-Type": "application/json",
-      "x-api-key": config.apiKey,
+      "x-api-key": apiKey,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
