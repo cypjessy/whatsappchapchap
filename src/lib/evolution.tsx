@@ -63,11 +63,10 @@ export const deleteInstance = async (instanceName: string) => {
 };
 
 export const setWebhook = async (instanceName: string, webhookUrl: string) => {
-  const webhookUrlFinal = `${webhookUrl}/api/webhook/evolution`;
   return callEvolutionApi(`webhook/set/${instanceName}`, "POST", {
     webhook: {
       enabled: true,
-      url: webhookUrlFinal,
+      url: webhookUrl,
       webhookByEvents: false,
       webhookBase64: false,
       events: [

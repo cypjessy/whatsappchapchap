@@ -108,8 +108,8 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   };
 
   const handleConnected = async () => {
-    const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
-    console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
+    const webhookUrl = "http://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/whatsapp";
+    console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl);
     
     try {
       await setWebhook(instanceName, webhookUrl);
@@ -139,8 +139,8 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
 
   const handleContinue = async () => {
     setStatus('loading');
-    const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
-    console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl + '/api/webhook/evolution');
+    const webhookUrl = "http://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/whatsapp";
+    console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl);
     
     try {
       await setWebhook(instanceName, webhookUrl);
@@ -197,7 +197,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
 
   const refreshWebhook = async () => {
     try {
-      const webhookUrl = process.env.NEXT_PUBLIC_APP_URL || "https://whatsappchapchap.vercel.app";
+      const webhookUrl = "http://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/whatsapp";
       await setWebhook(instanceName, webhookUrl);
       alert('Webhook registered successfully!');
     } catch (err) {
