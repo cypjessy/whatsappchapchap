@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { orderService, Order, productService, Product, customerService, Customer, tenantService } from "@/lib/db";
+import { orderService, Order, OrderStatus, productService, Product, customerService, Customer, tenantService } from "@/lib/db";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
