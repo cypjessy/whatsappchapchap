@@ -243,6 +243,7 @@ function OrderPageContent() {
         statusHistory: {
           pending: now.toISOString()
         },
+        lastNotifiedStatus: '',
         evolutionInstanceId: tenantId,
         notificationSent: false,
         createdAt: now,

@@ -176,22 +176,13 @@ export interface Order {
   deliveryMethod?: string;
   status?: OrderStatus;
   statusHistory?: Record<string, string>;
+  lastNotifiedStatus?: string;
   notes?: string;
   createdAt: any;
   updatedAt: any;
 }
 
 export type OrderStatus =  'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
-
-export interface OrderUpdate {
-  id?: string;
-  orderId: string;
-  orderNumber: string;
-  tenantId: string;
-  previousStatus?: string;
-  newStatus: string;
-  timestamp: any;
-}
 
 export interface Message {
   id: string;
@@ -488,14 +479,11 @@ async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<vo
       Object.entries(data).filter(([_, value]) => value !== undefined && value !== '' && value !== null)
     );
     
-    let previousStatus: string | undefined;
-    
-    // If status is being updated, also update statusHistory and create OrderUpdate
+    // If status is being updated, also update statusHistory
     if (data.status) {
       const orderDoc = await getDoc(doc(db, 'orders', orderId));
       const existingOrder = orderDoc.exists() ? orderDoc.data() as Order : null;
       const existingHistory = existingOrder?.statusHistory || {};
-      previousStatus = existingOrder?.status;
       
       finalData = {
         ...finalData,
@@ -505,16 +493,6 @@ async updateOrder(user: User, orderId: string, data: Partial<Order>): Promise<vo
           [data.status]: new Date().toISOString()
         }
       };
-      
-      // Create OrderUpdate record for AI notification
-      await addDoc(collection(db, 'orderUpdates'), {
-        orderId,
-        orderNumber: existingOrder?.orderNumber || '',
-        tenantId: existingOrder?.tenantId || getTenantId(user),
-        previousStatus: previousStatus || null,
-        newStatus: data.status,
-        timestamp: serverTimestamp()
-      });
     } else {
       finalData.updatedAt = serverTimestamp();
     }
