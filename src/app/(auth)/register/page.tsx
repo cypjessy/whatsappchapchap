@@ -147,10 +147,10 @@ export default function RegisterPage() {
     const { db } = await import("@/lib/firebase");
     
     await setDoc(doc(db, "tenants", tenantId), {
-      evolutionServerUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+      evolutionServerUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       evolutionInstanceId: data?.instanceId || instanceName,
-      evolutionApiUrl: data?.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
-      evolutionApiKey: data?.evolutionKey || "A69EDEB8-3C80-4CC1-92F4-20965F0820A5",
+      evolutionApiUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+      evolutionApiKey: data?.evolutionKey || "",
       evolutionUUID: data?.evolutionUUID || "",
       whatsappInstanceId: data?.instanceId || instanceName,
       whatsappConnectionStatus: "connected",

@@ -5,11 +5,29 @@ interface EvolutionQRCode {
   count?: number;
 }
 
+let cachedApiConfig: { apiUrl: string; apiKey: string } | null = null;
+
+async function getEvolutionConfig() {
+  if (cachedApiConfig) return cachedApiConfig;
+  try {
+    const res = await fetch('/api/evolution-config');
+    cachedApiConfig = await res.json();
+    return cachedApiConfig;
+  } catch {
+    return { 
+      apiUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io", 
+      apiKey: "lhnGSMQrQmC54PyPUBqILuWWeau20gDn" 
+    };
+  }
+}
+
 async function callEvolutionApi(endpoint: string, method: string = "GET", body?: any) {
+  const config = await getEvolutionConfig();
   const response = await fetch(`/api/evolution/${endpoint}`, {
     method,
     headers: { 
       "Content-Type": "application/json",
+      "x-api-key": config.apiKey,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
