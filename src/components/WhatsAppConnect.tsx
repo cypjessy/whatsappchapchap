@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceDetails } from '@/lib/evolution';
+import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceDetails, fetchInstanceApiKey } from '@/lib/evolution';
 
 interface Props {
   instanceName: string;
@@ -118,17 +118,18 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       console.log('Webhook error (may already be set):', webhookErr?.message);
     }
     
-    // Fetch actual API key from config
+    // Fetch instance-specific API key from Evolution API
     let actualApiKey = "";
     try {
-      const res = await fetch('/api/evolution-config');
-      const config = await res.json();
-      actualApiKey = config.apiKey;
-      console.log('Using actual API Key:', actualApiKey);
+      const instanceKey = await fetchInstanceApiKey(instanceName);
+      if (instanceKey) {
+        actualApiKey = instanceKey;
+        console.log('Got instance API key from Evolution:', actualApiKey);
+      }
       setFetchedApiKey(actualApiKey);
       setApiKeyFetched(true);
     } catch (err) {
-      console.log('Could not fetch API key:', err);
+      console.log('Could not fetch instance API key:', err);
     }
     
     // Fetch UUID from Evolution API
@@ -166,15 +167,16 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       console.log('Webhook error (may already be set):', webhookErr?.message);
     }
     
-    // Fetch actual API key from config
+    // Fetch instance-specific API key from Evolution API
     let actualApiKey = "";
     try {
-      const res = await fetch('/api/evolution-config');
-      const config = await res.json();
-      actualApiKey = config.apiKey;
-      console.log('Using actual API Key:', actualApiKey);
+      const instanceKey = await fetchInstanceApiKey(instanceName);
+      if (instanceKey) {
+        actualApiKey = instanceKey;
+        console.log('Got instance API key from Evolution:', actualApiKey);
+      }
     } catch (err) {
-      console.log('Could not fetch API key:', err);
+      console.log('Could not fetch instance API key:', err);
     }
     
     // Fetch UUID from Evolution API - try multiple methods

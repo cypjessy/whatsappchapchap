@@ -101,6 +101,15 @@ export const getInstanceDetails = async (instanceName: string) => {
   return callEvolutionApi(`instance/find/${instanceName}`, "GET");
 };
 
+export const fetchInstanceApiKey = async (instanceName: string): Promise<string | null> => {
+  try {
+    const details = await callEvolutionApi(`instance/find/${instanceName}`, "GET");
+    return details?.instance?.apikey || details?.instance?.hash || null;
+  } catch {
+    return null;
+  }
+};
+
 export const checkInstanceExists = async (instanceName: string): Promise<boolean> => {
   try {
     await callEvolutionApi(`instance/connectionState/${instanceName}`, "GET");
