@@ -156,6 +156,7 @@ export interface Order {
   customerPhone?: string;
   customerEmail?: string;
   customerAddress?: string;
+  deliveryAddress?: string;
   productId?: string;
   productName?: string;
   productImage?: string;

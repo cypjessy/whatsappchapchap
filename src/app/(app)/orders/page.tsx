@@ -663,7 +663,7 @@ export default function OrdersPage() {
               <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
                 <div className="p-6 border-r border-[#e2e8f0]">
                   <div className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-4 flex items-center gap-2">
-                    <i className="fas fa-box text-[#25D366]"></i>Order Items ({selectedOrder.products?.length || 0})
+                    <i className="fas fa-box text-[#25D366]"></i>Order Items ({selectedOrder.products?.length || (selectedOrder.productName ? 1 : 0)})
                   </div>
                   <table className="w-full border-collapse mb-4">
                     <thead>
@@ -675,24 +675,64 @@ export default function OrdersPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedOrder.products?.map((product, idx) => (
-                        <tr key={idx} className="border-b border-[#e2e8f0]">
+                      {selectedOrder.products && selectedOrder.products.length > 0 ? (
+                        selectedOrder.products.map((product, idx) => (
+                          <tr key={idx} className="border-b border-[#e2e8f0]">
+                            <td className="py-4 px-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-2xl overflow-hidden">📦</div>
+                                <div>
+                                  <h4 className="font-bold text-sm">{product.name}</h4>
+                                  <span className="text-xs text-[#64748b]">Qty: {product.quantity}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4 px-3 font-semibold">{formatCurrency(product.price)}</td>
+                            <td className="py-4 px-3 text-[#64748b]">x {product.quantity}</td>
+                            <td className="py-4 px-3 font-bold">{formatCurrency(product.price * product.quantity)}</td>
+                          </tr>
+                        ))
+                      ) : selectedOrder.productName ? (
+                        <tr className="border-b border-[#e2e8f0]">
                           <td className="py-4 px-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-2xl">📦</div>
+                              {selectedOrder.productImage ? (
+                                <img src={selectedOrder.productImage} alt={selectedOrder.productName} className="w-12 h-12 rounded-lg object-cover" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-2xl">📦</div>
+                              )}
                               <div>
-                                <h4 className="font-bold text-sm">{product.name}</h4>
-                                <span className="text-xs text-[#64748b]">Qty: {product.quantity}</span>
+                                <h4 className="font-bold text-sm">{selectedOrder.productName}</h4>
+                                <span className="text-xs text-[#64748b]">Qty: {selectedOrder.quantity || 1}</span>
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-3 font-semibold">{formatCurrency(product.price)}</td>
-                          <td className="py-4 px-3 text-[#64748b]">× {product.quantity}</td>
-                          <td className="py-4 px-3 font-bold">{formatCurrency(product.price * product.quantity)}</td>
+                          <td className="py-4 px-3 font-semibold">{formatCurrency(selectedOrder.basePrice || 0)}</td>
+                          <td className="py-4 px-3 text-[#64748b]">x {selectedOrder.quantity || 1}</td>
+                          <td className="py-4 px-3 font-bold">{formatCurrency((selectedOrder.basePrice || 0) * (selectedOrder.quantity || 1))}</td>
                         </tr>
-                      ))}
+                      ) : (
+                        <tr><td colSpan={4} className="py-4 px-3 text-center text-[#64748b]">No items</td></tr>
+                      )}
                     </tbody>
                   </table>
+
+                  {/* Selected Specs */}
+                  {selectedOrder.selectedSpecs && Object.keys(selectedOrder.selectedSpecs).filter(k => selectedOrder.selectedSpecs![k]).length > 0 && (
+                    <div className="bg-[rgba(37,211,102,0.05)] border border-[#25D366] rounded-xl p-4 mb-4">
+                      <div className="text-xs font-bold uppercase tracking-wider text-[#128C7E] mb-3 flex items-center gap-2">
+                        <i className="fas fa-sliders-h"></i>Selected Options
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(selectedOrder.selectedSpecs).filter(([_, v]) => v).map(([key, value]) => (
+                          <span key={key} className="bg-white px-3 py-1.5 rounded-full text-sm font-semibold border border-[#e2e8f0]">
+                            <i className="fas fa-check text-[#10b981] mr-1.5 text-xs"></i>
+                            {key.replace(/_/g, " ")}: {value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="bg-[#f8fafc] rounded-xl p-5">
                     <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
@@ -783,7 +823,7 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex items-center gap-3 text-sm">
                         <i className="fas fa-map-marker-alt text-[#64748b] w-5"></i>
-                        <span>{selectedOrder.customerAddress || "N/A"}</span>
+                        <span>{selectedOrder.deliveryAddress || selectedOrder.customerAddress || "N/A"}</span>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-4">
@@ -806,22 +846,16 @@ export default function OrdersPage() {
                       <span className="text-[#64748b]">Date</span>
                       <span className="font-semibold">{formatDate(selectedOrder.createdAt)}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
-                      <span className="text-[#64748b]">Payment</span>
-                      <span className="font-semibold flex items-center gap-2">
-                        <i className="fas fa-money-bill-wave text-[#10b981]"></i> {selectedOrder.paymentMethod || "COD"}
-                      </span>
-                    </div>
-                    {selectedOrder.paymentDetails && (
+                    {(selectedOrder.deliveryAddress || selectedOrder.customerAddress) && (
                       <div className="py-2 border-b border-[#e2e8f0] text-sm">
-                        <span className="text-[#64748b]">Payment Details: </span>
-                        <span className="font-semibold">{selectedOrder.paymentDetails}</span>
+                        <span className="text-[#64748b]">Delivery Address</span>
+                        <div className="font-semibold mt-1">{selectedOrder.deliveryAddress || selectedOrder.customerAddress}</div>
                       </div>
                     )}
-                    {selectedOrder.orderNotes && (
-                      <div className="py-2 border-b border-[#e2e8f0] text-sm">
-                        <span className="text-[#64748b]">Order Notes: </span>
-                        <span className="font-semibold">{selectedOrder.orderNotes}</span>
+                    {selectedOrder.deliveryMethod && (
+                      <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
+                        <span className="text-[#64748b]">Delivery Method</span>
+                        <span className="font-semibold capitalize">{selectedOrder.deliveryMethod}</span>
                       </div>
                     )}
                     <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
@@ -830,9 +864,37 @@ export default function OrdersPage() {
                         <i className="fab fa-whatsapp text-[#25D366]"></i> WhatsApp
                       </span>
                     </div>
+                  </div>
+
+                  {/* Payment Confirmation */}
+                  <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] mb-6">
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-4 flex items-center gap-2">
+                      <i className="fas fa-credit-card text-[#10b981]"></i>Payment Information
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-[#e2e8f0] text-sm">
+                      <span className="text-[#64748b]">Payment Method</span>
+                      <span className="font-semibold flex items-center gap-2">
+                        <i className={`fas ${selectedOrder.paymentMethod === "mpesa" || selectedOrder.paymentMethod === "M-Pesa" ? "fa-mobile-alt text-[#00A650]" : selectedOrder.paymentMethod === "bank" || selectedOrder.paymentMethod === "Bank Transfer" ? "fa-university text-[#64748b]" : "fa-money-bill-wave text-[#10b981]"}`}></i> 
+                        {selectedOrder.paymentMethod || "COD"}
+                      </span>
+                    </div>
+                    {selectedOrder.paymentDetails && (
+                      <div className="py-2 border-b border-[#e2e8f0] text-sm">
+                        <div className="text-[#64748b] mb-1">Payment Reference / Transaction ID</div>
+                        <div className="font-semibold bg-[#f8fafc] p-2.5 rounded-lg border border-[#e2e8f0]">{selectedOrder.paymentDetails}</div>
+                      </div>
+                    )}
+                    {selectedOrder.orderNotes && (
+                      <div className="py-2 border-b border-[#e2e8f0] text-sm">
+                        <div className="text-[#64748b] mb-1">Customer Message / Notes</div>
+                        <div className="font-semibold bg-[#fffbeb] p-2.5 rounded-lg border border-[#fde68a] text-[#92400e]">{selectedOrder.orderNotes}</div>
+                      </div>
+                    )}
                     <div className="flex justify-between py-2 text-sm">
-                      <span className="text-[#64748b]">Handled By</span>
-                      <span className="font-semibold">AI Assistant</span>
+                      <span className="text-[#64748b]">Payment Status</span>
+                      <span className={`font-semibold ${selectedOrder.status === "pending" ? "text-[#f59e0b]" : selectedOrder.status === "cancelled" ? "text-[#ef4444]" : "text-[#10b981]"}`}>
+                        {selectedOrder.status === "pending" ? "Awaiting Confirmation" : selectedOrder.status === "cancelled" ? "Cancelled" : "Confirmed"}
+                      </span>
                     </div>
                   </div>
 
