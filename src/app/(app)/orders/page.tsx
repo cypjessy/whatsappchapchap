@@ -620,10 +620,18 @@ export default function OrdersPage() {
                 <div>
                   <h2 className="text-2xl font-extrabold flex items-center gap-2">
                     Order <span className="text-[#25D366]">#{selectedOrder.orderNumber || selectedOrder.id.substring(0, 8)}</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-2 ${selectedOrder.status === "pending" ? "bg-[rgba(245,158,11,0.1)] text-[#f59e0b]" : selectedOrder.status === "processing" ? "bg-[rgba(59,130,246,0.1)] text-[#3b82f6]" : selectedOrder.status === "delivered" ? "bg-[rgba(37,211,102,0.1)] text-[#10b981]" : "bg-[rgba(239,68,68,0.1)] text-[#ef4444]"}`}>
-                      <span className="w-2 h-2 rounded-full bg-current"></span>
-                      {selectedOrder.status === "pending" ? "Pending" : selectedOrder.status === "processing" ? "Processing" : selectedOrder.status === "delivered" ? "Completed" : "Cancelled"}
-                    </span>
+                    <select 
+                      value={selectedOrder.status || 'pending'}
+                      onChange={(e) => updateOrderStatus(e.target.value as OrderStatus)}
+                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase cursor-pointer border-0 ${selectedOrder.status === 'pending' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' : selectedOrder.status === 'processing' ? 'bg-[rgba(59,130,246,0.1)] text-[#3b82f6]' : selectedOrder.status === 'shipped' ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]' : selectedOrder.status === 'delivered' ? 'bg-[rgba(37,211,102,0.1)] text-[#10b981]' : 'bg-[rgba(239,68,68,0.1)] text-[#ef4444]'}`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="refunded">Refunded</option>
+                    </select>
                   </h2>
                   <div className="flex items-center gap-4 text-sm text-[#64748b] mt-1">
                     <span><i className="far fa-calendar"></i> {formatDate(selectedOrder.createdAt)} at {formatTime(selectedOrder.createdAt)}</span>
@@ -634,20 +642,19 @@ export default function OrdersPage() {
               </div>
               <div className="flex gap-2">
                 <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-xl transition-all" onClick={() => window.print()}><i className="fas fa-print"></i></button>
-                <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-xl transition-all" onClick={() => openEditModal(selectedOrder)}><i className="fas fa-pen"></i></button>
                 <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all" onClick={() => { if(confirm("Cancel this order?")) updateOrderStatus("cancelled"); }}><i className="fas fa-times"></i></button>
                 <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all" onClick={() => setModalOpen(false)}><i className="fas fa-times"></i></button>
               </div>
             </div>
 
-            <div className={`p-4 flex justify-between items-center border-b ${selectedOrder.status === "pending" ? "bg-gradient-to-r from-[rgba(245,158,11,0.1)] to-[rgba(245,158,11,0.05)]" : selectedOrder.status === "processing" ? "bg-gradient-to-r from-[rgba(59,130,246,0.1)] to-[rgba(59,130,246,0.05)]" : "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(37,211,102,0.05)]"}`}>
+            <div className={`p-4 flex justify-between items-center border-b ${selectedOrder.status === "pending" ? "bg-gradient-to-r from-[rgba(245,158,11,0.1)] to-[rgba(245,158,11,0.05)]" : selectedOrder.status === "processing" ? "bg-gradient-to-r from-[rgba(59,130,246,0.1)] to-[rgba(59,130,246,0.05)]" : selectedOrder.status === "shipped" ? "bg-gradient-to-r from-[rgba(139,92,246,0.1)] to-[rgba(139,92,246,0.05)]" : "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(37,211,102,0.05)]"}`}>
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${selectedOrder.status === "pending" ? "bg-[rgba(245,158,11,0.2)] text-[#f59e0b]" : selectedOrder.status === "processing" ? "bg-[rgba(59,130,246,0.2)] text-[#3b82f6]" : "bg-[rgba(37,211,102,0.2)] text-[#10b981]"}`}>
-                  <i className={`fas ${selectedOrder.status === "pending" ? "fa-clock" : selectedOrder.status === "processing" ? "fa-cog" : "fa-check-circle"}`}></i>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${selectedOrder.status === "pending" ? "bg-[rgba(245,158,11,0.2)] text-[#f59e0b]" : selectedOrder.status === "processing" ? "bg-[rgba(59,130,246,0.2)] text-[#3b82f6]" : selectedOrder.status === "shipped" ? "bg-[rgba(139,92,246,0.2)] text-[#8b5cf6]" : "bg-[rgba(37,211,102,0.2)] text-[#10b981]"}`}>
+                  <i className={`fas ${selectedOrder.status === "pending" ? "fa-clock" : selectedOrder.status === "processing" ? "fa-cog" : selectedOrder.status === "shipped" ? "fa-shipping-fast" : "fa-check-circle"}`}></i>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg capitalize">{selectedOrder.status === "pending" ? "Payment Pending" : selectedOrder.status === "processing" ? "Order Processing" : "Order Completed"}</h3>
-                  <p className="text-sm text-[#64748b]">{selectedOrder.status === "pending" ? "Awaiting payment confirmation" : selectedOrder.status === "processing" ? "Your order is being prepared" : "Order delivered successfully"}</p>
+                  <h3 className="font-bold text-lg capitalize">{selectedOrder.status === "pending" ? "Payment Pending" : selectedOrder.status === "processing" ? "Order Processing" : selectedOrder.status === "shipped" ? "Order Shipped" : "Order Completed"}</h3>
+                  <p className="text-sm text-[#64748b]">{selectedOrder.status === "pending" ? "Awaiting payment confirmation" : selectedOrder.status === "processing" ? "Your order is being prepared" : selectedOrder.status === "shipped" ? "Your order is on its way" : "Order delivered successfully"}</p>
                 </div>
               </div>
             </div>
@@ -896,86 +903,6 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Edit Order Modal */}
-      {editModalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditModalOpen(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-[#e2e8f0] flex justify-between items-center">
-              <h2 className="text-xl font-extrabold flex items-center gap-2">
-                <i className="fas fa-edit text-[#25D366]"></i>Edit Order #{selectedOrder.id.substring(0, 8)}
-              </h2>
-              <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all" onClick={() => setEditModalOpen(false)}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-4 flex items-center gap-2">
-                  <i className="fas fa-user text-[#25D366]"></i>Customer Information
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1e293b] mb-2">Customer Name</label>
-                    <input type="text" name="customerName" value={editForm.customerName} onChange={handleEditInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1e293b] mb-2">Phone Number</label>
-                    <input type="tel" name="customerPhone" value={editForm.customerPhone} onChange={handleEditInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366]" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-[#1e293b] mb-2">Email Address</label>
-                    <input type="email" name="customerEmail" value={editForm.customerEmail} onChange={handleEditInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366]" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-[#1e293b] mb-2">Delivery Address</label>
-                    <textarea name="customerAddress" value={editForm.customerAddress} onChange={handleEditInputChange} rows={3} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366] resize-none"></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-4 flex items-center gap-2">
-                  <i className="fas fa-cog text-[#3b82f6]"></i>Order Settings
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1e293b] mb-2">Order Status</label>
-                    <select name="status" value={editForm.status} onChange={handleEditInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366] bg-white">
-                      <option value="pending">⏳ Pending</option>
-                      <option value="confirmed">✅ Confirmed</option>
-                      <option value="processing">🔄 Processing</option>
-                      <option value="shipped">🚚 Shipped</option>
-                      <option value="delivered">🎉 Delivered</option>
-                      <option value="cancelled">❌ Cancelled</option>
-                      <option value="refunded">💰 Refunded</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1e293b] mb-2">Payment Method</label>
-                    <select name="paymentMethod" value={editForm.paymentMethod} onChange={handleEditInputChange} className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366] bg-white">
-                      <option value="Cash on Delivery">Cash on Delivery</option>
-                      <option value="M-Pesa">M-Pesa</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Credit Card">Credit Card</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-[#e2e8f0] flex justify-end gap-3">
-              <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#ef4444] hover:text-[#ef4444]" onClick={() => setModalOpen(false)}><i className="fas fa-times mr-2"></i>Cancel Order</button>
-              <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={() => openEditModal(selectedOrder)}><i className="fas fa-edit mr-2"></i>Edit</button>
-              <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg" onClick={markOrderComplete}>
-                <i className="fas fa-check mr-2"></i>Mark {selectedOrder.status === "pending" ? "Processing" : selectedOrder.status === "processing" ? "Shipped" : "Delivered"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Order Modal */}
       {newOrderModalOpen && (
         <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto" onClick={() => setNewOrderModalOpen(false)}>
           <div className="bg-white rounded-[16px] w-full max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
