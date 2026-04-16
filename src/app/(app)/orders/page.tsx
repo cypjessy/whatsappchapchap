@@ -262,13 +262,9 @@ export default function OrdersPage() {
 
   const bulkUpdateStatus = async (status: Order["status"]) => {
     if (!user || selectedOrders.size === 0 || !status) return;
-    try {
+try {
       for (const orderId of selectedOrders) {
-        const order = orders.find(o => o.id === orderId);
         await orderService.updateOrder(user, orderId, { status });
-        if (order) {
-          await sendOrderUpdate(order, status);
-        }
       }
       loadOrders();
       loadCounts();
@@ -281,9 +277,7 @@ export default function OrdersPage() {
   const markOrderComplete = async () => {
     if (!user || !selectedOrder) return;
     try {
-      const nextStatus = selectedOrder.status === "pending" ? "processing" : selectedOrder.status === "processing" ? "shipped" : "delivered";
-      await orderService.updateOrder(user, selectedOrder.id, { status: nextStatus });
-      await sendOrderUpdate(selectedOrder, nextStatus);
+      await orderService.updateOrder(user, selectedOrder.id, { status: "delivered" });
       loadOrders();
       loadCounts();
       setModalOpen(false);
@@ -292,71 +286,10 @@ export default function OrdersPage() {
     }
   };
 
-  const sendWhatsAppMessage = (phone: string, customerName: string) => {
-    if (!phone) {
-      alert("No phone number available for this customer");
-      return;
-    }
-    const cleanPhone = phone.replace(/[^0-9]/g, "");
-    const message = encodeURIComponent(`Hi ${customerName}, thank you for your order! We'll update you on its status.`);
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
-    window.open(whatsappUrl, "_blank");
-  };
-
-  const sendOrderWhatsApp = (order: Order) => {
-    const phone = order.customerPhone;
-    const name = order.customerName;
-    if (!phone) {
-      alert("No phone number available");
-      return;
-    }
-    const statusMessages: Record<string, string> = {
-      pending: "Your order is pending payment.",
-      processing: "Your order is being processed.",
-      shipped: "Your order has been shipped!",
-      delivered: "Your order has been delivered. Thank you!"
-    };
-    const orderStatus = order.status || "pending";
-    const message = encodeURIComponent(
-      `Hi ${name}! 👋\n\nOrder #${order.orderNumber || order.id.substring(0, 8)}\nStatus: ${statusMessages[orderStatus] || "Updated"}\n\nTotal: ${CURRENCY_SYMBOL}${order.total}\n\nThank you for shopping with us!`
-    );
-    const cleanPhone = phone.replace(/[^0-9]/g, "");
-    window.open(`https://wa.me/${cleanPhone}?text=${message}`, "_blank");
-  };
-
-  const sendOrderUpdate = async (order: Order, newStatus: string) => {
-    try {
-      let tenantId = order.tenantId;
-      if (!tenantId && user?.uid) {
-        tenantId = `tenant_${user.uid}`;
-      }
-      
-      if (!tenantId) {
-        console.log("No tenant ID");
-        return;
-      }
-
-      const message = getOrderStatusMessage(
-        newStatus,
-        order.customerName || "Customer",
-        order.orderNumber || order.id.substring(0, 8),
-        order.productName || "Your order",
-        order.customerAddress
-      );
-
-      await sendEvolutionWhatsAppMessage(order.customerPhone || "", message, tenantId).catch(err => {
-        console.error('WhatsApp send failed:', err);
-      });
-    } catch (err: any) {
-      console.error('Order update error:', err.message || err);
-    }
-  };
-
   const updateOrderStatus = async (newStatus: Order["status"]) => {
     if (!user || !selectedOrder || !newStatus) return;
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: newStatus });
-      await sendOrderUpdate(selectedOrder, newStatus);
       loadOrders();
       loadCounts();
       setShowStatusMenu(false);
@@ -379,7 +312,6 @@ export default function OrdersPage() {
     if (!user || !selectedOrder) return;
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: "delivered" });
-      await sendOrderUpdate(selectedOrder, "delivered");
       loadOrders();
       loadCounts();
       setShowStatusMenu(false);
@@ -580,7 +512,6 @@ export default function OrdersPage() {
                           <div className="flex gap-2">
                             <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => openOrderModal(order)}><i className="fas fa-eye"></i></button>
                             <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => openEditModal(order)}><i className="fas fa-edit"></i></button>
-                            <button className="w-9 h-9 flex items-center justify-center text-[#25D366] bg-[rgba(37,211,102,0.1)] rounded-lg" onClick={() => sendOrderWhatsApp(order)}><i className="fab fa-whatsapp"></i></button>
                           </div>
                         </td>
                       </tr>
@@ -823,9 +754,6 @@ export default function OrdersPage() {
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       <button className="py-2.5 px-3 border border-[#e2e8f0] rounded-lg bg-white text-sm font-semibold flex items-center justify-center gap-2 hover:border-[#25D366] hover:text-[#25D366] transition-all">
                         <i className="fas fa-user"></i> Profile
-                      </button>
-                      <button className="py-2.5 px-3 bg-[#25D366] text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#128C7E] transition-all" onClick={() => sendOrderWhatsApp(selectedOrder)}>
-                        <i className="fab fa-whatsapp"></i> Message
                       </button>
                     </div>
                   </div>
