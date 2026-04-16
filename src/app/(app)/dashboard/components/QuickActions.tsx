@@ -58,20 +58,20 @@ export function QuickActions() {
         <div className="text-xs text-[#64748b]">{pendingOrders} pending orders</div>
       </Link>
       
-      <Link href="/ai-assistant" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
+      <Link href="/customers?action=broadcast" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
         <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-full flex items-center justify-center text-white text-xl">
-          <i className="fas fa-robot"></i>
+          <i className="fas fa-broadcast-tower"></i>
         </div>
-        <div className="font-bold">AI Assistant</div>
-        <div className="text-xs text-[#64748b]">Automate responses</div>
+        <div className="font-bold">Broadcast</div>
+        <div className="text-xs text-[#64748b]">Send bulk messages</div>
       </Link>
       
-      <Link href="/analytics" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
+      <Link href="/suppliers" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
         <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-[#f59e0b] to-[#d97706] rounded-full flex items-center justify-center text-white text-xl">
-          <i className="fas fa-chart-pie"></i>
+          <i className="fas fa-truck"></i>
         </div>
-        <div className="font-bold">Reports</div>
-        <div className="text-xs text-[#64748b]">View insights</div>
+        <div className="font-bold">Suppliers</div>
+        <div className="text-xs text-[#64748b]">Manage suppliers</div>
       </Link>
     </div>
   );
