@@ -540,61 +540,6 @@ export default function CustomersPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#e2e8f0]">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-lg flex items-center gap-2">
-              <i className="fas fa-clock text-[#3b82f6]"></i>Recent Activity
-            </h3>
-            <button className="px-3 py-1.5 border-2 border-[#e2e8f0] rounded-lg text-sm font-semibold hover:border-[#25D366]">View All</button>
-          </div>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#f8fafc]">
-              <div className="w-10 h-10 rounded-full bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center"><i className="fas fa-user-plus"></i></div>
-              <div>
-                <div className="font-semibold">New customer added</div>
-                <div className="text-xs text-[#64748b]">Just now</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0]">
-          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <i className="fas fa-chart-line text-[#10b981]"></i>Growth Stats
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="font-semibold text-sm">New Customers</span>
-                <span className="text-[#10b981] font-bold">+{customers.filter(c => c.segment === "new").length}</span>
-              </div>
-              <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
-                <div className="h-full w-[75%] bg-[#10b981] rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="font-semibold text-sm">Retention Rate</span>
-                <span className="text-[#25D366] font-bold">68%</span>
-              </div>
-              <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
-                <div className="h-full w-[68%] bg-[#25D366] rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="font-semibold text-sm">Satisfaction</span>
-                <span className="text-[#f59e0b] font-bold">4.8/5</span>
-              </div>
-              <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
-                <div className="h-full w-[96%] bg-[#f59e0b] rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {showModal && selectedCustomer && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 p-8 overflow-y-auto flex items-start justify-center" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-4xl my-8 shadow-xl" onClick={e => e.stopPropagation()}>
