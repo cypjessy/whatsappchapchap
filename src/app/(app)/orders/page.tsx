@@ -377,11 +377,12 @@ export default function OrdersPage() {
 
   const processOrder = async () => {
     if (!user || !selectedOrder) return;
-    const nextStatus = selectedOrder.status === "pending" ? "processing" : selectedOrder.status === "processing" ? "shipped" : "delivered";
     try {
-      await orderService.updateOrder(user, selectedOrder.id, { status: nextStatus });
+      await orderService.updateOrder(user, selectedOrder.id, { status: "delivered" });
+      await sendOrderUpdate(selectedOrder, "delivered");
       loadOrders();
       loadCounts();
+      setShowStatusMenu(false);
     } catch (error) {
       console.error("Error processing order:", error);
     }
@@ -449,10 +450,6 @@ export default function OrdersPage() {
 
   const tabs = [
     { id: "all", label: "All Orders", count: counts.all },
-    { id: "pending", label: "Pending", count: counts.pending, icon: "fa-clock" },
-    { id: "processing", label: "Processing", count: counts.processing, icon: "fa-cog" },
-    { id: "delivered", label: "Completed", count: counts.completed, icon: "fa-check-circle" },
-    { id: "cancelled", label: "Cancelled", count: counts.cancelled, icon: "fa-times-circle" },
   ];
 
   return (
@@ -480,7 +477,6 @@ export default function OrdersPage() {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveStatus(tab.id)} className={`px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all ${activeStatus === tab.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"}`}>
-            {tab.icon && <i className={`fas ${tab.icon}`}></i>}
             {tab.label}
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20">{tab.count}</span>
           </button>
@@ -500,9 +496,7 @@ export default function OrdersPage() {
             </div>
             {selectedOrders.size > 0 && (
               <div className="flex gap-2">
-                <button className="px-3 py-1 bg-[#10b981] text-white text-xs font-bold rounded-lg" onClick={() => bulkUpdateStatus("delivered")}><i className="fas fa-check mr-1"></i>Mark Complete</button>
-                <button className="px-3 py-1 bg-[#f59e0b] text-white text-xs font-bold rounded-lg" onClick={() => bulkUpdateStatus("processing")}><i className="fas fa-cog mr-1"></i>Process</button>
-                <button className="px-3 py-1 bg-[#ef4444] text-white text-xs font-bold rounded-lg" onClick={() => bulkUpdateStatus("cancelled")}><i className="fas fa-times mr-1"></i>Cancel</button>
+                <button className="px-3 py-1 bg-[#10b981] text-white text-xs font-bold rounded-lg" onClick={() => bulkUpdateStatus("delivered")}><i className="fas fa-check mr-1"></i>Mark Delivered</button>
               </div>
             )}
           </div>
@@ -941,23 +935,14 @@ export default function OrdersPage() {
                   </button>
                   <div className={`absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-[#e2e8f0] min-w-[180px] ${showStatusMenu ? "block" : "hidden"}`}>
                     <div className="py-1">
-                      <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("pending")}>
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span> Pending
-                      </div>
-                      <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("processing")}>
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> Processing
-                      </div>
                       <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("delivered")}>
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span> Completed
-                      </div>
-                      <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("cancelled")}>
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span> Cancelled
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span> Mark Delivered
                       </div>
                     </div>
                   </div>
                 </div>
                 <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center gap-2" onClick={processOrder}>
-                  <i className="fas fa-cog"></i> Process Order
+                  <i className="fas fa-check"></i> Mark Delivered
                 </button>
               </div>
             </div>
