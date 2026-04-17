@@ -179,10 +179,47 @@ export default function RegisterPage() {
     <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden">
       <FloatingShapes />
 
-      <div className="w-full max-w-[1200px] m-auto grid grid-cols-1 md:grid-cols-5 bg-white rounded-2xl shadow-2xl overflow-hidden relative z-10 min-h-[700px]">
-        <RegisterSidebar currentStep={currentStep} />
+      {/* Mobile: Full width card, Desktop: Split layout */}
+      <div className="w-full md:max-w-[1200px] m-auto grid grid-cols-1 md:grid-cols-5 bg-white md:rounded-2xl shadow-2xl overflow-hidden relative z-10 min-h-[700px]">
+        {/* Desktop Sidebar only */}
+        <div className="hidden md:block">
+          <RegisterSidebar currentStep={currentStep} />
+        </div>
 
-        <div className="md:col-span-3 p-8 md:p-12 flex flex-col">
+        {/* Mobile Progress Bar */}
+        <div className="md:hidden px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between mb-2">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`w-8 h-1 rounded-full transition-colors ${
+                  step <= currentStep ? "bg-[#25D366]" : "bg-[#e2e8f0]"
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-xs text-[#64748b]">
+            <span>Account</span>
+            <span>Business</span>
+            <span>Plan</span>
+            <span>Verify</span>
+            <span>Done</span>
+          </div>
+        </div>
+
+        {/* Content - Mobile full width, Desktop col-span-3 */}
+        <div className="md:col-span-3 px-4 md:px-12 py-4 md:py-8 flex flex-col">
+          {/* Mobile Back Button */}
+          {currentStep > 1 && (
+            <button
+              onClick={handleBack}
+              className="md:hidden flex items-center gap-2 text-[#64748b] mb-4"
+            >
+              <i className="fas fa-arrow-left"></i>
+              <span>Back</span>
+            </button>
+          )}
+
           {currentStep === 1 && (
             <Step1Account
               formData={formData}

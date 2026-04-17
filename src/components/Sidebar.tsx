@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   onClose?: () => void;
+  isExpanded?: boolean;
 }
 
 type NavItem = {
@@ -17,9 +18,9 @@ type NavItem = {
   isPro?: boolean;
 };
 
-export default function Sidebar({ onClose }: SidebarProps) {
+export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(isExpanded);
 
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },

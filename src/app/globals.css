@@ -79,3 +79,732 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease;
 }
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.animate-badgePulse {
+  animation: badgePulse 2s infinite;
+}
+
+/* ============================================
+   MOBILE & TABLET RESPONSIVE STYLES
+   ============================================ */
+
+/* Mobile specific overrides (max-width: 767px) */
+@media (max-width: 767px) {
+  html {
+    font-size: 14px;
+  }
+  
+  body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  
+  /* Remove hover-based sidebar collapse on mobile */
+  .sidebar-hover-collapse {
+    width: 100% !important;
+  }
+  
+  /* Mobile card styling - Android app like */
+  .mobile-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1rem;
+  }
+  
+  /* Touch-friendly button sizing */
+  .mobile-btn {
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  
+  /* Mobile input styling */
+  .mobile-input {
+    padding: 0.875rem 1rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Show mobile-only elements */
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* Full-width on mobile */
+  .mobile-full {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Remove padding on mobile main content */
+  main.p-6 {
+    padding: 1rem !important;
+  }
+  
+  /* Mobile grid adjustments */
+  .grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.md\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.xl\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Mobile flex adjustments */
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+  
+  /* Adjust stat cards for mobile */
+  .stat-card-mobile {
+    min-width: 80px;
+    padding: 0.75rem;
+  }
+  
+  /* Mobile table wrapper */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile modal styling */
+  .mobile-modal {
+    border-radius: 24px 24px 0 0;
+    max-height: 90vh;
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  
+  /* Mobile modal buttons */
+  .mobile-modal-footer {
+    padding: 1rem;
+    border-radius: 0;
+    position: sticky bottom 0;
+  }
+  
+  /* Hide scrollbar on mobile but allow scroll */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Bottom sheet styling */
+  .bottom-sheet {
+    border-radius: 24px 24px 0 0;
+    max-height: 85vh;
+  }
+  
+  /* FAB (Floating Action Button) styling */
+  .mobile-fab {
+    position: fixed;
+    bottom: 80px;
+    right: 1rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+  }
+}
+
+/* Tablet specific (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+  
+  .tablet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .tablet-card {
+    padding: 1.25rem;
+  }
+  
+  .tablet-modal {
+    max-width: 90%;
+  }
+  
+  /* Keep sidebar visible but compact on tablet */
+  .sidebar-tablet {
+    width: 80px !important;
+  }
+  
+  .sidebar-expanded-tablet {
+    width: 240px !important;
+  }
+  
+  main.p-6 {
+    padding: 1.5rem !important;
+  }
+  
+  /* Show tablet elements */
+  .tablet-only {
+    display: block !important;
+  }
+}
+
+/* Desktop only (1025px+) */
+@media (min-width: 1025px) {
+  .desktop-only {
+    display: block !important;
+  }
+  
+  .mobile-only {
+    display: none !important;
+  }
+  
+  .tablet-only {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   ANDROID APP-LIKE STYLING
+   ============================================ */
+
+/* Bottom Navigation Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: white;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.bottom-nav-item.active {
+  color: #25D366;
+}
+
+.bottom-nav-item i {
+  font-size: 1.25rem;
+  margin-bottom: 2px;
+}
+
+/* Touch ripple effect for buttons */
+.touch-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(37, 211, 102, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.touch-ripple:active::after {
+  width: 200%;
+  height: 200%;
+}
+
+/* Bottom sheet */
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 0 auto 1rem;
+}
+
+/* Pull to refresh indicator */
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: #64748b;
+}
+
+/* Android-style list items */
+.android-list-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.android-list-item:active {
+  background: #f8fafc;
+}
+
+/* Chip/Badge styling */
+.android-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: #f1f5f9;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.android-chip.active {
+  background: #DCF8C6;
+  color: #128C7E;
+}
+
+/* ============================================
+   RESPONSIVE UTILITY CLASSES
+   ============================================ */
+.hidden-mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: block;
+  }
+}
+
+.hidden-tablet {
+  display: block;
+}
+
+/* Safe area for iPhone notch */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .bottom-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ============================================
+   ANDROID APP CARD STYLING
+   ============================================ */
+
+.android-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.android-card-elevated {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Android-style Section Card */
+.section-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.section-card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+/* Android List Item */
+.android-list-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s;
+}
+
+.android-list-item:active {
+  background: #f8fafc;
+}
+
+/* Android FAB */
+.android-fab {
+  position: fixed;
+  bottom: 88px;
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  z-index: 30;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.android-fab:active {
+  transform: scale(0.95);
+}
+
+/* Android Chip/Badge */
+.android-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.875rem;
+  background: #f1f5f9;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.android-chip-primary {
+  background: #DCF8C6;
+  color: #128C7E;
+}
+
+.android-chip-danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Mobile Modal - Bottom Sheet Style */
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  max-height: 85vh;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 0.75rem auto;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bottom-sheet-content {
+  padding: 1rem;
+}
+
+.bottom-sheet-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-top: 1px solid #f1f5f9;
+  position: sticky bottom 0;
+  background: white;
+}
+
+/* Tabs - Android Style */
+.android-tabs {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.android-tab {
+  flex: 1;
+  padding: 0.75rem;
+  text-align: center;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.android-tab-active {
+  background: #25D366;
+  color: white;
+  font-weight: 600;
+}
+
+/* Stats Card - Mobile */
+.stats-card-mobile {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.stats-card-mobile .number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.stats-card-mobile .label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* Button - Mobile Touch */
+.btn-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.btn-mobile:active {
+  transform: scale(0.98);
+}
+
+.btn-mobile-primary {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+}
+
+.btn-mobile-secondary {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #1e293b;
+}
+
+/* Input - Mobile */
+.input-mobile {
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input-mobile:focus {
+  border-color: #25D366;
+  outline: none;
+}
+
+/* Search Bar - Mobile */
+.search-mobile {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  gap: 0.75rem;
+}
+
+.search-mobile input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9375rem;
+  outline: none;
+}
+
+.search-mobile input::placeholder {
+  color: #94a3b8;
+}
+
+/* Empty State - Mobile */
+.empty-state-mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.empty-state-mobile .icon {
+  width: 80px;
+  height: 80px;
+  background: #f1f5f9;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.empty-state-mobile .icon i {
+  font-size: 2rem;
+  color: #94a3b8;
+}
+
+.empty-state-mobile h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-mobile p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   RESPONSIVE OVERRIDES FOR MOBILE CARDS
+   ============================================ */
+
+@media (max-width: 767px) {
+  .android-card {
+    border-radius: 16px;
+    margin: 0 -1rem 1rem;
+    padding: 1rem;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .section-card {
+    border-radius: 16px;
+    margin: 0 0 0.75rem;
+  }
+  
+  .bottom-sheet {
+    border-radius: 24px 24px 0 0;
+  }
+  
+  /* Cards in grid - mobile */
+  .grid > .android-card {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Stats on mobile header */
+  .stats-header {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin: 0 -1rem 1rem;
+    padding: 0 1rem 0.5rem;
+  }
+  
+  .stats-header .stats-card-mobile {
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+}
+
+/* Tablet responsive */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .android-card {
+    padding: 1.25rem;
+  }
+  
+  .section-card {
+    padding: 1.25rem;
+  }
+  
+  .hidden-tablet {
+    display: block;
+  }
+}

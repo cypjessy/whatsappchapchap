@@ -28,12 +28,11 @@ export function QuickActions() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-[#e2e8f0]">
-            <div className="w-14 h-14 mx-auto mb-4 bg-gray-200 rounded-full animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-20 mx-auto mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-28 mx-auto"></div>
+          <div key={i} className="android-card p-4 md:p-6">
+            <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-gray-200 rounded-2xl animate-pulse"></div>
+            <div className="h-3 md:h-4 bg-gray-200 rounded w-16 md:w-20 mx-auto"></div>
           </div>
         ))}
       </div>
@@ -41,37 +40,37 @@ export function QuickActions() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <Link href="/products?action=add" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
-        <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full flex items-center justify-center text-white text-xl">
-          <i className="fas fa-plus"></i>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+      <Link href="/products?action=add" className="android-card p-4 md:p-6 text-center touch-ripple">
+        <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-2xl flex items-center justify-center">
+          <i className="fas fa-plus text-white text-xl"></i>
         </div>
-        <div className="font-bold">Add Product</div>
-        <div className="text-xs text-[#64748b]">List new items quickly</div>
+        <div className="font-bold text-sm">Add Product</div>
+        <div className="text-xs text-[#64748b] hidden md:block">List new items</div>
       </Link>
       
-      <Link href="/orders" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
-        <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] rounded-full flex items-center justify-center text-white text-xl">
-          <i className="fas fa-shopping-bag"></i>
+      <Link href="/orders" className="android-card p-4 md:p-6 text-center touch-ripple">
+        <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] rounded-2xl flex items-center justify-center">
+          <i className="fas fa-shopping-bag text-white text-xl"></i>
         </div>
-        <div className="font-bold">New Orders</div>
-        <div className="text-xs text-[#64748b]">{pendingOrders} pending orders</div>
+        <div className="font-bold text-sm">Orders</div>
+        <div className="text-xs text-[#64748b] hidden md:block">{pendingOrders} pending</div>
       </Link>
       
-      <Link href="/customers?action=broadcast" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
-        <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-full flex items-center justify-center text-white text-xl">
-          <i className="fas fa-broadcast-tower"></i>
+      <Link href="/customers?action=broadcast" className="android-card p-4 md:p-6 text-center touch-ripple">
+        <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-2xl flex items-center justify-center">
+          <i className="fas fa-broadcast-tower text-white text-xl"></i>
         </div>
-        <div className="font-bold">Broadcast</div>
-        <div className="text-xs text-[#64748b]">Send bulk messages</div>
+        <div className="font-bold text-sm">Broadcast</div>
+        <div className="text-xs text-[#64748b] hidden md:block">Bulk message</div>
       </Link>
       
-      <Link href="/suppliers" className="bg-white p-6 rounded-2xl border border-[#e2e8f0] hover:border-[#25D366] hover:-translate-y-1 transition-all text-center cursor-pointer">
-        <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-[#f59e0b] to-[#d97706] rounded-full flex items-center justify-center text-white text-xl">
-          <i className="fas fa-truck"></i>
+      <Link href="/suppliers" className="android-card p-4 md:p-6 text-center touch-ripple">
+        <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-gradient-to-r from-[#f59e0b] to-[#d97706] rounded-2xl flex items-center justify-center">
+          <i className="fas fa-truck text-white text-xl"></i>
         </div>
-        <div className="font-bold">Suppliers</div>
-        <div className="text-xs text-[#64748b]">Manage suppliers</div>
+        <div className="font-bold text-sm">Suppliers</div>
+        <div className="text-xs text-[#64748b] hidden md:block">Manage</div>
       </Link>
     </div>
   );

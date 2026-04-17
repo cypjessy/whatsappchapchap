@@ -449,8 +449,8 @@ try {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto hide-scrollbar">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr className="bg-[#f8fafc]">
                     <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b] w-12">
@@ -535,9 +535,9 @@ try {
 
       {/* Order Detail Modal */}
       {modalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 lg:p-8 overflow-y-auto" onClick={() => setModalOpen(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-[1000px] max-h-[calc(100vh-4rem)] overflow-hidden shadow-2xl animate-[modalSlideIn_0.4s_cubic-bezier(0.16,1,0.3,1)] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
+        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 lg:p-8 overflow-y-auto" onClick={() => setModalOpen(false)}>
+          <div className="bg-white rounded-2xl md:rounded-2xl w-full max-w-[1000px] max-h-[calc(100vh-4rem)] overflow-hidden shadow-2xl animate-[modalSlideIn_0.4s_cubic-bezier(0.16,1,0.3,1)] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
                   <i className="fas fa-shopping-bag"></i>
