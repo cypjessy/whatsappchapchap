@@ -20,7 +20,11 @@ type NavItem = {
 
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(isExpanded);
+  const [localCollapsed, setLocalCollapsed] = useState(isExpanded);
+  
+  // When isExpanded prop is true (mobile/tablet drawer), always show full sidebar
+  // On desktop, use local state for hover collapse
+  const isCollapsed = isExpanded ? false : localCollapsed;
 
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
@@ -30,9 +34,6 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
     { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers", badge: null },
     { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping", badge: null },
     { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
-    { id: "reviews", label: "Reviews", icon: "fa-star", href: "/reviews", badge: null },
-    { id: "reports", label: "Reports", icon: "fa-chart-bar", href: "/reports", badge: null },
-    { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
     { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
   ];
 
@@ -40,12 +41,16 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
 
   return (
     <aside 
-      className={`bg-white border-r border-[#e2e8f0] flex flex-col transition-all duration-300 ${
+      className={`bg-white border-r border-[#e2e8f0] flex flex-col overflow-x-hidden ${
         isCollapsed ? "w-20" : "w-[280px]"
-      }`}
-      onMouseEnter={() => setIsCollapsed(false)}
-      onMouseLeave={() => setIsCollapsed(true)}
-      style={{ height: "100vh", position: "sticky", top: 0 }}
+      } transition-all duration-300`}
+      onMouseEnter={() => {
+        if (window.innerWidth >= 1024) setLocalCollapsed(false);
+      }}
+      onMouseLeave={() => {
+        if (window.innerWidth >= 1024) setLocalCollapsed(true);
+      }}
+      style={{ height: "100vh" }}
     >
       <div className={`border-b border-[#e2e8f0] flex items-center ${isCollapsed ? "justify-center p-4" : "justify-start p-6 gap-3"}`}>
         <Link href="/dashboard" className={`flex items-center ${isCollapsed ? "" : "gap-3"}`}>
@@ -57,8 +62,7 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
-        <div className={`mb-2 text-xs font-bold uppercase tracking-wider text-[#64748b] ${isCollapsed ? "text-center" : "px-6"} ${isCollapsed ? "hidden" : ""}`}>Main</div>
-        {navItems.slice(0, 4).map((item) => (
+        {navItems.map((item) => (
           <Link
             key={item.id}
             href={item.href || "#"}
@@ -81,78 +85,6 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
                 {item.badge}
               </span>
             )}
-          </Link>
-        ))}
-
-        <div className={`mb-2 mt-4 text-xs font-bold uppercase tracking-wider text-[#64748b] ${isCollapsed ? "text-center" : "px-6"} ${isCollapsed ? "hidden" : ""}`}>Operations</div>
-        {navItems.slice(4, 8).map((item) => (
-          <Link
-            key={item.id}
-            href={item.href || "#"}
-            onClick={onClose}
-            className={`flex items-center gap-3 py-3 rounded-xl font-semibold transition-all relative ${
-              isCollapsed ? "justify-start px-3" : "px-6"
-            } ${
-              isActive(item.href || "") ? "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] text-[#25D366]" : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
-            }`}
-          >
-            {isActive(item.href || "") && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-[#25D366] rounded-r-full" />
-            )}
-            <i className={`fas ${item.icon} w-5 text-center`}></i>
-            {!isCollapsed && <span>{item.label}</span>}
-            {!isCollapsed && item.badge && (
-              <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-bold ${item.isPro ? "bg-[#00C853] text-white" : "bg-[#ef4444] text-white"}`}>
-                {item.badge}
-              </span>
-            )}
-          </Link>
-        ))}
-
-        <div className={`mb-2 mt-4 text-xs font-bold uppercase tracking-wider text-[#64748b] ${isCollapsed ? "text-center" : "px-6"} ${isCollapsed ? "hidden" : ""}`}>Marketing</div>
-        {navItems.slice(8, 10).map((item) => (
-          <Link
-            key={item.id}
-            href={item.href || "#"}
-            onClick={onClose}
-            className={`flex items-center gap-3 py-3 rounded-xl font-semibold transition-all relative ${
-              isCollapsed ? "justify-start px-3" : "px-6"
-            } ${
-              isActive(item.href || "") ? "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] text-[#25D366]" : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
-            }`}
-          >
-            {isActive(item.href || "") && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-[#25D366] rounded-r-full" />
-            )}
-            <i className={`fas ${item.icon} w-5 text-center`}></i>
-            {!isCollapsed && <span>{item.label}</span>}
-            {!isCollapsed && item.badge && (
-              <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-bold ${item.isPro ? "bg-[#00C853] text-white" : "bg-[#ef4444] text-white"}`}>
-                {item.badge}
-              </span>
-            )}
-          </Link>
-        ))}
-
-        <div className={`mb-2 mt-4 text-xs font-bold uppercase tracking-wider text-[#64748b] ${isCollapsed ? "text-center" : "px-6"} ${isCollapsed ? "hidden" : ""}`}>System</div>
-        {navItems.slice(10).map((item) => (
-          <Link
-            key={item.id}
-            href={item.href || "#"}
-            onClick={onClose}
-            className={`flex items-center gap-3 py-3 rounded-xl font-semibold transition-all relative ${
-              isCollapsed ? "justify-start px-3" : "px-6"
-            } ${
-              isActive(item.href || "")
-                ? "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(18,140,126,0.1)] text-[#25D366]"
-                : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
-            }`}
-          >
-            {isActive(item.href || "") && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-[#25D366] rounded-r-full" />
-            )}
-            <i className={`fas ${item.icon} w-5 text-center`}></i>
-            {!isCollapsed && <span>{item.label}</span>}
           </Link>
         ))}
       </nav>

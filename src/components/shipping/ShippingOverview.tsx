@@ -9,52 +9,58 @@ export function ShippingOverview({ stats }: { stats: ShippingStatsProps }) {
         .shipping-overview {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 1.5rem;
-          margin-bottom: 2rem;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
         }
-        @media (max-width: 1200px) { .shipping-overview { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px) { .shipping-overview { grid-template-columns: 1fr; } }
+        @media (max-width: 1200px) { .shipping-overview { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
+        @media (max-width: 640px) { .shipping-overview { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; } }
         .shipping-card {
           background: #ffffff;
-          border-radius: 16px;
-          padding: 1.5rem;
+          border-radius: 12px;
+          padding: 1rem;
           border: 1px solid #e2e8f0;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           display: flex;
           align-items: center;
-          gap: 1.25rem;
+          gap: 0.75rem;
         }
+        @media (max-width: 640px) { .shipping-card { padding: 0.75rem; gap: 0.5rem; } }
         .shipping-icon {
-          width: 64px;
-          height: 64px;
+          width: 48px;
+          height: 48px;
           border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.75rem;
+          font-size: 1.25rem;
+          flex-shrink: 0;
         }
+        @media (max-width: 640px) { .shipping-icon { width: 40px; height: 40px; font-size: 1rem; } }
         .shipping-icon.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
         .shipping-icon.transit { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
         .shipping-icon.delivered { background: rgba(37, 211, 102, 0.1); color: #10b981; }
         .shipping-icon.returns { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-        .shipping-content { flex: 1; }
+        .shipping-content { flex: 1; min-width: 0; }
         .shipping-label {
-          font-size: 0.875rem;
+          font-size: 0.75rem;
           color: #64748b;
           font-weight: 600;
           text-transform: uppercase;
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.125rem;
         }
-        .shipping-value { font-size: 2rem; font-weight: 800; color: #1e293b; }
+        @media (max-width: 640px) { .shipping-label { font-size: 0.65rem; } }
+        .shipping-value { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+        @media (max-width: 640px) { .shipping-value { font-size: 1.25rem; } }
         .shipping-change {
-          font-size: 0.875rem;
+          font-size: 0.75rem;
           color: #10b981;
           font-weight: 600;
           display: flex;
           align-items: center;
           gap: 0.25rem;
-          margin-top: 0.25rem;
+          margin-top: 0.125rem;
         }
+        @media (max-width: 640px) { .shipping-change { display: none; } }
       `}</style>
       <div className="shipping-card">
         <div className="shipping-icon pending"><i className="fas fa-clock"></i></div>

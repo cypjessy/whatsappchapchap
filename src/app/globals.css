@@ -105,206 +105,25 @@ body {
 /* Mobile specific overrides (max-width: 767px) */
 @media (max-width: 767px) {
   html {
-    font-size: 14px;
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  * {
+    box-sizing: border-box;
+    max-width: 100%;
   }
   
   body {
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
-  }
-  
-  /* Remove hover-based sidebar collapse on mobile */
-  .sidebar-hover-collapse {
-    width: 100% !important;
-  }
-  
-  /* Mobile card styling - Android app like */
-  .mobile-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 1rem;
-  }
-  
-  /* Touch-friendly button sizing */
-  .mobile-btn {
-    min-height: 48px;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  
-  /* Mobile input styling */
-  .mobile-input {
-    padding: 0.875rem 1rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    min-height: 48px;
-  }
-  
-  /* Hide desktop-only elements */
-  .desktop-only {
-    display: none !important;
-  }
-  
-  /* Show mobile-only elements */
-  .mobile-only {
-    display: block !important;
-  }
-  
-  /* Full-width on mobile */
-  .mobile-full {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-    border-radius: 0 !important;
-  }
-  
-  /* Remove padding on mobile main content */
-  main.p-6 {
-    padding: 1rem !important;
-  }
-  
-  /* Mobile grid adjustments */
-  .grid-cols-1.md\:grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-  
-  .grid-cols-1.md\:grid-cols-3 {
-    grid-template-columns: 1fr;
-  }
-  
-  .grid-cols-1.xl\:grid-cols-3 {
-    grid-template-columns: 1fr;
-  }
-  
-  .grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-  
-  .grid-cols-3 {
-    grid-template-columns: 1fr;
-  }
-  
-  .grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  /* Mobile flex adjustments */
-  .flex-wrap {
-    flex-wrap: wrap;
-  }
-  
-  /* Adjust stat cards for mobile */
-  .stat-card-mobile {
-    min-width: 80px;
-    padding: 0.75rem;
-  }
-  
-  /* Mobile table wrapper */
-  .table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Mobile modal styling */
-  .mobile-modal {
-    border-radius: 24px 24px 0 0;
-    max-height: 90vh;
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
-  }
-  
-  /* Mobile modal buttons */
-  .mobile-modal-footer {
-    padding: 1rem;
-    border-radius: 0;
-    position: sticky bottom 0;
-  }
-  
-  /* Hide scrollbar on mobile but allow scroll */
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* Bottom sheet styling */
-  .bottom-sheet {
-    border-radius: 24px 24px 0 0;
-    max-height: 85vh;
-  }
-  
-  /* FAB (Floating Action Button) styling */
-  .mobile-fab {
-    position: fixed;
-    bottom: 80px;
-    right: 1rem;
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 40;
-  }
-}
-
-/* Tablet specific (768px - 1024px) */
-@media (min-width: 768px) and (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
-  
-  .tablet-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .tablet-card {
-    padding: 1.25rem;
-  }
-  
-  .tablet-modal {
-    max-width: 90%;
-  }
-  
-  /* Keep sidebar visible but compact on tablet */
-  .sidebar-tablet {
-    width: 80px !important;
-  }
-  
-  .sidebar-expanded-tablet {
-    width: 240px !important;
-  }
-  
-  main.p-6 {
-    padding: 1.5rem !important;
-  }
-  
-  /* Show tablet elements */
-  .tablet-only {
-    display: block !important;
-  }
-}
-
-/* Desktop only (1025px+) */
-@media (min-width: 1025px) {
-  .desktop-only {
-    display: block !important;
-  }
-  
-  .mobile-only {
-    display: none !important;
-  }
-  
-  .tablet-only {
-    display: none !important;
+    overscroll-behavior-y: contain;
+    min-width: 100vw;
+    width: 100vw;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 

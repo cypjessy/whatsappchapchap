@@ -386,29 +386,29 @@ try {
 
   return (
     <div className="animate-fadeIn">
-      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
-            <i className="fas fa-shopping-bag text-[#25D366]"></i>Order Management
+          <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
+            <i className="fas fa-shopping-bag text-[#25D366]"></i>Orders
           </h1>
-          <p className="text-[#64748b]">Track, manage, and fulfill all your WhatsApp orders</p>
+          <p className="text-[#64748b] text-sm hidden md:block">Track and manage your WhatsApp orders</p>
         </div>
-        <div className="flex gap-3">
-          <a href={`/order?tenant=${user?.uid}`} target="_blank" className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] flex items-center">
-            <i className="fas fa-store mr-2"></i>View Store
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <a href={`/order?tenant=${user?.uid}`} target="_blank" className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] flex items-center">
+            <i className="fas fa-store mr-2"></i><span className="hidden md:inline">View Store</span>
           </a>
-          <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366]" onClick={exportToCSV}>
-            <i className="fas fa-download mr-2"></i>Export
+          <button className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366]" onClick={exportToCSV}>
+            <i className="fas fa-download mr-2"></i><span className="hidden md:inline">Export</span>
           </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5" onClick={() => setNewOrderModalOpen(true)}>
-            <i className="fas fa-plus mr-2"></i>New Order
+          <button className="px-3 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg flex items-center" onClick={() => setNewOrderModalOpen(true)}>
+            <i className="fas fa-plus mr-2"></i><span className="hidden md:inline">New Order</span><span className="md:hidden">+</span>
           </button>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 hide-scrollbar">
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveStatus(tab.id)} className={`px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all ${activeStatus === tab.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"}`}>
+          <button key={tab.id} onClick={() => setActiveStatus(tab.id)} className={`px-3 md:px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all ${activeStatus === tab.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"}`}>
             {tab.label}
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20">{tab.count}</span>
           </button>
@@ -416,21 +416,14 @@ try {
       </div>
 
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-center flex-wrap gap-4">
+        <div className="p-3 md:p-4 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div className="font-bold flex items-center gap-2">
-            <i className="fas fa-list text-[#3b82f6]"></i>Orders List
-            <span className="text-[#64748b] font-normal ml-2">(Showing {filteredOrders.length} of {orders.length})</span>
+            <i className="fas fa-list text-[#3b82f6]"></i>
+            <span className="text-sm text-[#64748b] font-normal">({filteredOrders.length})</span>
           </div>
-          <div className="flex gap-4 items-center">
-            <div className="relative">
-              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
-              <input type="text" placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
-            </div>
-            {selectedOrders.size > 0 && (
-              <div className="flex gap-2">
-                <button className="px-3 py-1 bg-[#10b981] text-white text-xs font-bold rounded-lg" onClick={() => bulkUpdateStatus("delivered")}><i className="fas fa-check mr-1"></i>Mark Delivered</button>
-              </div>
-            )}
+          <div className="relative w-full md:w-auto">
+            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
+            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full md:w-48 pl-9 pr-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
           </div>
         </div>
 
@@ -440,17 +433,48 @@ try {
             <p className="mt-4 text-[#64748b]">Loading orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-shopping-bag text-2xl text-[#64748b]"></i>
+          <div className="p-8 text-center">
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-shopping-bag text-xl md:text-2xl text-[#64748b]"></i>
             </div>
             <h4 className="font-bold text-[#1e293b] mb-2">No orders yet</h4>
             <p className="text-sm text-[#64748b]">When customers order from you, they will appear here.</p>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto hide-scrollbar">
-              <table className="w-full min-w-[800px]">
+            {/* Mobile List View */}
+            <div className="md:hidden divide-y divide-[#e2e8f0]">
+              {filteredOrders.map(order => {
+                const statusStyle = getStatusBadge(order.status);
+                return (
+                  <div key={order.id} className="p-3 hover:bg-[#f8fafc]" onClick={() => openOrderModal(order)}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-[#25D366]">#{order.orderNumber || order.id.substring(0, 8)}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusStyle.bg} ${statusStyle.color}`}>
+                        {statusStyle.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center font-bold text-sm">
+                        {order.customerName?.charAt(0) || "C"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm truncate">{order.customerName || "Customer"}</div>
+                        <div className="text-xs text-[#64748b]"><i className="fab fa-whatsapp text-[#25D366] mr-1"></i>{order.customerPhone || "N/A"}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm">{formatCurrency(order.total || 0)}</span>
+                      <span className="text-xs text-[#64748b]">{formatDate(order.createdAt)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="bg-[#f8fafc]">
                     <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b] w-12">
@@ -521,8 +545,8 @@ try {
               </table>
             </div>
 
-            <div className="p-4 border-t border-[#e2e8f0] flex justify-between items-center">
-              <div className="text-sm text-[#64748b]">Showing <strong>1-{filteredOrders.length}</strong> of <strong>{orders.length}</strong> orders</div>
+            <div className="p-3 md:p-4 border-t border-[#e2e8f0] flex justify-between items-center text-sm text-[#64748b]">
+              <div>{filteredOrders.length} orders</div>
               <div className="flex gap-2">
                 <button className="px-3 py-2 border-2 border-[#e2e8f0] rounded-lg text-[#64748b] font-semibold text-sm hover:border-[#25D366] disabled:opacity-50" disabled><i className="fas fa-chevron-left"></i></button>
                 <button className="px-3 py-2 border-2 border-[#25D366] bg-[#25D366] text-white rounded-lg font-semibold text-sm">1</button>
@@ -879,17 +903,17 @@ try {
       )}
 
       {newOrderModalOpen && (
-        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto" onClick={() => setNewOrderModalOpen(false)}>
-          <div className="bg-white rounded-[16px] w-full max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto" onClick={() => setNewOrderModalOpen(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="p-5 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
+            <div className="p-4 md:p-5 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-[8px] flex items-center justify-center text-white text-xl shadow-lg">
+                <div className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-lg md:rounded-[8px] flex items-center justify-center text-white text-lg md:text-xl shadow-lg">
                   <i className="fas fa-plus"></i>
                 </div>
                 <div>
-                  <h2 className="text-xl font-extrabold">Create New Order</h2>
-                  <p className="text-sm text-[#64748b]">Quickly add a new order for your customer</p>
+                  <h2 className="text-lg md:text-xl font-extrabold">New Order</h2>
+                  <p className="text-xs md:text-sm text-[#64748b] hidden md:block">Add a new order for your customer</p>
                 </div>
               </div>
               <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-lg transition-all" onClick={() => setNewOrderModalOpen(false)}>
@@ -898,8 +922,8 @@ try {
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Customer Selection */}
@@ -1039,9 +1063,9 @@ try {
                               <div className="text-xs text-[#64748b]">{formatCurrency(item.price)} each</div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button onClick={() => updateProductQuantity(item.productId, item.quantity - 1)} className="w-7 h-7 rounded-lg border border-[#e2e8f0] flex items-center justify-center">-</button>
+                              <button onClick={() => updateProductQuantity(item.productId, item.quantity - 1)} className="w-9 h-9 md:w-7 md:h-7 rounded-lg border border-[#e2e8f0] flex items-center justify-center active:scale-95 transition-transform">-</button>
                               <span className="font-bold w-8 text-center">{item.quantity}</span>
-                              <button onClick={() => updateProductQuantity(item.productId, item.quantity + 1)} className="w-7 h-7 rounded-lg border border-[#e2e8f0] flex items-center justify-center">+</button>
+                              <button onClick={() => updateProductQuantity(item.productId, item.quantity + 1)} className="w-9 h-9 md:w-7 md:h-7 rounded-lg border border-[#e2e8f0] flex items-center justify-center active:scale-95 transition-transform">+</button>
                             </div>
                             <div className="font-bold text-[#25D366] min-w-[60px] text-right">{formatCurrency(item.price * item.quantity)}</div>
                             <button onClick={() => removeProductFromOrder(item.productId)} className="w-7 h-7 rounded-full bg-red-100 text-red-500 flex items-center justify-center">
@@ -1211,17 +1235,17 @@ try {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-[#e2e8f0] flex justify-between items-center bg-[#f8fafc]">
-              <div className="flex items-center gap-2 text-sm text-[#64748b]">
+            <div className="p-3 md:p-4 border-t border-[#e2e8f0] flex flex-col md:flex-row justify-between items-center gap-3 bg-[#f8fafc]">
+              <div className="flex items-center gap-2 text-xs md:text-sm text-[#64748b]">
                 <i className="fas fa-shield-alt text-[#10b981]"></i>
-                <span><strong>Secure Order</strong> • Auto-saved</span>
+                <span><strong>Secure</strong> • Auto-saved</span>
               </div>
-              <div className="flex gap-3">
-                <button className="px-5 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#64748b] flex items-center gap-2" onClick={() => setNewOrderModalOpen(false)}>
-                  <i className="fas fa-save"></i>Save Draft
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                <button className="flex-1 md:flex-none px-4 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#64748b] flex items-center justify-center gap-2" onClick={() => setNewOrderModalOpen(false)}>
+                  <i className="fas fa-save"></i>Save
                 </button>
                 <button 
-                  className="px-5 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center gap-2 disabled:opacity-50"
+                  className="flex-1 md:flex-none px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px]"
                   onClick={createNewOrder}
                   disabled={creatingOrder || newOrderForm.selectedProducts.length === 0 || !newOrderForm.customerName || !newOrderForm.customerPhone}
                 >
@@ -1231,7 +1255,7 @@ try {
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-check"></i>Create Order
+                      <i className="fas fa-check"></i>Create
                     </>
                   )}
                 </button>

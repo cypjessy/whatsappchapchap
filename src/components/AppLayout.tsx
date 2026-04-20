@@ -13,7 +13,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+      setIsMobile(window.innerWidth < 768);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -25,52 +25,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block sticky top-0 h-screen z-50">
+    <div className="flex min-h-screen w-full max-w-full overflow-hidden">
+      {/* Desktop Sidebar - Fixed position, always visible on desktop */}
+      <div className="hidden lg:block fixed left-0 top-0 h-screen z-50" style={{ width: sidebarExpanded ? "280px" : "80px" }}>
         <div 
-          className="h-full"
+          className="h-full transition-all duration-300"
           onMouseEnter={() => setSidebarExpanded(true)}
           onMouseLeave={() => setSidebarExpanded(false)}
         >
           <Sidebar onClose={() => setSidebarOpen(false)} isExpanded={sidebarExpanded} />
         </div>
-      </aside>
+      </div>
 
-      {/* Tablet Sidebar */}
-      <aside className={`hidden md:block lg:hidden fixed left-0 top-0 h-screen z-50 transform transition-all duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="h-full bg-white shadow-xl">
-          <Sidebar onClose={() => setSidebarOpen(false)} isExpanded={true} />
-        </div>
-      </aside>
+      {/* Spacer to prevent content from going under fixed sidebar */}
+      <div className="hidden lg:block flex-shrink-0" style={{ width: sidebarExpanded ? "280px" : "80px" }} />
 
-      {/* Tablet Toggle */}
-      <button
-        className="hidden md:block lg:hidden fixed top-4 left-4 z-40 w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-[#25D366]"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'}`}></i>
-      </button>
-
-      {/* Mobile Drawer */}
-      <aside className={`md:hidden fixed inset-0 z-50 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300`}>
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+      {/* Tablet/Mobile Drawer - Full sidebar when opened */}
+      <aside className={`lg:hidden fixed inset-0 z-50 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300`}>
+        <Sidebar onClose={() => setSidebarOpen(false)} isExpanded={true} />
       </aside>
 
       {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+        <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Main Content - Full width on mobile */}
+      <div className="flex-1 flex flex-col min-h-screen w-full max-w-full lg:pl-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-3 md:p-6 bg-[#f8fafc] overflow-y-auto pb-24 md:pb-6">
+        <main className="flex-1 w-full p-3 md:p-6 bg-[#f8fafc] overflow-y-auto pb-24">
           {children}
         </main>
       </div>
 
-      {/* Premium Mobile Bottom Navigation */}
-      <BottomNav onFABClick={handleFabClick} />
+      {/* Premium Mobile Bottom Navigation - Only on mobile (< 768px) */}
+      {isMobile && <BottomNav onFABClick={handleFabClick} />}
     </div>
   );
 }

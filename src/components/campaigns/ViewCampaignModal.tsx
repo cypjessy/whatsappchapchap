@@ -1317,9 +1317,23 @@ export default function ViewCampaignModal({ campaign, isOpen, onClose, onPause, 
           }
 
           @media (max-width: 768px) {
-            .geo-grid {
-              grid-template-columns: 1fr;
-            }
+            .modal-overlay { padding: 0; align-items: flex-end; }
+            .modal-container { max-height: 95vh; border-radius: 16px 16px 0 0; max-width: 100%; }
+            .modal-header { padding: 1rem; }
+            .header-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .campaign-title { font-size: 1.25rem; flex-direction: column; gap: 0.25rem; }
+            .campaign-meta { flex-direction: column; gap: 0.5rem; }
+            .status-bar { padding: 1rem; flex-direction: column; gap: 0.75rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .stat-card { padding: 1rem; }
+            .stat-value { font-size: 1.5rem; }
+            .message-preview { padding: 1rem; }
+            .response-list { gap: 0.75rem; }
+            .response-item { padding: 1rem; flex-direction: column; align-items: flex-start; }
+            .timeline-section { padding: 1rem; }
+            .timeline-item { padding-left: 1.5rem; }
+            .geo-grid { grid-template-columns: 1fr; }
+            .modal-body { padding: 1rem; max-height: 60vh; overflow-y: auto; }
           }
 
           .geo-item {

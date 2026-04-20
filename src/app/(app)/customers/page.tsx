@@ -361,67 +361,63 @@ export default function CustomersPage() {
 
   return (
     <div className="animate-fadeIn">
-      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
-            <i className="fas fa-users text-[#25D366]"></i>Customer Management
+          <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
+            <i className="fas fa-users text-[#25D366]"></i>Customers
           </h1>
-          <p className="text-[#64748b]">Build relationships and grow your business with smart CRM tools</p>
+          <p className="text-[#64748b] text-sm hidden md:block">Build relationships and grow your business</p>
         </div>
-        <div className="flex gap-3">
-          <div className="flex gap-2">
-            <div className="bg-white p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[100px]">
-              <div className="text-2xl font-extrabold text-[#8b5cf6]">{customers.length}</div>
-              <div className="text-xs text-[#64748b]">Total</div>
-            </div>
-            <div className="bg-white p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[100px]">
-              <div className="text-2xl font-extrabold text-[#10b981]">{customers.filter(c => c.segment === "new").length}</div>
-              <div className="text-xs text-[#64748b]">New</div>
-            </div>
-            <div className="bg-white p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[100px]">
-              <div className="text-2xl font-extrabold text-[#f59e0b]">{customers.filter(c => c.segment === "frequent").length}</div>
-              <div className="text-xs text-[#64748b]">Active</div>
-            </div>
+        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
+          <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[100px]">
+            <div className="text-lg md:text-2xl font-extrabold text-[#8b5cf6]">{customers.length}</div>
+            <div className="text-xs text-[#64748b]">Total</div>
+          </div>
+          <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[100px]">
+            <div className="text-lg md:text-2xl font-extrabold text-[#10b981]">{customers.filter(c => c.segment === "new").length}</div>
+            <div className="text-xs text-[#64748b]">New</div>
+          </div>
+          <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[100px]">
+            <div className="text-lg md:text-2xl font-extrabold text-[#f59e0b]">{customers.filter(c => c.segment === "frequent").length}</div>
+            <div className="text-xs text-[#64748b]">Active</div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={exportToCSV}>
-            <i className="fas fa-download mr-2"></i>Export
+        <div className="flex gap-2 w-full md:w-auto">
+          <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={exportToCSV}>
+            <i className="fas fa-download mr-2"></i><span className="hidden md:inline">Export</span>
           </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg" onClick={() => setShowAddModal(true)}>
-            <i className="fas fa-user-plus mr-2"></i>Add Customer
+          <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg" onClick={() => setShowAddModal(true)}>
+            <i className="fas fa-user-plus mr-2"></i><span className="hidden md:inline">Add Customer</span><span className="md:hidden">+</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-2xl p-6 mb-6 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-radial-gradient from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div className="flex justify-between items-center relative z-10 flex-wrap gap-4">
-          <div className="flex gap-8 flex-wrap">
+      <div className="bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-xl md:rounded-2xl p-4 md:p-6 mb-4 md:mb-6 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-radial-gradient from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
+          <div className="flex gap-6 md:gap-8">
             <div className="text-center">
-              <div className="text-3xl font-extrabold">{formatCurrency(customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) / (customers.length || 1))}</div>
-              <div className="text-sm opacity-80">Avg. LTV</div>
+              <div className="text-2xl md:text-3xl font-extrabold">{formatCurrency(customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) / (customers.length || 1))}</div>
+              <div className="text-xs md:text-sm opacity-80">Avg. LTV</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-extrabold">{Number(customers.reduce((sum, c) => sum + (c.orderCount || 0), 0) / (customers.length || 1)).toFixed(0)}</div>
-              <div className="text-sm opacity-80">Avg. Orders</div>
+              <div className="text-2xl md:text-3xl font-extrabold">{Number(customers.reduce((sum, c) => sum + (c.orderCount || 0), 0) / (customers.length || 1)).toFixed(0)}</div>
+              <div className="text-xs md:text-sm opacity-80">Avg. Orders</div>
             </div>
           </div>
-          <div className="flex gap-3">
-            <button className="px-4 py-2 bg-white text-[#8b5cf6] rounded-xl font-semibold text-sm">
-              <i className="fas fa-chart-pie mr-2"></i>Segments
-            </button>
-          </div>
+          <button className="px-3 md:px-4 py-2 bg-white text-[#8b5cf6] rounded-xl font-semibold text-sm w-full md:w-auto">
+            <i className="fas fa-chart-pie mr-2"></i><span className="hidden md:inline">Segments</span>
+          </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-4 mb-4 flex gap-4 border border-[#e2e8f0] flex-wrap justify-between">
-        <div className="flex gap-4 flex-wrap flex-1">
-          <div className="relative flex-1 min-w-[280px]">
+      <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-4 mb-4 flex flex-col md:flex-row gap-3 md:gap-4 border border-[#e2e8f0] justify-between">
+        <div className="flex gap-2 md:gap-4 flex-1">
+          <div className="relative flex-1 min-w-[150px] md:min-w-[280px]">
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
-            <input type="text" placeholder="Search by name, phone, or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
+            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
           </div>
-          <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm">
+          <select className="px-3 md:px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm">
             <option>All Tiers</option>
             <option>VIP</option>
             <option>Regular</option>
@@ -455,15 +451,42 @@ export default function CustomersPage() {
           <p className="mt-4 text-[#64748b]">Loading customers...</p>
         </div>
       ) : filteredCustomers.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-[#e2e8f0]">
-          <div className="w-16 h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-users text-2xl text-[#64748b]"></i>
+        <div className="p-8 md:p-12 text-center bg-white rounded-2xl border border-[#e2e8f0]">
+          <div className="w-14 h-14 md:w-16 md:h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-users text-xl md:text-2xl text-[#64748b]"></i>
           </div>
           <h4 className="font-bold text-[#1e293b] mb-2">No customers yet</h4>
           <p className="text-sm text-[#64748b]">Add your first customer to start building your CRM.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+        <>
+          {/* Mobile List View */}
+          <div className="md:hidden space-y-2 mb-4">
+            {filteredCustomers.map(customer => (
+              <div key={customer.id} className="bg-white rounded-xl p-3 border border-[#e2e8f0] shadow-sm" onClick={() => openCustomerModal(customer)}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} flex items-center justify-center font-bold text-sm text-white flex-shrink-0`}>
+                    {getInitials(customer.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-sm truncate">{customer.name}</div>
+                      <span className="font-bold text-[#25D366] text-sm ml-2">{formatCurrency(customer.totalSpent)}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-[#64748b]"><i className="fab fa-whatsapp text-[#25D366] mr-1"></i>{customer.phone}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getTierClass(customer.segment === "vip" ? "VIP" : customer.segment === "new" ? "New" : "Regular")}`}>
+                        {customer.segment || "Regular"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Grid View */}
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
           {filteredCustomers.map(customer => (
             <div key={customer.id} className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onClick={() => openCustomerModal(customer)}>
               <div className="flex justify-between items-start mb-4">
@@ -537,7 +560,8 @@ export default function CustomersPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </>
       )}
 
       {showModal && selectedCustomer && (
@@ -688,25 +712,10 @@ export default function CustomersPage() {
         </div>
       )}
 
-      {showAddModal && (
-        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto" onClick={() => { setShowAddModal(false); setFormErrors({}); }}>
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[calc(100vh-4rem)] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-r from-[#f8fafc] to-white rounded-t-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center">
-                  <i className="fas fa-user-plus text-white text-lg"></i>
-                </div>
-                <div>
-                  <h2 className="text-xl font-extrabold">Add New Customer</h2>
-                  <p className="text-xs text-[#64748b]">Create a customer profile to track orders</p>
-                </div>
-              </div>
-              <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all" onClick={() => { setShowAddModal(false); setFormErrors({}); }}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6">
+{showAddModal && (
+        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto" onClick={() => { setShowAddModal(false); setFormErrors({}); }}>
+          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
               {/* Basic Information */}
               <div>
                 <h3 className="text-sm font-bold text-[#64748b] uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -914,12 +923,12 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-[#e2e8f0] flex justify-between bg-[#f8fafc] rounded-b-2xl">
+            <div className="p-4 md:p-6 border-t border-[#e2e8f0] flex flex-col md:flex-row justify-between bg-[#f8fafc] rounded-b-2xl gap-3">
               <span className="text-xs text-[#94a3b8] self-center"><span className="text-[#ef4444]">*</span> Required fields</span>
-              <div className="flex gap-3">
-                <button className="px-5 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#64748b] transition-colors" onClick={() => { setShowAddModal(false); setFormErrors({}); }}>Cancel</button>
-                <button className="px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-60" onClick={saveNewCustomer} disabled={savingCustomer}>
-                  {savingCustomer ? <><i className="fas fa-circle-notch fa-spin"></i>Saving...</> : <><i className="fas fa-save"></i>Save Customer</>}
+              <div className="flex gap-2 md:gap-3 w-full md:w-auto">
+                <button className="flex-1 md:flex-none px-4 md:px-5 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#64748b] transition-colors min-h-[48px]" onClick={() => { setShowAddModal(false); setFormErrors({}); }}>Cancel</button>
+                <button className="flex-1 md:flex-none px-4 md:px-5 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 min-h-[48px]" onClick={saveNewCustomer} disabled={savingCustomer}>
+                  {savingCustomer ? <><i className="fas fa-circle-notch fa-spin"></i>Saving...</> : <><i className="fas fa-save"></i><span className="md:hidden">Save</span><span className="hidden md:inline">Save Customer</span></>}
                 </button>
               </div>
             </div>

@@ -197,68 +197,62 @@ export default function ProductsPage() {
 
   return (
     <div className="animate-fadeIn">
-      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
-            <i className="fas fa-box-open text-[#25D366]"></i>Product Catalog
+          <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
+            <i className="fas fa-box-open text-[#25D366]"></i>Products
           </h1>
-          <p className="text-[#64748b]">Manage your inventory, pricing, and AI-optimized listings</p>
+          <p className="text-[#64748b] text-sm hidden md:block">Manage your inventory and listings</p>
         </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={() => setCategoriesModalOpen(true)}>
-            <i className="fas fa-layer-group mr-2"></i>Categories
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <button className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={() => setCategoriesModalOpen(true)}>
+            <i className="fas fa-layer-group mr-2"></i><span className="hidden md:inline">Categories</span>
           </button>
-          <div className="relative">
-            <input type="file" accept=".csv" onChange={importProducts} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-            <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]">
-              <i className="fas fa-file-import mr-2"></i>Import CSV
-            </button>
-          </div>
-          <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={exportProducts}>
-            <i className="fas fa-file-export mr-2"></i>Export
+          <button className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={exportProducts}>
+            <i className="fas fa-file-export mr-2"></i><span className="hidden md:inline">Export</span>
           </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg" onClick={() => setAddProductModalOpen(true)}>
-            <i className="fas fa-plus mr-2"></i>Add Product
+          <button className="px-3 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg" onClick={() => setAddProductModalOpen(true)}>
+            <i className="fas fa-plus mr-2"></i><span className="hidden md:inline">Add Product</span><span className="md:hidden">+</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-wrap gap-4 items-center justify-between border border-[#e2e8f0]">
-        <div className="flex gap-4 flex-wrap">
-          <div className="relative">
+      <div className="bg-white rounded-2xl p-3 md:p-4 mb-4 md:mb-6 flex flex-col md:flex-row gap-3 items-start md:items-center justify-between border border-[#e2e8f0]">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:flex-none">
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
-            <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 bg-[#f8fafc] border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-[#25D366] w-64" />
+            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-3 py-2 bg-[#f8fafc] border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-[#25D366] w-full md:w-48" />
           </div>
-          <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
-            <option value="all">All Stock</option>
+          <select className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
+            <option value="all">Stock</option>
             <option value="in">In Stock</option>
             <option value="low">Low Stock</option>
-            <option value="out">Out of Stock</option>
+            <option value="out">Out</option>
           </select>
-          <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="newest">Sort: Newest</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="stock-low">Stock: Low to High</option>
-            <option value="stock-high">Stock: High to Low</option>
+          <select className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="newest">Newest</option>
+            <option value="price-low">Price ↑</option>
+            <option value="price-high">Price ↓</option>
+            <option value="stock-low">Stock ↑</option>
+            <option value="stock-high">Stock ↓</option>
           </select>
         </div>
-        <div className="flex bg-[#f8fafc] rounded-xl p-1 border-2 border-[#e2e8f0]">
-          <button onClick={() => setView("grid")} className={`px-4 py-2 rounded-lg ${view === "grid" ? "bg-white shadow text-[#25D366]" : "text-[#64748b]"}`}>
+        <div className="flex bg-[#f8fafc] rounded-xl p-1 border-2 border-[#e2e8f0] self-end md:self-auto">
+          <button onClick={() => setView("grid")} className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg ${view === "grid" ? "bg-white shadow text-[#25D366]" : "text-[#64748b]"}`}>
             <i className="fas fa-th-large"></i>
           </button>
-          <button onClick={() => setView("list")} className={`px-4 py-2 rounded-lg ${view === "list" ? "bg-white shadow text-[#25D366]" : "text-[#64748b]"}`}>
+          <button onClick={() => setView("list")} className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg ${view === "list" ? "bg-white shadow text-[#25D366]" : "text-[#64748b]"}`}>
             <i className="fas fa-list"></i>
           </button>
         </div>
       </div>
 
-      <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 md:gap-3 mb-4 md:mb-6 overflow-x-auto pb-2 hide-scrollbar">
         {categories.map(cat => (
-          <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`px-5 py-2 rounded-full font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all ${activeCategory === cat.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]"}`}>
+          <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`px-3 md:px-5 py-2 rounded-full font-semibold text-sm whitespace-nowrap flex items-center gap-1 md:gap-2 transition-all ${activeCategory === cat.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]"}`}>
             {cat.icon && <span>{cat.icon}</span>}
             {cat.label}
-            <span className="px-2 py-0.5 rounded-full text-xs bg-white/20">{cat.count}</span>
+            <span className="px-1.5 md:px-2 py-0.5 rounded-full text-xs bg-white/20">{cat.count}</span>
           </button>
         ))}
       </div>
@@ -277,34 +271,34 @@ export default function ProductsPage() {
           <p className="text-sm text-[#64748b]">Add your first product to start selling on WhatsApp.</p>
         </div>
       ) : view === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {filteredProducts.map(product => {
             const stockStyle = getStockStyle(product.stock || 0);
             const badgeInfo = getBadgeStyle(product.stock || 0);
             return (
-              <div key={product.id} className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer" onClick={() => openProductModal(product)}>
+              <div key={product.id} className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer" onClick={() => openProductModal(product)}>
                 {badgeInfo.badge !== "new" && (
-                  <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold z-10 ${badgeInfo.badge === "out" ? "bg-[#64748b] text-white" : "bg-[#f59e0b] text-white"}`}>
+                  <span className={`absolute top-3 left-3 px-2 md:px-3 py-0.5 rounded-full text-xs font-bold z-10 ${badgeInfo.badge === "out" ? "bg-[#64748b] text-white" : "bg-[#f59e0b] text-white"}`}>
                     {badgeInfo.label}
                   </span>
                 )}
-                <div className={`h-48 bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-6xl relative overflow-hidden`}>
+                <div className={`h-32 md:h-48 bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-4xl md:text-6xl relative overflow-hidden`}>
                   {product.image ? (
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     getCategoryEmoji(product.category || "")
                   )}
                 </div>
-                <div className="p-5">
-                  <div className="text-xs font-bold text-[#25D366] uppercase mb-1">{product.category || "Uncategorized"}</div>
+                <div className="p-3 md:p-5">
+                  <div className="text-xs font-bold text-[#25D366] uppercase mb-1 truncate">{product.category || "Uncategorized"}</div>
                   <h3 className="font-bold text-sm mb-2 line-clamp-2">{product.name}</h3>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-xl font-extrabold">{formatCurrency(product.price)}</div>
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                    <div className="text-lg md:text-xl font-extrabold">{formatCurrency(product.price)}</div>
                   </div>
-                  <div className="pt-3 border-t border-[#e2e8f0] flex justify-between items-center">
+                  <div className="pt-2 md:pt-3 border-t border-[#e2e8f0] flex justify-between items-center">
                     <div>
                       <div className="text-xs text-[#64748b]">{product.stock || 0} in stock</div>
-                      <div className="w-20 h-1.5 bg-[#f8fafc] rounded-full mt-1 overflow-hidden">
+                      <div className="w-16 md:w-20 h-1.5 bg-[#f8fafc] rounded-full mt-1 overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: stockStyle.width, backgroundColor: stockStyle.color }}></div>
                       </div>
                     </div>
@@ -314,47 +308,80 @@ export default function ProductsPage() {
             );
           })}
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
-          <div className="grid grid-cols-7 gap-4 p-4 bg-[#f8fafc] border-b-2 border-[#e2e8f0] text-xs font-bold text-[#64748b] uppercase">
-            <div>Image</div>
-            <div className="col-span-2">Product</div>
-            <div>Category</div>
-            <div>Price</div>
-            <div>Stock</div>
-            <div>Actions</div>
-          </div>
-          {filteredProducts.map(product => {
-            const stockStyle = getStockStyle(product.stock || 0);
-            return (
-              <div key={product.id} className="grid grid-cols-7 gap-4 p-4 border-b border-[#e2e8f0] items-center hover:bg-[rgba(37,211,102,0.02)]">
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-2xl overflow-hidden`}>
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                  ) : (
-                    getCategoryEmoji(product.category || "")
-                  )}
-                </div>
-                <div className="col-span-2">
-                  <div className="font-bold text-sm">{product.name}</div>
-                  <div className="text-xs text-[#64748b]">SKU: {product.id.substring(0, 8)}</div>
-                </div>
-                <div className="text-sm capitalize">{product.category || "Uncategorized"}</div>
-                <div className="font-bold">{formatCurrency(product.price)}</div>
-                <div>
-                  <span style={{ color: stockStyle.color }} className="font-semibold">{product.stock || 0} in stock</span>
-                  <div className="w-24 h-1.5 bg-[#f8fafc] rounded-full mt-1 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: stockStyle.width, backgroundColor: stockStyle.color }}></div>
+) : (
+        <>
+          {/* Mobile List View */}
+          <div className="md:hidden bg-white rounded-xl border border-[#e2e8f0] overflow-hidden divide-y divide-[#e2e8f0]">
+            {filteredProducts.map(product => {
+              const stockStyle = getStockStyle(product.stock || 0);
+              return (
+                <div key={product.id} className="p-3 hover:bg-[#f8fafc] cursor-pointer" onClick={() => openProductModal(product)}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-xl overflow-hidden flex-shrink-0`}>
+                      {product.image ? (
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        getCategoryEmoji(product.category || "")
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-sm truncate">{product.name}</h3>
+                        <span className="font-bold text-[#25D366] text-sm ml-2">{formatCurrency(product.price)}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-[#64748b] capitalize">{product.category || "Uncategorized"}</span>
+                        <span className="text-xs" style={{ color: stockStyle.color }}>{product.stock || 0} in stock</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg" onClick={(e) => { e.stopPropagation(); openProductModal(product); }}><i className="fas fa-edit"></i></button>
+              );
+            })}
+          </div>
+
+          {/* Desktop List View */}
+          <div className="hidden md:block bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+            <div className="grid grid-cols-7 gap-4 p-4 bg-[#f8fafc] border-b-2 border-[#e2e8f0] text-xs font-bold text-[#64748b] uppercase">
+              <div>Image</div>
+              <div className="col-span-2">Product</div>
+              <div>Category</div>
+              <div>Price</div>
+              <div>Stock</div>
+              <div>Actions</div>
+            </div>
+            {filteredProducts.map(product => {
+              const stockStyle = getStockStyle(product.stock || 0);
+              return (
+                <div key={product.id} className="grid grid-cols-7 gap-4 p-4 border-b border-[#e2e8f0] items-center hover:bg-[rgba(37,211,102,0.02)]">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-2xl overflow-hidden`}>
+                    {product.image ? (
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      getCategoryEmoji(product.category || "")
+                    )}
+                  </div>
+                  <div className="col-span-2">
+                    <div className="font-bold text-sm">{product.name}</div>
+                    <div className="text-xs text-[#64748b]">SKU: {product.id.substring(0, 8)}</div>
+                  </div>
+                  <div className="text-sm capitalize">{product.category || "Uncategorized"}</div>
+                  <div className="font-bold">{formatCurrency(product.price)}</div>
+                  <div>
+                    <span style={{ color: stockStyle.color }} className="font-semibold">{product.stock || 0} in stock</span>
+                    <div className="w-24 h-1.5 bg-[#f8fafc] rounded-full mt-1 overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: stockStyle.width, backgroundColor: stockStyle.color }}></div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg" onClick={(e) => { e.stopPropagation(); openProductModal(product); }}><i className="fas fa-edit"></i></button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-)}
+              );
+            })}
+          </div>
+        </>
+      )}
       <CategoriesModal
         isOpen={categoriesModalOpen} 
         onClose={() => setCategoriesModalOpen(false)} 

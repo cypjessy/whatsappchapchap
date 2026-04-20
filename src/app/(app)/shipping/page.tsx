@@ -222,73 +222,41 @@ export default function ShippingPage() {
     activeDrivers: shipments.filter(s => s.status === "shipped").length,
   };
 
-  return (
-    <div className="shipping-page">
+return (
+    <div className="max-w-[1600px] mx-auto p-3 md:p-6">
       <style jsx>{`
-        .shipping-page { max-width: 1600px; margin: 0 auto; }
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 2rem;
-          flex-wrap: wrap;
-          gap: 1.5rem;
+        @media (max-width: 768px) {
+          .hide-scrollbar::-webkit-scrollbar { display: none; }
+          .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         }
-        .header-content h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
-        .header-content p { color: #64748b; font-size: 1rem; }
-        .header-stats { display: flex; gap: 1rem; }
-        .stat-card-mini { background: #ffffff; border-radius: 12px; padding: 1rem 1.5rem; border: 1px solid #e2e8f0; text-align: center; min-width: 120px; }
-        .stat-value-mini { font-size: 1.5rem; font-weight: 800; }
-        .stat-value-mini.success { color: #10b981; }
-        .stat-value-mini.warning { color: #f59e0b; }
-        .stat-value-mini.info { color: #3b82f6; }
-        .stat-value-mini.indigo { color: #6366f1; }
-        .stat-label-mini { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        .header-actions { display: flex; gap: 0.75rem; }
-        .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 0.5rem; }
-        .btn-primary { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }
-        .btn-secondary { background: #ffffff; color: #1e293b; border: 2px solid #e2e8f0; }
-        .btn-secondary:hover { border-color: #25D366; color: #25D366; }
-        .map-section { background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .map-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .map-title { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
-        .map-container { height: 300px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display: flex; align-items: center; justify-content: center; position: relative; }
-        .map-placeholder { text-align: center; color: #64748b; }
-        .map-placeholder i { font-size: 4rem; margin-bottom: 1rem; color: #6366f1; opacity: 0.5; }
-        .live-drivers { position: absolute; top: 1rem; right: 1rem; background: white; padding: 0.75rem 1rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 0.75rem; }
-        .live-indicator { width: 10px; height: 10px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
-        .status-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; }
-        .status-tab { padding: 0.75rem 1.5rem; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #64748b; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
-        .status-tab:hover { border-color: #25D366; color: #25D366; }
-        .status-tab.active { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border-color: #25D366; }
-        .status-count { background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
-        .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
       `}</style>
 
-      <div className="page-header">
-        <div className="header-content">
-          <h1><i className="fas fa-truck" style={{ color: "#25D366" }}></i> Shipping & Delivery</h1>
-          <p>Manage orders, track deliveries, and optimize your logistics</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+        <div>
+          <h1 className="text-xl md:text-2xl font-extrabold flex items-center gap-2">
+            <i className="fas fa-truck text-[#25D366]"></i>
+            <span className="md:hidden">Shipping</span>
+            <span className="hidden md:inline">Shipping & Delivery</span>
+          </h1>
+          <p className="text-sm text-[#64748b] hidden md:block">Manage orders, track deliveries</p>
         </div>
-        <div className="header-stats">
-          <div className="stat-card-mini">
-            <div className="stat-value-mini success">{stats.onTimeRate}%</div>
-            <div className="stat-label-mini">On-Time</div>
+        <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
+          <div className="flex flex-1 md:flex-none gap-2">
+            <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[90px]">
+              <div className="text-lg md:text-xl font-extrabold text-[#10b981]">{stats.onTimeRate}%</div>
+              <div className="text-xs text-[#64748b]">On-Time</div>
+            </div>
+            <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[90px]">
+              <div className="text-lg md:text-xl font-extrabold text-[#f59e0b]">{stats.avgDays}</div>
+              <div className="text-xs text-[#64748b]">Avg Days</div>
+            </div>
           </div>
-          <div className="stat-card-mini">
-            <div className="stat-value-mini warning">{stats.avgDays}</div>
-            <div className="stat-label-mini">Avg Days</div>
-          </div>
-          <div className="stat-card-mini">
-            <div className="stat-value-mini info">{stats.activeDrivers}</div>
-            <div className="stat-label-mini">In Transit</div>
-          </div>
-        </div>
-        <div className="header-actions">
-          <button className="btn btn-secondary" onClick={() => setShowShippingMethodsModal(true)}><i className="fas fa-truck"></i> Shipping Methods</button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}><i className="fas fa-plus"></i> New Shipment</button>
+          <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-white border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] text-nowrap" onClick={() => setShowShippingMethodsModal(true)}>
+            <i className="fas fa-truck mr-1"></i><span className="hidden md:inline">Methods</span>
+          </button>
+          <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow text-nowrap" onClick={() => setShowCreateModal(true)}>
+            <i className="fas fa-plus mr-1"></i><span className="md:hidden">+</span><span className="hidden md:inline">New Shipment</span>
+          </button>
         </div>
       </div>
 
@@ -305,25 +273,26 @@ export default function ShippingPage() {
         onExport={() => alert("Exporting shipments...")}
       />
 
-      <div className="status-tabs">
-        <div className={`status-tab ${!statusFilter ? "active" : ""}`} onClick={() => setStatusFilter("")}>
-          All Orders <span className="status-count">{shipments.length}</span>
+      {/* Status Tabs - Scrollable on mobile */}
+      <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 hide-scrollbar">
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${!statusFilter ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("")}>
+          All <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{shipments.length}</span>
         </div>
-        <div className={`status-tab ${statusFilter === "pending" ? "active" : ""}`} onClick={() => setStatusFilter("pending")}>
-          <i className="fas fa-clock"></i> Pending <span className="status-count">{stats.pending}</span>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "pending" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("pending")}>
+          <i className="fas fa-clock mr-1"></i>Pending <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{stats.pending}</span>
         </div>
-        <div className={`status-tab ${statusFilter === "shipped" ? "active" : ""}`} onClick={() => setStatusFilter("shipped")}>
-          <i className="fas fa-shipping-fast"></i> In Transit <span className="status-count">{stats.inTransit}</span>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "shipped" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("shipped")}>
+          <i className="fas fa-shipping-fast mr-1"></i>In Transit <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{stats.inTransit}</span>
         </div>
-        <div className={`status-tab ${statusFilter === "delivered" ? "active" : ""}`} onClick={() => setStatusFilter("delivered")}>
-          <i className="fas fa-check-circle"></i> Delivered <span className="status-count">{stats.delivered}</span>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "delivered" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("delivered")}>
+          <i className="fas fa-check-circle mr-1"></i>Delivered <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{stats.delivered}</span>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: "3rem", textAlign: "center" }}>
-          <i className="fas fa-spinner fa-spin" style={{ fontSize: "2rem", color: "#25D366" }}></i>
-          <p style={{ marginTop: "1rem", color: "#64748b" }}>Loading shipments...</p>
+        <div className="p-8 md:p-12 text-center">
+          <i className="fas fa-spinner fa-spin text-2xl text-[#25D366] mb-4"></i>
+          <p className="text-[#64748b]">Loading shipments...</p>
         </div>
       ) : (
         <ShippingTable

@@ -7,7 +7,6 @@ import {
   SupplierCard,
   AddSupplierModal,
   ViewSupplierModal,
-  SuppliersStats,
   SuppliersToolbar,
   SupplierCategoryTabs,
   SupplierFormData,
@@ -176,200 +175,43 @@ export default function SuppliersPage() {
     return matchesSearch;
   });
 
-  const filterByCategory = (category: string) => {
+const filterByCategory = (category: string) => {
     setActiveCategory(category);
   };
 
-  const stats = {
-    total: suppliers.length,
-    active: Math.floor(suppliers.length * 0.875),
-    pending: Math.max(0, suppliers.length - Math.floor(suppliers.length * 0.875)),
-    rating: 4.8,
-  };
-
   return (
-    <div className="suppliers-page">
+    <div className="suppliers-page max-w-[1600px] mx-auto">
       <style jsx>{`
-        .suppliers-page {
-          max-width: 1600px;
-          margin: 0 auto;
-        }
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 2rem;
-          flex-wrap: wrap;
-          gap: 1.5rem;
-        }
-        .header-content h1 {
-          font-size: 2rem;
-          font-weight: 800;
-          margin-bottom: 0.5rem;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-        .header-content p { color: #64748b; font-size: 1rem; }
-        .header-stats { display: flex; gap: 1rem; }
-        .stat-card-mini {
-          background: #ffffff;
-          border-radius: 12px;
-          padding: 1rem 1.5rem;
-          border: 1px solid #e2e8f0;
-          text-align: center;
-          min-width: 120px;
-        }
-        .stat-value-mini { font-size: 1.5rem; font-weight: 800; color: #25D366; }
-        .stat-label-mini { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        .header-actions { display: flex; gap: 0.75rem; }
-        .btn {
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-family: inherit;
-          font-weight: 700;
-          font-size: 0.9rem;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .btn-primary {
-          background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-          color: white;
-          box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4); }
-        .btn-secondary { background: #ffffff; color: #1e293b; border: 2px solid #e2e8f0; }
-        .btn-secondary:hover { border-color: #25D366; color: #25D366; }
+        .suppliers-page { margin: 0 auto; }
         .suppliers-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
           gap: 1.5rem;
           margin-bottom: 2rem;
         }
-        .performance-section {
-          background: #ffffff;
-          border-radius: 16px;
-          padding: 1.5rem;
-          margin-bottom: 2rem;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-        }
-        .section-title { font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; }
-        .chart-container {
-          height: 300px;
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .chart-placeholder { text-align: center; color: #64748b; }
-        .chart-placeholder i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; color: #25D366; }
-        .po-section {
-          background: #ffffff;
-          border-radius: 16px;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
-        .po-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .po-title { font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
-        .table-container { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th {
-          background: #f8fafc;
-          padding: 1rem 1.5rem;
-          text-align: left;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          color: #64748b;
-          border-bottom: 2px solid #e2e8f0;
-        }
-        .data-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        .po-id { font-weight: 800; color: #25D366; cursor: pointer; }
-        .supplier-cell-sm { display: flex; align-items: center; gap: 0.75rem; }
-        .supplier-avatar-sm {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          background: linear-gradient(135deg, #DCF8C6 0%, #e0e7ff 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .amount { font-weight: 800; font-size: 1rem; }
-        .po-status { padding: 0.375rem 0.875rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .po-status.draft { background: rgba(148, 163, 184, 0.1); color: #64748b; }
-        .table-actions { display: flex; gap: 0.5rem; }
-        .action-btn-sm {
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
-          border: none;
-          background: #f8fafc;
-          color: #64748b;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .action-btn-sm:hover { background: #25D366; color: white; }
         @media (max-width: 768px) {
           .suppliers-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
-      <div className="page-header">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-8 gap-4">
         <div className="header-content">
-          <h1>
-            <i className="fas fa-truck-loading" style={{ color: "#25D366" }}></i>
-            Supplier Management
+          <h1 className="text-xl md:text-2xl font-extrabold flex items-center gap-2">
+            <i className="fas fa-truck-loading text-[#25D366]"></i>
+            <span className="md:hidden">Suppliers</span>
+            <span className="hidden md:inline">Supplier Management</span>
           </h1>
-          <p>Manage your supply chain, track performance, and streamline procurement</p>
+          <p className="text-sm text-[#64748b] hidden md:block">Manage your supply chain</p>
         </div>
-        <div className="header-stats">
-          <div className="stat-card-mini">
-            <div className="stat-value-mini">{stats.total}</div>
-            <div className="stat-label-mini">Suppliers</div>
-          </div>
-          <div className="stat-card-mini">
-            <div className="stat-value-mini" style={{ color: "#f59e0b" }}>{stats.pending}</div>
-            <div className="stat-label-mini">Pending</div>
-          </div>
-          <div className="stat-card-mini">
-            <div className="stat-value-mini" style={{ color: "#8b5cf6" }}>$0</div>
-            <div className="stat-label-mini">Monthly Spend</div>
-          </div>
-        </div>
-        <div className="header-actions">
-          <button className="btn btn-secondary">
-            <i className="fas fa-download"></i>
-            Export
+        <div className="flex gap-2 md:gap-3 w-full md:w-auto overflow-x-auto">
+          <button className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg font-semibold text-sm hover:border-[#25D366] text-nowrap" onClick={() => {}}>
+            <i className="fas fa-download mr-1"></i><span className="hidden md:inline">Export</span>
           </button>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <i className="fas fa-plus"></i>
-            Add Supplier
+          <button className="px-3 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-lg font-semibold text-sm shadow text-nowrap" onClick={() => setShowModal(true)}>
+            <i className="fas fa-plus mr-1"></i><span className="hidden md:inline">Add Supplier</span><span className="md:hidden">+</span>
           </button>
         </div>
       </div>
-
-      <SuppliersStats
-        total={stats.total}
-        active={stats.active}
-        pending={stats.pending}
-        rating={stats.rating}
-      />
 
       <SuppliersToolbar
         searchTerm={searchTerm}
@@ -384,19 +226,21 @@ export default function SuppliersPage() {
       />
 
       {loading ? (
-        <div style={{ padding: "3rem", textAlign: "center" }}>
-          <i className="fas fa-spinner fa-spin" style={{ fontSize: "2rem", color: "#25D366" }}></i>
-          <p style={{ marginTop: "1rem", color: "#64748b" }}>Loading suppliers...</p>
+        <div className="p-8 md:p-12 text-center">
+          <i className="fas fa-spinner fa-spin text-2xl text-[#25D366] mb-4"></i>
+          <p className="text-[#64748b]">Loading suppliers...</p>
         </div>
       ) : filteredSuppliers.length === 0 ? (
-        <div style={{ padding: "3rem", textAlign: "center", background: "#ffffff", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-          <i className="fas fa-truck" style={{ fontSize: "3rem", color: "#64748b", marginBottom: "1rem" }}></i>
-          <h3 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>No suppliers found</h3>
-          <p style={{ color: "#64748b" }}>Add your first supplier to get started.</p>
-          <button className="btn btn-primary" style={{ marginTop: "1rem" }} onClick={() => setShowModal(true)}><i className="fas fa-plus"></i> Add Supplier</button>
+        <div className="p-8 md:p-12 text-center bg-white rounded-2xl border border-[#e2e8f0]">
+          <i className="fas fa-truck text-3xl text-[#64748b] mb-4"></i>
+          <h3 className="font-bold mb-2">No suppliers found</h3>
+          <p className="text-sm text-[#64748b] mb-4">Add your first supplier to get started.</p>
+          <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg" onClick={() => setShowModal(true)}>
+            <i className="fas fa-plus mr-2"></i>Add Supplier
+          </button>
         </div>
       ) : (
-        <div className="suppliers-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
           {filteredSuppliers.map((supplier) => (
             <SupplierCard
               key={supplier.id}
@@ -408,59 +252,6 @@ export default function SuppliersPage() {
           ))}
         </div>
       )}
-
-      <div className="performance-section">
-        <div className="section-header">
-          <h2 className="section-title"><i className="fas fa-chart-line" style={{ color: "#25D366" }}></i> Supplier Performance Analytics</h2>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <select className="filter-select">
-              <option>Last 30 Days</option>
-              <option>Last 90 Days</option>
-            </select>
-            <button className="btn btn-secondary"><i className="fas fa-download"></i> Report</button>
-          </div>
-        </div>
-        <div className="chart-container">
-          <div className="chart-placeholder">
-            <i className="fas fa-chart-area"></i>
-            <p>Supplier Performance Chart</p>
-            <small>Monthly spend, delivery times, and quality metrics by supplier</small>
-          </div>
-        </div>
-      </div>
-
-      <div className="po-section">
-        <div className="po-header">
-          <h3 className="po-title"><i className="fas fa-file-invoice" style={{ color: "#3b82f6" }}></i> Recent Purchase Orders</h3>
-          <button className="btn btn-primary btn-sm"><i className="fas fa-plus"></i> New PO</button>
-        </div>
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>PO Number</th>
-                <th>Supplier</th>
-                <th>Items</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><span className="po-id">PO-2026-001</span></td>
-                <td><div className="supplier-cell-sm"><div className="supplier-avatar-sm">👔</div><span style={{ fontWeight: 600 }}>Sample Supplier</span></div></td>
-                <td>0 items</td>
-                <td className="amount">$0.00</td>
-                <td><span className="po-status draft">Draft</span></td>
-                <td>Apr 10, 2026</td>
-                <td><div className="table-actions"><button className="action-btn-sm" title="View"><i className="fas fa-eye"></i></button><button className="action-btn-sm" title="Edit"><i className="fas fa-edit"></i></button></div></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       <AddSupplierModal
         isOpen={showModal}

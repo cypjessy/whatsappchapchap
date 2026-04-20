@@ -8,8 +8,8 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-[#e2e8f0] px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 bg-white border-b border-[#e2e8f0] px-3 md:px-6 py-2 md:py-4 flex items-center justify-between">
+      <div className="flex items-center gap-2 md:gap-3">
         <button className="md:hidden w-10 h-10 flex items-center justify-center text-[#1e293b]" onClick={onMenuClick}>
           <i className="fas fa-bars text-lg"></i>
         </button>
@@ -27,15 +27,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </button>
       </div>
       <div className="flex items-center gap-1 md:gap-2">
-        <button className="relative w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] rounded-full hover:bg-[#f1f5f9] transition-all">
+        <button className="relative w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] rounded-full hover:bg-[#f1f5f9] transition-all">
           <i className="fas fa-bell"></i>
-          <span className="absolute top-1 right-1 w-4 h-4 bg-[#ef4444] text-white text-[0.6rem] font-bold rounded-full flex items-center justify-center">3</span>
-        </button>
-        <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] rounded-full hover:bg-[#f1f5f9] transition-all">
-          <i className="fas fa-envelope"></i>
+          <span className="absolute top-0 right-0 w-4 h-4 bg-[#ef4444] text-white text-[0.5rem] font-bold rounded-full flex items-center justify-center">3</span>
         </button>
         {/* Mobile FAB instead of + button */}
-        <button className="md:hidden w-10 h-10 flex items-center justify-center bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl shadow-lg">
+        <button className="md:hidden w-9 h-9 flex items-center justify-center bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-lg shadow-lg">
           <i className="fas fa-plus"></i>
         </button>
         <button className="hidden md:flex w-10 h-10 items-center justify-center text-[#64748b] hover:text-[#25D366] rounded-full hover:bg-[#f1f5f9] transition-all">

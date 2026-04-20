@@ -215,82 +215,79 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
 
   return (
     <>
-      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
-        <div className="bg-white rounded-[20px] w-full max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-[slideUp_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={e => e.stopPropagation()}>
+      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto" onClick={onClose}>
+        <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-[slideUp_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={e => e.stopPropagation()}>
           
           {/* Header */}
-          <div className="p-7 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-r from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)]">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] rounded-[12px] flex items-center justify-center text-white text-2xl shadow-lg">
+          <div className="p-4 md:p-7 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-gradient-to-r from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)]">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] rounded-lg md:rounded-[12px] flex items-center justify-center text-white text-lg md:text-2xl shadow-lg">
                 <i className="fas fa-layer-group"></i>
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-[#1e293b]">Categories</h2>
-                <p className="text-sm text-[#64748b]">Organize your products into categories</p>
+                <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Categories</h2>
+                <p className="text-xs md:text-sm text-[#64748b] hidden md:block">Organize your products</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button className="w-11 h-11 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-[8px]">
+            <div className="flex gap-2">
+              <button className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-lg md:rounded-[8px]">
                 <i className="fas fa-question-circle"></i>
               </button>
-              <button className="w-11 h-11 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-[8px] transition-all" onClick={onClose}>
+              <button className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-lg md:rounded-[8px] transition-all" onClick={onClose}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
           </div>
 
           {/* Toolbar */}
-          <div className="p-5 border-b border-[#e2e8f0] flex justify-between items-center gap-4 flex-wrap">
-            <div className="flex gap-4 items-center flex-1">
-              <div className="relative w-[280px]">
+          <div className="p-3 md:p-5 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div className="flex gap-2 md:gap-4 items-center w-full md:flex-1">
+              <div className="relative flex-1 md:w-[280px]">
                 <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
                 <input 
                   type="text" 
-                  placeholder="Search categories..." 
+                  placeholder="Search..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:bg-white transition-all"
+                  className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2.5 md:py-3 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:bg-white transition-all"
                 />
               </div>
-              <div className="flex bg-[#f8fafc] rounded-[8px] p-1 border-2 border-[#e2e8f0]">
+              <div className="flex bg-[#f8fafc] rounded-lg md:rounded-[8px] p-1 border-2 border-[#e2e8f0]">
                 <button 
                   onClick={() => setViewMode("grid")} 
-                  className={`px-4 py-2 rounded-[6px] text-sm transition-all ${viewMode === "grid" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-[#64748b]"}`}
+                  className={`px-2 md:px-4 py-1.5 md:py-2 rounded text-sm transition-all ${viewMode === "grid" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-[#64748b]"}`}
                 >
                   <i className="fas fa-th-large"></i>
                 </button>
                 <button 
                   onClick={() => setViewMode("list")} 
-                  className={`px-4 py-2 rounded-[6px] text-sm transition-all ${viewMode === "list" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-[#64748b]"}`}
+                  className={`px-2 md:px-4 py-1.5 md:py-2 rounded text-sm transition-all ${viewMode === "list" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-[#64748b]"}`}
                 >
                   <i className="fas fa-list"></i>
                 </button>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] flex items-center gap-2 transition-all">
-                <i className="fas fa-expand-alt"></i>
-                Expand
-              </button>
-              <button className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-[8px] font-semibold text-sm shadow-lg flex items-center gap-2 hover:shadow-xl hover:-translate-y-0.5 transition-all" onClick={openAddModal}>
+            <div className="flex gap-2 w-full md:w-auto">
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[44px]" onClick={openAddModal}>
                 <i className="fas fa-plus"></i>
-                Add Category
+                <span className="md:hidden">Add</span>
+                <span className="hidden md:inline">Add Category</span>
               </button>
             </div>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 md:p-6">
             
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="bg-[#f8fafc] rounded-[12px] p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
-                <div className="text-4xl font-extrabold text-[#8b5cf6] mb-1">{categories.length}</div>
-                <div className="text-sm font-semibold text-[#64748b]">Total Categories</div>
+            {/* Stats - Grid on mobile, 4 cols desktop */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+              <div className="bg-[#f8fafc] rounded-xl md:rounded-[12px] p-3 md:p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] transition-all">
+                <div className="text-2xl md:text-4xl font-extrabold text-[#8b5cf6] mb-1">{categories.length}</div>
+                <div className="text-xs md:text-sm font-semibold text-[#64748b]">Total</div>
               </div>
-              <div className="bg-[#f8fafc] rounded-[12px] p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
-                <div className="text-4xl font-extrabold text-[#8b5cf6] mb-1">{totalProducts}</div>
-                <div className="text-sm font-semibold text-[#64748b]">Total Products</div>
+              <div className="bg-[#f8fafc] rounded-xl md:rounded-[12px] p-3 md:p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] transition-all">
+                <div className="text-2xl md:text-4xl font-extrabold text-[#8b5cf6] mb-1">{totalProducts}</div>
+                <div className="text-xs md:text-sm font-semibold text-[#64748b]">Products</div>
               </div>
               <div className="bg-[#f8fafc] rounded-[12px] p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
                 <div className="text-4xl font-extrabold text-[#10b981] mb-1">{activeCount}</div>
@@ -351,16 +348,16 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                   </div>
                 ))}
                 
-                {/* Add New Card */}
+                {/* Add New Card - Mobile Responsive */}
                 <button 
-                  className="border-2 border-dashed border-[#e2e8f0] bg-transparent rounded-[12px] p-6 cursor-pointer flex flex-col items-center justify-center min-h-[180px] hover:border-[#8b5cf6] hover:bg-[rgba(139,92,246,0.02)] transition-all"
+                  className="border-2 border-dashed border-[#e2e8f0] bg-transparent rounded-xl md:rounded-[12px] p-4 md:p-6 cursor-pointer flex flex-col items-center justify-center min-h-[120px] md:min-h-[180px] hover:border-[#8b5cf6] hover:bg-[rgba(139,92,246,0.02)] transition-all"
                   onClick={openAddModal}
                 >
-                  <div className="w-16 h-16 rounded-full bg-[#f8fafc] flex items-center justify-center text-2xl text-[#8b5cf6] mb-4 transition-all hover:bg-[#8b5cf6] hover:text-white hover:scale-110">
+                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-[#f8fafc] flex items-center justify-center text-lg md:text-2xl text-[#8b5cf6] mb-2 md:mb-4 transition-all hover:bg-[#8b5cf6] hover:text-white hover:scale-110">
                     <i className="fas fa-plus"></i>
                   </div>
-                  <div className="font-bold text-[#1e293b]">Add New Category</div>
-                  <div className="text-sm text-[#64748b] mt-1">Create a new product category</div>
+                  <div className="font-bold text-sm md:text-base text-[#1e293b]">Add Category</div>
+                  <div className="text-xs md:text-sm text-[#64748b] mt-0.5 md:mt-1 hidden md:block">Create a new category</div>
                 </button>
               </div>
             ) : (
@@ -403,18 +400,20 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
           </div>
 
           {/* Footer */}
-          <div className="p-5 border-t border-[#e2e8f0] flex justify-between items-center bg-[#f8fafc]">
-            <div className="flex items-center gap-3 text-sm text-[#64748b]">
-              <i className="fas fa-info-circle text-[#8b5cf6]"></i>
-              <span>Drag and drop to reorder categories</span>
+          <div className="p-3 md:p-5 border-t border-[#e2e8f0] flex flex-col md:flex-row justify-between items-center gap-3 md:items-center bg-[#f8fafc]">
+            <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-[#64748b]">
+              <i className="fas fa-info-circle text-[#8b5cf6] hidden md:inline"></i>
+              <span className="hidden md:inline">Drag and drop to reorder</span>
+              <span className="md:hidden">Reorder categories</span>
             </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all" onClick={onClose}>
+            <div className="flex gap-2 md:gap-3 w-full md:w-auto">
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[44px]" onClick={onClose}>
                 Cancel
               </button>
-              <button className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-[8px] font-semibold text-sm shadow-lg flex items-center gap-2 hover:shadow-xl hover:-translate-y-0.5 transition-all" onClick={saveChanges}>
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[44px]" onClick={saveChanges}>
                 <i className="fas fa-save"></i>
-                Save Changes
+                <span className="md:hidden">Save</span>
+                <span className="hidden md:inline">Save Changes</span>
               </button>
             </div>
           </div>
@@ -423,43 +422,43 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
 
       {/* Add/Edit Form Modal */}
       {formModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setFormModalOpen(false)}>
-          <div className="bg-white rounded-[20px] w-full max-w-[480px] p-8 shadow-2xl animate-[slideUp_0.3s_ease]" onClick={e => e.stopPropagation()}>
-            <div className="mb-6">
-              <h3 className="text-lg font-extrabold mb-2">{editingCategory ? "Edit Category" : "Add New Category"}</h3>
-              <p className="text-sm text-[#64748b]">{editingCategory ? "Update category details" : "Create a new category for your products"}</p>
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-2 md:p-4" onClick={() => setFormModalOpen(false)}>
+          <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-[480px] p-4 md:p-8 shadow-2xl animate-[slideUp_0.3s_ease]" onClick={e => e.stopPropagation()}>
+            <div className="mb-4 md:mb-6">
+              <h3 className="text-lg md:text-lg font-extrabold mb-1 md:mb-2">{editingCategory ? "Edit Category" : "Add Category"}</h3>
+              <p className="text-xs md:text-sm text-[#64748b]">{editingCategory ? "Update details" : "Create a new category"}</p>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4 md:space-y-5">
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Category Name</label>
+                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Name</label>
                 <input 
                   type="text" 
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3.5 border-2 border-[#e2e8f0] rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
+                  className="w-full px-3 md:px-4 py-3 border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
                   placeholder="e.g., Electronics"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Description (Optional)</label>
+                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Description</label>
                 <input 
                   type="text" 
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3.5 border-2 border-[#e2e8f0] rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
-                  placeholder="Brief description of this category"
+                  className="w-full px-3 md:px-4 py-3 border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
+                  placeholder="Brief description"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Choose Icon</label>
-                <div className="grid grid-cols-6 gap-3">
+                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Icon</label>
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
                   {icons.map(icon => (
                     <button
                       key={icon}
-                      className={`aspect-square border-2 border-[#e2e8f0] rounded-[8px] flex items-center justify-center text-2xl cursor-pointer transition-all hover:border-[#8b5cf6] hover:scale-110 ${formData.icon === icon ? "border-[#8b5cf6] bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] text-white" : "bg-[#f8fafc]"}`}
+                      className={`aspect-square border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] flex items-center justify-center text-xl md:text-2xl cursor-pointer transition-all hover:border-[#8b5cf6] hover:scale-110 ${formData.icon === icon ? "border-[#8b5cf6] bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] text-white" : "bg-[#f8fafc]"}`}
                       onClick={() => setFormData(prev => ({ ...prev, icon }))}
                     >
                       {icon}
@@ -469,12 +468,12 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
               </div>
 
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Category Color</label>
-                <div className="flex gap-3 flex-wrap">
+                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Color</label>
+                <div className="flex gap-2 md:gap-3 flex-wrap">
                   {colors.map(color => (
                     <button
                       key={color}
-                      className={`w-10 h-10 rounded-full cursor-pointer border-3 border-transparent transition-all hover:scale-110 ${formData.color === color ? "border-[#1e293b] shadow-[0_0_0_3px_white,0_0_0_5px_#1e293b]" : ""}`}
+                      className={`w-9 h-9 md:w-10 md:h-10 rounded-full cursor-pointer border-2 md:border-3 border-transparent transition-all hover:scale-110 ${formData.color === color ? "border-[#1e293b] shadow-[0_0_0_3px_white,0_0_0_5px_#1e293b]" : ""}`}
                       style={{ backgroundColor: color }}
                       onClick={() => setFormData(prev => ({ ...prev, color }))}
                     />
@@ -483,13 +482,14 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
               </div>
             </div>
 
-            <div className="flex gap-3 mt-8">
-              <button className="flex-1 px-4 py-3 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all" onClick={() => setFormModalOpen(false)}>
+            <div className="flex gap-2 md:gap-3 mt-6 md:mt-8">
+              <button className="flex-1 px-3 md:px-4 py-3 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[48px]" onClick={() => setFormModalOpen(false)}>
                 Cancel
               </button>
-              <button className="flex-1 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl hover:-translate-y-0.5 transition-all" onClick={saveCategory}>
+              <button className="flex-1 px-3 md:px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[48px]" onClick={saveCategory}>
                 <i className="fas fa-save"></i>
-                {editingCategory ? "Update Category" : "Save Category"}
+                <span className="hidden md:inline">{editingCategory ? "Update Category" : "Save Category"}</span>
+                <span className="md:hidden">{editingCategory ? "Update" : "Save"}</span>
               </button>
             </div>
           </div>

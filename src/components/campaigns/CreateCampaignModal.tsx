@@ -1721,42 +1721,45 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }: Crea
         }
 
         @media (max-width: 768px) {
+          .modal-overlay { padding: 0; align-items: flex-end; }
           .modal-container {
             max-height: 95vh;
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            max-width: 100%;
           }
-
+          .modal-header { padding: 1rem 1.25rem; }
+          .modal-header-content { flex-direction: column; gap: 0.5rem; }
+          .modal-title-section h2 { font-size: 1.25rem; }
+          .modal-title-section p { display: none; }
+          .modal-close { position: absolute; right: 1rem; top: 1rem; }
+          .modal-body { padding: 1rem; }
           .type-grid,
           .form-grid {
             grid-template-columns: 1fr;
           }
-
-          .datetime-picker {
-            grid-template-columns: 1fr;
-          }
-
-          .modal-footer {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .footer-actions {
-            width: 100%;
-            justify-content: stretch;
-          }
-
-          .footer-actions .btn {
-            flex: 1;
-            justify-content: center;
-          }
-
-          .progress-steps {
-            padding: 1rem;
-          }
-
-          .step-label {
-            display: none;
-          }
+          .type-card { padding: 1rem; }
+          .type-icon { width: 48px; height: 48px; font-size: 1.25rem; }
+          .type-content h4 { font-size: 1rem; }
+          .type-content p { display: none; }
+          .datetime-picker { grid-template-columns: 1fr; }
+          .modal-footer { padding: 1rem; flex-direction: column; gap: 0.75rem; }
+          .footer-info { display: none; }
+          .footer-actions { width: 100%; justify-content: stretch; }
+          .footer-actions .btn { flex: 1; justify-content: center; padding: 0.75rem 1rem; }
+          .progress-steps { padding: 0.75rem; gap: 0; }
+          .step-number { width: 32px; height: 32px; font-size: 0.8rem; }
+          .step-label { display: none; }
+          .step:not(:last-child)::after { top: 16px; height: 2px; }
+          .audience-card { padding: 0.75rem; }
+          .audience-info .audience-count { display: none; }
+          .review-row { flex-direction: column; gap: 0.5rem; }
+          .review-label { width: auto; }
+          .success-animation { padding: 2rem 1rem; }
+          .success-icon { width: 80px; height: 80px; font-size: 2.5rem; }
+          .success-stats { flex-direction: column; gap: 1rem; }
+          .cost-summary { padding: 1rem; }
+          .preview-panel { padding: 1rem; }
+          .phone-mockup { max-width: 280px; }
         }
       `}</style>
     </div>

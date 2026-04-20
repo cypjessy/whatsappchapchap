@@ -47,6 +47,7 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div className="modal-handle"></div>
       <style jsx>{`
         .modal-overlay {
           display: flex;
@@ -58,32 +59,40 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
           background: rgba(15, 23, 42, 0.7);
           backdrop-filter: blur(8px);
           z-index: 1000;
-          padding: 2rem;
-          align-items: center;
+          padding: 0;
+          align-items: flex-end;
           justify-content: center;
           animation: fadeIn 0.3s ease;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal {
           background: #ffffff;
-          border-radius: 20px;
+          border-radius: 20px 20px 0 0;
           width: 100%;
           max-width: 1100px;
-          max-height: 90vh;
+          max-height: 95vh;
           overflow: hidden;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
           animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           display: flex;
           flex-direction: column;
         }
-        @keyframes slideUp { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (min-width: 768px) {
+          .modal-overlay { padding: 2rem; align-items: center; }
+          .modal { border-radius: 20px; max-height: 90vh; animation-name: slideUpDesktop; }
+          @keyframes slideUpDesktop { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        }
+        .modal-handle { display: block; width: 40px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0.75rem auto; }
+        @media (min-width: 768px) { .modal-handle { display: none; } }
         .modal-header {
           background: linear-gradient(135deg, #10b981 0%, #00C853 100%);
           color: white;
-          padding: 1.5rem 2rem;
+          padding: 1rem 1rem 1.5rem;
           position: relative;
           overflow: hidden;
         }
+        @media (min-width: 768px) { .modal-header { padding: 1.5rem 2rem; } }
         .modal-header::before {
           content: '';
           position: absolute;
@@ -99,33 +108,41 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
           z-index: 1;
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
         }
-        .header-left { display: flex; align-items: center; gap: 1.5rem; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        @media (min-width: 768px) { .header-left { gap: 1.5rem; } }
         .shipment-icon {
-          width: 60px;
-          height: 60px;
+          width: 48px;
+          height: 48px;
           border-radius: 8px;
           background: rgba(255, 255, 255, 0.2);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.75rem;
-        }
-        .shipment-title h2 {
           font-size: 1.5rem;
+          flex-shrink: 0;
+        }
+        @media (min-width: 768px) { .shipment-icon { width: 60px; height: 60px; font-size: 1.75rem; } }
+        .shipment-title h2 {
+          font-size: 1.125rem;
           font-weight: 800;
           margin-bottom: 0.25rem;
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.5rem;
         }
+        @media (min-width: 768px) { .shipment-title h2 { font-size: 1.5rem; gap: 0.75rem; } }
         .tracking-badge {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.375rem 1rem;
+          padding: 0.25rem 0.75rem;
           background: rgba(255, 255, 255, 0.2);
+          font-size: 0.75rem;
+          border-radius: 20px;
+        }
+        @media (min-width: 768px) { .tracking-badge { padding: 0.375rem 1rem; font-size: 0.875rem; } }
           border-radius: 20px;
           font-size: 0.875rem;
           font-weight: 600;
@@ -215,41 +232,46 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
         .modal-body {
           flex: 1;
           overflow-y: auto;
-          padding: 2rem;
+          padding: 1rem;
           background: #f8fafc;
+          max-height: calc(95vh - 150px);
         }
+        @media (min-width: 768px) { .modal-body { padding: 2rem; max-height: none; } }
         .content-grid {
           display: grid;
-          grid-template-columns: 1.2fr 0.8fr;
-          gap: 2rem;
+          grid-template-columns: 1fr;
+          gap: 1rem;
         }
-        @media (max-width: 968px) { .content-grid { grid-template-columns: 1fr; } }
-        .left-column, .right-column { display: flex; flex-direction: column; gap: 1.5rem; }
+        @media (min-width: 968px) { .content-grid { grid-template-columns: 1.2fr 0.8fr; gap: 2rem; } }
+        .left-column, .right-column { display: flex; flex-direction: column; gap: 1rem; }
+        @media (min-width: 768px) { .left-column, .right-column { gap: 1.5rem; } }
         .card {
           background: white;
-          border-radius: 20px;
+          border-radius: 12px;
           border: 1px solid #e2e8f0;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           overflow: hidden;
         }
         .card-header {
-          padding: 1.25rem 1.5rem;
+          padding: 1rem;
           border-bottom: 1px solid #e2e8f0;
           display: flex;
           justify-content: space-between;
           align-items: center;
         }
-        .card-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; }
+        @media (min-width: 768px) { .card-header { padding: 1.25rem 1.5rem; } }
+        .card-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        @media (min-width: 768px) { .card-title { font-size: 1.1rem; gap: 0.75rem; } }
         .card-title i { color: #3b82f6; }
         .live-badge {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.375rem 0.875rem;
+          padding: 0.25rem 0.625rem;
           background: rgba(239, 68, 68, 0.1);
           color: #ef4444;
           border-radius: 20px;
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           font-weight: 700;
           text-transform: uppercase;
         }
@@ -474,38 +496,44 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
           font-size: 1.5rem;
           font-weight: 700;
         }
-        .carrier-name-sm { font-weight: 700; font-size: 1.1rem; }
-        .carrier-rating { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #64748b; margin-top: 0.25rem; }
+        .carrier-name-sm { font-weight: 700; font-size: 1rem; }
+        .carrier-rating { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; }
         .carrier-rating i { color: #f59e0b; }
-        .carrier-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .carrier-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
         .carrier-detail { display: flex; flex-direction: column; gap: 0.25rem; }
-        .carrier-detail-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; }
-        .carrier-detail-value { font-weight: 700; color: #1e293b; }
+        .carrier-detail-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; }
+        .carrier-detail-value { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
         .modal-footer {
-          padding: 1.5rem 2rem;
+          padding: 1rem;
           background: white;
           border-top: 1px solid #e2e8f0;
           display: flex;
           justify-content: space-between;
           align-items: center;
           flex-wrap: wrap;
-          gap: 1rem;
+          gap: 0.75rem;
         }
-        .footer-info { display: flex; align-items: center; gap: 0.75rem; color: #64748b; font-size: 0.9rem; }
-        .footer-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        @media (min-width: 768px) { .modal-footer { padding: 1.5rem 2rem; gap: 1rem; } }
+        .footer-info { display: none; }
+        @media (min-width: 768px) { .footer-info { display: flex; align-items: center; gap: 0.75rem; color: #64748b; font-size: 0.9rem; } }
+        .footer-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; width: 100%; }
+        @media (min-width: 768px) { .footer-actions { width: auto; gap: 0.75rem; flex-wrap: nowrap; } }
         .btn {
-          padding: 0.875rem 1.75rem;
+          padding: 0.625rem 0.875rem;
           border-radius: 8px;
           font-family: inherit;
           font-weight: 700;
-          font-size: 0.95rem;
+          font-size: 0.8rem;
           cursor: pointer;
           transition: all 0.2s;
           border: none;
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
+          flex: 1;
+          justify-content: center;
         }
+        @media (min-width: 768px) { .btn { padding: 0.875rem 1.75rem; font-size: 0.95rem; flex: unset; } }
         .btn-secondary { background: #f8fafc; color: #1e293b; border: 2px solid #e2e8f0; }
         .btn-secondary:hover { border-color: #3b82f6; color: #3b82f6; }
         .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }

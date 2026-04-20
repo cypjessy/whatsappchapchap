@@ -72,13 +72,13 @@ export function RecentOrders({ refreshTrigger }: RecentOrdersProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm">
-        <div className="p-6 border-b border-[#e2e8f0] flex items-center justify-between">
-          <h3 className="font-bold text-lg flex items-center gap-2">
+        <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
             <i className="fas fa-list text-[#3b82f6]"></i>
             Recent Orders
           </h3>
         </div>
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-16 bg-gray-200 rounded-lg"></div>
@@ -92,18 +92,18 @@ export function RecentOrders({ refreshTrigger }: RecentOrdersProps) {
   if (orders.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm">
-        <div className="p-6 border-b border-[#e2e8f0] flex items-center justify-between">
-          <h3 className="font-bold text-lg flex items-center gap-2">
+        <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
             <i className="fas fa-list text-[#3b82f6]"></i>
             Recent Orders
           </h3>
-          <Link href="/orders" className="px-4 py-2 bg-[#f1f5f9] text-sm font-semibold rounded-lg hover:bg-[#e2e8f0] transition-all">
+          <Link href="/orders" className="px-3 md:px-4 py-1.5 md:py-2 bg-[#f1f5f9] text-xs md:text-sm font-semibold rounded-lg hover:bg-[#e2e8f0] transition-all">
             View All
           </Link>
         </div>
-        <div className="p-12 text-center">
-          <div className="w-16 h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-shopping-bag text-2xl text-[#64748b]"></i>
+        <div className="p-8 text-center">
+          <div className="w-12 h-12 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-shopping-bag text-xl md:text-2xl text-[#64748b]"></i>
           </div>
           <h4 className="font-bold text-[#1e293b] mb-2">No orders yet</h4>
           <p className="text-sm text-[#64748b]">When customers order from you, they will appear here.</p>
@@ -114,16 +114,49 @@ export function RecentOrders({ refreshTrigger }: RecentOrdersProps) {
 
   return (
     <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm">
-      <div className="p-6 border-b border-[#e2e8f0] flex items-center justify-between">
-        <h3 className="font-bold text-lg flex items-center gap-2">
+      <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex items-center justify-between">
+        <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
           <i className="fas fa-list text-[#3b82f6]"></i>
           Recent Orders
         </h3>
-        <Link href="/orders" className="px-4 py-2 bg-[#f1f5f9] text-sm font-semibold rounded-lg hover:bg-[#e2e8f0] transition-all">
+        <Link href="/orders" className="px-3 md:px-4 py-1.5 md:py-2 bg-[#f1f5f9] text-xs md:text-sm font-semibold rounded-lg hover:bg-[#e2e8f0] transition-all">
           View All
         </Link>
       </div>
-      <div className="overflow-x-auto">
+      
+      {/* Mobile: List view */}
+      <div className="md:hidden divide-y divide-[#e2e8f0]">
+        {orders.map((order, index) => {
+          const statusStyle = getStatusStyles(order.status);
+          return (
+            <Link href="/orders" key={index} className="block p-4 hover:bg-[#f1f5f9] transition-all">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 bg-gradient-to-b ${order.productEmojiBg} rounded-lg flex items-center justify-center text-xl flex-shrink-0`}>
+                  {order.productEmoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#25D366] text-sm">#{order.id}</span>
+                    <span className="font-bold">{formatCurrency(order.amount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm truncate">{order.productName}</span>
+                    <span
+                      className="px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ml-2"
+                      style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
+                    >
+                      {statusStyle.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      
+      {/* Desktop: Table view */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-[#f1f5f9]">

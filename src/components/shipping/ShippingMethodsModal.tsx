@@ -171,6 +171,19 @@ export function ShippingMethodsModal({ isOpen, onClose, methods = [], onSave }: 
           cursor: pointer;
         }
         .btn-save:hover { box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+        @media (max-width: 640px) {
+          .modal-overlay { padding: 1rem; }
+          .modal { border-radius: 16px; max-height: 85vh; }
+          .modal-header { padding: 1rem 1.5rem; }
+          .modal-header h2 { font-size: 1.25rem; }
+          .modal-body { padding: 1rem; max-height: 55vh; }
+          .method-item { flex-wrap: wrap; gap: 0.5rem; }
+          .method-item input[type="number"] { width: 80px; }
+          .add-form { flex-direction: column; }
+          .add-btn { width: 100%; justify-content: center; }
+          .modal-footer { padding: 1rem; flex-direction: column; }
+          .btn-cancel, .btn-save { width: 100%; justify-content: center; }
+        }
       `}</style>
       
       <div className="modal">

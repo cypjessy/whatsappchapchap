@@ -5,186 +5,94 @@ import { SupplierCardProps, categoryLogos, getPaymentTermsLabel } from "./types"
 
 export function SupplierCard({ supplier, onView, onEdit, onDelete }: SupplierCardProps) {
   return (
-    <div className="supplier-card">
-      <span className="supplier-status status-active">Active</span>
-      <div className="supplier-header">
-        <div className="supplier-logo">{categoryLogos.general}</div>
-        <div className="supplier-info">
-          <div className="supplier-name">
-            {supplier.name}
-            <span className="verified-badge"><i className="fas fa-check"></i></span>
+    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden relative">
+      <span className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Active</span>
+      
+      {/* Header */}
+      <div className="p-3 md:p-5 border-b border-[#e2e8f0]">
+        <div className="flex gap-3">
+          <div className="w-12 h-12 md:w-[70px] md:h-[70px] rounded-lg md:rounded-xl bg-[#f8fafc] flex items-center justify-center text-2xl md:text-3xl border-2 border-[#e2e8f0]">
+            {categoryLogos.general}
           </div>
-          <span className="supplier-category"><i className="fas fa-box"></i> General</span>
-          <div className="supplier-location">
-            <i className="fas fa-map-marker-alt"></i>
-            {supplier.address || "No address"}
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-base md:text-xl flex items-center gap-1">
+              <span className="truncate">{supplier.name}</span>
+              <span className="w-5 h-5 bg-[#25D366] text-white rounded-full flex items-center justify-center text-xs">
+                <i className="fas fa-check"></i>
+              </span>
+            </div>
+            <span className="inline-flex px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase mb-1">
+              General
+            </span>
+            <div className="text-xs text-[#64748b] truncate">
+              <i className="fas fa-map-marker-alt mr-1"></i>
+              {supplier.address || "No address"}
+            </div>
           </div>
-        </div>
-        <div className="supplier-actions-top">
-          <button className="action-icon-btn" onClick={() => onView(supplier)} title="View"><i className="fas fa-eye"></i></button>
-          <button className="action-icon-btn" onClick={() => onEdit(supplier)} title="Edit"><i className="fas fa-edit"></i></button>
-          <button className="action-icon-btn" onClick={() => onDelete(supplier.id)} title="Delete" style={{ color: "#ef4444" }}><i className="fas fa-trash"></i></button>
-        </div>
-      </div>
-      <div className="supplier-body">
-        <div className="supplier-stats">
-          <div className="supplier-stat">
-            <div className="supplier-stat-value">{supplier.products?.length || 0}</div>
-            <div className="supplier-stat-label">Products</div>
-          </div>
-          <div className="supplier-stat">
-            <div className="supplier-stat-value">$0</div>
-            <div className="supplier-stat-label">Monthly</div>
-          </div>
-          <div className="supplier-stat">
-            <div className="supplier-stat-value">-</div>
-            <div className="supplier-stat-label">On Time</div>
-          </div>
-        </div>
-        <div className="supplier-products">
-          <div className="section-label">Contact</div>
-          <div className="product-tags">
-            <span className="product-tag">{supplier.contactPerson || "No contact"}</span>
-            <span className="product-tag">{supplier.phone || "No phone"}</span>
-            <span className="product-tag">{getPaymentTermsLabel(supplier.paymentTerms)}</span>
+          <div className="flex gap-1 md:gap-2">
+            <button className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg" onClick={() => onView(supplier)}>
+              <i className="fas fa-eye"></i>
+            </button>
+            <button className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg" onClick={() => onEdit(supplier)}>
+              <i className="fas fa-edit"></i>
+            </button>
+            <button className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#ef4444] hover:bg-red-50 rounded-lg" onClick={() => onDelete(supplier.id)}>
+              <i className="fas fa-trash"></i>
+            </button>
           </div>
         </div>
       </div>
-      <div className="supplier-footer">
-        <div className="supplier-rating">
-          <span className="stars"><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i></span>
-          <span className="rating-value">New</span>
+      
+      {/* Body */}
+      <div className="p-3 md:p-5">
+        <div className="grid grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-5">
+          <div className="text-center p-2 md:p-3 bg-[#f8fafc] rounded-lg md:rounded-xl">
+            <div className="font-bold text-base md:text-xl text-[#1e293b]">{supplier.products?.length || 0}</div>
+            <div className="text-xs text-[#64748b] font-bold uppercase">Products</div>
+          </div>
+          <div className="text-center p-2 md:p-3 bg-[#f8fafc] rounded-lg md:rounded-xl">
+            <div className="font-bold text-base md:text-xl text-[#1e293b]">$0</div>
+            <div className="text-xs text-[#64748b] font-bold uppercase">Monthly</div>
+          </div>
+          <div className="text-center p-2 md:p-3 bg-[#f8fafc] rounded-lg md:rounded-xl">
+            <div className="font-bold text-base md:text-xl text-[#1e293b]">-</div>
+            <div className="text-xs text-[#64748b] font-bold uppercase">On Time</div>
+          </div>
         </div>
-        <div className="last-order">{supplier.createdAt?.toDate ? supplier.createdAt.toDate().toLocaleDateString() : "Recently added"}</div>
+        
+        {/* Contact Info */}
+        <div>
+          <div className="text-xs font-bold uppercase text-[#64748b] mb-2">Contact</div>
+          <div className="flex flex-wrap gap-1 md:gap-2">
+            <span className="px-2 md:px-3 py-1 bg-[#f8fafc] border border-[#e2e8f0] rounded-full text-xs md:text-sm font-semibold text-[#64748b] truncate max-w-[120px]">
+              {supplier.contactPerson || "No contact"}
+            </span>
+            <span className="px-2 md:px-3 py-1 bg-[#f8fafc] border border-[#e2e8f0] rounded-full text-xs md:text-sm font-semibold text-[#64748b]">
+              {supplier.phone || "No phone"}
+            </span>
+            <span className="px-2 md:px-3 py-1 bg-[#f8fafc] border border-[#e2e8f0] rounded-full text-xs md:text-sm font-semibold text-[#64748b]">
+              {getPaymentTermsLabel(supplier.paymentTerms)}
+            </span>
+          </div>
+        </div>
       </div>
-      <style jsx>{`
-        .supplier-card {
-          background: #ffffff;
-          border-radius: 16px;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-          position: relative;
-        }
-        .supplier-header {
-          padding: 1.5rem;
-          display: flex;
-          align-items: flex-start;
-          gap: 1rem;
-          border-bottom: 1px solid #e2e8f0;
-        }
-        .supplier-logo {
-          width: 70px;
-          height: 70px;
-          border-radius: 8px;
-          background: #f8fafc;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2rem;
-          border: 2px solid #e2e8f0;
-        }
-        .supplier-info { flex: 1; }
-        .supplier-name {
-          font-size: 1.25rem;
-          font-weight: 800;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .verified-badge {
-          width: 20px;
-          height: 20px;
-          background: #25D366;
-          color: white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.7rem;
-        }
-        .supplier-category {
-          display: inline-flex;
-          padding: 0.375rem 0.875rem;
-          background: rgba(37, 211, 102, 0.1);
-          color: #128C7E;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          margin-bottom: 0.5rem;
-        }
-        .supplier-location {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #64748b;
-          font-size: 0.9rem;
-        }
-        .supplier-actions-top { display: flex; gap: 0.5rem; }
-        .action-icon-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          border: none;
-          background: #f8fafc;
-          color: #64748b;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .action-icon-btn:hover { background: #25D366; color: white; }
-        .supplier-body { padding: 1.5rem; }
-        .supplier-stats {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-        .supplier-stat {
-          text-align: center;
-          padding: 0.75rem;
-          background: #f8fafc;
-          border-radius: 8px;
-        }
-        .supplier-stat-value { font-size: 1.25rem; font-weight: 800; color: #1e293b; }
-        .supplier-stat-label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem; }
-        .product-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .product-tag {
-          padding: 0.375rem 0.75rem;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: #64748b;
-        }
-        .supplier-footer {
-          padding: 1rem 1.5rem;
-          border-top: 1px solid #e2e8f0;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: rgba(248, 250, 252, 0.5);
-        }
-        .supplier-rating { display: flex; align-items: center; gap: 0.5rem; }
-        .stars { color: #f59e0b; font-size: 0.9rem; }
-        .rating-value { font-weight: 700; color: #1e293b; }
-        .last-order { font-size: 0.875rem; color: #64748b; }
-        .supplier-status {
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          padding: 0.375rem 0.875rem;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-        .status-active { background: rgba(37, 211, 102, 0.1); color: #10b981; }
-      `}</style>
+      
+      {/* Footer */}
+      <div className="p-3 md:p-4 border-t border-[#e2e8f0] flex justify-between items-center bg-[#f8fafc]/50">
+        <div className="flex items-center gap-1 text-xs md:text-sm">
+          <span className="text-yellow-500">
+            <i className="fas fa-star"></i>
+            <i className="fas fa-star"></i>
+            <i className="fas fa-star"></i>
+            <i className="fas fa-star"></i>
+            <i className="fas fa-star"></i>
+          </span>
+          <span className="font-bold">New</span>
+        </div>
+        <div className="text-xs md:text-sm text-[#64748b]">
+          {supplier.createdAt?.toDate ? supplier.createdAt.toDate().toLocaleDateString() : "Recently added"}
+        </div>
+      </div>
     </div>
   );
 }

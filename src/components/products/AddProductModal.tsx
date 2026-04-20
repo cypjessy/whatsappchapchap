@@ -801,33 +801,34 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4 overflow-y-auto">
         <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
           
           {/* Header */}
-          <div className="px-8 py-6 border-b border-slate-200 bg-gradient-to-r from-green-50 to-purple-50">
+          <div className="px-4 md:px-8 py-4 md:py-6 border-b border-slate-200 bg-gradient-to-r from-green-50 to-purple-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-extrabold flex items-center gap-3">
+              <h2 className="text-lg md:text-2xl font-extrabold flex items-center gap-2 md:gap-3">
                 <i className="fas fa-plus-circle text-green-500"></i>
-                Add New Product
+                <span className="md:hidden">Add Product</span>
+                <span className="hidden md:inline">Add New Product</span>
               </h2>
-              <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xl text-slate-500">
+              <button onClick={onClose} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-lg md:text-xl text-slate-500">
                 <i className="fas fa-times"></i>
               </button>
             </div>
           </div>
 
           {/* Body */}
-          <div className="overflow-y-auto p-8 flex-1" style={{ maxHeight: "calc(90vh - 180px)" }}>
+          <div className="overflow-y-auto p-4 md:p-8 flex-1" style={{ maxHeight: "calc(90vh - 140px)" }}>
             
             {/* SECTION 1: Basic Information */}
-            <div className="mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
+            <div className="mb-6 md:mb-8 pb-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 md:mb-5">
                 <i className="fas fa-info-circle"></i>
-                Basic Information
+                Basic Info
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="col-span-1 md:col-span-2">
                   <label className="block font-semibold text-sm mb-2 text-slate-700">
                     Product Name <span className="text-red-500">*</span>
                   </label>
@@ -836,11 +837,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     name="name" 
                     value={formData.name} 
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    className="w-full px-3 md:px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
                     placeholder="e.g., iPhone 15 Pro Max"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-1 md:col-span-2">
                   <label className="block font-semibold text-sm mb-2 text-slate-700">
                     Description
                   </label>
@@ -849,7 +850,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     value={formData.description} 
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50 resize-none"
+                    className="w-full px-3 md:px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50 resize-none"
                     placeholder="Describe your product..."
                   />
                 </div>
@@ -857,22 +858,22 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             </div>
 
             {/* SECTION 1.5: Pricing & Shipping */}
-            <div className="mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
+            <div className="mb-6 md:mb-8 pb-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 md:mb-5">
                 <i className="fas fa-dollar-sign"></i>
-                Pricing, Stock & Shipping
+                Pricing & Stock
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Base Price (KES) <span className="text-red-500">*</span>
+                    Price (KES) <span className="text-red-500">*</span>
                   </label>
                   <input 
                     type="number" 
                     name="price" 
                     value={formData.price} 
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
+                    className="w-full px-3 md:px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
                     placeholder="0.00"
                   />
                 </div>
@@ -1281,10 +1282,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-4">
+          <div className="px-4 md:px-8 py-4 md:py-5 border-t border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-end gap-2 md:gap-4">
             <button 
               onClick={onClose}
-              className="px-6 py-3 bg-white text-slate-700 border-2 border-slate-200 rounded-xl font-bold text-sm hover:border-green-500 hover:text-green-500 transition-all flex items-center gap-2"
+              className="flex-1 md:flex-none px-4 md:px-6 py-3 bg-white text-slate-700 border-2 border-slate-200 rounded-xl font-bold text-sm hover:border-green-500 hover:text-green-500 transition-all flex items-center justify-center gap-2 min-h-[48px]"
             >
               <i className="fas fa-times"></i>
               Cancel
@@ -1292,17 +1293,19 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             <button 
               onClick={saveProduct}
               disabled={saving}
-              className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 md:flex-none px-4 md:px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
             >
               {saving ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Saving...
+                  <span className="md:hidden">Saving...</span>
+                  <span className="hidden md:inline">Saving...</span>
                 </>
               ) : (
                 <>
                   <i className="fas fa-save"></i>
-                  Save Product
+                  <span className="md:hidden">Save</span>
+                  <span className="hidden md:inline">Save Product</span>
                 </>
               )}
             </button>
