@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMode } from "@/context/ModeContext";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -21,12 +22,13 @@ type NavItem = {
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
   const [localCollapsed, setLocalCollapsed] = useState(isExpanded);
+  const { mode, toggleMode } = useMode();
   
   // When isExpanded prop is true (mobile/tablet drawer), always show full sidebar
   // On desktop, use local state for hover collapse
   const isCollapsed = isExpanded ? false : localCollapsed;
 
-  const navItems: NavItem[] = [
+  const productNavItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
     { id: "orders", label: "Orders", icon: "fa-shopping-bag", href: "/orders", badge: "12" },
     { id: "products", label: "Products", icon: "fa-box", href: "/products", badge: null },
@@ -36,6 +38,19 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
     { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
     { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
   ];
+
+  const serviceNavItems: NavItem[] = [
+    { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
+    { id: "bookings", label: "Bookings", icon: "fa-calendar-check", href: "/bookings", badge: null },
+    { id: "services", label: "Services", icon: "fa-concierge-bell", href: "/services", badge: null },
+    { id: "clients", label: "Clients", icon: "fa-users", href: "/clients", badge: null },
+    { id: "staff", label: "Staff", icon: "fa-user-tie", href: "/staff", badge: null },
+    { id: "appointments", label: "Appointments", icon: "fa-clock", href: "/appointments", badge: null },
+    { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
+    { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
+  ];
+
+  const navItems = mode === "product" ? productNavItems : serviceNavItems;
 
   const isActive = (href: string) => pathname === href;
 
@@ -52,13 +67,34 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
       }}
       style={{ height: "100vh" }}
     >
-      <div className={`border-b border-[#e2e8f0] flex items-center ${isCollapsed ? "justify-center p-4" : "justify-start p-6 gap-3"}`}>
-        <Link href="/dashboard" className={`flex items-center ${isCollapsed ? "" : "gap-3"}`}>
+      <div className={`border-b border-[#e2e8f0] flex flex-col ${isCollapsed ? "p-2" : "p-4"} gap-2`}>
+        <Link href="/dashboard" className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
           <div className="w-11 h-11 bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-xl">
             <i className="fab fa-whatsapp"></i>
           </div>
           {!isCollapsed && <div className="text-xl font-extrabold text-[#1e293b]">Chap<span className="text-[#25D366]">Chap</span></div>}
         </Link>
+        
+        {/* Mode Toggle Switch */}
+        <button
+          onClick={toggleMode}
+          className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition-all ${
+            isCollapsed ? "flex-col" : ""
+          } ${mode === "product" ? "bg-[#f0fdf4] hover:bg-[#dcfce7]" : "bg-[#fef3c7] hover:bg-[#fde68a]"}`}
+        >
+          {mode === "product" ? (
+            <>
+              <i className="fas fa-box text-[#25D366]"></i>
+              {!isCollapsed && <span className="text-xs font-bold text-[#25D366]">Product Mode</span>}
+            </>
+          ) : (
+            <>
+              <i className="fas fa-concierge-bell text-[#f59e0b]"></i>
+              {!isCollapsed && <span className="text-xs font-bold text-[#f59e0b]">Service Mode</span>}
+            </>
+          )}
+          <i className={`fas fa-exchange-alt text-xs ${mode === "product" ? "text-[#25D366]" : "text-[#f59e0b]"}`}></i>
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
