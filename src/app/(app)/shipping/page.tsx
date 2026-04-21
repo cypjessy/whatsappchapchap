@@ -223,7 +223,7 @@ export default function ShippingPage() {
   };
 
 return (
-    <div className="max-w-[1600px] mx-auto p-3 md:p-6">
+    <div>
       <style jsx>{`
         @media (max-width: 768px) {
           .hide-scrollbar::-webkit-scrollbar { display: none; }

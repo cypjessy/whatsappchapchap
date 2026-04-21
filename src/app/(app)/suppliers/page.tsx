@@ -180,9 +180,9 @@ const filterByCategory = (category: string) => {
   };
 
   return (
-    <div className="suppliers-page max-w-[1600px] mx-auto">
+    <div className="suppliers-page">
       <style jsx>{`
-        .suppliers-page { margin: 0 auto; }
+        .suppliers-page { }
         .suppliers-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));

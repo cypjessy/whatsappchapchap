@@ -559,15 +559,45 @@ try {
 
       {/* Order Detail Modal */}
       {modalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 lg:p-8 overflow-y-auto" onClick={() => setModalOpen(false)}>
-          <div className="bg-white rounded-2xl md:rounded-2xl w-full max-w-[1000px] max-h-[calc(100vh-4rem)] overflow-hidden shadow-2xl animate-[modalSlideIn_0.4s_cubic-bezier(0.16,1,0.3,1)] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
+        <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-0 md:p-4 lg:p-8 overflow-y-auto" onClick={() => setModalOpen(false)}>
+          <div className="bg-white w-full min-h-screen md:min-h-0 md:rounded-2xl md:max-w-[1000px] md:max-h-[calc(100vh-4rem)] overflow-hidden shadow-2xl animate-[modalSlideIn_0.4s_cubic-bezier(0.16,1,0.3,1)] flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Mobile Header */}
+            <div className="md:hidden sticky top-0 z-10 bg-white border-b border-[#e2e8f0]">
+              <div className="p-3 flex items-center justify-between bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
+                <div className="flex items-center gap-2">
+                  <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-lg" onClick={() => setModalOpen(false)}>
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-lg flex items-center justify-center text-white text-sm">
+                    <i className="fas fa-shopping-bag"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-extrabold">
+                      <span className="text-[#25D366]">#{selectedOrder.orderNumber || selectedOrder.id.substring(0, 8)}</span>
+                    </h2>
+                    <p className="text-xs text-[#64748b]">{formatDate(selectedOrder.createdAt)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-lg" onClick={() => { if(confirm("Cancel this order?")) updateOrderStatus("cancelled"); }}>
+                    <i className="fas fa-trash-alt text-sm"></i>
+                  </button>
+                </div>
+              </div>
+              {/* Status badge */}
+              <div className={`px-3 py-2 text-xs font-bold uppercase ${selectedOrder.status === 'pending' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' : selectedOrder.status === 'processing' ? 'bg-[rgba(59,130,246,0.1)] text-[#3b82f6]' : selectedOrder.status === 'shipped' ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]' : selectedOrder.status === 'delivered' ? 'bg-[rgba(37,211,102,0.1)] text-[#10b981]' : 'bg-[rgba(239,68,68,0.1)] text-[#ef4444]'}`}>
+                {selectedOrder.status === "pending" ? "Payment Pending" : selectedOrder.status === "processing" ? "Order Processing" : selectedOrder.status === "shipped" ? "Order Shipped" : "Order Completed"}
+              </div>
+            </div>
+
+            {/* Desktop Header */}
+            <div className="hidden md:block p-4 md:p-6 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
                   <i className="fas fa-shopping-bag"></i>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-extrabold flex items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-extrabold flex items-center gap-2">
                     Order <span className="text-[#25D366]">#{selectedOrder.orderNumber || selectedOrder.id.substring(0, 8)}</span>
                     <select 
                       value={selectedOrder.status || 'pending'}
@@ -583,9 +613,9 @@ try {
                     </select>
                   </h2>
                   <div className="flex items-center gap-4 text-sm text-[#64748b] mt-1">
-                    <span><i className="far fa-calendar"></i> {formatDate(selectedOrder.createdAt)} at {formatTime(selectedOrder.createdAt)}</span>
+                    <span><i className="far fa-calendar"></i> {formatDate(selectedOrder.createdAt)}</span>
                     <span className="text-[#e2e8f0]">|</span>
-                    <span><i className="fas fa-clock"></i> 2 hours ago</span>
+                    <span><i className="fas fa-clock"></i> {formatTime(selectedOrder.createdAt)}</span>
                   </div>
                 </div>
               </div>
@@ -596,7 +626,8 @@ try {
               </div>
             </div>
 
-            <div className={`p-4 flex justify-between items-center border-b ${selectedOrder.status === "pending" ? "bg-gradient-to-r from-[rgba(245,158,11,0.1)] to-[rgba(245,158,11,0.05)]" : selectedOrder.status === "processing" ? "bg-gradient-to-r from-[rgba(59,130,246,0.1)] to-[rgba(59,130,246,0.05)]" : selectedOrder.status === "shipped" ? "bg-gradient-to-r from-[rgba(139,92,246,0.1)] to-[rgba(139,92,246,0.05)]" : "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(37,211,102,0.05)]"}`}>
+            {/* Status Bar - Desktop only */}
+            <div className={`hidden md:flex p-4 justify-between items-center border-b ${selectedOrder.status === "pending" ? "bg-gradient-to-r from-[rgba(245,158,11,0.1)] to-[rgba(245,158,11,0.05)]" : selectedOrder.status === "processing" ? "bg-gradient-to-r from-[rgba(59,130,246,0.1)] to-[rgba(59,130,246,0.05)]" : selectedOrder.status === "shipped" ? "bg-gradient-to-r from-[rgba(139,92,246,0.1)] to-[rgba(139,92,246,0.05)]" : "bg-gradient-to-r from-[rgba(37,211,102,0.1)] to-[rgba(37,211,102,0.05)]"}`}>
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${selectedOrder.status === "pending" ? "bg-[rgba(245,158,11,0.2)] text-[#f59e0b]" : selectedOrder.status === "processing" ? "bg-[rgba(59,130,246,0.2)] text-[#3b82f6]" : selectedOrder.status === "shipped" ? "bg-[rgba(139,92,246,0.2)] text-[#8b5cf6]" : "bg-[rgba(37,211,102,0.2)] text-[#10b981]"}`}>
                   <i className={`fas ${selectedOrder.status === "pending" ? "fa-clock" : selectedOrder.status === "processing" ? "fa-cog" : selectedOrder.status === "shipped" ? "fa-shipping-fast" : "fa-check-circle"}`}></i>
@@ -610,11 +641,44 @@ try {
 
             <div className="overflow-y-auto flex-1">
               <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
-                <div className="p-6 border-r border-[#e2e8f0]">
+                <div className="p-4 md:p-6 border-r border-[#e2e8f0]">
                   <div className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-4 flex items-center gap-2">
                     <i className="fas fa-box text-[#25D366]"></i>Order Items ({selectedOrder.products?.length || (selectedOrder.productName ? 1 : 0)})
                   </div>
-                  <table className="w-full border-collapse mb-4">
+                  
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-3 mb-4">
+                    {selectedOrder.products && selectedOrder.products.length > 0 ? (
+                      selectedOrder.products.map((product, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl shrink-0">📦</div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm truncate">{product.name}</h4>
+                            <div className="flex items-center gap-2 text-xs text-[#64748b]">
+                              <span>{formatCurrency(product.price)} x {product.quantity}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-sm">{formatCurrency(product.price * product.quantity)}</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : selectedOrder.productName ? (
+                      <div className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl shrink-0">📦</div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-sm">{selectedOrder.productName}</h4>
+                          <div className="text-xs text-[#64748b]">Qty: {selectedOrder.quantity || 1}</div>
+                        </div>
+                        <div className="font-bold text-sm">{formatCurrency((selectedOrder.basePrice || 0) * (selectedOrder.quantity || 1))}</div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-[#64748b] py-4">No items</div>
+                    )}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <table className="hidden md:table w-full border-collapse mb-4">
                     <thead>
                       <tr className="text-left">
                         <th className="py-3 px-3 text-xs font-bold uppercase tracking-wider text-[#64748b] bg-[#f8fafc] border-b-2 border-[#e2e8f0]">Product</th>
@@ -871,21 +935,21 @@ try {
               </div>
             </div>
 
-            <div className="p-5 border-t border-[#e2e8f0] flex justify-between items-center bg-white">
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center gap-2">
-                  <i className="fas fa-file-invoice"></i> Invoice
+            <div className="p-3 md:p-5 border-t border-[#e2e8f0] flex flex-col md:flex-row justify-between items-center gap-3 bg-white">
+              <div className="flex gap-2 w-full md:w-auto">
+                <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center justify-center gap-2">
+                  <i className="fas fa-file-invoice"></i> <span className="hidden md:inline">Invoice</span>
                 </button>
-                <button className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center gap-2">
-                  <i className="fas fa-receipt"></i> Receipt
+                <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center justify-center gap-2">
+                  <i className="fas fa-receipt"></i> <span className="hidden md:inline">Receipt</span>
                 </button>
               </div>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <button className="px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center gap-2" onClick={() => setShowStatusMenu(!showStatusMenu)}>
-                    <i className="fas fa-tag"></i> Update Status <i className="fas fa-chevron-up ml-2"></i>
+              <div className="flex gap-2 w-full md:w-auto">
+                <div className="relative flex-1 md:flex-none">
+                  <button className="w-full md:w-auto px-3 md:px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center justify-center gap-2" onClick={() => setShowStatusMenu(!showStatusMenu)}>
+                    <i className="fas fa-tag"></i> <span className="hidden md:inline">Update Status</span> <i className="fas fa-chevron-up ml-1 md:ml-2"></i>
                   </button>
-                  <div className={`absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-[#e2e8f0] min-w-[180px] ${showStatusMenu ? "block" : "hidden"}`}>
+                  <div className={`absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-[#e2e8f0] min-w-[180px] z-50 ${showStatusMenu ? "block" : "hidden"}`}>
                     <div className="py-1">
                       <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("delivered")}>
                         <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span> Mark Delivered
@@ -893,8 +957,8 @@ try {
                     </div>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center gap-2" onClick={processOrder}>
-                  <i className="fas fa-check"></i> Mark Delivered
+                <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center justify-center gap-2" onClick={processOrder}>
+                  <i className="fas fa-check"></i> <span className="hidden md:inline">Mark Delivered</span>
                 </button>
               </div>
             </div>

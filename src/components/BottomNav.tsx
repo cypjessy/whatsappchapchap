@@ -31,8 +31,9 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
     { id: "new-order", label: "New Order", icon: "fa-shopping-cart", href: "/orders?new=true" },
     { id: "add-product", label: "Add Product", icon: "fa-plus-square", href: "/products?new=true" },
     { id: "add-customer", label: "Add Customer", icon: "fa-user-plus", href: "/customers?new=true" },
-    { id: "analytics", label: "Analytics", icon: "fa-chart-line", href: "/reports" },
-    { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings" },
+    { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers" },
+    { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping" },
+    { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns" },
     { id: "help", label: "Help", icon: "fa-question-circle", href: "/help" },
   ];
 

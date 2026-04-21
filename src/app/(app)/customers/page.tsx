@@ -235,17 +235,13 @@ export default function CustomersPage() {
     }
     setSendingBroadcast(true);
     try {
-      const customersToMessage = activeSegment === "all" 
-        ? customers 
-        : customers.filter(c => c.segment === activeSegment);
-      
-      for (const customer of customersToMessage) {
+      for (const customer of customers) {
         if (customer.phone) {
           sendWhatsAppMessage(customer.phone, broadcastMessage);
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
-      alert(`Broadcast sent to ${customersToMessage.length} customers!`);
+      alert(`Broadcast sent to ${customers.length} customers!`);
       setShowBroadcastModal(false);
       setBroadcastMessage("");
     } catch (error) {
@@ -295,16 +291,6 @@ export default function CustomersPage() {
   };
 
   const filteredCustomers = customers.filter(c => {
-    if (activeSegment !== "all") {
-      const segmentMap: Record<string, string> = {
-        vip: "vip",
-        frequent: "frequent",
-        new: "new",
-        "at-risk": "at-risk",
-        inactive: "inactive"
-      };
-      if (segmentMap[activeSegment] !== c.segment) return false;
-    }
     if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase()) && !c.phone.includes(searchTerm)) return false;
     return true;
   }).sort((a, b) => {
@@ -319,31 +305,6 @@ export default function CustomersPage() {
         return 0;
     }
   });
-
-  const segments = [
-    { id: "all", label: "All Customers", count: customers.length },
-    { id: "vip", label: "VIP", icon: "fa-crown", iconColor: "text-[#fbbf24]", count: customers.filter(c => c.segment === "vip").length },
-    { id: "frequent", label: "Frequent Buyers", icon: "fa-shopping-bag", iconColor: "text-[#25D366]", count: customers.filter(c => c.segment === "frequent").length },
-    { id: "new", label: "New (30 days)", icon: "fa-star", iconColor: "text-[#3b82f6]", count: customers.filter(c => c.segment === "new").length },
-    { id: "at-risk", label: "At Risk", icon: "fa-exclamation-triangle", iconColor: "text-[#f59e0b]", count: customers.filter(c => c.segment === "at-risk").length },
-    { id: "inactive", label: "Inactive", icon: "fa-moon", iconColor: "text-[#64748b]", count: customers.filter(c => c.segment === "inactive").length },
-  ];
-
-  const getStatusClass = (status: string) => {
-    switch(status) {
-      case "online": return "bg-[#10b981]";
-      case "recent": return "bg-[#f59e0b]";
-      default: return "bg-[#64748b]";
-    }
-  };
-
-  const getTierClass = (tier: string) => {
-    switch(tier) {
-      case "VIP": return "bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-white";
-      case "New": return "bg-[#DCF8C6] text-[#128C7E]";
-      default: return "bg-[#f1f5f9] text-[#64748b]";
-    }
-  };
 
   const getColorFromString = (str: string) => {
     const colors = ["from-[#fbbf24] to-[#f59e0b]", "from-[#3b82f6] to-[#2563eb]", "from-[#ec4899] to-[#db2777]", "from-[#8b5cf6] to-[#7c3aed]", "from-[#10b981] to-[#059669]", "from-[#64748b] to-[#475569]"];
@@ -368,20 +329,7 @@ export default function CustomersPage() {
           </h1>
           <p className="text-[#64748b] text-sm hidden md:block">Build relationships and grow your business</p>
         </div>
-        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
-          <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[100px]">
-            <div className="text-lg md:text-2xl font-extrabold text-[#8b5cf6]">{customers.length}</div>
-            <div className="text-xs text-[#64748b]">Total</div>
-          </div>
-          <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[100px]">
-            <div className="text-lg md:text-2xl font-extrabold text-[#10b981]">{customers.filter(c => c.segment === "new").length}</div>
-            <div className="text-xs text-[#64748b]">New</div>
-          </div>
-          <div className="bg-white p-2 md:p-3 rounded-xl border border-[#e2e8f0] text-center min-w-[70px] md:min-w-[100px]">
-            <div className="text-lg md:text-2xl font-extrabold text-[#f59e0b]">{customers.filter(c => c.segment === "frequent").length}</div>
-            <div className="text-xs text-[#64748b]">Active</div>
-          </div>
-        </div>
+        
         <div className="flex gap-2 w-full md:w-auto">
           <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={exportToCSV}>
             <i className="fas fa-download mr-2"></i><span className="hidden md:inline">Export</span>
@@ -392,24 +340,7 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-xl md:rounded-2xl p-4 md:p-6 mb-4 md:mb-6 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-radial-gradient from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
-          <div className="flex gap-6 md:gap-8">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-extrabold">{formatCurrency(customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) / (customers.length || 1))}</div>
-              <div className="text-xs md:text-sm opacity-80">Avg. LTV</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-extrabold">{Number(customers.reduce((sum, c) => sum + (c.orderCount || 0), 0) / (customers.length || 1)).toFixed(0)}</div>
-              <div className="text-xs md:text-sm opacity-80">Avg. Orders</div>
-            </div>
-          </div>
-          <button className="px-3 md:px-4 py-2 bg-white text-[#8b5cf6] rounded-xl font-semibold text-sm w-full md:w-auto">
-            <i className="fas fa-chart-pie mr-2"></i><span className="hidden md:inline">Segments</span>
-          </button>
-        </div>
-      </div>
+      
 
       <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-4 mb-4 flex flex-col md:flex-row gap-3 md:gap-4 border border-[#e2e8f0] justify-between">
         <div className="flex gap-2 md:gap-4 flex-1">
@@ -417,12 +348,7 @@ export default function CustomersPage() {
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
             <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
           </div>
-          <select className="px-3 md:px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm">
-            <option>All Tiers</option>
-            <option>VIP</option>
-            <option>Regular</option>
-            <option>New</option>
-          </select>
+          
           <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
             <option value="recent">Most Recent</option>
             <option value="highestLTV">Highest LTV</option>
@@ -435,15 +361,7 @@ export default function CustomersPage() {
         </button>
       </div>
 
-      <div className="flex gap-3 mb-6 flex-wrap">
-        {segments.map(seg => (
-          <button key={seg.id} onClick={() => setActiveSegment(seg.id)} className={`px-5 py-3 rounded-full font-semibold text-sm flex items-center gap-2 transition-all ${activeSegment === seg.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]"}`}>
-            {seg.icon && <i className={`fas ${seg.icon} ${activeSegment === seg.id ? '' : seg.iconColor}`}></i>}
-            {seg.label}
-            <span className="px-2 py-0.5 rounded-full text-xs bg-white/20">{seg.count}</span>
-          </button>
-        ))}
-      </div>
+      
 
       {loading ? (
         <div className="p-8 text-center">
@@ -475,9 +393,6 @@ export default function CustomersPage() {
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-[#64748b]"><i className="fab fa-whatsapp text-[#25D366] mr-1"></i>{customer.phone}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getTierClass(customer.segment === "vip" ? "VIP" : customer.segment === "new" ? "New" : "Regular")}`}>
-                        {customer.segment || "Regular"}
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -497,10 +412,6 @@ export default function CustomersPage() {
                   </div>
                   <div>
                     <div className="font-bold text-[#1e293b]">{customer.name}</div>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${getTierClass(customer.segment === "vip" ? "VIP" : customer.segment === "new" ? "New" : "Regular")}`}>
-                      {customer.segment === "vip" && <i className="fas fa-crown text-xs"></i>}
-                      {customer.segment || "Regular"}
-                    </span>
                   </div>
                 </div>
                 <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-lg">
@@ -574,11 +485,6 @@ export default function CustomersPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-extrabold mb-1">{selectedCustomer.name}</h2>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${getTierClass(selectedCustomer.segment === "vip" ? "VIP" : selectedCustomer.segment === "new" ? "New" : "Regular")}`}>
-                      <i className="fas fa-crown mr-1"></i>{selectedCustomer.segment || "Regular"} Customer
-                    </span>
-                  </div>
                 </div>
               </div>
               <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-white border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white transition-all">
@@ -845,21 +751,8 @@ export default function CustomersPage() {
               {/* Segment & Tags */}
               <div>
                 <h3 className="text-sm font-bold text-[#64748b] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <i className="fas fa-tags text-[#ec4899]"></i>Segment & Tags
+                  <i className="fas fa-tags text-[#ec4899]"></i>Tags
                 </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {[
-                    { id: "", label: "Regular", icon: "fa-user" },
-                    { id: "vip", label: "VIP", icon: "fa-crown" },
-                    { id: "frequent", label: "Frequent", icon: "fa-shopping-bag" },
-                    { id: "new", label: "New", icon: "fa-star" },
-                  ].map(seg => (
-                    <button key={seg.id} type="button" onClick={() => setNewCustomer(prev => ({ ...prev, segment: seg.id }))} className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${newCustomer.segment === seg.id ? "border-[#25D366] bg-[#DCF8C6]/30" : "border-[#e2e8f0] hover:border-[#cbd5e1]"}`}>
-                      <i className={`fas ${seg.icon} text-xs`}></i>
-                      <span className="text-xs font-semibold">{seg.label}</span>
-                    </button>
-                  ))}
-                </div>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {newCustomer.tags.map((tag, i) => (
                     <span key={i} className="px-3 py-1 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-semibold flex items-center gap-1.5">
@@ -949,7 +842,7 @@ export default function CustomersPage() {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-[#64748b]">
-                This will send a WhatsApp message to all {activeSegment === "all" ? customers.length : customers.filter(c => c.segment === activeSegment).length} customers in the "{segments.find(s => s.id === activeSegment)?.label}" segment.
+                This will send a WhatsApp message to all {customers.length} customers.
               </p>
               <div>
                 <label className="block font-semibold text-sm mb-2">Message</label>

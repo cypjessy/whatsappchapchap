@@ -72,7 +72,7 @@ export default function HelpPage() {
       </section>
 
       {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="px-4 md:px-6">
         {/* Categories */}
         <h2 className="text-2xl font-extrabold mb-6 flex items-center gap-3">
           <i className="fas fa-th-large text-[#25D366]"></i>Browse by Category

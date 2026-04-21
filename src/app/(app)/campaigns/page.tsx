@@ -112,7 +112,7 @@ export default function CampaignsPage() {
   return (
     <div className="campaigns-page">
       <style jsx>{`
-        .campaigns-page { max-width: 1600px; margin: 0 auto; }
+        .campaigns-page { }
         .page-header {
           display: flex;
           justify-content: space-between;
