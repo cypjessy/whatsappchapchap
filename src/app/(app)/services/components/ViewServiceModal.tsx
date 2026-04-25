@@ -99,8 +99,8 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           {/* Header Banner with Emoji */}
             <div className={`h-40 bg-gradient-to-br ${service.bgGradient} flex items-center justify-center relative mb-4 rounded-lg mx-4 mt-4`}>
             <span className="text-6xl">{businessTypeIcons[service.businessType || 'other']}</span>
-            <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusClass(service.status)}`}>
-              {service.status}
+            <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusClass(service.status || 'active')}`}>
+              {service.status || 'active'}
             </span>
           </div>
 
@@ -153,8 +153,8 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                </div>
               <div className="p-3 bg-[#f8fafc] rounded-lg">
                 <div className="text-xs text-[#64748b] mb-1">Status</div>
-                <div className={`font-semibold px-2 py-1 rounded text-xs inline-block ${getStatusClass(service.status)}`}>
-                  {service.status}
+                <div className={`font-semibold px-2 py-1 rounded text-xs inline-block ${getStatusClass(service.status || 'active')}`}>
+                  {service.status || 'active'}
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                 Duration
               </div>
               <div className="font-semibold">
-                {service.selectedDuration === 'custom' ? 'Custom' : `${service.selectedDuration} minutes`}
+                {String(service.selectedDuration) === 'custom' ? 'Custom' : `${service.selectedDuration} minutes`}
               </div>
             </div>
           )}
@@ -219,7 +219,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                       {key.replace(/_/g, ' ')}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {values.map((val, idx) => (
+                      {(values as string[]).map((val: string, idx: number) => (
                         <span key={idx} className="px-3 py-1 bg-[#ede9fe] text-[#7c3aed] rounded-full text-sm font-medium">
                           {val}
                         </span>

@@ -17,8 +17,8 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }: Crea
   const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    type: "broadcast" as Campaign["type"],
-    segment: "all" as Campaign["segment"],
+    type: "broadcast",
+    segment: "all",
     message: "",
     schedule: "now",
     scheduledDate: "",
@@ -120,14 +120,12 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }: Crea
     try {
       const campaignData = {
         name: formData.name,
-        type: formData.type as Campaign["type"],
-        segment: formData.segment as Campaign["segment"],
         message: formData.message,
-        status: (formData.schedule === "now" ? "running" : "scheduled") as Campaign["status"],
+        status: (formData.schedule === "now" ? "sent" : "scheduled") as Campaign["status"],
         scheduledAt: formData.schedule === "later" && formData.scheduledDate && formData.scheduledTime
-          ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString()
+          ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`)
           : undefined,
-        recipientCount: formData.segment === "all" ? 12456 : formData.segment === "vip" ? 2340 : formData.segment === "new" ? 1890 : formData.segment === "inactive" ? 3240 : 0,
+        recipientCount: 0,
         deliveredCount: 0,
         responseCount: 0,
       };

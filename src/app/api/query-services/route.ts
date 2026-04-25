@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { Service } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (search) {
       // Note: Firestore doesn't support full-text search, so we'll filter client-side
       const snapshot = await getDocs(q);
-      const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Service[];
       
       const filtered = services.filter(s => 
         s.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Get all services
     const snapshot = await getDocs(q);
-    const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Service[];
 
     // If specific service name requested
     if (serviceName) {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       if (found) {
         return NextResponse.json({ 
           service: found,
-          message: `Found service: ${found.name}\nPrice: KES ${found.price?.toLocaleString()}\nDuration: ${found.duration || 'N/A'}\n${found.description || ''}`
+          message: `Found service: ${found.name}\nPrice: KES ${found.priceMin?.toLocaleString()}${found.priceMax ? ` - ${found.priceMax.toLocaleString()}` : ''}\nDuration: ${found.duration || 'N/A'}\n${found.description || ''}`
         });
       }
       
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     const snapshot = await getDocs(q);
-    const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Service[];
 
     if (serviceName) {
       const found = services.find(s => 
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       if (found) {
         return NextResponse.json({ 
           service: found,
-          message: `Found service: ${found.name}\nPrice: KES ${found.price?.toLocaleString()}\nDuration: ${found.duration || 'N/A'}\n${found.description || ''}`
+          message: `Found service: ${found.name}\nPrice: KES ${found.priceMin?.toLocaleString()}${found.priceMax ? ` - ${found.priceMax.toLocaleString()}` : ''}\nDuration: ${found.duration || 'N/A'}\n${found.description || ''}`
         });
       }
       

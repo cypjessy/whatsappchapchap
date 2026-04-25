@@ -185,14 +185,39 @@ export interface Product {
   name: string;
   description?: string;
   price: number;
+  salePrice?: number; // Sale/discounted price
+  costPrice?: number; // Cost price for profit calculation
   category?: string;
+  brand?: string;
+  condition?: string; // Product condition (new, used, refurbished)
   imageUrl?: string;
   image?: string; // For backward compatibility
+  images?: string[]; // Array of product images
   stock?: number;
+  lowStockAlert?: number; // Low stock alert threshold
+  filters?: {
+    colors?: string[];
+    sizes?: string[];
+    brands?: string[];
+    [key: string]: any;
+  };
+  sku?: string; // Stock keeping unit
+  barcode?: string; // Barcode/ISBN
+  taxEnabled?: boolean; // Tax enabled flag
+  taxRate?: number; // Tax rate percentage
+  warranty?: string; // Warranty information
+  weight?: number; // Product weight
+  weightUnit?: string; // Weight unit (kg, lbs, etc)
+  dimensions?: { // Product dimensions
+    length?: number;
+    width?: number;
+    height?: number;
+  };
   status?: "active" | "paused" | "draft";
   views?: number;
   orders?: number;
   rating?: number;
+  orderLink?: string; // Order link for WhatsApp ordering
   createdAt: any;
   updatedAt: any;
 }
@@ -327,6 +352,8 @@ export interface Campaign {
   deliveredCount: number;
   responseCount: number;
   status: "draft" | "scheduled" | "sent" | "failed";
+  type?: string; // Optional field for campaign type (broadcast, automated, promo)
+  segment?: string; // Optional field for audience segment
   scheduledAt?: any;
   sentAt?: any;
   createdAt: any;

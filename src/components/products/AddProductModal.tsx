@@ -754,26 +754,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
-        categoryName: categoryData[selectedCategory]?.subcategories[selectedSubcategory!]?.name || customSubcategories[selectedSubcategory!]?.name || selectedSubcategory,
-        subcategory: selectedSubcategory,
-        filters: filters,
         price: minPrice,
         stock: stock,
-        lowStockAlert: parseInt(formData.lowStockAlert) || 5,
         image: imageUrl,
-        images: images.length > 1 ? images : undefined,
-        shippingMethods: shippingMethods.filter(m => m.enabled).map(m => ({
-          id: m.id,
-          name: m.name,
-          price: parseInt(m.price) || 0,
-        })),
-        paymentMethods: paymentMethods.filter(m => m.enabled).map(m => ({
-          id: m.id,
-          name: m.name,
-          details: m.details,
-        })),
         status: "active" as const,
-        variants: variantsWithPrice,
       });
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";

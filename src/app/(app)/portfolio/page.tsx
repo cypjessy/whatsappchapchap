@@ -436,10 +436,10 @@ export default function PortfolioPage() {
                     <div key={testimonial.id} className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-sm hover:shadow-md transition-all">
                       <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] flex items-center justify-center font-bold text-lg text-[#7c3aed]">
-                          {(testimonial.clientName || "A")[0]}
+                          {(testimonial.customerName || "A")[0]}
                         </div>
                         <div>
-                          <div className="font-bold text-[#1e293b]">{testimonial.clientName || "Anonymous"}</div>
+                          <div className="font-bold text-[#1e293b]">{testimonial.customerName || "Anonymous"}</div>
                           <div className="text-sm text-[#64748b]">{new Date(testimonial.createdAt?.toDate()).toLocaleDateString()}</div>
                         </div>
                       </div>

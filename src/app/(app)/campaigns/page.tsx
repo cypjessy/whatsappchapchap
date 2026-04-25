@@ -49,7 +49,7 @@ export default function CampaignsPage() {
   const loadCustomers = async () => {
     if (!user) return;
     try {
-      const data = await customerService.getCustomers(user);
+      const data = await customerService.getClients(user);
       setCustomers(data);
     } catch (error) {
       console.error("Error loading customers:", error);
@@ -59,9 +59,9 @@ export default function CampaignsPage() {
   const getStats = (): CampaignStats => {
     return {
       total: campaigns.length,
-      active: campaigns.filter(c => c.status === "running" || c.status === "sending").length,
+      active: campaigns.filter(c => c.status === "sent").length,
       scheduled: campaigns.filter(c => c.status === "scheduled").length,
-      completed: campaigns.filter(c => c.status === "completed").length,
+      completed: campaigns.filter(c => c.status === "sent").length,
       totalReach: campaigns.reduce((acc, c) => acc + (c.recipientCount || 0), 0),
     };
   };
@@ -71,11 +71,8 @@ export default function CampaignsPage() {
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = !searchTerm || 
       campaign.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !typeFilter || campaign.type === typeFilter;
-    const matchesTab = activeTab === "all" || campaign.status === activeTab || 
-      (activeTab === "running" && (campaign.status === "running" || campaign.status === "sending")) ||
-      (activeTab === "draft" && campaign.status === "draft");
-    return matchesSearch && matchesType && matchesTab;
+    const matchesTab = activeTab === "all" || campaign.status === activeTab;
+    return matchesSearch && matchesTab;
   });
 
   const tabs = [
@@ -394,10 +391,6 @@ export default function CampaignsPage() {
             <div key={campaign.id} className="campaign-card" onClick={() => { setSelectedCampaign(campaign); setShowViewModal(true); }} style={{ cursor: "pointer" }}>
               <div className="campaign-header">
                 <div>
-                  <span className={`campaign-type ${getTypeClass(campaign.type)}`}>
-                    <i className={campaign.type === "broadcast" ? "fas fa-broadcast-tower" : campaign.type === "automated" ? "fas fa-robot" : "fas fa-percentage"}></i>
-                    {campaign.type}
-                  </span>
                   <div className="campaign-title">{campaign.name}</div>
                   <div className="campaign-date">
                     <i className="fas fa-calendar"></i>
@@ -426,10 +419,10 @@ export default function CampaignsPage() {
                   </div>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: campaign.status === "completed" ? "100%" : "50%" }}></div>
+                  <div className="progress-fill" style={{ width: campaign.status === "sent" ? "100%" : "50%" }}></div>
                 </div>
                 <div className="progress-text">
-                  <span>{campaign.status === "completed" ? "100% Complete" : "In Progress"}</span>
+                  <span>{campaign.status === "sent" ? "100% Complete" : "In Progress"}</span>
                   <span>{campaign.recipientCount || 0} recipients</span>
                 </div>
               </div>
@@ -439,9 +432,6 @@ export default function CampaignsPage() {
                   {campaign.status}
                 </div>
                 <div className="campaign-actions">
-                  {campaign.status === "running" && (
-                    <button className="action-btn-sm btn-pause" onClick={(e) => e.stopPropagation()}><i className="fas fa-pause"></i> Pause</button>
-                  )}
                   <button className="action-btn-sm btn-analytics" onClick={(e) => { e.stopPropagation(); setSelectedCampaign(campaign); setShowViewModal(true); }}><i className="fas fa-chart-bar"></i> Stats</button>
                 </div>
               </div>

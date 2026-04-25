@@ -78,8 +78,8 @@ export default function ViewCampaignModal({ campaign, isOpen, onClose, onPause, 
           <div className="modal-header-content">
             <div className="header-top">
               <span className="campaign-badge">
-                <i className={getTypeIcon(campaign.type)}></i>
-                {getTypeLabel(campaign.type)}
+                <i className={getTypeIcon(campaign.type || 'broadcast')}></i>
+                {getTypeLabel(campaign.type || 'broadcast')}
               </span>
               <div className="header-actions">
                 <button className="header-btn" title="Refresh">
@@ -117,12 +117,10 @@ export default function ViewCampaignModal({ campaign, isOpen, onClose, onPause, 
         <div className="status-bar">
           <div className={`status-indicator ${getStatusClass(campaign.status)}`}>
             <span className="status-dot"></span>
-            {campaign.status === "running" && "Currently Running"}
-            {campaign.status === "sending" && "Sending"}
+            {campaign.status === "sent" && "Sent"}
             {campaign.status === "scheduled" && "Scheduled"}
-            {campaign.status === "paused" && "Paused"}
-            {campaign.status === "completed" && "Completed"}
             {campaign.status === "draft" && "Draft"}
+            {campaign.status === "failed" && "Failed"}
           </div>
           <div className="progress-info">
             <div className="progress-bar">
@@ -131,12 +129,6 @@ export default function ViewCampaignModal({ campaign, isOpen, onClose, onPause, 
             <span className="progress-text">{currentSent.toLocaleString()} of {totalRecipients.toLocaleString()} sent ({Math.round(progress)}%)</span>
           </div>
           <div className="action-buttons">
-            {campaign.status === "running" && (
-              <button className="btn-sm btn-outline" onClick={onPause}>
-                <i className="fas fa-pause"></i>
-                Pause
-              </button>
-            )}
             <button className="btn-sm btn-primary-sm" onClick={() => alert("Boost feature coming soon")}>
               <i className="fas fa-rocket"></i>
               Boost

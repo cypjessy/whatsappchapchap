@@ -73,8 +73,8 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
       const customCats: Category[] = customCategories.map(cat => ({
         id: cat.id,
         name: cat.name,
-        icon: cat.icon,
-        color: cat.color,
+        icon: cat.icon || "fas fa-folder",
+        color: cat.color || "#64748b",
         productCount: productCounts[cat.id] || 0,
         views: 0,
         status: "active" as const,
@@ -179,13 +179,12 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
           icon: formData.icon,
           color: formData.color,
           description: formData.description,
-          isDefault: false,
         });
         const newCategory: Category = {
           id: newCat.id,
           name: newCat.name,
-          icon: newCat.icon,
-          color: newCat.color,
+          icon: newCat.icon || "fas fa-folder",
+          color: newCat.color || "#64748b",
           productCount: 0,
           views: 0,
           status: "active",
