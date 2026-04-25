@@ -52,6 +52,13 @@ export default function CustomersPage() {
   const [customerNotes, setCustomerNotes] = useState("");
   const [customerTags, setCustomerTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [bulkSelected, setBulkSelected] = useState<string[]>([]);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRangeStart, setDateRangeStart] = useState("");
+  const [dateRangeEnd, setDateRangeEnd] = useState("");
+  const [spendingMin, setSpendingMin] = useState<number | "">("");
+  const [spendingMax, setSpendingMax] = useState<number | "">("");
 
   useEffect(() => {
     if (!user) return;
@@ -62,7 +69,7 @@ export default function CustomersPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await customerService.getCustomers(user);
+      const data = await customerService.getClients(user);
       setCustomers(data);
     } catch (error) {
       console.error("Error loading customers:", error);
@@ -119,14 +126,19 @@ export default function CustomersPage() {
       const fullName = `${newCustomer.firstName.trim()} ${newCustomer.lastName.trim()}`.trim();
       const fullPhone = newCustomer.countryCode + newCustomer.phone.replace(/[^0-9]/g, "");
       
-      await customerService.createCustomer(user, {
+      await customerService.createClient(user, {
         name: fullName,
         phone: fullPhone,
         email: newCustomer.email.trim() || undefined,
-        address: fullAddress || undefined,
+        location: fullAddress || undefined,
         notes: newCustomer.notes.trim() || undefined,
-        segment: newCustomer.segment || undefined,
-        tags: newCustomer.tags.length > 0 ? newCustomer.tags : undefined,
+        initials: `${newCustomer.firstName.charAt(0)}${newCustomer.lastName.charAt(0)}`.toUpperCase(),
+        status: 'new',
+        verified: false,
+        visits: 0,
+        totalSpent: 0,
+        rating: 0,
+        services: [],
       });
       loadCustomers();
       setShowAddModal(false);
@@ -174,7 +186,7 @@ export default function CustomersPage() {
   const deleteCustomer = async () => {
     if (!user || !selectedCustomer) return;
     try {
-      await customerService.deleteCustomer(user, selectedCustomer.id);
+      await customerService.deleteClient(user, selectedCustomer.id);
       loadCustomers();
       setShowModal(false);
       setShowDeleteConfirm(false);
@@ -187,8 +199,9 @@ export default function CustomersPage() {
     if (!user) return;
     setLoadingOrders(true);
     try {
-      const orders = await orderService.getOrdersByCustomerId(user, customerId);
-      setCustomerOrders(orders);
+      const orders = await orderService.getOrders(user);
+      const customerOrders = orders.filter(o => o.customerId === customerId);
+      setCustomerOrders(customerOrders);
     } catch (error) {
       console.error("Error loading customer orders:", error);
       setCustomerOrders([]);
@@ -209,15 +222,15 @@ export default function CustomersPage() {
   };
 
   const exportToCSV = () => {
-    const headers = ["Name", "Phone", "Email", "Address", "Total Spent", "Orders", "Segment", "Created"];
+    const headers = ["Name", "Phone", "Email", "Location", "Total Spent", "Visits", "Status", "Created"];
     const rows = filteredCustomers.map(c => [
       c.name,
       c.phone,
-      c.email,
-      c.address,
+      c.email || '',
+      c.location || '',
       c.totalSpent || 0,
-      c.orderCount || 0,
-      c.segment || "regular",
+      c.visits || 0,
+      c.status,
       c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : "N/A"
     ]);
     const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
@@ -254,7 +267,7 @@ export default function CustomersPage() {
   const updateCustomerNotes = async () => {
     if (!user || !selectedCustomer) return;
     try {
-      await customerService.updateCustomer(user, selectedCustomer.id, { notes: customerNotes });
+      await customerService.updateClient(user, selectedCustomer.id, { notes: customerNotes });
       loadCustomers();
     } catch (error) {
       console.error("Error updating notes:", error);
@@ -264,8 +277,8 @@ export default function CustomersPage() {
   const updateCustomerTags = async () => {
     if (!user || !selectedCustomer) return;
     try {
-      await customerService.updateCustomer(user, selectedCustomer.id, { tags: customerTags });
-      loadCustomers();
+      // Tags not supported in Client interface, skip for now
+      alert('Tags feature coming soon!');
     } catch (error) {
       console.error("Error updating tags:", error);
     }
@@ -283,24 +296,247 @@ export default function CustomersPage() {
     setCustomerTags(customerTags.filter(t => t !== tag));
   };
 
+  // Analytics calculations
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter(c => c.status === 'active').length;
+  const vipCustomers = customers.filter(c => c.status === 'vip').length;
+  const newCustomers = customers.filter(c => c.status === 'new').length;
+  const totalRevenue = customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
+  const avgOrderValue = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+
+  // Bulk selection handlers
+  const selectAllCustomers = () => {
+    if (bulkSelected.length === filteredCustomers.length) {
+      setBulkSelected([]);
+    } else {
+      setBulkSelected(filteredCustomers.map(c => c.id));
+    }
+  };
+
+  const toggleCustomerSelection = (customerId: string) => {
+    setBulkSelected(prev => 
+      prev.includes(customerId) 
+        ? prev.filter(id => id !== customerId)
+        : [...prev, customerId]
+    );
+  };
+
+  // Bulk status update
+  const handleBulkStatusUpdate = async (newStatus: 'active' | 'new' | 'vip' | 'inactive') => {
+    if (!user || bulkSelected.length === 0) return;
+    try {
+      await Promise.all(
+        bulkSelected.map(id => customerService.updateClient(user, id, { status: newStatus }))
+      );
+      loadCustomers();
+      setBulkSelected([]);
+      setBulkMode(false);
+      alert(`Updated ${bulkSelected.length} customers to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating customers:", error);
+      alert("Failed to update some customers");
+    }
+  };
+
+  // Bulk delete
+  const handleBulkDelete = async () => {
+    if (!user || bulkSelected.length === 0) return;
+    try {
+      await Promise.all(
+        bulkSelected.map(id => customerService.deleteClient(user, id))
+      );
+      loadCustomers();
+      setBulkSelected([]);
+      setBulkMode(false);
+      alert(`Deleted ${bulkSelected.length} customers`);
+    } catch (error) {
+      console.error("Error deleting customers:", error);
+      alert("Failed to delete some customers");
+    }
+  };
+
+  // Duplicate customer
+  const handleDuplicateCustomer = async (customer: Customer) => {
+    if (!user) return;
+    try {
+      const initials = customer.initials || customer.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      await customerService.createClient(user, {
+        name: `${customer.name} (Copy)`,
+        phone: customer.phone,
+        email: customer.email,
+        location: customer.location,
+        notes: customer.notes,
+        initials: initials,
+        status: customer.status,
+        verified: customer.verified,
+        visits: customer.visits,
+        totalSpent: customer.totalSpent,
+        rating: customer.rating,
+        services: customer.services,
+      });
+      loadCustomers();
+      alert('Customer duplicated successfully!');
+    } catch (error) {
+      console.error("Error duplicating customer:", error);
+      alert("Failed to duplicate customer");
+    }
+  };
+
+  // Print customer profile
+  const printCustomerProfile = (customer: Customer) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Customer Profile - ${customer.name}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #25D366; padding-bottom: 20px; }
+          .logo { font-size: 24px; font-weight: bold; color: #25D366; }
+          .avatar { width: 100px; height: 100px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; font-weight: bold; }
+          .name { font-size: 28px; font-weight: bold; margin: 10px 0; }
+          .status { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; }
+          .section { margin: 30px 0; }
+          .section-title { font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+          .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+          .info-label { font-weight: 600; color: #64748b; }
+          .info-value { font-weight: 500; color: #1e293b; }
+          .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+          .stat-card { background: #f8fafc; padding: 15px; border-radius: 12px; text-align: center; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #25D366; }
+          .stat-label { font-size: 12px; color: #64748b; margin-top: 5px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">CUSTOMER PROFILE</div>
+          <div class="avatar" style="background: linear-gradient(135deg, #25D366, #128C7E);">
+            ${customer.initials || customer.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+          </div>
+          <div class="name">${customer.name}</div>
+          <div class="status" style="background: ${customer.status === 'vip' ? '#fef3c7; color: #f59e0b' : customer.status === 'active' ? '#dcfce7; color: #10b981' : customer.status === 'new' ? '#dbeafe; color: #3b82f6' : '#fee2e2; color: #ef4444'}; text-transform: capitalize;">
+            ${customer.status}
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value">${formatCurrency(customer.totalSpent || 0)}</div>
+            <div class="stat-label">Total Spent</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${customer.visits || 0}</div>
+            <div class="stat-label">Visits</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${customer.visits || 0}</div>
+            <div class="stat-label">Visits</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Contact Information</div>
+          <div class="info-row">
+            <span class="info-label">Phone</span>
+            <span class="info-value">${customer.phone}</span>
+          </div>
+          ${customer.email ? `
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">${customer.email}</span>
+          </div>` : ''}
+          ${customer.location ? `
+          <div class="info-row">
+            <span class="info-label">Address</span>
+            <span class="info-value">${customer.location}</span>
+          </div>` : ''}
+        </div>
+
+        ${customer.rating ? `
+        <div class="section">
+          <div class="section-title">Rating</div>
+          <div class="info-row">
+            <span class="info-label">Customer Rating</span>
+            <span class="info-value">${customer.rating.toFixed(1)} ⭐</span>
+          </div>
+        </div>` : ''}
+
+        ${customer.notes ? `
+        <div class="section">
+          <div class="section-title">Notes</div>
+          <p style="color: #64748b; line-height: 1.6;">${customer.notes}</p>
+        </div>` : ''}
+
+        <div style="margin-top: 40px; text-align: center; color: #64748b; border-top: 2px solid #e2e8f0; padding-top: 20px;">
+          <p>Generated on ${new Date().toLocaleDateString()}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  // Share customer via WhatsApp
+  const shareCustomerWhatsApp = (customer: Customer) => {
+    const message = `👤 *Customer Contact*\n\n*Name:* ${customer.name}\n📱 *Phone:* ${customer.phone}${customer.email ? `\n📧 *Email:* ${customer.email}` : ''}${customer.location ? `\n📍 *Location:* ${customer.location}` : ''}\n\n💰 *Total Spent:* ${formatCurrency(customer.totalSpent || 0)}\n⭐ *Rating:* ${customer.rating ? customer.rating.toFixed(1) : 'N/A'}\n\nSave this contact!`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const openCustomerModal = (customer: Customer) => {
     setSelectedCustomer(customer);
     setCustomerNotes(customer.notes || "");
-    setCustomerTags(customer.tags || []);
+    setCustomerTags([]);
     setShowModal(true);
   };
 
   const filteredCustomers = customers.filter(c => {
+    // Search filter
     if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase()) && !c.phone.includes(searchTerm)) return false;
+    
+    // Status filter
+    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    
+    // Date range filter
+    if (dateRangeStart || dateRangeEnd) {
+      const customerDate = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+      if (dateRangeStart && customerDate < new Date(dateRangeStart)) return false;
+      if (dateRangeEnd) {
+        const endDate = new Date(dateRangeEnd);
+        endDate.setHours(23, 59, 59, 999);
+        if (customerDate > endDate) return false;
+      }
+    }
+    
+    // Spending range filter
+    if (spendingMin !== "" && (c.totalSpent || 0) < Number(spendingMin)) return false;
+    if (spendingMax !== "" && (c.totalSpent || 0) > Number(spendingMax)) return false;
+    
     return true;
   }).sort((a, b) => {
     switch(sortBy) {
       case "highestLTV":
         return (b.totalSpent || 0) - (a.totalSpent || 0);
       case "mostOrders":
-        return (b.orderCount || 0) - (a.orderCount || 0);
+        return (b.visits || 0) - (a.visits || 0);
       case "name":
         return a.name.localeCompare(b.name);
+      case "oldest":
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return dateA.getTime() - dateB.getTime();
+      case "rating":
+        return (b.rating || 0) - (a.rating || 0);
+      case "visits":
+        return (b.visits || 0) - (a.visits || 0);
       default:
         return 0;
     }
@@ -334,26 +570,120 @@ export default function CustomersPage() {
           <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={exportToCSV}>
             <i className="fas fa-download mr-2"></i><span className="hidden md:inline">Export</span>
           </button>
+          <button 
+            className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-xl font-semibold text-sm shadow-lg transition-all ${bulkMode ? 'bg-[#ef4444] text-white' : 'bg-white border-2 border-[#e2e8f0] text-[#64748b]'}`}
+            onClick={() => { setBulkMode(!bulkMode); setBulkSelected([]); }}
+          >
+            <i className={`fas ${bulkMode ? 'fa-times' : 'fa-check-square'} mr-2`}></i>
+            <span className="hidden md:inline">{bulkMode ? 'Cancel' : 'Select'}</span>
+          </button>
           <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg" onClick={() => setShowAddModal(true)}>
             <i className="fas fa-user-plus mr-2"></i><span className="hidden md:inline">Add Customer</span><span className="md:hidden">+</span>
           </button>
         </div>
       </div>
 
+      {/* Stats Section */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+        <div className="bg-white rounded-xl md:rounded-2xl p-4 border border-[#e2e8f0] shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-[#DCF8C6] rounded-xl flex items-center justify-center">
+              <i className="fas fa-users text-[#25D366] text-lg md:text-xl"></i>
+            </div>
+            <span className="text-xs text-[#64748b] font-semibold">Total</span>
+          </div>
+          <div className="font-extrabold text-xl md:text-2xl text-[#1e293b]">{totalCustomers}</div>
+          <div className="text-xs text-[#64748b] mt-1">All Customers</div>
+        </div>
+        <div className="bg-white rounded-xl md:rounded-2xl p-4 border border-[#e2e8f0] shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-[#dcfce7] rounded-xl flex items-center justify-center">
+              <i className="fas fa-check-circle text-[#10b981] text-lg md:text-xl"></i>
+            </div>
+            <span className="text-xs text-[#64748b] font-semibold">Active</span>
+          </div>
+          <div className="font-extrabold text-xl md:text-2xl text-[#1e293b]">{activeCustomers}</div>
+          <div className="text-xs text-[#64748b] mt-1">Active Status</div>
+        </div>
+        <div className="bg-white rounded-xl md:rounded-2xl p-4 border border-[#e2e8f0] shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-[#fef3c7] rounded-xl flex items-center justify-center">
+              <i className="fas fa-crown text-[#f59e0b] text-lg md:text-xl"></i>
+            </div>
+            <span className="text-xs text-[#64748b] font-semibold">VIP</span>
+          </div>
+          <div className="font-extrabold text-xl md:text-2xl text-[#1e293b]">{vipCustomers}</div>
+          <div className="text-xs text-[#64748b] mt-1">VIP Customers</div>
+        </div>
+        <div className="bg-white rounded-xl md:rounded-2xl p-4 border border-[#e2e8f0] shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-[#dbeafe] rounded-xl flex items-center justify-center">
+              <i className="fas fa-coins text-[#3b82f6] text-lg md:text-xl"></i>
+            </div>
+            <span className="text-xs text-[#64748b] font-semibold">Revenue</span>
+          </div>
+          <div className="font-extrabold text-xl md:text-2xl text-[#1e293b]">{formatCurrency(totalRevenue)}</div>
+          <div className="text-xs text-[#64748b] mt-1">Total Revenue</div>
+        </div>
+      </div>
+
       
 
       <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-4 mb-4 flex flex-col md:flex-row gap-3 md:gap-4 border border-[#e2e8f0] justify-between">
-        <div className="flex gap-2 md:gap-4 flex-1">
+        <div className="flex gap-2 md:gap-4 flex-1 flex-wrap">
           <div className="relative flex-1 min-w-[150px] md:min-w-[280px]">
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
             <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
           </div>
           
+          <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="new">New</option>
+            <option value="vip">VIP</option>
+            <option value="inactive">Inactive</option>
+          </select>
+
+          <div className="flex gap-2">
+            <input 
+              type="number" 
+              placeholder="Min Spent" 
+              value={spendingMin} 
+              onChange={(e) => setSpendingMin(e.target.value ? Number(e.target.value) : "")}
+              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm w-24"
+            />
+            <input 
+              type="number" 
+              placeholder="Max Spent" 
+              value={spendingMax} 
+              onChange={(e) => setSpendingMax(e.target.value ? Number(e.target.value) : "")}
+              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm w-24"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <input 
+              type="date" 
+              value={dateRangeStart} 
+              onChange={(e) => setDateRangeStart(e.target.value)}
+              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm"
+            />
+            <input 
+              type="date" 
+              value={dateRangeEnd} 
+              onChange={(e) => setDateRangeEnd(e.target.value)}
+              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm"
+            />
+          </div>
+
           <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
             <option value="recent">Most Recent</option>
+            <option value="oldest">Oldest</option>
             <option value="highestLTV">Highest LTV</option>
             <option value="mostOrders">Most Orders</option>
             <option value="name">Name A-Z</option>
+            <option value="rating">Rating</option>
+            <option value="visits">Visits</option>
           </select>
         </div>
         <button className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={() => setShowBroadcastModal(true)}>
@@ -378,15 +708,62 @@ export default function CustomersPage() {
         </div>
       ) : (
         <>
+          {/* Bulk Operations Bar */}
+          {bulkMode && filteredCustomers.length > 0 && (
+            <div className="mb-4 flex items-center justify-between bg-[#f8fafc] p-3 rounded-xl">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={bulkSelected.length === filteredCustomers.length && filteredCustomers.length > 0}
+                  onChange={selectAllCustomers}
+                  className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
+                />
+                <span className="text-sm font-semibold text-[#1e293b]">Select All ({filteredCustomers.length})</span>
+              </label>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleBulkStatusUpdate('active')}
+                  disabled={bulkSelected.length === 0}
+                  className="px-3 py-1.5 bg-[#dcfce7] text-[#10b981] rounded-lg text-xs font-semibold hover:bg-[#10b981] hover:text-white disabled:opacity-50"
+                >
+                  <i className="fas fa-check mr-1"></i>Activate
+                </button>
+                <button 
+                  onClick={() => handleBulkStatusUpdate('vip')}
+                  disabled={bulkSelected.length === 0}
+                  className="px-3 py-1.5 bg-[#fef3c7] text-[#f59e0b] rounded-lg text-xs font-semibold hover:bg-[#f59e0b] hover:text-white disabled:opacity-50"
+                >
+                  <i className="fas fa-crown mr-1"></i>VIP
+                </button>
+                <button 
+                  onClick={() => handleBulkDelete()}
+                  disabled={bulkSelected.length === 0}
+                  className="px-3 py-1.5 bg-[#fee2e2] text-[#ef4444] rounded-lg text-xs font-semibold hover:bg-[#ef4444] hover:text-white disabled:opacity-50"
+                >
+                  <i className="fas fa-trash mr-1"></i>Delete
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Mobile List View */}
           <div className="md:hidden space-y-2 mb-4">
             {filteredCustomers.map(customer => (
-              <div key={customer.id} className="bg-white rounded-xl p-3 border border-[#e2e8f0] shadow-sm" onClick={() => openCustomerModal(customer)}>
+              <div key={customer.id} className="bg-white rounded-xl p-3 border border-[#e2e8f0] shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} flex items-center justify-center font-bold text-sm text-white flex-shrink-0`}>
+                  {bulkMode && (
+                    <input
+                      type="checkbox"
+                      checked={bulkSelected.includes(customer.id)}
+                      onChange={() => toggleCustomerSelection(customer.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366] flex-shrink-0"
+                    />
+                  )}
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} flex items-center justify-center font-bold text-sm text-white flex-shrink-0`} onClick={() => !bulkMode && openCustomerModal(customer)}>
                     {getInitials(customer.name)}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0" onClick={() => !bulkMode && openCustomerModal(customer)}>
                     <div className="flex items-center justify-between">
                       <div className="font-bold text-sm truncate">{customer.name}</div>
                       <span className="font-bold text-[#25D366] text-sm ml-2">{formatCurrency(customer.totalSpent)}</span>
@@ -395,6 +772,30 @@ export default function CustomersPage() {
                       <span className="text-xs text-[#64748b]"><i className="fab fa-whatsapp text-[#25D366] mr-1"></i>{customer.phone}</span>
                     </div>
                   </div>
+                  {!bulkMode && (
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          shareCustomerWhatsApp(customer);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
+                        title="Share via WhatsApp"
+                      >
+                        <i className="fab fa-whatsapp text-sm"></i>
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          printCustomerProfile(customer);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg"
+                        title="Print Profile"
+                      >
+                        <i className="fas fa-print text-sm"></i>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -403,20 +804,32 @@ export default function CustomersPage() {
           {/* Desktop Grid View */}
           <div className="hidden md:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
           {filteredCustomers.map(customer => (
-            <div key={customer.id} className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onClick={() => openCustomerModal(customer)}>
+            <div key={customer.id} className={`bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all ${bulkMode ? 'cursor-default' : 'cursor-pointer'}`} onClick={() => !bulkMode && openCustomerModal(customer)}>
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
+                  {bulkMode && (
+                    <input
+                      type="checkbox"
+                      checked={bulkSelected.includes(customer.id)}
+                      onChange={() => toggleCustomerSelection(customer.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366] flex-shrink-0"
+                    />
+                  )}
                   <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} flex items-center justify-center font-bold text-lg text-white relative`}>
                     {getInitials(customer.name)}
-                    <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white bg-[#64748b]`}></span>
+                    <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${customer.status === 'vip' ? 'bg-[#f59e0b]' : customer.status === 'active' ? 'bg-[#10b981]' : customer.status === 'new' ? 'bg-[#3b82f6]' : 'bg-[#64748b]'}`}></span>
                   </div>
                   <div>
                     <div className="font-bold text-[#1e293b]">{customer.name}</div>
+                    <div className="text-xs text-[#64748b] capitalize">{customer.status}</div>
                   </div>
                 </div>
-                <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-lg">
-                  <i className="fas fa-ellipsis-v"></i>
-                </button>
+                {!bulkMode && (
+                  <button className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-lg">
+                    <i className="fas fa-ellipsis-v"></i>
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-[#f8fafc] rounded-xl">
@@ -425,11 +838,11 @@ export default function CustomersPage() {
                   <div className="text-xs text-[#64748b] uppercase font-semibold">Spent</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-extrabold text-[#1e293b] text-lg">{customer.orderCount || 0}</div>
-                  <div className="text-xs text-[#64748b] uppercase font-semibold">Orders</div>
+                  <div className="font-extrabold text-[#1e293b] text-lg">{customer.visits || 0}</div>
+                  <div className="text-xs text-[#64748b] uppercase font-semibold">Visits</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-extrabold text-[#1e293b] text-lg">-</div>
+                  <div className="font-extrabold text-[#1e293b] text-lg">{customer.rating ? customer.rating.toFixed(1) : '-'}</div>
                   <div className="text-xs text-[#64748b] uppercase font-semibold">Rating</div>
                 </div>
               </div>
@@ -445,30 +858,72 @@ export default function CustomersPage() {
                     {customer.email}
                   </div>
                 )}
-                {customer.address && (
+                {customer.location && (
                   <div className="flex items-center gap-2 text-sm text-[#64748b]">
                     <i className="fas fa-map-marker-alt w-8 h-8 bg-[#f8fafc] rounded-lg flex items-center justify-center text-[#25D366]"></i>
-                    {customer.address}
+                    {customer.location}
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                {customer.tags?.map((tag, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-[#f1f5f9] rounded-full text-xs font-semibold text-[#64748b]">{tag}</span>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={(e) => { e.stopPropagation(); sendWhatsAppMessage(customer.phone); }} className="py-2 px-3 bg-[#DCF8C6] text-[#128C7E] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#25D366] hover:text-white transition-all">
-                  <i className="fab fa-whatsapp"></i>
-                  Message
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); openCustomerModal(customer); }} className="py-2 px-3 bg-[#f1f5f9] text-[#1e293b] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#1e293b] hover:text-white transition-all">
-                  <i className="fas fa-eye"></i>
-                  View
-                </button>
-              </div>
+              {!bulkMode && (
+                <div className="grid grid-cols-4 gap-2">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); sendWhatsAppMessage(customer.phone); }} 
+                    className="py-2 px-2 bg-[#DCF8C6] text-[#128C7E] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#25D366] hover:text-white transition-all"
+                    title="Send WhatsApp"
+                  >
+                    <i className="fab fa-whatsapp"></i>
+                    <span className="hidden lg:inline">Message</span>
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); shareCustomerWhatsApp(customer); }} 
+                    className="py-2 px-2 bg-[#f1f5f9] text-[#64748b] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#25D366] hover:text-white transition-all"
+                    title="Share via WhatsApp"
+                  >
+                    <i className="fas fa-share-alt"></i>
+                    <span className="hidden lg:inline">Share</span>
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDuplicateCustomer(customer); }} 
+                    className="py-2 px-2 bg-[#f1f5f9] text-[#64748b] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#3b82f6] hover:text-white transition-all"
+                    title="Duplicate Customer"
+                  >
+                    <i className="fas fa-copy"></i>
+                    <span className="hidden lg:inline">Copy</span>
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); printCustomerProfile(customer); }} 
+                    className="py-2 px-2 bg-[#f1f5f9] text-[#64748b] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#3b82f6] hover:text-white transition-all"
+                    title="Print Profile"
+                  >
+                    <i className="fas fa-print"></i>
+                    <span className="hidden lg:inline">Print</span>
+                  </button>
+                </div>
+              )}
+              {bulkMode && (
+                <div className="grid grid-cols-3 gap-2">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleBulkStatusUpdate('active'); toggleCustomerSelection(customer.id); }}
+                    className="py-2 px-2 bg-[#dcfce7] text-[#10b981] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#10b981] hover:text-white transition-all"
+                  >
+                    <i className="fas fa-check"></i>Activate
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleBulkStatusUpdate('vip'); toggleCustomerSelection(customer.id); }}
+                    className="py-2 px-2 bg-[#fef3c7] text-[#f59e0b] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#f59e0b] hover:text-white transition-all"
+                  >
+                    <i className="fas fa-crown"></i>VIP
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleBulkDelete(); toggleCustomerSelection(customer.id); }}
+                    className="py-2 px-2 bg-[#fee2e2] text-[#ef4444] rounded-xl font-semibold text-xs flex items-center justify-center gap-1 hover:bg-[#ef4444] hover:text-white transition-all"
+                  >
+                    <i className="fas fa-trash"></i>Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           </div>
@@ -507,7 +962,7 @@ export default function CustomersPage() {
                     <div className="mt-4 pt-4 border-t border-[#e2e8f0] space-y-3">
                       <div><div className="text-xs text-[#64748b]">Phone</div><div className="font-bold">{selectedCustomer.phone}</div></div>
                       <div><div className="text-xs text-[#64748b]">Email</div><div className="font-bold">{selectedCustomer.email || "N/A"}</div></div>
-                      <div><div className="text-xs text-[#64748b]">Address</div><div className="font-bold">{selectedCustomer.address || "N/A"}</div></div>
+                      <div><div className="text-xs text-[#64748b]">Location</div><div className="font-bold">{selectedCustomer.location || "N/A"}</div></div>
                     </div>
                   </div>
                   <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0]">
@@ -534,7 +989,7 @@ export default function CustomersPage() {
                   {activeTab === "orders" && (
                     <div>
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold">{selectedCustomer.orderCount || 0} Orders • {formatCurrency(selectedCustomer.totalSpent)} Total</h3>
+                        <h3 className="font-bold">{selectedCustomer.visits || 0} Visits • {formatCurrency(selectedCustomer.totalSpent)} Total</h3>
                       </div>
                       {loadingOrders ? (
                         <div className="text-center py-8">

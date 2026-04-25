@@ -36,18 +36,18 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
     { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers", badge: null },
     { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping", badge: null },
     { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
+    { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
     { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
   ];
 
   const serviceNavItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
-    { id: "bookings", label: "Bookings", icon: "fa-calendar-check", href: "/bookings", badge: null },
-    { id: "services", label: "Services", icon: "fa-concierge-bell", href: "/services", badge: null },
+    { id: "bookings", label: "Bookings", icon: "fa-calendar-alt", href: "/bookings", badge: "8" },
+    { id: "services", label: "My Services", icon: "fa-list", href: "/services", badge: null },
     { id: "clients", label: "Clients", icon: "fa-users", href: "/clients", badge: null },
-    { id: "staff", label: "Staff", icon: "fa-user-tie", href: "/staff", badge: null },
-    { id: "appointments", label: "Appointments", icon: "fa-clock", href: "/appointments", badge: null },
-    { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
-    { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
+    { id: "availability", label: "Availability", icon: "fa-clock", href: "/availability", badge: null },
+    { id: "portfolio", label: "Portfolio", icon: "fa-images", href: "/portfolio", badge: null },
+    { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
   ];
 
   const navItems = mode === "product" ? productNavItems : serviceNavItems;

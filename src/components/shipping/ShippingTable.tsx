@@ -9,9 +9,21 @@ interface ShippingTableProps {
   onPrint: (shipment: Shipment) => void;
   onWhatsApp: (shipment: Shipment) => void;
   onAssign: (shipment: Shipment) => void;
+  bulkMode?: boolean;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
 }
 
-export function ShippingTable({ shipments, onView, onPrint, onWhatsApp, onAssign }: ShippingTableProps) {
+export function ShippingTable({ 
+  shipments, 
+  onView, 
+  onPrint, 
+  onWhatsApp, 
+  onAssign,
+  bulkMode = false,
+  selectedIds = [],
+  onToggleSelect
+}: ShippingTableProps) {
   const getStatusClass = (status: string) => {
     const classes: Record<string, string> = {
       pending: "status-badge status-pending",
@@ -140,6 +152,7 @@ export function ShippingTable({ shipments, onView, onPrint, onWhatsApp, onAssign
       <table className="desktop-table shipping-table">
         <thead>
           <tr>
+            {bulkMode && <th style={{ width: '50px' }}><input type="checkbox" disabled /></th>}
             <th>Order</th>
             <th>Customer</th>
             <th>Delivery Address</th>
@@ -151,7 +164,18 @@ export function ShippingTable({ shipments, onView, onPrint, onWhatsApp, onAssign
         </thead>
         <tbody>
           {shipments.map((shipment) => (
-            <tr key={shipment.id}>
+            <tr key={shipment.id} style={bulkMode && selectedIds.includes(shipment.id) ? { backgroundColor: '#dcfce7' } : {}}>
+              {bulkMode && (
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(shipment.id)}
+                    onChange={() => onToggleSelect?.(shipment.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
+                  />
+                </td>
+              )}
               <td>
                 <div className="order-cell">
                   <div className="order-icon">📦</div>
@@ -212,7 +236,18 @@ export function ShippingTable({ shipments, onView, onPrint, onWhatsApp, onAssign
 
       <div className="mobile-cards">
         {shipments.map((shipment) => (
-          <div key={shipment.id} className="shipment-card">
+          <div key={shipment.id} className="shipment-card" style={bulkMode && selectedIds.includes(shipment.id) ? { border: '2px solid #25D366', backgroundColor: '#dcfce7' } : {}}>
+            {bulkMode && (
+              <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(shipment.id)}
+                  onChange={() => onToggleSelect?.(shipment.id)}
+                  className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
+                />
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Select</span>
+              </div>
+            )}
             <div className="card-header">
               <div className="card-order">
                 <div className="order-icon">📦</div>

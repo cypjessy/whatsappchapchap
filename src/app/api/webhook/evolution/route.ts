@@ -85,27 +85,45 @@ async function getTenantBusinessName(tenantId: string): Promise<string> {
   }
 }
 
-async function getTenantSettings(tenantId: string): Promise<{ businessName: string; welcomeMessage: string }> {
+async function getTenantSettings(tenantId: string): Promise<{ businessName: string; welcomeMessage: string; welcomeMessageEnabled: boolean }> {
   try {
     const adminDb = getAdminDb();
+    
+    // Try to get WhatsApp settings first
+    const whatsappDoc = await adminDb.collection("whatsappSettings").doc(tenantId).get();
+    
+    if (whatsappDoc.exists) {
+      const data = whatsappDoc.data();
+      return {
+        businessName: data?.businessName || "Our Shop",
+        welcomeMessage: data?.welcomeMessage || `Hello! 👋 Welcome to {{business_name}}.\n\nWe're excited to connect with you! How can we help you today?`,
+        welcomeMessageEnabled: data?.welcomeMessageEnabled ?? true
+      };
+    }
+    
+    // Fallback to old settings collection
     const settingsDoc = await adminDb.collection("settings").doc(tenantId).get();
 
     if (settingsDoc.exists) {
       const data = settingsDoc.data();
       return {
         businessName: data?.businessName || "Our Shop",
-        welcomeMessage: data?.welcomeMessage || `Hello! Welcome to our shop. How can we help you today?`
+        welcomeMessage: data?.welcomeMessage || `Hello! Welcome to our shop. How can we help you today?`,
+        welcomeMessageEnabled: true
       };
     }
+    
     return {
       businessName: "Our Shop",
-      welcomeMessage: `Hello! Welcome to our shop. How can we help you today?`
+      welcomeMessage: `Hello! 👋 Welcome to {{business_name}}.\n\nWe're excited to connect with you! How can we help you today?`,
+      welcomeMessageEnabled: true
     };
   } catch (error) {
     console.error("[Webhook] Error fetching tenant settings:", error);
     return {
       businessName: "Our Shop",
-      welcomeMessage: `Hello! Welcome to our shop. How can we help you today?`
+      welcomeMessage: `Hello! 👋 Welcome to {{business_name}}.\n\nWe're excited to connect with you! How can we help you today?`,
+      welcomeMessageEnabled: true
     };
   }
 }
@@ -270,7 +288,13 @@ export async function POST(req: NextRequest) {
       console.log("[Webhook] Tenant ID for settings:", tenantId);
       const settings = await getTenantSettings(tenantId);
       console.log("[Webhook] Settings found:", settings);
-      await sendWelcomeMessage(tenantId, from, settings.businessName, settings.welcomeMessage);
+      
+      // Only send if welcome message is enabled
+      if (settings.welcomeMessageEnabled) {
+        await sendWelcomeMessage(tenantId, from, settings.businessName, settings.welcomeMessage);
+      } else {
+        console.log("[Webhook] Welcome message is disabled, skipping");
+      }
     }
 
     return NextResponse.json({ received: true, status: "saved" });

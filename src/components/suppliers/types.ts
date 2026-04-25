@@ -28,6 +28,12 @@ export interface SupplierCardProps {
   onView: (supplier: Supplier) => void;
   onEdit: (supplier: Supplier) => void;
   onDelete: (supplierId: string) => void;
+  bulkMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
+  onShare?: () => void;
+  onPrint?: () => void;
+  onDuplicate?: () => void;
 }
 
 export interface AddSupplierModalProps {

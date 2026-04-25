@@ -44,6 +44,12 @@ export default function OrdersPage() {
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [orderNotes, setOrderNotes] = useState("");
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [dateRangeStart, setDateRangeStart] = useState("");
+  const [dateRangeEnd, setDateRangeEnd] = useState("");
+  const [amountMin, setAmountMin] = useState<number | "">("");
+  const [amountMax, setAmountMax] = useState<number | "">("");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     if (!user) return;
@@ -90,7 +96,7 @@ export default function OrdersPage() {
   const loadCustomers = async () => {
     if (!user) return;
     try {
-      const data = await customerService.getCustomers(user);
+      const data = await customerService.getClients(user);
       setCustomers(data);
     } catch (error) {
       console.error("Error loading customers:", error);
@@ -338,6 +344,149 @@ try {
     }
   };
 
+  // Calculate analytics
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const pendingOrdersCount = orders.filter(o => o.status === 'pending').length;
+  const completedOrdersCount = orders.filter(o => o.status === 'delivered').length;
+  const completionRate = orders.length > 0 ? ((completedOrdersCount / orders.length) * 100).toFixed(1) : "0";
+
+  // Duplicate order handler
+  const handleDuplicateOrder = async (order: Order) => {
+    if (!user) return;
+    try {
+      await orderService.createOrder(user, {
+        orderNumber: "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
+        customerId: order.customerId || "",
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerEmail: order.customerEmail || "",
+        customerAddress: order.customerAddress || "",
+        products: order.products || [],
+        subtotal: order.subtotal || 0,
+        shipping: order.shipping || 0,
+        tax: order.tax || 0,
+        discount: order.discount || 0,
+        total: order.total || 0,
+        paymentMethod: order.paymentMethod || "Cash on Delivery",
+        status: "pending",
+        notes: order.notes || "",
+      });
+      loadOrders();
+      loadCounts();
+      alert('Order duplicated successfully!');
+    } catch (error) {
+      console.error("Error duplicating order:", error);
+      alert("Failed to duplicate order");
+    }
+  };
+
+  // Send WhatsApp notification
+  const sendWhatsAppNotification = async (order: Order, status: OrderStatus) => {
+    if (!user) return;
+    try {
+      const tenant = await tenantService.getTenant(user);
+      if (!tenant || !tenant.evolutionInstanceId) {
+        alert('WhatsApp not configured. Please connect WhatsApp first.');
+        return;
+      }
+
+      const productName = order.products?.[0]?.name || order.productName || 'Order';
+      const message = getOrderStatusMessage(
+        status,
+        order.customerName,
+        order.orderNumber || order.id.substring(0, 8),
+        productName,
+        order.deliveryAddress || order.customerAddress
+      );
+      const phone = order.customerPhone.replace(/[^0-9]/g, '');
+      
+      await sendEvolutionWhatsAppMessage(
+        phone,
+        message,
+        user.uid
+      );
+      
+      alert('WhatsApp notification sent!');
+    } catch (error) {
+      console.error("Error sending WhatsApp:", error);
+      alert("Failed to send WhatsApp notification");
+    }
+  };
+
+  // Print invoice
+  const printInvoice = (order: Order) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice #${order.orderNumber || order.id.substring(0, 8)}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: bold; color: #25D366; }
+          .invoice-details { margin: 20px 0; }
+          .invoice-details div { margin: 5px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+          th { background-color: #f8fafc; }
+          .total { font-size: 18px; font-weight: bold; color: #25D366; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">INVOICE</div>
+          <div>Order #${order.orderNumber || order.id.substring(0, 8)}</div>
+          <div>Date: ${formatDate(order.createdAt)}</div>
+        </div>
+        <div class="invoice-details">
+          <div><strong>Customer:</strong> ${order.customerName}</div>
+          <div><strong>Phone:</strong> ${order.customerPhone}</div>
+          <div><strong>Email:</strong> ${order.customerEmail || 'N/A'}</div>
+          <div><strong>Address:</strong> ${order.deliveryAddress || order.customerAddress || 'N/A'}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(order.products || []).map(p => `
+              <tr>
+                <td>${p.name}</td>
+                <td>${CURRENCY_SYMBOL}${p.price.toFixed(2)}</td>
+                <td>${p.quantity}</td>
+                <td>${CURRENCY_SYMBOL}${(p.price * p.quantity).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="invoice-details">
+          <div>Subtotal: ${CURRENCY_SYMBOL}${(order.subtotal || 0).toFixed(2)}</div>
+          <div>Shipping: ${CURRENCY_SYMBOL}${(order.shipping || 0).toFixed(2)}</div>
+          <div>Tax: ${CURRENCY_SYMBOL}${(order.tax || 0).toFixed(2)}</div>
+          ${order.discount ? `<div>Discount: -${CURRENCY_SYMBOL}${(order.discount || 0).toFixed(2)}</div>` : ''}
+          <div class="total">Total: ${CURRENCY_SYMBOL}${(order.total || 0).toFixed(2)}</div>
+        </div>
+        <div style="margin-top: 30px; text-align: center; color: #64748b;">
+          <p>Thank you for your business!</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const getStatusBadge = (status?: string) => {
     const styles: Record<string, { bg: string; color: string; label: string }> = {
       pending: { bg: "bg-[rgba(245,158,11,0.1)]", color: "text-[#f59e0b]", label: "Pending" },
@@ -377,7 +526,42 @@ try {
         !order.id.includes(searchTerm)) {
       return false;
     }
+    
+    // Date range filter
+    if (dateRangeStart || dateRangeEnd) {
+      try {
+        const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+        if (dateRangeStart && orderDate < new Date(dateRangeStart)) return false;
+        if (dateRangeEnd) {
+          const endDate = new Date(dateRangeEnd);
+          endDate.setHours(23, 59, 59, 999);
+          if (orderDate > endDate) return false;
+        }
+      } catch {}
+    }
+    
+    // Amount range filter
+    if (amountMin !== "" && (order.total || 0) < Number(amountMin)) return false;
+    if (amountMax !== "" && (order.total || 0) > Number(amountMax)) return false;
+    
+    // Payment method filter
+    if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) return false;
+    
     return true;
+  }).sort((a, b) => {
+    if (sortBy === "newest") {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    }
+    if (sortBy === "oldest") {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateA.getTime() - dateB.getTime();
+    }
+    if (sortBy === "amount-high") return (b.total || 0) - (a.total || 0);
+    if (sortBy === "amount-low") return (a.total || 0) - (b.total || 0);
+    return 0;
   });
 
   const tabs = [
@@ -397,6 +581,16 @@ try {
           <a href={`/order?tenant=${user?.uid}`} target="_blank" className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] flex items-center">
             <i className="fas fa-store mr-2"></i><span className="hidden md:inline">View Store</span>
           </a>
+          {selectedOrders.size > 0 && (
+            <>
+              <button className="px-3 py-2 bg-green-500 text-white rounded-xl font-semibold text-sm hover:bg-green-600" onClick={() => bulkUpdateStatus("delivered")}>
+                <i className="fas fa-check mr-2"></i><span className="hidden md:inline">Complete</span>
+              </button>
+              <button className="px-3 py-2 bg-red-500 text-white rounded-xl font-semibold text-sm hover:bg-red-600" onClick={() => bulkUpdateStatus("cancelled")}>
+                <i className="fas fa-times mr-2"></i><span className="hidden md:inline">Cancel</span>
+              </button>
+            </>
+          )}
           <button className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366]" onClick={exportToCSV}>
             <i className="fas fa-download mr-2"></i><span className="hidden md:inline">Export</span>
           </button>
@@ -415,16 +609,131 @@ try {
         ))}
       </div>
 
+      {/* Stats Row */}
+      <div className="flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
+        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center">
+            <i className="fas fa-shopping-bag text-sm"></i>
+          </div>
+          <div>
+            <div className="font-extrabold text-lg">{counts.all}</div>
+            <div className="text-xs text-[#64748b]">Total Orders</div>
+          </div>
+        </div>
+        
+        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(59,130,246,0.1)] text-[#3b82f6] flex items-center justify-center">
+            <i className="fas fa-dollar-sign text-sm"></i>
+          </div>
+          <div>
+            <div className="font-extrabold text-lg">{formatCurrency(totalRevenue)}</div>
+            <div className="text-xs text-[#64748b]">Total Revenue</div>
+          </div>
+        </div>
+        
+        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(245,158,11,0.1)] text-[#f59e0b] flex items-center justify-center">
+            <i className="fas fa-clock text-sm"></i>
+          </div>
+          <div>
+            <div className="font-extrabold text-lg">{pendingOrdersCount}</div>
+            <div className="text-xs text-[#64748b]">Pending</div>
+          </div>
+        </div>
+        
+        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(16,185,129,0.1)] text-[#10b981] flex items-center justify-center">
+            <i className="fas fa-check-circle text-sm"></i>
+          </div>
+          <div>
+            <div className="font-extrabold text-lg">{completionRate}%</div>
+            <div className="text-xs text-[#64748b]">Completion Rate</div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
         <div className="p-3 md:p-4 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div className="font-bold flex items-center gap-2">
             <i className="fas fa-list text-[#3b82f6]"></i>
             <span className="text-sm text-[#64748b] font-normal">({filteredOrders.length})</span>
           </div>
-          <div className="relative w-full md:w-auto">
-            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
-            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full md:w-48 pl-9 pr-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:w-48">
+              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
+              <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]" />
+            </div>
+            <select className="px-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
+              <option value="all">All Payments</option>
+              <option value="Cash on Delivery">COD</option>
+              <option value="M-Pesa">M-Pesa</option>
+              <option value="Bank Transfer">Bank</option>
+            </select>
+            <select className="px-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="amount-high">Amount ↓</option>
+              <option value="amount-low">Amount ↑</option>
+            </select>
           </div>
+        </div>
+
+        {/* Advanced Filters */}
+        <div className="p-3 md:p-4 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#64748b] mb-1">Start Date</label>
+              <input 
+                type="date" 
+                value={dateRangeStart}
+                onChange={(e) => setDateRangeStart(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#64748b] mb-1">End Date</label>
+              <input 
+                type="date" 
+                value={dateRangeEnd}
+                onChange={(e) => setDateRangeEnd(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#64748b] mb-1">Min Amount</label>
+              <input 
+                type="number" 
+                placeholder="0"
+                value={amountMin}
+                onChange={(e) => setAmountMin(e.target.value ? Number(e.target.value) : "")}
+                className="w-full px-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#64748b] mb-1">Max Amount</label>
+              <input 
+                type="number" 
+                placeholder="Any"
+                value={amountMax}
+                onChange={(e) => setAmountMax(e.target.value ? Number(e.target.value) : "")}
+                className="w-full px-3 py-2 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366]"
+              />
+            </div>
+          </div>
+          {(dateRangeStart || dateRangeEnd || amountMin !== "" || amountMax !== "" || paymentFilter !== "all") && (
+            <button
+              onClick={() => {
+                setDateRangeStart("");
+                setDateRangeEnd("");
+                setAmountMin("");
+                setAmountMax("");
+                setPaymentFilter("all");
+              }}
+              className="mt-3 text-sm text-[#25D366] hover:text-[#128C7E] font-semibold"
+            >
+              <i className="fas fa-times-circle mr-1"></i>Clear All Filters
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -466,6 +775,26 @@ try {
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-sm">{formatCurrency(order.total || 0)}</span>
                       <span className="text-xs text-[#64748b]">{formatDate(order.createdAt)}</span>
+                    </div>
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-[#e2e8f0]">
+                      <button 
+                        className="flex-1 py-2 bg-[#f8fafc] rounded-lg text-xs font-semibold flex items-center justify-center gap-1 hover:bg-[#f1f5f9]"
+                        onClick={(e) => { e.stopPropagation(); printInvoice(order); }}
+                      >
+                        <i className="fas fa-print text-[#3b82f6]"></i>Print
+                      </button>
+                      <button 
+                        className="flex-1 py-2 bg-[#f8fafc] rounded-lg text-xs font-semibold flex items-center justify-center gap-1 hover:bg-[#f1f5f9]"
+                        onClick={(e) => { e.stopPropagation(); handleDuplicateOrder(order); }}
+                      >
+                        <i className="fas fa-copy text-[#25D366]"></i>Duplicate
+                      </button>
+                      <button 
+                        className="flex-1 py-2 bg-[#f8fafc] rounded-lg text-xs font-semibold flex items-center justify-center gap-1 hover:bg-[#f1f5f9]"
+                        onClick={(e) => { e.stopPropagation(); sendWhatsAppNotification(order, order.status as OrderStatus); }}
+                      >
+                        <i className="fab fa-whatsapp text-[#25D366]"></i>Notify
+                      </button>
                     </div>
                   </div>
                 );
@@ -534,6 +863,9 @@ try {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
+                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => printInvoice(order)} title="Print Invoice"><i className="fas fa-print"></i></button>
+                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => handleDuplicateOrder(order)} title="Duplicate"><i className="fas fa-copy"></i></button>
+                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => sendWhatsAppNotification(order, order.status as OrderStatus)} title="Send WhatsApp"><i className="fab fa-whatsapp"></i></button>
                             <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => openOrderModal(order)}><i className="fas fa-eye"></i></button>
                             <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => openEditModal(order)}><i className="fas fa-edit"></i></button>
                           </div>
@@ -620,7 +952,9 @@ try {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-xl transition-all" onClick={() => window.print()}><i className="fas fa-print"></i></button>
+                <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-xl transition-all" onClick={() => printInvoice(selectedOrder)} title="Print Invoice"><i className="fas fa-print"></i></button>
+                <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-xl transition-all" onClick={() => handleDuplicateOrder(selectedOrder)} title="Duplicate Order"><i className="fas fa-copy"></i></button>
+                <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-xl transition-all" onClick={() => sendWhatsAppNotification(selectedOrder, selectedOrder.status as OrderStatus)} title="Send WhatsApp"><i className="fab fa-whatsapp"></i></button>
                 <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all" onClick={() => { if(confirm("Cancel this order?")) updateOrderStatus("cancelled"); }}><i className="fas fa-times"></i></button>
                 <button className="w-10 h-10 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all" onClick={() => setModalOpen(false)}><i className="fas fa-times"></i></button>
               </div>
@@ -1025,7 +1359,7 @@ try {
                                     customerName: customer.name,
                                     customerPhone: customer.phone,
                                     customerEmail: customer.email || "",
-                                    customerAddress: customer.address || ""
+                                    customerAddress: customer.location || ""
                                   }));
                                   setNewOrderCustomerSearch("");
                                 }}
