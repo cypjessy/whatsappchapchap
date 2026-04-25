@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { tenantService, settingsService } from "@/lib/db";
+import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
 import FloatingShapes from "@/components/auth/FloatingShapes";
 import RegisterSidebar from "@/components/auth/RegisterSidebar";
@@ -118,7 +118,7 @@ export default function RegisterPage() {
       const tenantId = `tenant_${user.uid}`;
       setInstanceName(tenantId);
       await tenantService.createTenant(user, formData.businessName);
-      await settingsService.updateSettings(user, {
+      await tenantService.updateTenant(user, {
         whatsappInstanceId: tenantId,
         whatsappConnectionStatus: "pending",
       });
