@@ -23,9 +23,13 @@ const ALLOWED_COLLECTIONS = [
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const headers = request.headers;
+    
+    // Get tenantId from body or header (for AI tool compatibility)
+    const tenantId = body.tenantId || headers.get('x-tenant-id');
+    
     const { 
       collection: collectionName, 
-      tenantId, 
       filters = {}, 
       search, 
       sortBy = 'createdAt',
