@@ -73,12 +73,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Apply sorting (if field exists in collection)
-    try {
-      q = q.orderBy(sortBy, sortOrder);
-    } catch (error) {
-      console.warn(`Sorting by ${sortBy} failed, using default order`);
-    }
+    // Apply sorting (disabled - causes Firestore composite index issues)
+    // try {
+    //   q = q.orderBy(sortBy, sortOrder);
+    // } catch (error) {
+    //   console.warn(`Sorting by ${sortBy} failed, using default order`);
+    // }
 
     // Apply limit
     q = q.limit(limit);
