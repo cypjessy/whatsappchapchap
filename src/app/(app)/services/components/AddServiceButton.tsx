@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { serviceService } from "@/lib/db";
+import { bunnyStorage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 
 // Business Type Specifications Database (exact as provided)
@@ -144,6 +145,8 @@ export default function AddServiceButton() {
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']));
   const [selectedTimes, setSelectedTimes] = useState<Set<string>>(new Set());
   const [bookedTimes] = useState<Set<string>>(new Set(['10:00 AM', '2:00 PM', '4:00 PM'])); // Simulated booked slots
+  const [portfolioImages, setPortfolioImages] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const specsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -284,6 +287,7 @@ export default function AddServiceButton() {
       setTempCustomValue("");
       setSelectedDays(new Set(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']));
       setSelectedTimes(new Set());
+      setPortfolioImages([]);
     }
   };
 
@@ -317,6 +321,22 @@ export default function AddServiceButton() {
   const cancelCustom = () => {
     setActiveCustomSpec(null);
     setTempCustomValue("");
+  };
+
+  // Handle portfolio image selection
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const newImages = [...portfolioImages];
+      newImages[index] = files[0];
+      setPortfolioImages(newImages.filter(img => img != null));
+    }
+  };
+
+  // Remove portfolio image
+  const removeImage = (index: number) => {
+    const newImages = portfolioImages.filter((_, i) => i !== index);
+    setPortfolioImages(newImages);
   };
 
   // Save service to database
@@ -367,6 +387,30 @@ export default function AddServiceButton() {
         other: 'from-[#f8fafc] to-[#f1f5f9]'
       };
 
+      // Upload portfolio images
+      let portfolioImageUrls: string[] = [];
+      const validImages = portfolioImages.filter(img => img != null);
+      
+      if (validImages.length > 0) {
+        setUploadingImages(true);
+        try {
+          const uploadPromises = validImages.map(img => bunnyStorage.uploadFile(user, img, "services"));
+          
+          const uploadResults = await Promise.all(uploadPromises);
+          portfolioImageUrls = uploadResults
+            .filter(result => result.success && result.url)
+            .map(result => result.url!);
+          
+          console.log("Uploaded portfolio images:", portfolioImageUrls);
+        } catch (error) {
+          console.error("Error uploading images:", error);
+          alert("Failed to upload images. Please try again.");
+          return;
+        } finally {
+          setUploadingImages(false);
+        }
+      }
+
       const serviceData = {
         name,
         description,
@@ -383,18 +427,21 @@ export default function AddServiceButton() {
         mode: selectedMode,
         selectedDuration: Number(selectedDuration),
         status: 'draft' as const,
+        portfolioImages: portfolioImageUrls,
       };
 
       await serviceService.createService(user, serviceData);
+      console.log("Service created successfully with", portfolioImageUrls.length, "portfolio images");
       alert(`Service "${name}" saved successfully!`);
       closeModal();
-      // Refresh the services list if on services page
-      router.refresh();
+      // Reload the page to refresh services list
+      window.location.reload();
     } catch (error) {
       console.error("Error saving service:", error);
       alert("Failed to save service. Please try again.");
     } finally {
       setSaving(false);
+      setUploadingImages(false);
     }
   };
 
@@ -792,19 +839,37 @@ export default function AddServiceButton() {
                 </div>
                 <div className="image-upload-grid">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="upload-slot"
-                      onClick={() => document.getElementById(`portfolioInput${i}`)?.click()}
-                    >
-                      <i className="fas fa-plus"></i>
-                      <span>Add Photo</span>
+                    <div key={i} className="upload-slot">
+                      {portfolioImages[i] ? (
+                        <div className="image-preview">
+                          <img
+                            src={URL.createObjectURL(portfolioImages[i])}
+                            alt={`Portfolio ${i + 1}`}
+                            className="preview-image"
+                          />
+                          <button
+                            type="button"
+                            className="remove-image-btn"
+                            onClick={() => removeImage(i)}
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          className="upload-placeholder"
+                          onClick={() => document.getElementById(`portfolioInput${i}`)?.click()}
+                        >
+                          <i className="fas fa-plus"></i>
+                          <span>Add Photo</span>
+                        </div>
+                      )}
                       <input
                         type="file"
                         id={`portfolioInput${i}`}
-                        multiple
                         accept="image/*"
                         style={{ display: 'none' }}
+                        onChange={(e) => handleImageSelect(e, i)}
                       />
                     </div>
                   ))}
@@ -815,10 +880,10 @@ export default function AddServiceButton() {
 
             {/* Modal Footer */}
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button className="btn btn-primary" onClick={saveService}>
-                <i className="fas fa-save"></i>
-                Save Service
+              <button className="btn btn-secondary" onClick={closeModal} disabled={saving || uploadingImages}>Cancel</button>
+              <button className="btn btn-primary" onClick={saveService} disabled={saving || uploadingImages}>
+                <i className={`fas ${uploadingImages ? 'fa-spinner fa-spin' : saving ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
+                {uploadingImages ? 'Uploading...' : saving ? 'Saving...' : 'Save Service'}
               </button>
             </div>
 

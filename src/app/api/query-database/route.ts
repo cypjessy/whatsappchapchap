@@ -22,6 +22,17 @@ const ALLOWED_COLLECTIONS = [
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Firebase Admin SDK is initialized
+    if (!adminDb) {
+      return NextResponse.json(
+        { 
+          error: 'Firebase Admin SDK not configured',
+          message: 'Please add your Firebase service account credentials to Vercel environment variables'
+        }, 
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const headers = request.headers;
     

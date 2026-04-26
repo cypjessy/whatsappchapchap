@@ -121,6 +121,7 @@ export interface Service {
   status?: "active" | "paused" | "draft";
   rating?: number;
   imageUrl?: string;
+  portfolioImages?: string[];
   createdAt: any;
   updatedAt: any;
 }
@@ -837,9 +838,13 @@ export const serviceService = {
 
   async getServices(user: User): Promise<Service[]> {
     const tenantId = getTenantId(user);
+    console.log("Fetching services for tenantId:", tenantId);
     const q = query(collection(db, "services"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
     const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Service[];
+    console.log("Firestore snapshot size:", snap.size);
+    const services = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Service[];
+    console.log("Mapped services:", services.length);
+    return services;
   },
 
   async updateService(user: User, serviceId: string, data: Partial<Service>): Promise<void> {

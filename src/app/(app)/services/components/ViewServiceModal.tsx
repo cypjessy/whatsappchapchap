@@ -231,6 +231,28 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
             </div>
           )}
 
+          {/* Portfolio Images */}
+          {service.portfolioImages && service.portfolioImages.length > 0 && (
+            <div className="form-section">
+              <div className="section-title">
+                <i className="fas fa-images"></i>
+                Portfolio Photos
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {service.portfolioImages.map((imageUrl, idx) => (
+                  <div key={idx} className="aspect-square rounded-lg overflow-hidden bg-[#f8fafc]">
+                    <img
+                      src={imageUrl}
+                      alt={`Portfolio ${idx + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                      onClick={() => window.open(imageUrl, '_blank')}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="form-section">
             <div className="section-title">

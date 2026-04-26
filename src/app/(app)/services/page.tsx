@@ -38,7 +38,10 @@ export default function ServicesPage() {
     if (!user) return;
     setLoading(true);
     try {
+      console.log("Loading services for user:", user.uid);
       const data = await serviceService.getServices(user);
+      console.log("Loaded services count:", data.length);
+      console.log("Services data:", data);
       setServices(data);
     } catch (error) {
       console.error("Error loading services:", error);
