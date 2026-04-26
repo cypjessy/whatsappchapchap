@@ -764,8 +764,107 @@ export default function SettingsPage() {
                 onChange={(e) => handleWhatsAppChange("welcomeMessage", e.target.value)}
                 rows={12}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none font-mono text-sm resize-none"
-                placeholder="Enter your welcome message..."
+                placeholder="Enter your welcome message or choose a template below..."
               />
+            </div>
+
+            {/* Quick Templates */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-[#64748b] mb-3">
+                <i className="fas fa-magic mr-1"></i>
+                Quick Templates (click to use):
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "👋 Hi there! Welcome to {{business_name}}!\n\nWe're excited to have you here. How can we help you today?\n\n📞 Contact us: {{phone}}\n🌐 Visit: {{website}}" }))}
+                  className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-left hover:border-blue-400 hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-hand-wave text-white"></i>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-blue-900 mb-1">Friendly Greeting</div>
+                      <div className="text-xs text-blue-700">Warm welcome with contact info</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Hello! 👋\n\nThank you for contacting {{business_name}}.\n\nWe offer:\n✅ Quality products/services\n✅ Fast delivery\n✅ Excellent customer support\n\nHow can we assist you today?" }))}
+                  className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-left hover:border-green-400 hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check-circle text-white"></i>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-green-900 mb-1">Professional Intro</div>
+                      <div className="text-xs text-green-700">Highlights key offerings</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "🎉 Welcome to {{business_name}}!\n\nWe're here to serve you 24/7.\n\n⏰ Business Hours: Mon-Sat, 9AM-6PM\n📍 Location: {{address}}\n📱 WhatsApp: {{phone}}\n\nWhat would you like to know about?" }))}
+                  className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-left hover:border-purple-400 hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-clock text-white"></i>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-purple-900 mb-1">Business Info Focus</div>
+                      <div className="text-xs text-purple-700">Shows hours and location</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Hi! Thanks for reaching out to {{business_name}} 🙏\n\nI'm here to help you with:\n• Product inquiries\n• Order status\n• Booking appointments\n• General questions\n\nPlease let me know what you need!" }))}
+                  className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl text-left hover:border-orange-400 hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-list-check text-white"></i>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-orange-900 mb-1">Service Menu</div>
+                      <div className="text-xs text-orange-700">Lists available services</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Welcome to {{business_name}}! ✨\n\nWe specialize in providing top-quality products and exceptional service.\n\n💬 Chat with us anytime\n🚀 Fast response guaranteed\n⭐ Customer satisfaction is our priority\n\nHow can we help you today?" }))}
+                  className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-xl text-left hover:border-pink-400 hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-star text-white"></i>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-pink-900 mb-1">Premium Service</div>
+                      <div className="text-xs text-pink-700">Emphasizes quality & speed</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "👋 Hello!\n\nYou've reached {{business_name}}.\n\nFor quick assistance:\n1️⃣ Browse our catalog\n2️⃣ Check order status\n3️⃣ Book an appointment\n4️⃣ Speak with support\n\nReply with a number or ask away!" }))}
+                  className="p-4 bg-gradient-to-br from-cyan-50 to-sky-50 border-2 border-cyan-200 rounded-xl text-left hover:border-cyan-400 hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-keyboard text-white"></i>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-cyan-900 mb-1">Interactive Menu</div>
+                      <div className="text-xs text-cyan-700">Numbered options for easy navigation</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
 
             {/* Quick Variables */}
