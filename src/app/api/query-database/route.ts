@@ -31,11 +31,14 @@ export async function POST(request: NextRequest) {
     const { 
       collection: collectionName, 
       filters = {}, 
-      search, 
+      search = '', 
       sortBy = 'createdAt',
       sortOrder = 'desc',
-      limit = 20 
+      limit: limitRaw = 20 
     } = body;
+
+    // Ensure limit is a valid number (n8n may send wrong type)
+    const limit = parseInt(String(limitRaw), 10) || 20;
 
     // Validate inputs
     if (!collectionName) {
