@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy, limit as limitClause } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Define allowed collections to prevent unauthorized access
 const ALLOWED_COLLECTIONS = [
@@ -60,32 +60,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build query
-    let q = query(
-      collection(db, collectionName),
-      where('tenantId', '==', tenantId)
-    );
+    // Build query using Admin SDK
+    let q = adminDb.collection(collectionName).where('tenantId', '==', tenantId);
 
     // Apply additional filters
     Object.entries(filters).forEach(([field, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        q = query(q, where(field, '==', value));
+        q = q.where(field, '==', value);
       }
     });
 
     // Apply sorting (if field exists in collection)
     try {
-      q = query(q, orderBy(sortBy, sortOrder));
+      q = q.orderBy(sortBy, sortOrder);
     } catch (error) {
       console.warn(`Sorting by ${sortBy} failed, using default order`);
     }
 
     // Apply limit
-    q = query(q, limitClause(limit));
+    q = q.limit(limit);
 
     // Execute query
-    const snapshot = await getDocs(q);
-    let results = snapshot.docs.map(doc => ({ 
+    const snapshot = await q.get();
+    let results = snapshot.docs.map((doc: any) => ({ 
       id: doc.id, 
       ...doc.data() 
     }));
