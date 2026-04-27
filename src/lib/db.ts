@@ -904,8 +904,14 @@ export const serviceService = {
   async createService(user: User, service: Omit<Service, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Service> {
     const tenantId = getTenantId(user);
     const docRef = doc(collection(db, "services"));
+    
+    // Clean service data - remove undefined values (Firebase doesn't allow undefined)
+    const cleanService = Object.fromEntries(
+      Object.entries(service).filter(([_, value]) => value !== undefined)
+    ) as Omit<Service, "id" | "tenantId" | "createdAt" | "updatedAt">;
+    
     const serviceData: Service = {
-      ...service,
+      ...cleanService,
       id: docRef.id,
       tenantId,
       createdAt: serverTimestamp(),
@@ -1181,8 +1187,14 @@ export const productService = {
   async createProduct(user: User, product: Omit<Product, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Product> {
     const tenantId = getTenantId(user);
     const docRef = doc(collection(db, "products"));
+    
+    // Clean product data - remove undefined values (Firebase doesn't allow undefined)
+    const cleanProduct = Object.fromEntries(
+      Object.entries(product).filter(([_, value]) => value !== undefined)
+    ) as Omit<Product, "id" | "tenantId" | "createdAt" | "updatedAt">;
+    
     const productData: Product = {
-      ...product,
+      ...cleanProduct,
       id: docRef.id,
       tenantId,
       stock: product.stock || 0,
