@@ -20,17 +20,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all category names for this tenant
+    // Fetch all category names for this tenant (hierarchical structure)
     const snapshot = await adminDb
       .collection("categoryNames")
       .where("tenantId", "==", tenantId)
       .orderBy("createdAt", "desc")
       .get();
 
-    const categories = snapshot.docs.map(doc => ({
-      id: doc.id,
-      name: doc.data().name,
-    }));
+    const categories = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        mainCategory: data.mainCategory,
+        mainCategoryName: data.mainCategoryName,
+        subcategories: data.subcategories || [],
+      };
+    });
 
     return NextResponse.json({
       success: true,

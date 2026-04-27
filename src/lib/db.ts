@@ -10,7 +10,8 @@ import {
   orderBy,
   serverTimestamp,
   deleteDoc,
-  addDoc
+  addDoc,
+  updateDoc
 } from "firebase/firestore";
 import { User } from "firebase/auth";
 
@@ -1125,40 +1126,55 @@ export const productService = {
     await setDoc(docRef, productData);
     
     // Save category name to categoryNames collection for AI
-    if (product.categoryName) {
-      await this.saveCategoryName(user, product.categoryName);
+    if (product.categoryName && product.category) {
+      await this.saveCategoryName(user, product.category, product.categoryName);
     }
     
     return productData;
   },
 
-  // Save unique category name for AI to fetch
-  async saveCategoryName(user: User, categoryName: string): Promise<void> {
+  // Save unique category name for AI to fetch (hierarchical structure)
+  async saveCategoryName(user: User, category: string, categoryName: string): Promise<void> {
     const tenantId = getTenantId(user);
     
-    // Check if category name already exists for this tenant
-    const q = query(
+    // Check if main category exists for this tenant
+    const categoryQuery = query(
       collection(db, "categoryNames"),
       where("tenantId", "==", tenantId),
-      where("name", "==", categoryName)
+      where("mainCategory", "==", category)
     );
-    const existingSnap = await getDocs(q);
+    const categorySnap = await getDocs(categoryQuery);
     
-    // If doesn't exist, create it
-    if (existingSnap.empty) {
+    if (categorySnap.empty) {
+      // Create new main category with first subcategory
       const categoryDoc = doc(collection(db, "categoryNames"));
       await setDoc(categoryDoc, {
         id: categoryDoc.id,
         tenantId,
-        name: categoryName,
+        mainCategory: category, // e.g., "clothing", "electronics"
+        mainCategoryName: category.charAt(0).toUpperCase() + category.slice(1), // e.g., "Clothing", "Electronics"
+        subcategories: [categoryName], // e.g., ["Dresses"]
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+    } else {
+      // Main category exists, check if subcategory already exists
+      const existingDoc = categorySnap.docs[0];
+      const existingData = existingDoc.data();
+      const existingSubcategories = existingData.subcategories || [];
+      
+      if (!existingSubcategories.includes(categoryName)) {
+        // Add new subcategory to existing main category
+        await updateDoc(doc(db, "categoryNames", existingDoc.id), {
+          subcategories: [...existingSubcategories, categoryName],
+          updatedAt: serverTimestamp(),
+        });
+      }
     }
   },
 
-  // Get all category names for AI
-  async getCategoryNames(user: User): Promise<string[]> {
+  // Get all category names for AI (hierarchical structure)
+  async getCategoryNames(user: User): Promise<Array<{mainCategory: string, mainCategoryName: string, subcategories: string[]}>> {
     const tenantId = getTenantId(user);
     const q = query(
       collection(db, "categoryNames"),
@@ -1166,7 +1182,14 @@ export const productService = {
       orderBy("createdAt", "desc")
     );
     const snap = await getDocs(q);
-    return snap.docs.map(doc => doc.data().name);
+    return snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        mainCategory: data.mainCategory,
+        mainCategoryName: data.mainCategoryName,
+        subcategories: data.subcategories || [],
+      };
+    });
   },
 
   async getProducts(user: User): Promise<Product[]> {
