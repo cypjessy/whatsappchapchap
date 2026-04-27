@@ -5,6 +5,8 @@ import { useMode } from "@/context/ModeContext";
 import { useAuth } from "@/context/AuthContext";
 import { serviceService, bookingService, Booking, Service } from "@/lib/db";
 import ManualBookingModal from "@/app/(app)/bookings/components/ManualBookingModal";
+import ViewBookingModal from "@/app/(app)/bookings/components/ViewBookingModal";
+import PaymentConfirmationModal from "@/app/(app)/bookings/components/PaymentConfirmationModal";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 
 type ViewMode = "calendar" | "timeline" | "list" | "grid";
@@ -14,12 +16,14 @@ export default function BookingsPage() {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedServiceFilter, setSelectedServiceFilter] = useState("");
@@ -76,6 +80,24 @@ export default function BookingsPage() {
     } catch (error) {
       console.error("Error updating status:", error);
       alert("Failed to update booking status");
+    }
+  };
+
+  // Handle payment confirmation
+  const handleConfirmPayment = async (bookingId: string, paymentProof: any) => {
+    if (!user) return;
+    try {
+      await bookingService.updateBooking(user, bookingId, { 
+        paymentProof,
+        paymentStatus: 'paid',
+        status: 'confirmed' // Auto-confirm when payment is received
+      });
+      loadBookings();
+      setPaymentModalOpen(false);
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      throw error;
     }
   };
 
@@ -214,6 +236,13 @@ export default function BookingsPage() {
     // Service filter
     if (selectedServiceFilter && booking.serviceId !== selectedServiceFilter) {
       return false;
+    }
+
+    // Payment status filter
+    if (filterPaymentStatus !== "all") {
+      if (filterPaymentStatus === "unpaid" && booking.paymentStatus !== "unpaid") return false;
+      if (filterPaymentStatus === "partial" && booking.paymentStatus !== "partial") return false;
+      if (filterPaymentStatus === "paid" && booking.paymentStatus !== "paid") return false;
     }
 
     // Date range filter
@@ -408,6 +437,18 @@ export default function BookingsPage() {
             ))}
           </select>
 
+          {/* Payment Status Filter */}
+          <select
+            value={filterPaymentStatus}
+            onChange={(e) => setFilterPaymentStatus(e.target.value)}
+            className="px-4 py-2.5 rounded-lg border border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+          >
+            <option value="all">All Payments</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="partial">Partial</option>
+            <option value="paid">Paid</option>
+          </select>
+
           {/* Date Range */}
           <input
             type="date"
@@ -425,11 +466,12 @@ export default function BookingsPage() {
           />
 
           {/* Clear Filters */}
-          {(searchQuery || selectedServiceFilter || dateRangeStart || dateRangeEnd || selectedDate) && (
+          {(searchQuery || selectedServiceFilter || filterPaymentStatus !== "all" || dateRangeStart || dateRangeEnd || selectedDate) && (
             <button
               onClick={() => {
                 setSearchQuery("");
                 setSelectedServiceFilter("");
+                setFilterPaymentStatus("all");
                 setDateRangeStart("");
                 setDateRangeEnd("");
                 setSelectedDate(null);
@@ -861,105 +903,31 @@ export default function BookingsPage() {
       </button>
 
       {/* Booking Detail Modal */}
-      {selectedBooking && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setSelectedBooking(null)}>
-          <div className="bg-white rounded-t-3xl md:rounded-2xl w-full md:max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-[#e2e8f0] flex justify-between items-center">
-              <div className="font-bold flex items-center gap-2">
-                <i className="fas fa-calendar-check text-[#8b5cf6]"></i>
-                Booking Details
-              </div>
-              <button onClick={() => setSelectedBooking(null)} className="w-9 h-9 rounded-full border border-[#e2e8f0] flex items-center justify-center text-[#64748b]">
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div className="p-5 space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-[#ede9fe] rounded-xl">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold ${
-                  selectedBooking.verified ? "bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] text-[#8b5cf6]" : "bg-[#f1f5f9] text-[#64748b]"
-                }`}>{selectedBooking.clientInitials}</div>
-                <div>
-                  <div className="font-bold text-lg">{selectedBooking.client}</div>
-                  <div className="text-sm text-[#64748b] flex items-center gap-1">
-                    <i className="fab fa-whatsapp text-[#25D366]"></i> {selectedBooking.phone}
-                  </div>
-                  {selectedBooking.verified && (
-                    <div className="text-xs text-[#10b981] mt-1"><i className="fas fa-check-circle"></i> Verified Client</div>
-                  )}
-                </div>
-              </div>
+      <ViewBookingModal 
+        booking={selectedBooking} 
+        open={!!selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+        onUpdateStatus={handleUpdateStatus}
+        onDelete={(bookingId) => {
+          setShowDeleteConfirm(bookingId);
+          setSelectedBooking(null);
+        }}
+        onEdit={(booking) => {
+          handleEditBooking(booking);
+          setSelectedBooking(null);
+        }}
+        onConfirmPayment={handleConfirmPayment}
+        onOpenPaymentModal={() => setPaymentModalOpen(true)}
+      />
 
-              <div>
-                <div className="text-xs font-bold text-[#64748b] uppercase mb-3">Service Details</div>
-                <div className="space-y-3">
-                  <div className="flex justify-between"><span className="text-[#64748b]">Service</span><span className="font-semibold">{selectedBooking.service}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Date & Time</span><span className="font-semibold">{formatDate(selectedBooking.date)} at {selectedBooking.time}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Duration</span><span className="font-semibold">{selectedBooking.duration}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Location</span><span className="font-semibold flex items-center gap-1"><i className="fas fa-map-marker-alt text-[#8b5cf6]"></i>{selectedBooking.location}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Status</span><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getStatusClass(selectedBooking.status)}`}>{selectedBooking.status}</span></div>
-                </div>
-              </div>
-
-              {selectedBooking.notes && (
-                <div>
-                  <div className="text-xs font-bold text-[#64748b] uppercase mb-2">Notes</div>
-                  <div className="p-3 bg-[#f8fafc] rounded-lg text-sm text-[#64748b]">{selectedBooking.notes}</div>
-                </div>
-              )}
-
-              <div>
-                <div className="text-xs font-bold text-[#64748b] uppercase mb-3">Payment Details</div>
-                <div className="space-y-3">
-                  <div className="flex justify-between"><span className="text-[#64748b]">Total Price</span><span className="font-semibold">KES {selectedBooking.price.toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Deposit Paid</span><span className="font-semibold text-[#10b981]">KES {(selectedBooking.deposit || 0).toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Balance Due</span><span className="font-bold text-[#f59e0b]">KES {((selectedBooking.balance ?? selectedBooking.price) - (selectedBooking.deposit || 0)).toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Payment Method</span><span className="font-semibold capitalize">{selectedBooking.paymentMethod || 'Not specified'}</span></div>
-                  <div className="flex justify-between"><span className="text-[#64748b]">Payment Status</span><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    selectedBooking.paymentStatus === 'paid' ? 'bg-[rgba(37,211,102,0.1)] text-[#10b981]' :
-                    selectedBooking.paymentStatus === 'partial' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
-                    'bg-[rgba(239,68,68,0.1)] text-[#ef4444]'
-                  }`}>{selectedBooking.paymentStatus || 'unpaid'}</span></div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button 
-                  onClick={() => handleSendMessage(selectedBooking)}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all"
-                >
-                  <i className="fab fa-whatsapp"></i> Message
-                </button>
-                <button 
-                  onClick={() => handleEditBooking(selectedBooking)}
-                  className="flex-1 px-4 py-3 border-2 border-[#3b82f6] text-[#3b82f6] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#3b82f6] hover:text-white transition-all"
-                >
-                  <i className="fas fa-edit"></i> Edit
-                </button>
-              </div>
-
-              <div className="flex gap-2">
-                {selectedBooking.status !== 'completed' && (
-                  <button 
-                    onClick={() => handleUpdateStatus(selectedBooking.id, 'completed')}
-                    className="flex-1 px-4 py-3 border-2 border-[#10b981] text-[#10b981] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#10b981] hover:text-white transition-all"
-                  >
-                    <i className="fas fa-check"></i> Complete
-                  </button>
-                )}
-                {selectedBooking.status !== 'cancelled' && (
-                  <button 
-                    onClick={() => setShowDeleteConfirm(selectedBooking.id)}
-                    className="flex-1 px-4 py-3 border-2 border-[#ef4444] text-[#ef4444] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#ef4444] hover:text-white transition-all"
-                  >
-                    <i className="fas fa-times"></i> Cancel
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Payment Confirmation Modal */}
+      <PaymentConfirmationModal
+        item={selectedBooking}
+        itemType="booking"
+        open={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        onConfirm={handleConfirmPayment}
+      />
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (

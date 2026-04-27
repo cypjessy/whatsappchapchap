@@ -68,6 +68,32 @@ export interface BusinessProfile {
     saturday?: { open: string; close: string; closed: boolean };
     sunday?: { open: string; close: string; closed: boolean };
   };
+  paymentMethods?: {
+    mpesa?: {
+      enabled: boolean;
+      phoneNumber?: string; // e.g., "254712345678"
+      businessName?: string; // e.g., "Your Business Name"
+      paybillNumber?: string; // Optional for Paybill
+      accountNumber?: string; // Optional for Paybill account
+    };
+    bank?: {
+      enabled: boolean;
+      bankName?: string;
+      accountName?: string;
+      accountNumber?: string;
+      branch?: string;
+      swiftCode?: string;
+    };
+    card?: {
+      enabled: boolean;
+      provider?: 'stripe' | 'paypal' | 'other';
+      instructions?: string; // Custom payment instructions
+    };
+    cash?: {
+      enabled: boolean;
+      instructions?: string; // e.g., "Pay on delivery"
+    };
+  };
   category?: string;
   taxId?: string;
   registrationNumber?: string;
@@ -122,6 +148,31 @@ export interface Service {
   rating?: number;
   imageUrl?: string;
   portfolioImages?: string[];
+  bookingUrl?: string;
+  
+  // NEW FIELDS
+  providerName?: string; // Business/Provider name
+  packageFeatures?: { // Custom features for each package
+    basic: string[];
+    standard: string[];
+    premium: string[];
+  };
+  packagePricing?: { // Custom pricing for each tier (overrides auto-calculation)
+    basic?: number;
+    standard?: number;
+    premium?: number;
+  };
+  tierLabels?: { // Custom labels for tiers
+    basic?: string;
+    standard?: string;
+    premium?: string;
+  };
+  featuredTier?: 'basic' | 'standard' | 'premium'; // Which tier gets the "Popular" badge
+  availability?: { // Available days and times
+    days: string[]; // ['Mon', 'Tue', etc.]
+    timeSlots: string[]; // ['9:00 AM', '10:00 AM', etc.]
+  };
+  customTimeSlots?: string[]; // Custom time slots based on service duration
   createdAt: any;
   updatedAt: any;
 }
@@ -132,8 +183,10 @@ export interface Booking {
   client: string;
   clientInitials: string;
   phone: string;
+  email?: string; // Client email address
   service: string;
   serviceId?: string;
+  packageTier?: 'basic' | 'standard' | 'premium'; // Package tier booked
   date: string;
   time: string;
   duration: string;
@@ -142,10 +195,28 @@ export interface Booking {
   status: "confirmed" | "pending" | "completed" | "cancelled";
   verified: boolean;
   notes?: string;
+  specialRequests?: string; // Special requirements separate from notes
   deposit?: number;
   balance?: number;
   paymentMethod?: "cash" | "mpesa" | "card" | "bank";
   paymentStatus?: "unpaid" | "partial" | "paid";
+  paymentProof?: { // Payment confirmation details
+    method: string;
+    transactionId?: string;
+    amount: number;
+    paidAt?: any;
+    confirmedBy?: string; // Staff who confirmed
+    confirmedAt?: any;
+    proofImage?: string; // Screenshot URL
+    notes?: string;
+  };
+  source?: 'manual' | 'online' | 'whatsapp' | 'phone'; // How booking was made
+  assignedTo?: string; // Staff/provider assigned
+  reminderSent?: boolean; // Whether reminder was sent
+  reminderSentAt?: any; // When reminder was sent
+  cancellationReason?: string; // Reason if cancelled
+  rescheduleCount?: number; // Number of times rescheduled
+  originalDate?: string; // Original date if rescheduled
   createdAt: any;
   updatedAt: any;
 }
@@ -254,6 +325,16 @@ export interface Order {
   total: number;
   paymentMethod?: string;
   paymentDetails?: string;
+  paymentProof?: { // Payment confirmation details
+    method: string;
+    transactionId?: string;
+    amount: number;
+    paidAt?: any;
+    confirmedBy?: string; // Staff who confirmed
+    confirmedAt?: any;
+    proofImage?: string; // Screenshot URL
+    notes?: string;
+  };
   deliveryMethod?: string;
   deliveryCost?: number;
   status: OrderStatus;

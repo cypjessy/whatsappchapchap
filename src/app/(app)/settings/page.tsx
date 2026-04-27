@@ -6,7 +6,7 @@ import { businessProfileService, whatsappSettingsService, shippingService, Busin
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "whatsapp">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "whatsapp" | "payments">("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -61,6 +61,34 @@ export default function SettingsPage() {
     awayMessage: "Hi! Thanks for reaching out. We're currently away but will respond as soon as we're back during our business hours.",
   });
 
+  // Payment Methods State
+  const [paymentMethods, setPaymentMethods] = useState({
+    mpesa: {
+      enabled: false,
+      phoneNumber: "",
+      businessName: "",
+      paybillNumber: "",
+      accountNumber: "",
+    },
+    bank: {
+      enabled: false,
+      bankName: "",
+      accountName: "",
+      accountNumber: "",
+      branch: "",
+      swiftCode: "",
+    },
+    card: {
+      enabled: false,
+      provider: "stripe" as 'stripe' | 'paypal' | 'other',
+      instructions: "",
+    },
+    cash: {
+      enabled: false,
+      instructions: "Pay on delivery or at our office",
+    },
+  });
+
   useEffect(() => {
     if (user) {
       loadData();
@@ -79,6 +107,35 @@ export default function SettingsPage() {
 
       if (profileData) {
         setProfile(profileData);
+        // Load payment methods from profile
+        if (profileData.paymentMethods) {
+          setPaymentMethods({
+            mpesa: {
+              enabled: profileData.paymentMethods.mpesa?.enabled || false,
+              phoneNumber: profileData.paymentMethods.mpesa?.phoneNumber || "",
+              businessName: profileData.paymentMethods.mpesa?.businessName || "",
+              paybillNumber: profileData.paymentMethods.mpesa?.paybillNumber || "",
+              accountNumber: profileData.paymentMethods.mpesa?.accountNumber || "",
+            },
+            bank: {
+              enabled: profileData.paymentMethods.bank?.enabled || false,
+              bankName: profileData.paymentMethods.bank?.bankName || "",
+              accountName: profileData.paymentMethods.bank?.accountName || "",
+              accountNumber: profileData.paymentMethods.bank?.accountNumber || "",
+              branch: profileData.paymentMethods.bank?.branch || "",
+              swiftCode: profileData.paymentMethods.bank?.swiftCode || "",
+            },
+            card: {
+              enabled: profileData.paymentMethods.card?.enabled || false,
+              provider: profileData.paymentMethods.card?.provider || "stripe",
+              instructions: profileData.paymentMethods.card?.instructions || "",
+            },
+            cash: {
+              enabled: profileData.paymentMethods.cash?.enabled || false,
+              instructions: profileData.paymentMethods.cash?.instructions || "Pay on delivery or at our office",
+            },
+          });
+        }
       }
 
       if (whatsappData) {
@@ -107,7 +164,17 @@ export default function SettingsPage() {
     if (!user) return;
     setSaving(true);
     try {
-      await businessProfileService.createOrUpdateProfile(user, profile as any);
+      // Include payment methods in profile
+      const profileWithPayments = {
+        ...profile,
+        paymentMethods: {
+          mpesa: paymentMethods.mpesa.enabled ? paymentMethods.mpesa : undefined,
+          bank: paymentMethods.bank.enabled ? paymentMethods.bank : undefined,
+          card: paymentMethods.card.enabled ? paymentMethods.card : undefined,
+          cash: paymentMethods.cash.enabled ? paymentMethods.cash : undefined,
+        }
+      };
+      await businessProfileService.createOrUpdateProfile(user, profileWithPayments as any);
       alert("Business profile saved successfully!");
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -254,6 +321,17 @@ export default function SettingsPage() {
         >
           <i className="fab fa-whatsapp"></i>
           WhatsApp
+        </button>
+        <button
+          onClick={() => setActiveTab("payments")}
+          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+            activeTab === "payments"
+              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-green-500"
+          }`}
+        >
+          <i className="fas fa-credit-card"></i>
+          Payment Methods
         </button>
       </div>
 
@@ -994,6 +1072,284 @@ export default function SettingsPage() {
                 <>
                   <i className="fas fa-save"></i>
                   Save WhatsApp Settings
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Methods Tab */}
+      {activeTab === "payments" && (
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500">
+            <div className="flex items-start gap-3">
+              <i className="fas fa-credit-card text-2xl text-green-500"></i>
+              <div>
+                <h3 className="font-bold text-lg mb-1">Payment Methods Configuration</h3>
+                <p className="text-sm text-[#64748b]">
+                  Configure payment methods that will be displayed to customers when booking services or purchasing products.
+                  These settings are automatically applied to all your services and products.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* M-Pesa Section */}
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-green-500 transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <i className="fas fa-mobile-alt text-green-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">M-Pesa (Kenya)</h3>
+                    <p className="text-sm text-[#64748b]">Accept payments via M-Pesa mobile money</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.mpesa.enabled}
+                    onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, enabled: e.target.checked } }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                </label>
+              </div>
+
+              {paymentMethods.mpesa.enabled && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">M-Pesa Phone Number *</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.mpesa.phoneNumber}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, phoneNumber: e.target.value } }))}
+                      placeholder="254712345678"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                    />
+                    <p className="text-xs text-[#64748b] mt-1">Format: 254XXXXXXXXX (no + sign)</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Business Name *</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.mpesa.businessName}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, businessName: e.target.value } }))}
+                      placeholder="Your Business Name"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Paybill Number (Optional)</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.mpesa.paybillNumber}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybillNumber: e.target.value } }))}
+                      placeholder="123456"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Number (Optional)</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.mpesa.accountNumber}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, accountNumber: e.target.value } }))}
+                      placeholder="ACCOUNT123"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bank Transfer Section */}
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-blue-500 transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i className="fas fa-university text-blue-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Bank Transfer</h3>
+                    <p className="text-sm text-[#64748b]">Accept direct bank transfers</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.bank.enabled}
+                    onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, enabled: e.target.checked } }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {paymentMethods.bank.enabled && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Bank Name *</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.bank.bankName}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, bankName: e.target.value } }))}
+                      placeholder="KCB Bank"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Name *</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.bank.accountName}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, accountName: e.target.value } }))}
+                      placeholder="Business Name Ltd"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Number *</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.bank.accountNumber}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, accountNumber: e.target.value } }))}
+                      placeholder="1234567890"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Branch</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.bank.branch}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, branch: e.target.value } }))}
+                      placeholder="Nairobi Branch"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">SWIFT Code</label>
+                    <input
+                      type="text"
+                      value={paymentMethods.bank.swiftCode}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, swiftCode: e.target.value } }))}
+                      placeholder="KCBLKENX"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Card Payment Section */}
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-purple-500 transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                    <i className="fas fa-credit-card text-purple-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Card Payments</h3>
+                    <p className="text-sm text-[#64748b]">Accept credit/debit card payments</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.card.enabled}
+                    onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, enabled: e.target.checked } }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
+
+              {paymentMethods.card.enabled && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Payment Provider</label>
+                    <select
+                      value={paymentMethods.card.provider}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, provider: e.target.value as any } }))}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none"
+                    >
+                      <option value="stripe">Stripe</option>
+                      <option value="paypal">PayPal</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Payment Instructions</label>
+                    <textarea
+                      value={paymentMethods.card.instructions}
+                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, instructions: e.target.value } }))}
+                      placeholder="Pay via Stripe link sent separately..."
+                      rows={3}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Cash Payment Section */}
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-orange-500 transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                    <i className="fas fa-money-bill-wave text-orange-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Cash on Delivery</h3>
+                    <p className="text-sm text-[#64748b]">Accept cash payments</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.cash.enabled}
+                    onChange={(e) => setPaymentMethods(prev => ({ ...prev, cash: { ...prev.cash, enabled: e.target.checked } }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                </label>
+              </div>
+
+              {paymentMethods.cash.enabled && (
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-[#64748b] mb-2">Cash Payment Instructions</label>
+                  <textarea
+                    value={paymentMethods.cash.instructions}
+                    onChange={(e) => setPaymentMethods(prev => ({ ...prev, cash: { ...prev.cash, instructions: e.target.value } }))}
+                    placeholder="Pay on delivery or at our office..."
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-orange-500 focus:outline-none resize-none"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end mt-6 pt-6 border-t border-[#e2e8f0]">
+            <button
+              onClick={saveProfile}
+              disabled={saving}
+              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save"></i>
+                  Save Payment Methods
                 </>
               )}
             </button>

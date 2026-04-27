@@ -147,8 +147,60 @@ export default function AddServiceButton() {
   const [bookedTimes] = useState<Set<string>>(new Set(['10:00 AM', '2:00 PM', '4:00 PM'])); // Simulated booked slots
   const [portfolioImages, setPortfolioImages] = useState<File[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  
+  // Package features state
+  const [packageFeatures, setPackageFeatures] = useState({
+    basic: ['Core service included', 'Professional quality'],
+    standard: ['Everything in Basic', 'Priority scheduling', 'Enhanced support'],
+    premium: ['Everything in Standard', 'VIP treatment', '24/7 support']
+  });
+  
+  // Custom pricing state
+  const [customPricing, setCustomPricing] = useState({
+    basic: 0,
+    standard: 0,
+    premium: 0
+  });
+  
+  // Tier labels state
+  const [tierLabels, setTierLabels] = useState({
+    basic: 'Starter',
+    standard: 'Standard',
+    premium: 'Premium'
+  });
+  
+  // Featured tier state
+  const [featuredTier, setFeaturedTier] = useState<'basic' | 'standard' | 'premium'>('standard');
 
   const specsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Generate time slots based on service duration
+  const generateTimeSlots = (durationMinutes: number): string[] => {
+    const slots: string[] = [];
+    const startHour = 9; // 9 AM
+    const endHour = 17; // 5 PM
+    
+    // Calculate interval based on duration
+    let interval = 60; // default 1 hour
+    if (durationMinutes <= 30) interval = 30;
+    else if (durationMinutes <= 45) interval = 45;
+    else if (durationMinutes <= 60) interval = 60;
+    else if (durationMinutes <= 90) interval = 90;
+    else interval = 120; // 2+ hours
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += interval) {
+        if (hour + (minute / 60) >= endHour) break;
+        
+        const h = hour % 12 || 12;
+        const ampm = hour < 12 ? 'AM' : 'PM';
+        const m = minute === 0 ? '00' : minute.toString();
+        slots.push(`${h}:${m} ${ampm}`);
+      }
+    }
+    
+    return slots.length > 0 ? slots : ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+  };
 
   // Business Type Specifications Database (exact as provided)
   const businessSpecs: Record<string, any> = {
@@ -363,6 +415,10 @@ export default function AddServiceButton() {
       const descInput = document.getElementById("serviceDesc") as HTMLTextAreaElement;
       const description = descInput?.value || '';
 
+      // Get provider name
+      const providerNameInput = document.getElementById("providerName") as HTMLInputElement;
+      const providerName = providerNameInput?.value.trim() || '';
+
       // Get business icon emoji based on type
       const businessIcons: Record<string, string> = {
         beauty: '💇‍♀️', home: '🔧', health: '🏥', education: '📚',
@@ -411,9 +467,11 @@ export default function AddServiceButton() {
         }
       }
 
-      const serviceData = {
+      // Create service data first (without bookingUrl)
+      const serviceDataWithoutUrl = {
         name,
         description,
+        providerName,
         emoji: businessIcons[selectedBusiness] || '✨',
         bgGradient: gradients[selectedBusiness] || 'from-gray-100 to-gray-200',
         duration: `${selectedDuration} min`,
@@ -428,9 +486,34 @@ export default function AddServiceButton() {
         selectedDuration: Number(selectedDuration),
         status: 'draft' as const,
         portfolioImages: portfolioImageUrls,
+        packageFeatures,
+        packagePricing: customPricing.basic > 0 || customPricing.standard > 0 || customPricing.premium > 0 ? {
+          basic: customPricing.basic || undefined,
+          standard: customPricing.standard || undefined,
+          premium: customPricing.premium || undefined
+        } : undefined,
+        tierLabels: tierLabels.basic !== 'Starter' || tierLabels.standard !== 'Standard' || tierLabels.premium !== 'Premium' ? {
+          basic: tierLabels.basic,
+          standard: tierLabels.standard,
+          premium: tierLabels.premium
+        } : undefined,
+        featuredTier: featuredTier !== 'standard' ? featuredTier : undefined,
+        availability: {
+          days: Array.from(selectedDays),
+          timeSlots: Array.from(selectedTimes)
+        },
+        customTimeSlots: generateTimeSlots(Number(selectedDuration)),
       };
 
-      await serviceService.createService(user, serviceData);
+      // Create the service in Firestore
+      const createdService = await serviceService.createService(user, serviceDataWithoutUrl);
+      
+      // Generate booking URL with the actual service ID
+      const bookingUrl = `${window.location.origin}/book/${createdService.id}`;
+      console.log("Generated booking URL:", bookingUrl);
+      
+      // Update the service with the booking URL
+      await serviceService.updateService(user, createdService.id, { bookingUrl });
       console.log("Service created successfully with", portfolioImageUrls.length, "portfolio images");
       alert(`Service "${name}" saved successfully!`);
       closeModal();
@@ -584,6 +667,10 @@ export default function AddServiceButton() {
                 </div>
                 <div className="form-grid">
                   <div className="form-group full-width">
+                    <label className="form-label">Business/Provider Name *</label>
+                    <input type="text" className="form-input" id="providerName" placeholder="e.g., Sarah's Beauty Salon" />
+                  </div>
+                  <div className="form-group full-width">
                     <label className="form-label">Service Name *</label>
                     <input type="text" className="form-input" id="serviceName" placeholder="e.g., Professional Box Braids" />
                   </div>
@@ -713,6 +800,183 @@ export default function AddServiceButton() {
                    </div>
                  </div>
                )}
+
+              {/* Package Features */}
+              {selectedBusiness && (
+                <div className="form-section">
+                  <div className="section-title">
+                    <i className="fas fa-list-check"></i>
+                    Customize Package Features
+                  </div>
+                  <p className="text-sm text-[#64748b] mb-4">Define what's included in each package tier</p>
+                  
+                  {/* Basic Package */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                      <span className="px-2 py-1 bg-gray-100 rounded text-xs mr-2">BASIC</span>
+                      Package Features (one per line)
+                    </label>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      value={packageFeatures.basic.join('\n')}
+                      onChange={(e) => setPackageFeatures({
+                        ...packageFeatures,
+                        basic: e.target.value.split('\n').filter(line => line.trim())
+                      })}
+                      placeholder="Core service included&#10;Professional quality"
+                    />
+                  </div>
+
+                  {/* Standard Package */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs mr-2">STANDARD</span>
+                      Package Features (one per line)
+                    </label>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      value={packageFeatures.standard.join('\n')}
+                      onChange={(e) => setPackageFeatures({
+                        ...packageFeatures,
+                        standard: e.target.value.split('\n').filter(line => line.trim())
+                      })}
+                      placeholder="Everything in Basic&#10;Priority scheduling&#10;Enhanced support"
+                    />
+                  </div>
+
+                  {/* Premium Package */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs mr-2">PREMIUM</span>
+                      Package Features (one per line)
+                    </label>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      value={packageFeatures.premium.join('\n')}
+                      onChange={(e) => setPackageFeatures({
+                        ...packageFeatures,
+                        premium: e.target.value.split('\n').filter(line => line.trim())
+                      })}
+                      placeholder="Everything in Standard&#10;VIP treatment&#10;24/7 support"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Pricing & Tier Customization */}
+              {selectedBusiness && (
+                <div className="form-section">
+                  <div className="section-title">
+                    <i className="fas fa-tags"></i>
+                    Customize Pricing & Tiers
+                  </div>
+                  <p className="text-sm text-[#64748b] mb-4">Set custom prices and labels for each package (leave at 0 for auto-calculation)</p>
+                  
+                  {/* Tier Labels */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Package Tier Names</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs text-[#64748b] mb-1 block">Basic Tier Name</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={tierLabels.basic}
+                          onChange={(e) => setTierLabels({...tierLabels, basic: e.target.value})}
+                          placeholder="Starter"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#64748b] mb-1 block">Standard Tier Name</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={tierLabels.standard}
+                          onChange={(e) => setTierLabels({...tierLabels, standard: e.target.value})}
+                          placeholder="Standard"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#64748b] mb-1 block">Premium Tier Name</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={tierLabels.premium}
+                          onChange={(e) => setTierLabels({...tierLabels, premium: e.target.value})}
+                          placeholder="Premium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Featured Tier */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Featured Tier (gets "Popular" badge)</label>
+                    <div className="flex gap-3">
+                      {(['basic', 'standard', 'premium'] as const).map((tier) => (
+                        <button
+                          key={tier}
+                          type="button"
+                          className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all ${
+                            featuredTier === tier
+                              ? 'bg-[#8b5cf6] text-white'
+                              : 'bg-[#f8fafc] text-[#64748b] border-2 border-[#e2e8f0]'
+                          }`}
+                          onClick={() => setFeaturedTier(tier)}
+                        >
+                          {tierLabels[tier]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Pricing */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Custom Prices (KES) - Leave 0 for auto-calculation</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs text-[#64748b] mb-1 block">Basic Price</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={customPricing.basic}
+                          onChange={(e) => setCustomPricing({...customPricing, basic: Number(e.target.value)})}
+                          min="0"
+                          placeholder="Auto"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#64748b] mb-1 block">Standard Price</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={customPricing.standard}
+                          onChange={(e) => setCustomPricing({...customPricing, standard: Number(e.target.value)})}
+                          min="0"
+                          placeholder="Auto"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#64748b] mb-1 block">Premium Price</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={customPricing.premium}
+                          onChange={(e) => setCustomPricing({...customPricing, premium: Number(e.target.value)})}
+                          min="0"
+                          placeholder="Auto"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#64748b] mt-2">
+                      Auto-calculation: Basic = base price, Standard = 1.5x, Premium = 2x
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Availability */}
               {selectedBusiness && (

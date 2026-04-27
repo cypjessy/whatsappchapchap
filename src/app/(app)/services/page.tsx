@@ -80,8 +80,8 @@ export default function ServicesPage() {
 
   // Share service handler
   const handleShareService = async (service: Service) => {
-    const shareUrl = `${window.location.origin}/services/${service.id}`;
-    const shareText = `Check out ${service.name} - ${service.description}`;
+    const shareUrl = service.bookingUrl || `${window.location.origin}/book/${service.id}`;
+    const shareText = `Book ${service.name} - Professional ${service.businessType} service`;
     
     if (navigator.share) {
       try {
@@ -96,7 +96,7 @@ export default function ServicesPage() {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(shareUrl);
-      alert('Service link copied to clipboard!');
+      alert('Booking link copied to clipboard!');
     }
   };
 
@@ -525,7 +525,14 @@ export default function ServicesPage() {
                 </span>
               </div>
               <div className="p-4">
-                <h3 className="font-bold text-base mb-2 line-clamp-2">{service.name}</h3>
+                <h3 className="font-bold text-base mb-2 line-clamp-2 flex items-center gap-2">
+                  {service.name}
+                  {service.bookings && service.bookings > 10 && (
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-orange-400 to-red-500 text-white text-[10px] font-bold rounded-full">
+                      🔥 Popular
+                    </span>
+                  )}
+                </h3>
                 <div className="flex gap-3 text-xs text-[#64748b] mb-3">
                   <span><i className="fas fa-clock mr-1"></i>{service.duration || 'TBD'}</span>
                   <span><i className={`fas ${getLocationIcon(service.location || '')} mr-1`}></i>{service.location || 'TBD'}</span>
@@ -552,6 +559,16 @@ export default function ServicesPage() {
                   </div>
                   {!bulkMode && (
                     <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShareService(service);
+                        }}
+                        className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all"
+                        title="Copy Booking Link"
+                      >
+                        <i className="fas fa-link text-xs"></i>
+                      </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
@@ -621,7 +638,14 @@ export default function ServicesPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-bold text-base truncate">{service.name}</h3>
+                  <h3 className="font-bold text-base truncate flex items-center gap-2">
+                    {service.name}
+                    {service.bookings && service.bookings > 10 && (
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-orange-400 to-red-500 text-white text-[10px] font-bold rounded-full flex-shrink-0">
+                        🔥 Popular
+                      </span>
+                    )}
+                  </h3>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getStatusClass(service.status || 'active')}`}>
                     {service.status || 'active'}
                   </span>
@@ -635,6 +659,9 @@ export default function ServicesPage() {
               </div>
               {!bulkMode && (
                 <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => handleShareService(service)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all" title="Copy Booking Link">
+                    <i className="fas fa-link text-xs"></i>
+                  </button>
                   <button onClick={() => handleToggleStatus(service)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all">
                     <i className={`fas ${service.status === 'active' ? 'fa-pause' : 'fa-play'} text-xs`}></i>
                   </button>
