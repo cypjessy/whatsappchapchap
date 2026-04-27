@@ -117,52 +117,60 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             {/* Overview Tab */}
             {activeTab === "overview" && (
               <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-4 md:gap-8">
-                {/* Left: Image */}
+                {/* Left: Image Gallery */}
                 <div className="flex flex-col gap-3 md:gap-4">
-                  <div className="aspect-square sm:aspect-square bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-xl md:rounded-[16px] flex items-center justify-center text-[5rem] md:text-[8rem] relative border-2 border-[#e2e8f0] overflow-hidden">
+                  {/* Main Image Display */}
+                  <div className="aspect-square bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-xl md:rounded-[16px] flex items-center justify-center relative border-2 border-[#e2e8f0] overflow-hidden shadow-lg">
                     {(product.images && product.images.length > 0) || product.image ? (
                       <img 
                         src={(product.images && product.images[selectedImage]) || product.image} 
                         alt={product.name} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover transition-all duration-300 hover:scale-105" 
                       />
                     ) : (
-                      getCategoryEmoji(product.category || "other")
+                      <div className="text-[5rem] md:text-[8rem] opacity-50">
+                        {getCategoryEmoji(product.category || "other")}
+                      </div>
                     )}
                     {hasDiscount && (
-                      <span className="absolute top-4 left-4 px-4 py-2 bg-[#ef4444] text-white rounded-[20px] text-sm font-bold">-{discount}% OFF</span>
+                      <span className="absolute top-4 left-4 px-4 py-2 bg-[#ef4444] text-white rounded-[20px] text-sm font-bold shadow-lg">-{discount}% OFF</span>
+                    )}
+                    {/* Image Counter Badge */}
+                    {((product.images?.length || 0) + (product.image ? 1 : 0)) > 1 && (
+                      <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/70 backdrop-blur-sm text-white rounded-full text-xs font-semibold">
+                        {selectedImage === -1 ? 1 : selectedImage + 1} / {(product.images?.length || 0) + (product.image ? 1 : 0)}
+                      </div>
                     )}
                   </div>
-                  {(product.images && product.images.length > 1) || product.image ? (
-                    <div className="flex gap-3">
+
+                  {/* Thumbnail Gallery */}
+                  {((product.images && product.images.length > 0) || product.image) && (
+                    <div className="grid grid-cols-5 gap-2">
                       {product.image && (
                         <button 
-                          className={`w-20 h-20 rounded-[12px] border-2 flex items-center justify-center bg-[#f8fafc] overflow-hidden ${selectedImage === -1 ? "border-[#25D366]" : "border-[#e2e8f0]"}`}
+                          className={`aspect-square rounded-[12px] border-2 flex items-center justify-center bg-[#f8fafc] overflow-hidden transition-all hover:scale-105 ${selectedImage === -1 ? "border-[#25D366] ring-2 ring-[#25D366]/30 shadow-md" : "border-[#e2e8f0] hover:border-[#25D366]/50"}`}
                           onClick={() => setSelectedImage(-1)}
                         >
-                          <img src={product.image} alt="Main" className="w-full h-full object-cover rounded-[10px]" />
+                          <img src={product.image} alt="Main" className="w-full h-full object-cover" />
                         </button>
                       )}
                       {product.images?.map((img, idx) => (
                         <button 
                           key={idx}
-                          className={`w-20 h-20 rounded-[12px] border-2 flex items-center justify-center bg-[#f8fafc] overflow-hidden ${selectedImage === idx ? "border-[#25D366]" : "border-[#e2e8f0]"}`}
+                          className={`aspect-square rounded-[12px] border-2 flex items-center justify-center bg-[#f8fafc] overflow-hidden transition-all hover:scale-105 ${selectedImage === idx ? "border-[#25D366] ring-2 ring-[#25D366]/30 shadow-md" : "border-[#e2e8f0] hover:border-[#25D366]/50"}`}
                           onClick={() => setSelectedImage(idx)}
                         >
-                          <img src={img} alt={`Variant ${idx + 1}`} className="w-full h-full object-cover rounded-[10px]" />
+                          <img src={img} alt={`Variant ${idx + 1}`} className="w-full h-full object-cover" />
                         </button>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="flex gap-3">
-                      {[0, 1, 2, 3].map((i) => (
-                        <button 
-                          key={i}
-                          className={`w-20 h-20 rounded-[12px] border-2 cursor-pointer flex items-center justify-center text-3xl bg-[#f8fafc] transition-all hover:border-[#25D366] hover:scale-105 ${selectedImage === i ? "border-[#25D366]" : "border-[#e2e8f0]"}`}
-                          onClick={() => setSelectedImage(i)}
+                      {/* Add more placeholder if less than 5 images */}
+                      {Array.from({ length: Math.max(0, 5 - ((product.images?.length || 0) + (product.image ? 1 : 0))) }).map((_, i) => (
+                        <div 
+                          key={`placeholder-${i}`}
+                          className="aspect-square rounded-[12px] border-2 border-dashed border-[#e2e8f0] flex items-center justify-center bg-[#f8fafc]/50"
                         >
-                          {i === 3 ? <i className="fas fa-plus text-[#64748b] text-xl"></i> : getCategoryEmoji(product.category || "other")}
-                        </button>
+                          <i className="fas fa-plus text-[#cbd5e1] text-lg"></i>
+                        </div>
                       ))}
                     </div>
                   )}

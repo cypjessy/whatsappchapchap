@@ -251,11 +251,18 @@ function OrderPageContent() {
             
             {products.map((product, idx) => (
               <div key={idx} className="flex gap-4 mb-4 pb-4 border-b border-[#e2e8f0]">
-                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center text-4xl overflow-hidden">
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                {/* Product Image Gallery */}
+                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center text-4xl overflow-hidden shadow-md relative">
+                  {product.image || (product.images && product.images.length > 0) ? (
+                    <img src={product.image || product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     "📦"
+                  )}
+                  {/* Image count badge if multiple images */}
+                  {(product.images && product.images.length > 0) && (
+                    <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-white rounded-full text-[10px] font-semibold">
+                      {product.images.length + (product.image ? 1 : 0)}
+                    </div>
                   )}
                 </div>
                 <div className="flex-1">
@@ -264,18 +271,40 @@ function OrderPageContent() {
                   {selectedSize && (
                     <p className="text-sm text-[#64748b]">Size: {selectedSize}</p>
                   )}
+                  
+                  {/* Show thumbnail gallery if multiple images */}
+                  {product.images && product.images.length > 0 && (
+                    <div className="flex gap-1 mt-2">
+                      {product.image && (
+                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#e2e8f0]">
+                          <img src={product.image} alt="Main" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      {product.images.slice(0, 3).map((img: string, imgIdx: number) => (
+                        <div key={imgIdx} className="w-8 h-8 rounded-lg overflow-hidden border border-[#e2e8f0]">
+                          <img src={img} alt={`Variant ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                      {product.images.length > 3 && (
+                        <div className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center text-xs font-semibold text-[#64748b]">
+                          +{product.images.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
-                        className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold"
+                        className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
                       >
                         -
                       </button>
                       <span className="w-8 text-center font-bold">{selectedQuantity}</span>
                       <button 
                         onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                        className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold"
+                        className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
                       >
                         +
                       </button>
