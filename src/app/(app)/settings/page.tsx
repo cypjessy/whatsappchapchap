@@ -171,18 +171,25 @@ export default function SettingsPage() {
     
     setSaving(true);
     try {
-      // Include payment methods in profile
+      // Include payment methods in profile - filter out disabled ones completely
+      const paymentMethodsData: any = {};
+      if (paymentMethods.mpesa.enabled) paymentMethodsData.mpesa = paymentMethods.mpesa;
+      if (paymentMethods.bank.enabled) paymentMethodsData.bank = paymentMethods.bank;
+      if (paymentMethods.card.enabled) paymentMethodsData.card = paymentMethods.card;
+      if (paymentMethods.cash.enabled) paymentMethodsData.cash = paymentMethods.cash;
+      
       const profileWithPayments = {
         ...profile,
-        paymentMethods: {
-          mpesa: paymentMethods.mpesa.enabled ? paymentMethods.mpesa : undefined,
-          bank: paymentMethods.bank.enabled ? paymentMethods.bank : undefined,
-          card: paymentMethods.card.enabled ? paymentMethods.card : undefined,
-          cash: paymentMethods.cash.enabled ? paymentMethods.cash : undefined,
-        }
+        paymentMethods: Object.keys(paymentMethodsData).length > 0 ? paymentMethodsData : undefined,
       };
-      console.log("Saving profile:", profileWithPayments);
-      await businessProfileService.createOrUpdateProfile(user, profileWithPayments as any);
+      
+      // Remove undefined values before saving to Firebase
+      const cleanedProfile = Object.fromEntries(
+        Object.entries(profileWithPayments).filter(([_, v]) => v !== undefined)
+      );
+      
+      console.log("Saving profile:", cleanedProfile);
+      await businessProfileService.createOrUpdateProfile(user, cleanedProfile as any);
       alert("Business profile saved successfully!");
     } catch (error: any) {
       console.error("Error saving profile:", error);
@@ -203,8 +210,13 @@ export default function SettingsPage() {
     
     setSaving(true);
     try {
-      console.log("Saving WhatsApp settings:", whatsappSettings);
-      await whatsappSettingsService.createOrUpdateSettings(user, whatsappSettings as any);
+      // Remove undefined values before saving to Firebase
+      const cleanedSettings = Object.fromEntries(
+        Object.entries(whatsappSettings).filter(([_, v]) => v !== undefined)
+      );
+      
+      console.log("Saving WhatsApp settings:", cleanedSettings);
+      await whatsappSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
       alert("WhatsApp settings saved successfully!");
     } catch (error: any) {
       console.error("Error saving WhatsApp settings:", error);
