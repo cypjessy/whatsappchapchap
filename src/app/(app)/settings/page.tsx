@@ -162,6 +162,13 @@ export default function SettingsPage() {
 
   const saveProfile = async () => {
     if (!user) return;
+    
+    // Validate required fields
+    if (!profile.businessName || profile.businessName.trim() === "") {
+      alert("Business Name is required!");
+      return;
+    }
+    
     setSaving(true);
     try {
       // Include payment methods in profile
@@ -174,11 +181,12 @@ export default function SettingsPage() {
           cash: paymentMethods.cash.enabled ? paymentMethods.cash : undefined,
         }
       };
+      console.log("Saving profile:", profileWithPayments);
       await businessProfileService.createOrUpdateProfile(user, profileWithPayments as any);
       alert("Business profile saved successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving profile:", error);
-      alert("Failed to save profile");
+      alert(`Failed to save profile: ${error.message || "Unknown error"}`);
     } finally {
       setSaving(false);
     }
@@ -186,13 +194,21 @@ export default function SettingsPage() {
 
   const saveWhatsAppSettings = async () => {
     if (!user) return;
+    
+    // Validate required fields
+    if (!whatsappSettings.businessName || whatsappSettings.businessName.trim() === "") {
+      alert("Business Name is required for WhatsApp settings!");
+      return;
+    }
+    
     setSaving(true);
     try {
+      console.log("Saving WhatsApp settings:", whatsappSettings);
       await whatsappSettingsService.createOrUpdateSettings(user, whatsappSettings as any);
       alert("WhatsApp settings saved successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving WhatsApp settings:", error);
-      alert("Failed to save WhatsApp settings");
+      alert(`Failed to save WhatsApp settings: ${error.message || "Unknown error"}`);
     } finally {
       setSaving(false);
     }
@@ -814,6 +830,25 @@ export default function SettingsPage() {
       {/* WhatsApp Tab */}
       {activeTab === "whatsapp" && (
         <div className="space-y-6">
+          {/* Business Name */}
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
+            <h3 className="font-bold text-lg flex items-center gap-2 mb-4">
+              <i className="fas fa-store text-[#8b5cf6]"></i>
+              Business Name
+            </h3>
+            <div>
+              <label className="block text-sm font-semibold text-[#64748b] mb-2">Your Business Name</label>
+              <input
+                type="text"
+                value={whatsappSettings.businessName || ""}
+                onChange={(e) => handleWhatsAppChange("businessName", e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                placeholder="e.g., Campus Hub Store"
+              />
+              <p className="text-xs text-[#64748b] mt-2">This will be used in automated messages and greetings</p>
+            </div>
+          </div>
+
           {/* Welcome Message */}
           <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
             <div className="flex items-center justify-between mb-4">

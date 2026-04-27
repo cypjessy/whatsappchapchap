@@ -105,6 +105,7 @@ export interface BusinessProfile {
 export interface WhatsAppSettings {
   id: string;
   tenantId: string;
+  businessName?: string;
   welcomeMessageEnabled: boolean;
   welcomeMessage: string;
   autoReplyEnabled: boolean;

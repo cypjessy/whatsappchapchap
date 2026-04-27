@@ -102,6 +102,18 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
       };
     }
     
+    // Fallback to business profile
+    const profileDoc = await adminDb.collection("businessProfiles").doc(tenantId).get();
+    
+    if (profileDoc.exists) {
+      const data = profileDoc.data();
+      return {
+        businessName: data?.businessName || "Our Shop",
+        welcomeMessage: `Hello! 👋 Welcome to ${data?.businessName || "our shop"}.\n\nWe're excited to connect with you! How can we help you today?`,
+        welcomeMessageEnabled: true
+      };
+    }
+    
     // Fallback to old settings collection
     const settingsDoc = await adminDb.collection("settings").doc(tenantId).get();
 
