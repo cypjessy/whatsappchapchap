@@ -450,6 +450,19 @@ export default function AddServiceButton() {
         }
       }
 
+      // Get pricing from tier inputs
+      const tierInputs = document.querySelectorAll('.tier-price-input') as NodeListOf<HTMLInputElement>;
+      const prices = {
+        basic: Number(tierInputs[0]?.value) || 0,
+        standard: Number(tierInputs[1]?.value) || 0,
+        premium: Number(tierInputs[2]?.value) || 0
+      };
+      
+      // Calculate min and max prices
+      const validPrices = [prices.basic, prices.standard, prices.premium].filter(p => p > 0);
+      const priceMin = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+      const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : 0;
+
       // Create service data first (without bookingUrl)
       const serviceDataWithoutUrl = {
         name,
@@ -460,15 +473,16 @@ export default function AddServiceButton() {
         duration: `${selectedDuration} min`,
         location: selectedLocation,
         tags: [selectedBusiness, ...specs.service_type || []].slice(0, 5),
-        priceMin: 0,
-        priceMax: 0,
+        priceMin,
+        priceMax,
         businessType: selectedBusiness,
         specifications: specs,
         tier: selectedTier,
         mode: selectedMode,
         selectedDuration: Number(selectedDuration),
-        status: 'draft' as const,
+        status: 'active' as const,
         portfolioImages: portfolioImageUrls,
+        imageUrl: portfolioImageUrls.length > 0 ? portfolioImageUrls[0] : undefined,
         packageFeatures,
         availability: {
           days: Array.from(selectedDays),

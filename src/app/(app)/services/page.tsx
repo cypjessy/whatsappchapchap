@@ -505,7 +505,7 @@ export default function ServicesPage() {
                 </div>
               )}
               <div 
-                className={`h-40 md:h-44 bg-gradient-to-br ${service.bgGradient || 'from-gray-100 to-gray-200'} flex items-center justify-center relative`}
+                className={`h-40 md:h-44 bg-gradient-to-br ${service.bgGradient || 'from-gray-100 to-gray-200'} flex items-center justify-center relative overflow-hidden`}
                 onClick={() => !bulkMode && setSelectedService(service)}
               >
                 {!bulkMode && (
@@ -514,12 +514,20 @@ export default function ServicesPage() {
                       e.stopPropagation();
                       // Could add dropdown menu here
                     }}
-                    className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[#64748b] hover:bg-white"
+                    className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[#64748b] hover:bg-white z-10"
                   >
                     <i className="fas fa-ellipsis-v"></i>
                   </button>
                 )}
-                <span className="text-5xl">{service.emoji || '✨'}</span>
+                {service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0) ? (
+                  <img 
+                    src={service.imageUrl || service.portfolioImages![0]} 
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-5xl">{service.emoji || '✨'}</span>
+                )}
                 <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusClass(service.status || 'active')}`}>
                   {service.status || 'active'}
                 </span>
@@ -633,8 +641,16 @@ export default function ServicesPage() {
                   onClick={(e) => e.stopPropagation()}
                 />
               )}
-              <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${service.bgGradient || 'from-gray-100 to-gray-200'} flex items-center justify-center flex-shrink-0`}>
-                <span className="text-3xl">{service.emoji || '✨'}</span>
+              <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${service.bgGradient || 'from-gray-100 to-gray-200'} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                {service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0) ? (
+                  <img 
+                    src={service.imageUrl || service.portfolioImages![0]} 
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl">{service.emoji || '✨'}</span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
