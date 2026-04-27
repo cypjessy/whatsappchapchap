@@ -149,18 +149,22 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     
     // Get tenant info
     console.log("[Webhook] Fetching tenant info...");
+    const tenantFetchStart = Date.now();
     const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+    console.log(`[Webhook] Tenant fetch took ${Date.now() - tenantFetchStart}ms`);
     const businessName = tenantDoc.exists ? tenantDoc.data()?.businessName || "Our Shop" : "Our Shop";
     console.log("[Webhook] Business name:", businessName);
     
     // Get active products (limit to 20 for context)
     console.log("[Webhook] Fetching products...");
+    const productsFetchStart = Date.now();
     const productsSnap = await adminDb
       .collection("products")
       .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
       .limit(20)
       .get();
+    console.log(`[Webhook] Products fetch took ${Date.now() - productsFetchStart}ms`);
     
     const products = productsSnap.docs.map(doc => {
       const data = doc.data();
@@ -180,12 +184,14 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     
     // Get active services (limit to 20 for context)
     console.log("[Webhook] Fetching services...");
+    const servicesFetchStart = Date.now();
     const servicesSnap = await adminDb
       .collection("services")
       .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
       .limit(20)
       .get();
+    console.log(`[Webhook] Services fetch took ${Date.now() - servicesFetchStart}ms`);
     
     const services = servicesSnap.docs.map(doc => {
       const data = doc.data();
@@ -205,16 +211,20 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     
     // NEW: Get business profile
     console.log("[Webhook] Fetching business profile...");
+    const profileFetchStart = Date.now();
     const profileDoc = await adminDb.collection("businessProfiles").doc(tenantId).get();
+    console.log(`[Webhook] Profile fetch took ${Date.now() - profileFetchStart}ms`);
     const businessProfile = profileDoc.exists ? profileDoc.data() : null;
     console.log("[Webhook] Business profile:", businessProfile ? "found" : "not found");
     
     // NEW: Get shipping methods
     console.log("[Webhook] Fetching shipping methods...");
+    const shippingFetchStart = Date.now();
     const shippingSnap = await adminDb
       .collection("shippingMethods")
       .where("tenantId", "==", tenantId)
       .get();
+    console.log(`[Webhook] Shipping fetch took ${Date.now() - shippingFetchStart}ms`);
     
     const shippingMethods = shippingSnap.docs.map(doc => ({
       id: doc.id,
@@ -224,13 +234,17 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     
     // NEW: Get product settings
     console.log("[Webhook] Fetching product settings...");
+    const prodSettingsFetchStart = Date.now();
     const productSettingsDoc = await adminDb.collection("productSettings").doc(tenantId).get();
+    console.log(`[Webhook] Product settings fetch took ${Date.now() - prodSettingsFetchStart}ms`);
     const productSettings = productSettingsDoc.exists ? productSettingsDoc.data() : null;
     console.log("[Webhook] Product settings:", productSettings ? "found" : "not found");
     
     // NEW: Get service settings
     console.log("[Webhook] Fetching service settings...");
+    const svcSettingsFetchStart = Date.now();
     const serviceSettingsDoc = await adminDb.collection("serviceSettings").doc(tenantId).get();
+    console.log(`[Webhook] Service settings fetch took ${Date.now() - svcSettingsFetchStart}ms`);
     const serviceSettings = serviceSettingsDoc.exists ? serviceSettingsDoc.data() : null;
     console.log("[Webhook] Service settings:", serviceSettings ? "found" : "not found");
     
@@ -363,12 +377,16 @@ async function processWithAI(
   phone: string,
   message: string
 ): Promise<void> {
+  const processStart = Date.now();
   try {
     console.log("[Webhook] Processing message with AI...");
+    console.log("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
     
     // Get business context (products, services, shipping, payments, policies)
     console.log("[Webhook] Fetching business context for tenant:", tenantId);
+    const contextStart = Date.now();
     const context = await getBusinessContext(tenantId);
+    console.log(`[Webhook] Context fetch took ${Date.now() - contextStart}ms`);
     console.log(`[Webhook] Context loaded: ${context.products.length} products, ${context.services.length} services`);
     console.log(`[Webhook] Shipping methods: ${context.shippingMethods?.length || 0}`);
     console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
@@ -429,9 +447,12 @@ async function processWithAI(
     await sendEvolutionMessage(tenantId, phone, aiResponse);
     
     console.log("[Webhook] AI processing complete ✅");
+    console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
   } catch (error) {
-    console.error("[Webhook] Error in AI processing:", error);
+    console.error("[Webhook] ❌ ERROR in AI processing after", Date.now() - processStart, "ms:", error);
     console.error("[Webhook] Error stack:", error instanceof Error ? error.stack : 'No stack');
+    console.error("[Webhook] Error name:", error instanceof Error ? error.name : 'Unknown');
+    console.error("[Webhook] Error message:", error instanceof Error ? error.message : 'Unknown');
     // Send fallback message
     try {
       await sendEvolutionMessage(
