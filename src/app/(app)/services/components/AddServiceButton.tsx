@@ -763,7 +763,7 @@ export default function AddServiceButton() {
                        >
                          <span className={`tier-badge ${tier.badgeClass}`}>{tier.badge}</span>
                          <div className="tier-name">{tier.label}</div>
-                         <input type="number" className="tier-price-input" placeholder="$0.00" />
+                         <input type="number" className="tier-price-input" placeholder="KSh 0.00" />
                          <div className="tier-features">
                            {tier.features}
                          </div>
@@ -773,70 +773,7 @@ export default function AddServiceButton() {
                  </div>
                )}
 
-              {/* Package Features */}
-              {selectedBusiness && (
-                <div className="form-section">
-                  <div className="section-title">
-                    <i className="fas fa-list-check"></i>
-                    Customize Package Features
-                  </div>
-                  <p className="text-sm text-[#64748b] mb-4">Define what's included in each package tier</p>
-                  
-                  {/* Basic Package */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">
-                      <span className="px-2 py-1 bg-gray-100 rounded text-xs mr-2">BASIC</span>
-                      Package Features (one per line)
-                    </label>
-                    <textarea
-                      className="form-textarea"
-                      rows={3}
-                      value={packageFeatures.basic.join('\n')}
-                      onChange={(e) => setPackageFeatures({
-                        ...packageFeatures,
-                        basic: e.target.value.split('\n').filter(line => line.trim())
-                      })}
-                      placeholder="Core service included&#10;Professional quality"
-                    />
-                  </div>
 
-                  {/* Standard Package */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs mr-2">STANDARD</span>
-                      Package Features (one per line)
-                    </label>
-                    <textarea
-                      className="form-textarea"
-                      rows={3}
-                      value={packageFeatures.standard.join('\n')}
-                      onChange={(e) => setPackageFeatures({
-                        ...packageFeatures,
-                        standard: e.target.value.split('\n').filter(line => line.trim())
-                      })}
-                      placeholder="Everything in Basic&#10;Priority scheduling&#10;Enhanced support"
-                    />
-                  </div>
-
-                  {/* Premium Package */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs mr-2">PREMIUM</span>
-                      Package Features (one per line)
-                    </label>
-                    <textarea
-                      className="form-textarea"
-                      rows={3}
-                      value={packageFeatures.premium.join('\n')}
-                      onChange={(e) => setPackageFeatures({
-                        ...packageFeatures,
-                        premium: e.target.value.split('\n').filter(line => line.trim())
-                      })}
-                      placeholder="Everything in Standard&#10;VIP treatment&#10;24/7 support"
-                    />
-                  </div>
-                </div>
-              )}
 
               {/* Pricing & Tier Customization */}
               {selectedBusiness && (
