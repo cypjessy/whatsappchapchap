@@ -288,6 +288,21 @@ export interface Product {
   orders?: number;
   rating?: number;
   orderLink?: string; // Order link for WhatsApp ordering
+  
+  // Shipping Methods - only enabled ones are saved
+  shippingMethods?: Array<{
+    id: string;
+    name: string;
+    price: number;
+  }>;
+  
+  // Payment Methods - only enabled ones are saved
+  paymentMethods?: Array<{
+    id: string;
+    name: string;
+    details: string;
+  }>;
+  
   createdAt: any;
   updatedAt: any;
 }

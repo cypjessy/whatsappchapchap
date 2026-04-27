@@ -762,6 +762,24 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         }
       }
 
+      // Filter only enabled shipping methods
+      const enabledShippingMethods = shippingMethods
+        .filter(method => method.enabled)
+        .map(method => ({
+          id: method.id,
+          name: method.name,
+          price: parseFloat(method.price) || 0,
+        }));
+
+      // Filter only enabled payment methods
+      const enabledPaymentMethods = paymentMethods
+        .filter(method => method.enabled)
+        .map(method => ({
+          id: method.id,
+          name: method.name,
+          details: method.details,
+        }));
+
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
@@ -770,7 +788,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         price: minPrice,
         stock: stock,
         image: imageUrl,
+        images: images.length > 0 ? images : undefined,
         status: "active" as const,
+        shippingMethods: enabledShippingMethods.length > 0 ? enabledShippingMethods : undefined,
+        paymentMethods: enabledPaymentMethods.length > 0 ? enabledPaymentMethods : undefined,
       });
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
