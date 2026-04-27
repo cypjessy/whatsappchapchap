@@ -234,34 +234,34 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] pb-8">
       {/* Provider Header */}
-      <div className="bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white p-6 pt-8 relative overflow-hidden">
-        <div className="absolute top-[-50%] right-[-20%] w-[300px] h-[300px] bg-white/10 rounded-full"></div>
-        <div className="absolute bottom-[-30%] left-[-10%] w-[200px] h-[200px] bg-white/5 rounded-full"></div>
+      <div className="bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white p-4 md:p-6 lg:p-8 pt-6 md:pt-8 relative overflow-hidden">
+        <div className="absolute top-[-50%] right-[-20%] w-[200px] h-[200px] md:w-[300px] md:h-[300px] bg-white/10 rounded-full"></div>
+        <div className="absolute bottom-[-30%] left-[-10%] w-[150px] h-[150px] md:w-[200px] md:h-[200px] bg-white/5 rounded-full"></div>
         
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-3xl shadow-lg">
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center text-2xl md:text-3xl shadow-lg flex-shrink-0">
               {service.emoji || "✨"}
             </div>
-            <div>
-              <h1 className="text-2xl font-extrabold">{service.name}</h1>
-              <p className="text-sm opacity-90 flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold truncate">{service.name}</h1>
+              <p className="text-xs md:text-sm opacity-90 flex items-center gap-2">
                 <i className="fas fa-store"></i>
-                {service.businessType || "Professional Service"}
+                <span className="truncate">{service.businessType || "Professional Service"}</span>
               </p>
             </div>
           </div>
           
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex items-center gap-2 text-sm font-semibold">
+          <div className="flex gap-3 md:gap-4 flex-wrap">
+            <div className="flex items-center gap-2 text-xs md:text-sm font-semibold">
               <i className="fas fa-clock"></i>
               {service.duration}
             </div>
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="flex items-center gap-2 text-xs md:text-sm font-semibold">
               <i className="fas fa-star text-yellow-300"></i>
               {service.rating || "4.5"}
             </div>
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="flex items-center gap-2 text-xs md:text-sm font-semibold">
               <i className="fas fa-calendar-check"></i>
               {service.bookings || 0} bookings
             </div>
@@ -270,11 +270,17 @@ export default function BookingPage() {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-[600px] mx-auto px-4 -mt-4 relative z-10">
+      <div className="max-w-6xl mx-auto px-3 md:px-4 lg:px-6 -mt-3 md:-mt-4 relative z-10">
+        
+        {/* Two Column Layout for Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          
+          {/* Left Column - Package & Details */}
+          <div className="lg:col-span-2 space-y-4">
         
         {/* Service Selection */}
-        <div className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0] animate-slideUp">
-          <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0] animate-slideUp">
+          <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-concierge-bell text-[#8b5cf6]"></i>
             Select Package
           </h2>
@@ -283,11 +289,11 @@ export default function BookingPage() {
             <p className="text-sm text-[#64748b] mb-4">{service.description}</p>
           )}
           
-          <div className="grid gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {(["basic", "standard", "premium"] as const).map((pkg) => (
               <div
                 key={pkg}
-                className={`p-4 border-2 rounded-xl cursor-pointer transition-all relative overflow-hidden ${
+                className={`p-3 md:p-4 border-2 rounded-xl cursor-pointer transition-all relative overflow-hidden ${
                   selectedPackage === pkg
                     ? "border-[#8b5cf6] bg-[#ede9fe]"
                     : "border-[#e2e8f0] hover:border-[#8b5cf6]"
@@ -295,24 +301,24 @@ export default function BookingPage() {
                 onClick={() => setSelectedPackage(pkg)}
               >
                 {selectedPackage === pkg && (
-                  <div className="absolute top-2 right-2 bg-[#8b5cf6] text-white px-2 py-1 rounded-full text-xs font-bold uppercase">
+                  <div className="absolute top-2 right-2 bg-[#8b5cf6] text-white px-2 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase">
                     Selected
                   </div>
                 )}
                 
-                <div className="font-bold text-lg mb-2">{packageLabels[pkg]}</div>
-                <ul className="text-sm text-[#64748b] mb-3 space-y-1">
+                <div className="font-bold text-base md:text-lg mb-2">{packageLabels[pkg]}</div>
+                <ul className="text-xs md:text-sm text-[#64748b] mb-3 space-y-1">
                   {(service.packageFeatures?.[pkg] || [
                     pkg === 'basic' ? 'Core service included' : pkg === 'standard' ? 'Everything in Basic' : 'Everything in Standard',
                     pkg === 'basic' ? 'Professional quality' : pkg === 'standard' ? 'Priority scheduling' : 'VIP treatment'
                   ]).map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2">
-                      <i className="fas fa-check text-green-500 text-xs"></i>
-                      {feature}
+                    <li key={idx} className="flex items-start gap-2">
+                      <i className="fas fa-check text-green-500 text-[10px] md:text-xs mt-0.5 flex-shrink-0"></i>
+                      <span className="text-xs md:text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="text-2xl font-extrabold text-[#8b5cf6]">
+                <div className="text-xl md:text-2xl font-extrabold text-[#8b5cf6]">
                   {formatCurrency(packagePrices[pkg])}
                 </div>
               </div>
@@ -322,14 +328,14 @@ export default function BookingPage() {
 
         {/* Portfolio Images */}
         {service.portfolioImages && service.portfolioImages.length > 0 && (
-          <div className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0]">
-            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+            <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
               <i className="fas fa-images text-[#8b5cf6]"></i>
               Portfolio Photos
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
               {service.portfolioImages.map((imageUrl, idx) => (
-                <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-[#f8fafc]">
+                <div key={idx} className="aspect-square rounded-lg md:rounded-xl overflow-hidden bg-[#f8fafc]">
                   <img
                     src={imageUrl}
                     alt={`Portfolio ${idx + 1}`}
@@ -344,20 +350,20 @@ export default function BookingPage() {
 
         {/* Service Specifications */}
         {service.specifications && Object.keys(service.specifications).length > 0 && (
-          <div className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0]">
-            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+            <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
               <i className="fas fa-sliders-h text-[#8b5cf6]"></i>
               Service Details
             </h2>
             <div className="space-y-3">
               {Object.entries(service.specifications).map(([key, values]) => (
                 <div key={key} className="border-b border-[#e2e8f0] pb-3 last:border-0">
-                  <div className="text-sm font-semibold text-[#64748b] mb-2 capitalize">
+                  <div className="text-xs md:text-sm font-semibold text-[#64748b] mb-2 capitalize">
                     {key.replace(/_/g, ' ')}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 md:gap-2">
                     {(values as string[]).map((val: string, idx: number) => (
-                      <span key={idx} className="px-3 py-1 bg-[#ede9fe] text-[#7c3aed] rounded-full text-sm font-medium">
+                      <span key={idx} className="px-2 md:px-3 py-1 bg-[#ede9fe] text-[#7c3aed] rounded-full text-xs md:text-sm font-medium">
                         {val}
                       </span>
                     ))}
@@ -369,32 +375,32 @@ export default function BookingPage() {
         )}
 
         {/* Date Selection */}
-        <div className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0]">
-          <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+          <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-calendar-alt text-[#8b5cf6]"></i>
             Select Date
           </h2>
           
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {getNextDays().map((date, idx) => {
               const isSelected = selectedDate?.toDateString() === date.toDateString();
               return (
                 <div
                   key={idx}
-                  className={`min-w-[70px] p-3 border-2 rounded-xl text-center cursor-pointer transition-all ${
+                  className={`min-w-[60px] md:min-w-[70px] p-2 md:p-3 border-2 rounded-xl text-center cursor-pointer transition-all ${
                     isSelected
                       ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-lg"
                       : "border-[#e2e8f0] hover:border-[#8b5cf6] bg-white"
                   }`}
                   onClick={() => setSelectedDate(date)}
                 >
-                  <div className="text-xs font-semibold uppercase mb-1">
+                  <div className="text-[10px] md:text-xs font-semibold uppercase mb-1">
                     {date.toLocaleDateString("en-US", { weekday: "short" })}
                   </div>
-                  <div className="text-xl font-extrabold">
+                  <div className="text-lg md:text-xl font-extrabold">
                     {date.getDate()}
                   </div>
-                  <div className="text-xs opacity-80">
+                  <div className="text-[10px] md:text-xs opacity-80">
                     {date.toLocaleDateString("en-US", { month: "short" })}
                   </div>
                 </div>
@@ -405,17 +411,17 @@ export default function BookingPage() {
 
         {/* Time Selection */}
         {selectedDate && (
-          <div className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0]">
-            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+            <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
               <i className="fas fa-clock text-[#8b5cf6]"></i>
               Select Time
             </h2>
             
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
               {timeSlots.map((time) => (
                 <div
                   key={time}
-                  className={`p-3 border-2 rounded-xl text-center cursor-pointer transition-all font-semibold ${
+                  className={`p-2 md:p-3 border-2 rounded-xl text-center cursor-pointer transition-all font-semibold text-xs md:text-sm ${
                     selectedTime === time
                       ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-lg"
                       : "border-[#e2e8f0] hover:border-[#8b5cf6] bg-white"
@@ -430,44 +436,50 @@ export default function BookingPage() {
         )}
 
         {/* Location Selection */}
-        <div className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0]">
-          <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+          <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-map-marker-alt text-[#8b5cf6]"></i>
             Service Location
           </h2>
           
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {getLocationOptions().map((loc) => (
               <div
                 key={loc.key}
-                className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                className={`flex items-center gap-2 md:gap-3 p-3 md:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                   selectedLocation === loc.key
                     ? "border-[#8b5cf6] bg-[#ede9fe]"
                     : "border-[#e2e8f0] hover:border-[#8b5cf6]"
                 }`}
                 onClick={() => setSelectedLocation(loc.key)}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
                   selectedLocation === loc.key ? "bg-[#8b5cf6] text-white" : "bg-[#f8fafc] text-[#64748b]"
                 }`}>
-                  <i className={`fas ${loc.icon}`}></i>
+                  <i className={`fas ${loc.icon} text-sm md:text-base`}></i>
                 </div>
-                <span className="font-semibold">{loc.label}</span>
+                <span className="font-semibold text-sm md:text-base">{loc.label}</span>
               </div>
             ))}
           </div>
         </div>
 
+        </div>{/* End Left Column */}
+
+        {/* Right Column - Customer Form (Sticky on Desktop) */}
+        <div className="lg:col-span-1">
+          <div className="lg:sticky lg:top-4 space-y-4">
+        
         {/* Customer Information */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-[20px] p-5 mb-4 shadow-md border border-[#e2e8f0]">
-          <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <form onSubmit={handleSubmit} className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+          <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-user text-[#8b5cf6]"></i>
             Your Information
           </h2>
           
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                 Full Name *
               </label>
               <input
@@ -475,13 +487,13 @@ export default function BookingPage() {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Enter your full name"
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm md:text-base"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                 Phone Number *
               </label>
               <input
@@ -489,13 +501,13 @@ export default function BookingPage() {
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="e.g., +254 712 345 678"
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm md:text-base"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                 Additional Notes (Optional)
               </label>
               <textarea
@@ -503,7 +515,7 @@ export default function BookingPage() {
                 onChange={(e) => setCustomerNotes(e.target.value)}
                 placeholder="Any special requests or requirements..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none text-sm md:text-base"
               />
             </div>
           </div>
@@ -513,7 +525,7 @@ export default function BookingPage() {
         <button
           onClick={handleSubmit}
           disabled={submitting || !selectedDate || !selectedTime || !customerName || !customerPhone}
-          className="w-full py-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-lg shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 md:py-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-base md:text-lg shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? (
             <>
@@ -528,8 +540,13 @@ export default function BookingPage() {
           )}
         </button>
 
+        </div>{/* End Sticky Container */}
+        </div>{/* End Right Column */}
+        
+        </div>{/* End Grid */}
+
         {/* Footer */}
-        <div className="text-center mt-6 text-sm text-[#64748b]">
+        <div className="text-center mt-6 md:mt-8 text-xs md:text-sm text-[#64748b]">
           <p>Powered by WhatsApp Chap Chap</p>
         </div>
       </div>
