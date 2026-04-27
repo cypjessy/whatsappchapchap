@@ -157,17 +157,6 @@ export interface Service {
     standard: string[];
     premium: string[];
   };
-  packagePricing?: { // Custom pricing for each tier (overrides auto-calculation)
-    basic?: number;
-    standard?: number;
-    premium?: number;
-  };
-  tierLabels?: { // Custom labels for tiers
-    basic?: string;
-    standard?: string;
-    premium?: string;
-  };
-  featuredTier?: 'basic' | 'standard' | 'premium'; // Which tier gets the "Popular" badge
   availability?: { // Available days and times
     days: string[]; // ['Mon', 'Tue', etc.]
     timeSlots: string[]; // ['9:00 AM', '10:00 AM', etc.]

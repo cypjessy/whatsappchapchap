@@ -71,18 +71,18 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
 
   const tierLabels: Record<string, { label: string; badge: string; color: string }> = {
     basic: { 
-      label: service.tierLabels?.basic || 'Starter', 
+      label: 'Starter', 
       badge: 'Basic', 
       color: 'bg-gray-200 text-gray-600' 
     },
     standard: { 
-      label: service.tierLabels?.standard || 'Standard', 
-      badge: service.featuredTier === 'standard' ? 'Popular' : 'Standard', 
+      label: 'Standard', 
+      badge: 'Popular', 
       color: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white' 
     },
     premium: { 
-      label: service.tierLabels?.premium || 'Premium', 
-      badge: service.featuredTier === 'premium' ? 'Best' : 'Premium', 
+      label: 'Premium', 
+      badge: 'Best', 
       color: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' 
     },
   };
@@ -96,12 +96,12 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
     }
   };
 
-  // Calculate package prices (use custom pricing if available, otherwise auto-calculate)
+  // Calculate package prices with auto-calculation
   const basePrice = service.priceMin || 0;
   const packagePrices = {
-    basic: service.packagePricing?.basic ?? basePrice,
-    standard: service.packagePricing?.standard ?? Math.round(basePrice * 1.5),
-    premium: service.packagePricing?.premium ?? Math.round(basePrice * 2)
+    basic: basePrice,
+    standard: Math.round(basePrice * 1.5),
+    premium: Math.round(basePrice * 2)
   };
 
   // Default package features
@@ -255,7 +255,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
             </div>
             <div className="grid grid-cols-3 gap-3">
               {(['basic', 'standard', 'premium'] as const).map((tier) => {
-                const isFeatured = service.featuredTier === tier;
+                const isFeatured = tier === 'standard'; // Always feature standard tier
                 return (
                   <div 
                     key={tier}
@@ -265,7 +265,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                   >
                     {isFeatured && (
                       <div className="absolute top-0 right-0 px-3 py-1 bg-[#8b5cf6] text-white text-[10px] font-bold uppercase rounded-bl-lg">
-                        {tierLabels[tier].badge}
+                        Popular
                       </div>
                     )}
                   <div className="font-bold text-sm mb-2 text-[#1e293b]">{tierLabels[tier].label}</div>

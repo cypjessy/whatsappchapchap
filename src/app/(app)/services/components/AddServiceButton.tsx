@@ -154,23 +154,6 @@ export default function AddServiceButton() {
     standard: ['Everything in Basic', 'Priority scheduling', 'Enhanced support'],
     premium: ['Everything in Standard', 'VIP treatment', '24/7 support']
   });
-  
-  // Custom pricing state
-  const [customPricing, setCustomPricing] = useState({
-    basic: 0,
-    standard: 0,
-    premium: 0
-  });
-  
-  // Tier labels state
-  const [tierLabels, setTierLabels] = useState({
-    basic: 'Starter',
-    standard: 'Standard',
-    premium: 'Premium'
-  });
-  
-  // Featured tier state
-  const [featuredTier, setFeaturedTier] = useState<'basic' | 'standard' | 'premium'>('standard');
 
   const specsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -487,17 +470,6 @@ export default function AddServiceButton() {
         status: 'draft' as const,
         portfolioImages: portfolioImageUrls,
         packageFeatures,
-        packagePricing: customPricing.basic > 0 || customPricing.standard > 0 || customPricing.premium > 0 ? {
-          basic: customPricing.basic || undefined,
-          standard: customPricing.standard || undefined,
-          premium: customPricing.premium || undefined
-        } : undefined,
-        tierLabels: tierLabels.basic !== 'Starter' || tierLabels.standard !== 'Standard' || tierLabels.premium !== 'Premium' ? {
-          basic: tierLabels.basic,
-          standard: tierLabels.standard,
-          premium: tierLabels.premium
-        } : undefined,
-        featuredTier: featuredTier !== 'standard' ? featuredTier : undefined,
         availability: {
           days: Array.from(selectedDays),
           timeSlots: Array.from(selectedTimes)
@@ -869,112 +841,6 @@ export default function AddServiceButton() {
               {/* Pricing & Tier Customization */}
               {selectedBusiness && (
                 <div className="form-section">
-                  <div className="section-title">
-                    <i className="fas fa-tags"></i>
-                    Customize Pricing & Tiers
-                  </div>
-                  <p className="text-sm text-[#64748b] mb-4">Set custom prices and labels for each package (leave at 0 for auto-calculation)</p>
-                  
-                  {/* Tier Labels */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Package Tier Names</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs text-[#64748b] mb-1 block">Basic Tier Name</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={tierLabels.basic}
-                          onChange={(e) => setTierLabels({...tierLabels, basic: e.target.value})}
-                          placeholder="Starter"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#64748b] mb-1 block">Standard Tier Name</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={tierLabels.standard}
-                          onChange={(e) => setTierLabels({...tierLabels, standard: e.target.value})}
-                          placeholder="Standard"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#64748b] mb-1 block">Premium Tier Name</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={tierLabels.premium}
-                          onChange={(e) => setTierLabels({...tierLabels, premium: e.target.value})}
-                          placeholder="Premium"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Featured Tier */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Featured Tier (gets "Popular" badge)</label>
-                    <div className="flex gap-3">
-                      {(['basic', 'standard', 'premium'] as const).map((tier) => (
-                        <button
-                          key={tier}
-                          type="button"
-                          className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all ${
-                            featuredTier === tier
-                              ? 'bg-[#8b5cf6] text-white'
-                              : 'bg-[#f8fafc] text-[#64748b] border-2 border-[#e2e8f0]'
-                          }`}
-                          onClick={() => setFeaturedTier(tier)}
-                        >
-                          {tierLabels[tier]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Custom Pricing */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Custom Prices (KES) - Leave 0 for auto-calculation</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs text-[#64748b] mb-1 block">Basic Price</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={customPricing.basic}
-                          onChange={(e) => setCustomPricing({...customPricing, basic: Number(e.target.value)})}
-                          min="0"
-                          placeholder="Auto"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#64748b] mb-1 block">Standard Price</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={customPricing.standard}
-                          onChange={(e) => setCustomPricing({...customPricing, standard: Number(e.target.value)})}
-                          min="0"
-                          placeholder="Auto"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#64748b] mb-1 block">Premium Price</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={customPricing.premium}
-                          onChange={(e) => setCustomPricing({...customPricing, premium: Number(e.target.value)})}
-                          min="0"
-                          placeholder="Auto"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-[#64748b] mt-2">
-                      Auto-calculation: Basic = base price, Standard = 1.5x, Premium = 2x
-                    </p>
-                  </div>
                 </div>
               )}
 
