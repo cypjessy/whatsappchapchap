@@ -144,13 +144,17 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
 // Get business context for AI (products, services, shipping, payments, policies)
 async function getBusinessContext(tenantId: string): Promise<AIContext> {
   try {
+    console.log("[Webhook] Starting to fetch business context...");
     const adminDb = getAdminDb();
     
     // Get tenant info
+    console.log("[Webhook] Fetching tenant info...");
     const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
     const businessName = tenantDoc.exists ? tenantDoc.data()?.businessName || "Our Shop" : "Our Shop";
+    console.log("[Webhook] Business name:", businessName);
     
     // Get active products (limit to 20 for context)
+    console.log("[Webhook] Fetching products...");
     const productsSnap = await adminDb
       .collection("products")
       .where("tenantId", "==", tenantId)
@@ -172,8 +176,10 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
         orderLink: data.orderLink,
       };
     });
+    console.log(`[Webhook] Products loaded: ${products.length}`);
     
     // Get active services (limit to 20 for context)
+    console.log("[Webhook] Fetching services...");
     const servicesSnap = await adminDb
       .collection("services")
       .where("tenantId", "==", tenantId)
@@ -195,12 +201,16 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
         description: data.description,
       };
     });
+    console.log(`[Webhook] Services loaded: ${services.length}`);
     
     // NEW: Get business profile
+    console.log("[Webhook] Fetching business profile...");
     const profileDoc = await adminDb.collection("businessProfiles").doc(tenantId).get();
     const businessProfile = profileDoc.exists ? profileDoc.data() : null;
+    console.log("[Webhook] Business profile:", businessProfile ? "found" : "not found");
     
     // NEW: Get shipping methods
+    console.log("[Webhook] Fetching shipping methods...");
     const shippingSnap = await adminDb
       .collection("shippingMethods")
       .where("tenantId", "==", tenantId)
@@ -210,16 +220,22 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       id: doc.id,
       ...doc.data()
     })) as Array<{ id: string; name: string; price: number; estimatedDays?: string; description?: string }>;
+    console.log(`[Webhook] Shipping methods loaded: ${shippingMethods.length}`);
     
     // NEW: Get product settings
+    console.log("[Webhook] Fetching product settings...");
     const productSettingsDoc = await adminDb.collection("productSettings").doc(tenantId).get();
     const productSettings = productSettingsDoc.exists ? productSettingsDoc.data() : null;
+    console.log("[Webhook] Product settings:", productSettings ? "found" : "not found");
     
     // NEW: Get service settings
+    console.log("[Webhook] Fetching service settings...");
     const serviceSettingsDoc = await adminDb.collection("serviceSettings").doc(tenantId).get();
     const serviceSettings = serviceSettingsDoc.exists ? serviceSettingsDoc.data() : null;
+    console.log("[Webhook] Service settings:", serviceSettings ? "found" : "not found");
     
-    return {
+    console.log("[Webhook] Building context object...");
+    const context = {
       businessName,
       products,
       services,
@@ -251,8 +267,12 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
         cancellationPolicy: serviceSettings.cancellationPolicy,
       } : undefined,
     };
+    
+    console.log("[Webhook] Context built successfully ✅");
+    return context;
   } catch (error) {
     console.error("[Webhook] Error getting business context:", error);
+    console.error("[Webhook] Error stack:", error instanceof Error ? error.stack : 'No stack');
     return {
       businessName: "Our Shop",
       products: [],
@@ -346,19 +366,26 @@ async function processWithAI(
   try {
     console.log("[Webhook] Processing message with AI...");
     
-    // Get business context (products, services)
+    // Get business context (products, services, shipping, payments, policies)
+    console.log("[Webhook] Fetching business context for tenant:", tenantId);
     const context = await getBusinessContext(tenantId);
     console.log(`[Webhook] Context loaded: ${context.products.length} products, ${context.services.length} services`);
+    console.log(`[Webhook] Shipping methods: ${context.shippingMethods?.length || 0}`);
+    console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
     
     // Get conversation history
+    console.log("[Webhook] Fetching conversation history...");
     const history = await getConversationHistory(tenantId, phone);
     console.log(`[Webhook] Conversation history: ${history.length} messages`);
     
     // Generate AI response
+    console.log("[Webhook] Calling Gemini AI...");
     const aiResponse = await generateAIResponse(message, context, history);
-    console.log("[Webhook] AI Response generated:", aiResponse.substring(0, 100));
+    console.log("[Webhook] AI Response generated successfully, length:", aiResponse.length);
+    console.log("[Webhook] AI Response preview:", aiResponse.substring(0, 100));
     
     // Save AI response to messages collection
+    console.log("[Webhook] Saving AI response to database...");
     const adminDb = getAdminDb();
     const messageId = `ai_${Date.now()}`;
     const timestamp = new Date();
@@ -381,6 +408,8 @@ async function processWithAI(
         isAI: true,
       });
     
+    console.log("[Webhook] AI response saved to database");
+    
     // Update conversation with last message
     await adminDb
       .collection("tenants")
@@ -393,18 +422,27 @@ async function processWithAI(
         updatedAt: timestamp,
       }, { merge: true });
     
+    console.log("[Webhook] Conversation updated");
+    
     // Send response via Evolution API
+    console.log("[Webhook] Sending response via Evolution API...");
     await sendEvolutionMessage(tenantId, phone, aiResponse);
     
-    console.log("[Webhook] AI processing complete");
+    console.log("[Webhook] AI processing complete ✅");
   } catch (error) {
     console.error("[Webhook] Error in AI processing:", error);
+    console.error("[Webhook] Error stack:", error instanceof Error ? error.stack : 'No stack');
     // Send fallback message
-    await sendEvolutionMessage(
-      tenantId,
-      phone,
-      "Thank you for your message! We'll get back to you shortly. 🙏"
-    );
+    try {
+      await sendEvolutionMessage(
+        tenantId,
+        phone,
+        "Thank you for your message! We'll get back to you shortly. 🙏"
+      );
+      console.log("[Webhook] Fallback message sent");
+    } catch (fallbackError) {
+      console.error("[Webhook] Failed to send fallback message:", fallbackError);
+    }
   }
 }
 
