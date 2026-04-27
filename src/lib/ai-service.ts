@@ -13,11 +13,20 @@ export interface AIContext {
     id: string;
     name: string;
     price: number;
+    salePrice?: number;
     category?: string;
     categoryName?: string;
     stock?: number;
     description?: string;
     images?: string[];
+    imageUrl?: string;
+    image?: string;
+    brand?: string;
+    condition?: string;
+    colors?: string[];
+    sizes?: string[];
+    sku?: string;
+    warranty?: string;
     orderLink?: string;
   }>;
   // NEW: Product categories for browsing
@@ -137,7 +146,14 @@ function buildSystemPrompt(context: AIContext): string {
   const productsList = context.products
     .map(p => {
       const stockStatus = p.stock && p.stock > 0 ? `(${p.stock} in stock)` : "(Out of stock)";
-      return `- ${p.name}: KES ${p.price.toLocaleString()} ${stockStatus}${p.categoryName ? ` [${p.categoryName}]` : ""}`;
+      const priceInfo = p.salePrice ? `KES ${p.salePrice.toLocaleString()} ~~KES ${p.price.toLocaleString()}~~` : `KES ${p.price.toLocaleString()}`;
+      const colors = p.colors && p.colors.length > 0 ? ` [Colors: ${p.colors.join(', ')}]` : '';
+      const sizes = p.sizes && p.sizes.length > 0 ? ` [Sizes: ${p.sizes.join(', ')}]` : '';
+      const brand = p.brand ? ` [${p.brand}]` : '';
+      const condition = p.condition ? ` (${p.condition})` : '';
+      const imageInfo = p.images && p.images.length > 0 ? ` [IMAGES:${p.images.join(',')}]` : '';
+      
+      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${imageInfo}`;
     })
     .join("\n");
 
@@ -212,15 +228,28 @@ PRODUCT BROWSING FLOW (IMPORTANT):
 When customers ask about products or want to see what you have:
 1. FIRST: Show them the PRODUCT CATEGORIES list and ask them to choose one
 2. WHEN THEY CHOOSE A CATEGORY: 
-   - Send 3-5 products from that category at a time (with names, prices, stock status)
-   - For each product with images, include: [IMAGE:image_url|Product Name - KES price]
+   - Send 3-5 products from that category at a time
+   - FOR EACH PRODUCT, include ALL available details:
+     * Product name
+     * Price (and sale price if on sale)
+     * Stock count
+     * Colors (if available)
+     * Sizes (if available)
+     * Brand (if available)
+     * Condition (if available)
+     * Description (brief)
+   - CRITICAL: If product has images (shown as [IMAGES:url1,url2] in product data), YOU MUST send them!
+   - Use this EXACT format for each product with images:
+     Product Name - KES price (stock) [Colors: red, blue] [Sizes: M, L]
+     [IMAGE:https://example.com/image.jpg|Product Name - KES price]
    - Tell them "We have X more [category] products. Reply 'show more' to see them"
 3. WHEN THEY ASK FOR MORE:
-   - Send the next 3-5 products
+   - Send the next 3-5 products with full details and images
    - Repeat until all products are shown
 4. Always mention stock status and prices
 5. Ask which product they're interested in after showing products
-6. Use the IMAGE format for products with images: [IMAGE:url|caption]
+6. NEVER skip product details - always show colors, sizes, brand if available
+7. ALWAYS send images when products have them - customers need to see the products!
 
 AVAILABLE PRODUCT CATEGORIES:${categoriesSection || "\nNo categories available"}
 
@@ -254,10 +283,10 @@ Customer: "What products do you have?"
 You: "We have several product categories:\n\n👗 Dresses (15 products)\n👟 Shoes (8 products)\n👜 Bags (12 products)\n👕 T-Shirts (20 products)\n\nWhich category interests you? I'll show you what's available! 😊"
 
 Customer: "Show me dresses"
-You: "Here are our dresses:\n\n1️⃣ Floral Summer Dress - KES 2,500 (5 in stock)\n[IMAGE:https://example.com/dress1.jpg|Floral Summer Dress]\n\n2️⃣ Evening Gown - KES 8,000 (2 in stock)\n[IMAGE:https://example.com/dress2.jpg|Evening Gown]\n\n3️⃣ Casual Midi Dress - KES 1,800 (8 in stock)\n[IMAGE:https://example.com/dress3.jpg|Casual Midi Dress]\n\nWe have 12 more dresses! Reply 'show more' to see them. Which one catches your eye? 👗"
+You: "Here are our dresses:\n\n1️⃣ Floral Summer Dress\nKES 2,500 (5 in stock)\nColors: Red, Blue, Yellow\nSizes: S, M, L, XL\nBrand: FashionHub\n\n[IMAGE:https://example.com/dress1.jpg|Floral Summer Dress - KES 2,500]\n\n2️⃣ Evening Gown\nKES 8,000 (2 in stock)\nColors: Black, Gold\nSizes: M, L\nBrand: Elegance\n\n[IMAGE:https://example.com/dress2.jpg|Evening Gown - KES 8,000]\n\n3️⃣ Casual Midi Dress\nKES 1,800 (8 in stock)\nColors: White, Pink\nSizes: S, M, L\nBrand: ComfortWear\n\n[IMAGE:https://example.com/dress3.jpg|Casual Midi Dress - KES 1,800]\n\nWe have 12 more dresses! Reply 'show more' to see them. Which one catches your eye? 👗"
 
 Customer: "show more"
-You: "Here are more dresses:\n\n4️⃣ Maxi Dress - KES 3,200 (3 in stock)\n5️⃣ Wrap Dress - KES 2,800 (6 in stock)\n6️⃣ Bodycon Dress - KES 2,200 (4 in stock)\n\nWe have 9 more! Reply 'show more' again. Interested in any of these? 😊"
+You: "Here are more dresses:\n\n4️⃣ Maxi Dress\nKES 3,200 (3 in stock)\nColors: Blue, Green\nSizes: M, L, XL\nBrand: StyleCo\n\n[IMAGE:https://example.com/dress4.jpg|Maxi Dress - KES 3,200]\n\n5️⃣ Wrap Dress\nKES 2,800 (6 in stock)\nColors: Red, Black\nSizes: S, M, L\nBrand: FashionHub\n\n[IMAGE:https://example.com/dress5.jpg|Wrap Dress - KES 2,800]\n\n6️⃣ Bodycon Dress\nKES 2,200 (4 in stock)\nColors: White, Beige\nSizes: XS, S, M\nBrand: TrendyWear\n\n[IMAGE:https://example.com/dress6.jpg|Bodycon Dress - KES 2,200]\n\nWe have 9 more! Reply 'show more' again. Interested in any of these? 😊"
 
 Customer: "Do you have iPhone?"
 You: "Yes! We have these iPhones available:\n\n📱 iPhone 15 - KES 120,000 (10 in stock)\n📱 iPhone 15 Pro - KES 150,000 (5 in stock)\n\nWhich one interests you? I can share more details! 😊"
