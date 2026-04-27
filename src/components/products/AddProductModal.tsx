@@ -849,6 +849,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         image: imageUrl,
         images: images.length > 0 ? images : undefined,
         status: "active" as const,
+        filters: Object.keys(filters).length > 0 ? filters : undefined,
+        brand: filters.brand && filters.brand.length > 0 ? filters.brand[0] : undefined,
+        condition: filters.condition && filters.condition.length > 0 ? filters.condition[0] : undefined,
         shippingMethods: enabledShippingMethods.length > 0 ? enabledShippingMethods : undefined,
         paymentMethods: enabledPaymentMethods.length > 0 ? enabledPaymentMethods : undefined,
       });
