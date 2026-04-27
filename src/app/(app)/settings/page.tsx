@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { businessProfileService, whatsappSettingsService, shippingService, BusinessProfile, WhatsAppSettings, ShippingMethod } from "@/lib/db";
+import { businessProfileService, whatsappSettingsService, shippingService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, ProductSettings, ServiceSettings } from "@/lib/db";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ export default function SettingsPage() {
   });
 
   // Product Store Settings
-  const [productSettings, setProductSettings] = useState({
+  const [productSettings, setProductSettings] = useState<Partial<ProductSettings>>({
     enabled: false,
     storeDescription: "",
     returnPolicy: "",
@@ -35,7 +35,7 @@ export default function SettingsPage() {
   });
 
   // Service Business Settings
-  const [serviceSettings, setServiceSettings] = useState({
+  const [serviceSettings, setServiceSettings] = useState<Partial<ServiceSettings>>({
     enabled: false,
     serviceDescription: "",
     bookingPolicy: "",
@@ -99,10 +99,12 @@ export default function SettingsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [profileData, whatsappData, shippingData] = await Promise.all([
+      const [profileData, whatsappData, shippingData, productData, serviceData] = await Promise.all([
         businessProfileService.getProfile(user),
         whatsappSettingsService.getSettings(user),
         shippingService.getShippingMethods(user),
+        productSettingsService.getSettings(user),
+        serviceSettingsService.getSettings(user),
       ]);
 
       if (profileData) {
@@ -144,6 +146,14 @@ export default function SettingsPage() {
 
       if (shippingData) {
         setShippingMethods(shippingData);
+      }
+
+      if (productData) {
+        setProductSettings(productData);
+      }
+
+      if (serviceData) {
+        setServiceSettings(serviceData);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -221,6 +231,48 @@ export default function SettingsPage() {
     } catch (error: any) {
       console.error("Error saving WhatsApp settings:", error);
       alert(`Failed to save WhatsApp settings: ${error.message || "Unknown error"}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveProductSettings = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      // Remove undefined values before saving to Firebase
+      const cleanedSettings = Object.fromEntries(
+        Object.entries(productSettings).filter(([_, v]) => v !== undefined)
+      );
+      
+      console.log("Saving product settings:", cleanedSettings);
+      await productSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
+      alert("Product settings saved successfully!");
+    } catch (error: any) {
+      console.error("Error saving product settings:", error);
+      alert(`Failed to save product settings: ${error.message || "Unknown error"}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveServiceSettings = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      // Remove undefined values before saving to Firebase
+      const cleanedSettings = Object.fromEntries(
+        Object.entries(serviceSettings).filter(([_, v]) => v !== undefined)
+      );
+      
+      console.log("Saving service settings:", cleanedSettings);
+      await serviceSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
+      alert("Service settings saved successfully!");
+    } catch (error: any) {
+      console.error("Error saving service settings:", error);
+      alert(`Failed to save service settings: ${error.message || "Unknown error"}`);
     } finally {
       setSaving(false);
     }
@@ -651,6 +703,27 @@ export default function SettingsPage() {
               </>
             )}
           </div>
+
+          {/* Save Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={saveProductSettings}
+              disabled={saving}
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save"></i>
+                  Save Product Settings
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
@@ -724,6 +797,27 @@ export default function SettingsPage() {
                 </div>
               </>
             )}
+          </div>
+
+          {/* Save Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={saveServiceSettings}
+              disabled={saving}
+              className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save"></i>
+                  Save Service Settings
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

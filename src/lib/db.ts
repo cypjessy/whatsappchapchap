@@ -127,6 +127,28 @@ export interface WhatsAppSettings {
   updatedAt: any;
 }
 
+export interface ProductSettings {
+  id: string;
+  tenantId: string;
+  enabled: boolean;
+  storeDescription?: string;
+  returnPolicy?: string;
+  warrantyInfo?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface ServiceSettings {
+  id: string;
+  tenantId: string;
+  enabled: boolean;
+  serviceDescription?: string;
+  bookingPolicy?: string;
+  cancellationPolicy?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
 export interface Service {
   id: string;
   tenantId: string;
@@ -1654,6 +1676,82 @@ export const whatsappSettingsService = {
     
     if (snap.empty) return null;
     return { id: snap.docs[0].id, ...snap.docs[0].data() } as WhatsAppSettings;
+  },
+};
+
+export const productSettingsService = {
+  async createOrUpdateSettings(user: User, settings: Omit<ProductSettings, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<ProductSettings> {
+    const tenantId = getTenantId(user);
+    
+    // Check if settings already exist
+    const q = query(collection(db, "productSettings"), where("tenantId", "==", tenantId));
+    const snap = await getDocs(q);
+    
+    if (!snap.empty) {
+      // Update existing
+      const docId = snap.docs[0].id;
+      await setDoc(doc(db, "productSettings", docId), { ...settings, updatedAt: serverTimestamp() }, { merge: true });
+      return { id: docId, tenantId, ...settings, createdAt: snap.docs[0].data().createdAt, updatedAt: serverTimestamp() } as ProductSettings;
+    } else {
+      // Create new
+      const docRef = doc(collection(db, "productSettings"));
+      const settingsData: ProductSettings = {
+        ...settings,
+        id: docRef.id,
+        tenantId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(docRef, settingsData);
+      return settingsData;
+    }
+  },
+
+  async getSettings(user: User): Promise<ProductSettings | null> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "productSettings"), where("tenantId", "==", tenantId));
+    const snap = await getDocs(q);
+    
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() } as ProductSettings;
+  },
+};
+
+export const serviceSettingsService = {
+  async createOrUpdateSettings(user: User, settings: Omit<ServiceSettings, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<ServiceSettings> {
+    const tenantId = getTenantId(user);
+    
+    // Check if settings already exist
+    const q = query(collection(db, "serviceSettings"), where("tenantId", "==", tenantId));
+    const snap = await getDocs(q);
+    
+    if (!snap.empty) {
+      // Update existing
+      const docId = snap.docs[0].id;
+      await setDoc(doc(db, "serviceSettings", docId), { ...settings, updatedAt: serverTimestamp() }, { merge: true });
+      return { id: docId, tenantId, ...settings, createdAt: snap.docs[0].data().createdAt, updatedAt: serverTimestamp() } as ServiceSettings;
+    } else {
+      // Create new
+      const docRef = doc(collection(db, "serviceSettings"));
+      const settingsData: ServiceSettings = {
+        ...settings,
+        id: docRef.id,
+        tenantId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(docRef, settingsData);
+      return settingsData;
+    }
+  },
+
+  async getSettings(user: User): Promise<ServiceSettings | null> {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "serviceSettings"), where("tenantId", "==", tenantId));
+    const snap = await getDocs(q);
+    
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() } as ServiceSettings;
   },
 };
 
