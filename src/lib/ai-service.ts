@@ -100,7 +100,7 @@ export async function generateAIResponse(
       parts: [{ text: msg.content }]
     }));
 
-    // Start chat with history
+    // Start chat with history AND system instruction
     const chat = model.startChat({
       history: historyMessages,
       generationConfig: {
@@ -108,6 +108,10 @@ export async function generateAIResponse(
         temperature: 0.7,
         topP: 0.8,
         topK: 40,
+      },
+      systemInstruction: {
+        role: "user",
+        parts: [{ text: systemPrompt }],
       },
     });
 
@@ -118,8 +122,9 @@ export async function generateAIResponse(
 
     return text.trim();
   } catch (error) {
-    console.error("[AI] Error generating response:", error);
-    return "I'm sorry, I'm having trouble processing your request right now. Please try again later or contact us directly.";
+    console.error("[AI] Full error:", JSON.stringify(error, null, 2));
+    console.error("[AI] GEMINI_API_KEY set:", !!process.env.GEMINI_API_KEY);
+    throw error; // Rethrow so webhook-logger catches it
   }
 }
 
