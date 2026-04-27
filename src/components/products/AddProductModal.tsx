@@ -854,6 +854,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         condition: filters.condition && filters.condition.length > 0 ? filters.condition[0] : undefined,
         shippingMethods: enabledShippingMethods.length > 0 ? enabledShippingMethods : undefined,
         paymentMethods: enabledPaymentMethods.length > 0 ? enabledPaymentMethods : undefined,
+        variants: variants.length > 0 ? variants.map((v, index) => ({
+          id: `variant_${index + 1}`,
+          specs: v.specs,
+          sku: v.sku || ``,
+          price: parseFloat(v.price) || 0,
+          stock: parseInt(v.stock) || 0,
+        })) : undefined,
       });
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";

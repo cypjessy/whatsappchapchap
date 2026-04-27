@@ -232,6 +232,7 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
         orderLink: data.orderLink,
         productPaymentMethods: data.paymentMethods || [],
         productShippingMethods: data.shippingMethods || [],
+        variants: data.variants || [],
       };
     });
     console.log(`[Webhook] Products loaded: ${products.length}`);

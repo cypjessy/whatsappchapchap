@@ -30,6 +30,13 @@ export interface AIContext {
     orderLink?: string;
     productPaymentMethods?: Array<{ id: string; name: string; details: string }>;
     productShippingMethods?: Array<{ id: string; name: string; price: number }>;
+    variants?: Array<{
+      id: string;
+      specs: Record<string, string>;
+      sku: string;
+      price: number;
+      stock: number;
+    }>;
   }>;
   // NEW: Product categories for browsing
   productCategories?: Array<{
@@ -168,8 +175,14 @@ function buildSystemPrompt(context: AIContext): string {
       const shipping = p.productShippingMethods && p.productShippingMethods.length > 0
         ? `\n  Shipping: ${p.productShippingMethods.map((s: any) => `${s.name} KES ${s.price}`).join(' | ')}`
         : '';
+      const variants = p.variants && p.variants.length > 0
+        ? `\n  Variants: ${p.variants.map((v: any) => {
+            const specText = Object.entries(v.specs).map(([key, val]) => `${key}: ${val}`).join(', ');
+            return `${specText} (KES ${v.price.toLocaleString()}, ${v.stock} in stock)`;
+          }).join(' | ')}`
+        : '';
 
-      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${description}${payment}${shipping}${orderLink}${imageInfo}`;
+      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${description}${variants}${payment}${shipping}${orderLink}${imageInfo}`;
     })
     .join("\n\n");
 
@@ -254,6 +267,7 @@ When customers ask about products or want to see what you have:
      * Brand (if available)
      * Condition (if available)
      * Description (brief)
+     * Available variants with specs, prices, and stock
      * Payment methods (if product has specific payment options)
      * Shipping methods (if product has specific shipping options)
    - IMPORTANT: Do NOT include image tags or URLs in your response. Images will be sent automatically.
@@ -289,6 +303,12 @@ IMPORTANT RULES:
 11. ALWAYS include the order link when showing a product using exactly this format:
     🛒 *Order here:* https://orderlink-url
 12. The order link for each product is provided in the product data above
+13. When a product has VARIANTS, display them clearly:
+    - List each variant with its specifications (size, color, etc.)
+    - Show the variant's specific price and stock
+    - Use this format: "Size: M, Color: Black (KES 2,000, 25 in stock)"
+    - Separate multiple variants with | or list them on separate lines
+14. Help customers choose the right variant by asking which specifications they prefer
 
 RESPONSE FORMAT (CRITICAL FOR WHATSAPP):
 
@@ -309,6 +329,7 @@ Example:
  Dresses (15 products)
 👟 Shoes (8 products)
 👜 Bags (12 products)
+👕 T-Shirts (20 products)
 
 Which category interests you? I'll show you what's available! 😊
 
@@ -317,6 +338,7 @@ For Products:
 - Product name on its own line
 - Price and stock on next line
 - Details (colors, sizes, brand) on separate lines
+- If product has variants, list them after details
 - ALWAYS include order link if product has one
 - ALWAYS leave blank line between products
 - Description should be brief (1 sentence max)
@@ -327,14 +349,13 @@ Brand: FashionHub
 Colors: Red, Blue, Yellow
 Sizes: S, M, L, XL
 About: Beautiful floral pattern perfect for summer occasions
-🛒 *Order here:* https://shop.example.com/order/abc123
 
-2️⃣ Evening Gown
-KES 8,000 (2 in stock)
-Brand: Elegance
-Colors: Black, Gold
-Sizes: M, L
-About: Elegant evening wear for special events
+Available variants:
+• Size: M, Color: Black (KES 2,000, 25 in stock)
+• Size: M, Color: Red (KES 2,000, 25 in stock)
+• Size: L, Color: Black (KES 2,000, 25 in stock)
+
+ *Order here:* https://shop.example.com/order/abc123
 
 For General Messages:
 - Greeting on its own line

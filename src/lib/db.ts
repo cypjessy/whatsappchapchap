@@ -326,6 +326,15 @@ export interface Product {
     details: string;
   }>;
   
+  // Product Variants
+  variants?: Array<{
+    id: string;
+    specs: Record<string, string>; // e.g., { size: "M", color: "Black" }
+    sku: string;
+    price: number;
+    stock: number;
+  }>;
+  
   createdAt: any;
   updatedAt: any;
 }
