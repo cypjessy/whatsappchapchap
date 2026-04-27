@@ -508,7 +508,9 @@ export async function POST(req: NextRequest) {
 
     // Extract phone number from remoteJid
     // Format can be: "254748132692@s.whatsapp.net" or "254748132692:39@s.whatsapp.net"
-    const remoteJid = message?.key?.remoteJid || "";
+    // For messages.update events, remoteJid is directly in message object
+    // For messages.upsert events, remoteJid is in message.key object
+    const remoteJid = message?.key?.remoteJid || message?.remoteJid || "";
     const from = remoteJid
       .replace(/:\d+@s\.whatsapp\.net$/, "")  // Remove :39@s.whatsapp.net
       .replace(/@s\.whatsapp\.net$/, "")       // Remove @s.whatsapp.net
@@ -516,6 +518,7 @@ export async function POST(req: NextRequest) {
     
     if (!from) {
       console.log("[Webhook] ❌ No phone number extracted from remoteJid:", remoteJid);
+      console.log("[Webhook] Message structure:", JSON.stringify(message).substring(0, 200));
       return NextResponse.json({ received: true, error: "No phone number" });
     }
     
