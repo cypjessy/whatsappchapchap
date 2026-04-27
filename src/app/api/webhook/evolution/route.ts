@@ -4,6 +4,7 @@ import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit, addDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { initializeApp as initializeClientApp, type FirebaseApp } from "firebase/app";
 import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
+import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getAdminFirestore> | null = null;
@@ -219,6 +220,16 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       console.error("[Webhook] Error name:", tenantError instanceof Error ? tenantError.name : "Unknown");
       console.error("[Webhook] Error message:", tenantError instanceof Error ? tenantError.message : "Unknown");
       console.error("[Webhook] Error stack:", tenantError instanceof Error ? tenantError.stack : "No stack");
+      
+      // Log error to Firestore
+      await logWebhookError(
+        tenantId,
+        "TENANT_FETCH_ERROR",
+        tenantError instanceof Error ? tenantError.message : String(tenantError),
+        tenantError instanceof Error ? tenantError.stack : undefined,
+        { step: "getBusinessContext" }
+      );
+      
       throw tenantError;
     }
     
@@ -521,11 +532,30 @@ async function processWithAI(
     
     console.log("[Webhook] AI processing complete ✅");
     console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+    
+    // Log success to Firestore
+    await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
   } catch (error) {
-    console.error("[Webhook] ❌ ERROR in AI processing after", Date.now() - processStart, "ms:", error);
+    const processingTime = Date.now() - processStart;
+    console.error("[Webhook] ❌ ERROR in AI processing after", processingTime, "ms:", error);
     console.error("[Webhook] Error stack:", error instanceof Error ? error.stack : 'No stack');
     console.error("[Webhook] Error name:", error instanceof Error ? error.name : 'Unknown');
     console.error("[Webhook] Error message:", error instanceof Error ? error.message : 'Unknown');
+    
+    // Log error to Firestore
+    await logWebhookError(
+      tenantId,
+      "AI_PROCESSING_ERROR",
+      error instanceof Error ? error.message : String(error),
+      error instanceof Error ? error.stack : undefined,
+      { 
+        phone, 
+        message: message.substring(0, 100),
+        processingTimeMs: processingTime,
+        step: "processWithAI"
+      }
+    );
+    
     // Send fallback message
     try {
       await sendEvolutionMessage(
