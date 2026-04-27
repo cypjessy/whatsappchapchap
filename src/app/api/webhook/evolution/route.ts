@@ -438,7 +438,16 @@ async function processWithAI(
     
     // Generate AI response
     console.log("[Webhook] Calling Gemini AI...");
-    const aiResponse = await generateAIResponse(message, context, history);
+    const aiStart = Date.now();
+    
+    // Add timeout to prevent hanging
+    const aiPromise = generateAIResponse(message, context, history);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("AI generation timeout after 15000ms")), 15000)
+    );
+    
+    const aiResponse = await Promise.race([aiPromise, timeoutPromise]) as string;
+    console.log(`[Webhook] AI generation took ${Date.now() - aiStart}ms`);
     console.log("[Webhook] AI Response generated successfully, length:", aiResponse.length);
     console.log("[Webhook] AI Response preview:", aiResponse.substring(0, 100));
     
