@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 
 const firebaseConfig = {
@@ -58,6 +58,13 @@ function OrderPageContent() {
   const [activeTab, setActiveTab] = useState<"order">("order");
   const [product, setProduct] = useState<Product | null>(null);
   const [tenantData, setTenantData] = useState<{evolutionServerUrl?: string; evolutionApiKey?: string; evolutionInstanceId?: string} | null>(null);
+  const [businessSettings, setBusinessSettings] = useState<{
+    shippingMethods?: Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
+    paymentMethods?: any;
+    businessName?: string;
+    phone?: string;
+    address?: string;
+  } | null>(null);
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
@@ -65,9 +72,9 @@ function OrderPageContent() {
   const [address, setAddress] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState("standard");
-  const [deliveryCost, setDeliveryCost] = useState(500);
-  const [paymentMethod, setPaymentMethod] = useState("mpesa");
+  const [deliveryMethod, setDeliveryMethod] = useState("");
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentDetails, setPaymentDetails] = useState("");
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
@@ -79,7 +86,7 @@ function OrderPageContent() {
 
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       if (!productId || !tenantId) {
         setError("Invalid product link");
         setLoading(false);
@@ -95,6 +102,8 @@ function OrderPageContent() {
         }
 
         const db = getFirestore(app);
+        
+        // Fetch product
         const productRef = doc(db, "products", productId);
         const productSnap = await getDoc(productRef);
         
@@ -102,36 +111,72 @@ function OrderPageContent() {
           const data = productSnap.data() as Product;
           const loadedProduct = { ...data, id: productSnap.id } as Product;
           setProduct(loadedProduct);
-          
-          // Set default delivery cost from product's shipping methods
-          if (loadedProduct.shippingMethods && loadedProduct.shippingMethods.length > 0) {
-            setDeliveryMethod(loadedProduct.shippingMethods[0].id);
-            setDeliveryCost(loadedProduct.shippingMethods[0].price);
-          }
-          
-          // Fetch tenant data for Evolution credentials
-          const tenantRef = doc(db, "tenants", tenantId);
-          const tenantSnap = await getDoc(tenantRef);
-          if (tenantSnap.exists()) {
-            const tenantData = tenantSnap.data();
-            setTenantData({
-              evolutionServerUrl: tenantData.evolutionServerUrl,
-              evolutionApiKey: tenantData.evolutionApiKey,
-              evolutionInstanceId: tenantData.evolutionInstanceId
-            });
-          }
         } else {
           setError("Product not found");
+          setLoading(false);
+          return;
         }
+        
+        // Fetch tenant data for Evolution credentials
+        const tenantRef = doc(db, "tenants", tenantId);
+        const tenantSnap = await getDoc(tenantRef);
+        if (tenantSnap.exists()) {
+          const tenantData = tenantSnap.data();
+          setTenantData({
+            evolutionServerUrl: tenantData.evolutionServerUrl,
+            evolutionApiKey: tenantData.evolutionApiKey,
+            evolutionInstanceId: tenantData.evolutionInstanceId
+          });
+        }
+        
+        // Fetch business profile for payment methods and business info
+        const profileRef = doc(db, "businessProfiles", tenantId);
+        const profileSnap = await getDoc(profileRef);
+        
+        // Fetch shipping methods
+        const shippingQuery = collection(db, "shippingMethods");
+        const shippingSnap = await getDocs(shippingQuery);
+        const shippingMethods = shippingSnap.docs
+          .filter(doc => doc.data().tenantId === tenantId)
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
+        
+        // Set business settings
+        const profileData = profileSnap.exists() ? profileSnap.data() : null;
+        setBusinessSettings({
+          shippingMethods: shippingMethods.length > 0 ? shippingMethods : undefined,
+          paymentMethods: profileData?.paymentMethods,
+          businessName: profileData?.businessName,
+          phone: profileData?.phone,
+          address: profileData?.address,
+        });
+        
+        // Set default delivery method (first available)
+        if (shippingMethods.length > 0) {
+          setDeliveryMethod(shippingMethods[0].id);
+          setDeliveryCost(shippingMethods[0].price);
+        }
+        
+        // Set default payment method (first enabled)
+        if (profileData?.paymentMethods) {
+          const pm = profileData.paymentMethods;
+          if (pm.mpesa?.enabled) setPaymentMethod("mpesa");
+          else if (pm.bank?.enabled) setPaymentMethod("bank");
+          else if (pm.card?.enabled) setPaymentMethod("card");
+          else if (pm.cash?.enabled) setPaymentMethod("cash");
+        }
+        
       } catch (err) {
-        console.error("Error fetching product:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to load product");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProduct();
+    fetchData();
   }, [productId, tenantId]);
 
   const getBasePrice = () => {

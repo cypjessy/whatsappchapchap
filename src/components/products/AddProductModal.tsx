@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
+import { getAllBusinessSettings } from "@/lib/business-settings";
 
 type StringSet = Set<string>;
 
@@ -376,16 +377,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [imagePreview, setImagePreview] = useState<string>("");
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([
-    { id: "standard", name: "Standard Delivery", price: "500", enabled: true },
-    { id: "express", name: "Express Delivery", price: "1000", enabled: true },
-    { id: "pickup", name: "Store Pickup", price: "0", enabled: true },
-  ]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { id: "mpesa", name: "M-Pesa", details: "Enter your M-Pesa number for payment instructions", enabled: true },
-    { id: "cod", name: "Cash on Delivery", details: "Pay when you receive", enabled: true },
-    { id: "bank", name: "Bank Transfer", details: "Bank: Example Bank\nAccount: 1234567890", enabled: true },
-  ]);
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [loadingSettings, setLoadingSettings] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customInputKey, setCustomInputKey] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
@@ -393,8 +387,73 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   useEffect(() => {
     if (isOpen) {
       resetForm();
+      loadBusinessSettings();
     }
   }, [isOpen]);
+
+  const loadBusinessSettings = async () => {
+    if (!user) return;
+    
+    setLoadingSettings(true);
+    try {
+      const settings = await getAllBusinessSettings(user);
+      
+      // Convert shipping methods from database to form format
+      const shippingMethodsData = settings.shippingMethods.map(method => ({
+        id: method.id,
+        name: method.name,
+        price: method.price.toString(),
+        enabled: true, // All fetched methods are enabled by default
+      }));
+      
+      // Convert payment methods from business profile to form format
+      const paymentMethodsData: PaymentMethod[] = [];
+      const pm = settings.paymentMethods;
+      
+      if (pm?.mpesa?.enabled) {
+        paymentMethodsData.push({
+          id: "mpesa",
+          name: "M-Pesa",
+          details: `Pay to ${pm.mpesa.phoneNumber || ''}${pm.mpesa.businessName ? ` (${pm.mpesa.businessName})` : ''}`,
+          enabled: true,
+        });
+      }
+      
+      if (pm?.bank?.enabled) {
+        paymentMethodsData.push({
+          id: "bank",
+          name: "Bank Transfer",
+          details: `${pm.bank.bankName || ''}\nAccount: ${pm.bank.accountNumber || ''}${pm.bank.branch ? `\nBranch: ${pm.bank.branch}` : ''}`,
+          enabled: true,
+        });
+      }
+      
+      if (pm?.card?.enabled) {
+        paymentMethodsData.push({
+          id: "card",
+          name: "Card Payment",
+          details: pm.card.instructions || "Pay with credit/debit card",
+          enabled: true,
+        });
+      }
+      
+      if (pm?.cash?.enabled) {
+        paymentMethodsData.push({
+          id: "cod",
+          name: "Cash on Delivery",
+          details: pm.cash.instructions || "Pay when you receive",
+          enabled: true,
+        });
+      }
+      
+      setShippingMethods(shippingMethodsData);
+      setPaymentMethods(paymentMethodsData);
+    } catch (error) {
+      console.error("Error loading business settings:", error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
 
   const resetForm = () => {
     setSelectedCategory(null);
