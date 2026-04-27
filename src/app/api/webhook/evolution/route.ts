@@ -181,21 +181,46 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
 async function getBusinessContext(tenantId: string): Promise<AIContext> {
   try {
     console.log("[Webhook] Starting to fetch business context...");
-    const db = getClientDb(); // Use client SDK for faster reads
+    console.log("[Webhook] Tenant ID:", tenantId);
+    console.log("[Webhook] Environment check - Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? "✓" : "✗");
+    console.log("[Webhook] Environment check - API Key:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "✓ (first 8: " + process.env.NEXT_PUBLIC_FIREBASE_API_KEY.substring(0, 8) + "...)" : "✗");
+    
+    const db = getClientDb();
     
     if (!db) {
-      console.error("[Webhook] Failed to initialize database");
+      console.error("[Webhook] ❌ Failed to initialize database");
       return { businessName: "Our Shop", products: [], services: [] };
     }
     
-    // Get tenant info
+    console.log("[Webhook] Database object created:", typeof db);
+    
+    // Get tenant info with timeout
     console.log("[Webhook] Fetching tenant info...");
     const tenantFetchStart = Date.now();
-    const tenantRef = doc(db, "tenants", tenantId);
-    const tenantSnap = await getDoc(tenantRef);
-    console.log(`[Webhook] Tenant fetch took ${Date.now() - tenantFetchStart}ms`);
-    const businessName = tenantSnap.exists() ? tenantSnap.data()?.businessName || "Our Shop" : "Our Shop";
-    console.log("[Webhook] Business name:", businessName);
+    let businessName = "Our Shop";
+    
+    try {
+      const tenantRef = doc(db, "tenants", tenantId);
+      console.log("[Webhook] Tenant ref created:", tenantRef.path);
+      
+      const tenantPromise = getDoc(tenantRef);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Tenant fetch timeout after 5000ms")), 5000)
+      );
+      
+      const tenantSnap = await Promise.race([tenantPromise, timeoutPromise]) as any;
+      console.log(`[Webhook] Tenant fetch took ${Date.now() - tenantFetchStart}ms`);
+      console.log("[Webhook] Tenant exists:", tenantSnap.exists());
+      
+      businessName = tenantSnap.exists() ? tenantSnap.data()?.businessName || "Our Shop" : "Our Shop";
+      console.log("[Webhook] Business name:", businessName);
+    } catch (tenantError) {
+      console.error("[Webhook] ❌ Tenant fetch error:", tenantError);
+      console.error("[Webhook] Error name:", tenantError instanceof Error ? tenantError.name : "Unknown");
+      console.error("[Webhook] Error message:", tenantError instanceof Error ? tenantError.message : "Unknown");
+      console.error("[Webhook] Error stack:", tenantError instanceof Error ? tenantError.stack : "No stack");
+      throw tenantError;
+    }
     
     // Get active products (limit to 20 for context)
     console.log("[Webhook] Fetching products...");
