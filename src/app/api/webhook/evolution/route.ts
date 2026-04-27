@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
 
 let db: ReturnType<typeof getFirestore> | null = null;
 
@@ -125,6 +126,223 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
       welcomeMessage: `Hello! 👋 Welcome to {{business_name}}.\n\nWe're excited to connect with you! How can we help you today?`,
       welcomeMessageEnabled: true
     };
+  }
+}
+
+// Get business context for AI (products, services, etc.)
+async function getBusinessContext(tenantId: string): Promise<AIContext> {
+  try {
+    const adminDb = getAdminDb();
+    
+    // Get tenant info
+    const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+    const businessName = tenantDoc.exists ? tenantDoc.data()?.businessName || "Our Shop" : "Our Shop";
+    
+    // Get active products (limit to 20 for context)
+    const productsSnap = await adminDb
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .limit(20)
+      .get();
+    
+    const products = productsSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        price: data.price || 0,
+        category: data.category,
+        categoryName: data.categoryName,
+        stock: data.stock || 0,
+        description: data.description,
+        images: data.images,
+        orderLink: data.orderLink,
+      };
+    });
+    
+    // Get active services (limit to 20 for context)
+    const servicesSnap = await adminDb
+      .collection("services")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .limit(20)
+      .get();
+    
+    const services = servicesSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        priceMin: data.priceMin || 0,
+        priceMax: data.priceMax,
+        businessType: data.businessType,
+        businessCategory: data.businessCategory,
+        serviceName: data.serviceName,
+        duration: data.duration,
+        description: data.description,
+      };
+    });
+    
+    return {
+      businessName,
+      products,
+      services,
+    };
+  } catch (error) {
+    console.error("[Webhook] Error getting business context:", error);
+    return {
+      businessName: "Our Shop",
+      products: [],
+      services: [],
+    };
+  }
+}
+
+// Get conversation history for context (last 5 messages)
+async function getConversationHistory(
+  tenantId: string,
+  phone: string
+): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
+  try {
+    const adminDb = getAdminDb();
+    
+    const messagesSnap = await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .collection("messages")
+      .orderBy("timestamp", "desc")
+      .limit(10)
+      .get();
+    
+    const messages = messagesSnap.docs
+      .map(doc => doc.data())
+      .reverse() // Reverse to get chronological order
+      .slice(-10); // Take last 10 messages
+    
+    return messages.map(msg => ({
+      role: msg.fromMe || msg.sender === "business" ? "assistant" : "user",
+      content: msg.text || "",
+    }));
+  } catch (error) {
+    console.error("[Webhook] Error getting conversation history:", error);
+    return [];
+  }
+}
+
+// Send message via Evolution API
+async function sendEvolutionMessage(
+  tenantId: string,
+  phoneNumber: string,
+  text: string
+): Promise<void> {
+  try {
+    const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
+    const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+
+    if (!evolutionApiUrl || !evolutionApiKey) {
+      console.log("[Webhook] Evolution API not configured, skipping response");
+      return;
+    }
+
+    console.log(`[Webhook] Sending AI response to ${phoneNumber}`);
+
+    const response = await fetch(
+      `${evolutionApiUrl}/message/sendText/${tenantId}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: evolutionApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          number: phoneNumber,
+          text: text,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("[Webhook] AI response sent:", data);
+
+    if (!response.ok) {
+      console.error("[Webhook] Failed to send AI response:", data);
+    }
+  } catch (error) {
+    console.error("[Webhook] Error sending AI response:", error);
+  }
+}
+
+// Process message with AI and send response
+async function processWithAI(
+  tenantId: string,
+  phone: string,
+  message: string
+): Promise<void> {
+  try {
+    console.log("[Webhook] Processing message with AI...");
+    
+    // Get business context (products, services)
+    const context = await getBusinessContext(tenantId);
+    console.log(`[Webhook] Context loaded: ${context.products.length} products, ${context.services.length} services`);
+    
+    // Get conversation history
+    const history = await getConversationHistory(tenantId, phone);
+    console.log(`[Webhook] Conversation history: ${history.length} messages`);
+    
+    // Generate AI response
+    const aiResponse = await generateAIResponse(message, context, history);
+    console.log("[Webhook] AI Response generated:", aiResponse.substring(0, 100));
+    
+    // Save AI response to messages collection
+    const adminDb = getAdminDb();
+    const messageId = `ai_${Date.now()}`;
+    const timestamp = new Date();
+    
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .collection("messages")
+      .doc(messageId)
+      .set({
+        text: aiResponse,
+        from: tenantId,
+        fromMe: true,
+        sender: "business",
+        timestamp,
+        status: "sent",
+        createdAt: timestamp,
+        isAI: true,
+      });
+    
+    // Update conversation with last message
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        lastMessage: aiResponse,
+        lastMessageTime: timestamp,
+        updatedAt: timestamp,
+      }, { merge: true });
+    
+    // Send response via Evolution API
+    await sendEvolutionMessage(tenantId, phone, aiResponse);
+    
+    console.log("[Webhook] AI processing complete");
+  } catch (error) {
+    console.error("[Webhook] Error in AI processing:", error);
+    // Send fallback message
+    await sendEvolutionMessage(
+      tenantId,
+      phone,
+      "Thank you for your message! We'll get back to you shortly. 🙏"
+    );
   }
 }
 
@@ -256,30 +474,12 @@ export async function POST(req: NextRequest) {
 
     console.log("[Webhook] Message saved");
 
-    // Forward to n8n webhook
-    const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-    console.log("[Webhook] N8N URL configured:", !!n8nWebhookUrl);
-    if (n8nWebhookUrl && text) {
-      try {
-        console.log("[Webhook] Forwarding to n8n:", n8nWebhookUrl);
-        const n8nResponse = await fetch(n8nWebhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tenantId,
-            phone: from,
-            customerName: message?.pushName || "Customer",
-            message: text,
-            timestamp: timestamp.toISOString(),
-          }),
-        });
-        console.log("[Webhook] n8n response status:", n8nResponse.status);
-        console.log("[Webhook] Forwarded to n8n successfully");
-      } catch (error) {
-        console.error("[Webhook] Error forwarding to n8n:", error);
-      }
-    } else {
-      console.log("[Webhook] N8N_WEBHOOK_URL not set or no text to forward");
+    // Process with AI and send response (replaces n8n)
+    if (text) {
+      // Use async processing to not block webhook response
+      processWithAI(tenantId, from, text).catch(err => {
+        console.error("[Webhook] Async AI processing error:", err);
+      });
     }
 
     // Send welcome message only on first contact
