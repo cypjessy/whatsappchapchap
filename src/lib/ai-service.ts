@@ -28,6 +28,8 @@ export interface AIContext {
     sku?: string;
     warranty?: string;
     orderLink?: string;
+    productPaymentMethods?: Array<{ id: string; name: string; details: string }>;
+    productShippingMethods?: Array<{ id: string; name: string; price: number }>;
   }>;
   // NEW: Product categories for browsing
   productCategories?: Array<{
@@ -146,16 +148,28 @@ function buildSystemPrompt(context: AIContext): string {
   const productsList = context.products
     .map(p => {
       const stockStatus = p.stock && p.stock > 0 ? `(${p.stock} in stock)` : "(Out of stock)";
-      const priceInfo = p.salePrice ? `KES ${p.salePrice.toLocaleString()} ~~KES ${p.price.toLocaleString()}~~` : `KES ${p.price.toLocaleString()}`;
-      const colors = p.colors && p.colors.length > 0 ? ` [Colors: ${p.colors.join(', ')}]` : '';
-      const sizes = p.sizes && p.sizes.length > 0 ? ` [Sizes: ${p.sizes.join(', ')}]` : '';
-      const brand = p.brand ? ` [${p.brand}]` : '';
-      const condition = p.condition ? ` (${p.condition})` : '';
-      const imageInfo = p.images && p.images.length > 0 ? ` [IMAGES:${p.images.join(',')}]` : '';
-      
-      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${imageInfo}`;
+      const priceInfo = p.salePrice 
+        ? `KES ${p.salePrice.toLocaleString()} (was KES ${p.price.toLocaleString()})` 
+        : `KES ${p.price.toLocaleString()}`;
+      const colors = p.colors && p.colors.length > 0 ? `\n  Colors: ${p.colors.join(', ')}` : '';
+      const sizes = p.sizes && p.sizes.length > 0 ? `\n  Sizes: ${p.sizes.join(', ')}` : '';
+      const brand = p.brand ? `\n  Brand: ${p.brand}` : '';
+      const condition = p.condition ? `\n  Condition: ${p.condition}` : '';
+      const description = p.description ? `\n  About: ${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}` : '';
+      const orderLink = p.orderLink ? `\n  Order Link: ${p.orderLink}` : '';
+      const imageInfo = p.images && p.images.length > 0 
+        ? `\n  Images: ${p.images.slice(0, 2).join(', ')}${p.images.length > 2 ? ` (+${p.images.length - 2} more)` : ''}` 
+        : p.image ? `\n  Image: ${p.image}` : '';
+      const payment = p.productPaymentMethods && p.productPaymentMethods.length > 0
+        ? `\n  Payment: ${p.productPaymentMethods.map((m: any) => `${m.name} - ${m.details}`).join(' | ')}`
+        : '';
+      const shipping = p.productShippingMethods && p.productShippingMethods.length > 0
+        ? `\n  Shipping: ${p.productShippingMethods.map((s: any) => `${s.name} KES ${s.price}`).join(' | ')}`
+        : '';
+
+      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${description}${payment}${shipping}${orderLink}${imageInfo}`;
     })
-    .join("\n");
+    .join("\n\n");
 
   const servicesList = context.services
     .map(s => {
@@ -238,18 +252,18 @@ When customers ask about products or want to see what you have:
      * Brand (if available)
      * Condition (if available)
      * Description (brief)
-   - CRITICAL: If product has images (shown as [IMAGES:url1,url2] in product data), YOU MUST send them!
-   - Use this EXACT format for each product with images:
-     Product Name - KES price (stock) [Colors: red, blue] [Sizes: M, L]
-     [IMAGE:https://example.com/image.jpg|Product Name - KES price]
+     * Payment methods (if product has specific payment options)
+     * Shipping methods (if product has specific shipping options)
+   - IMPORTANT: Do NOT include image tags or URLs in your response. Images will be sent automatically.
+   - Just describe the products in text with all details.
    - Tell them "We have X more [category] products. Reply 'show more' to see them"
 3. WHEN THEY ASK FOR MORE:
-   - Send the next 3-5 products with full details and images
+   - Send the next 3-5 products with full details
    - Repeat until all products are shown
 4. Always mention stock status and prices
 5. Ask which product they're interested in after showing products
 6. NEVER skip product details - always show colors, sizes, brand if available
-7. ALWAYS send images when products have them - customers need to see the products!
+7. Include payment and shipping info if product has specific options
 
 AVAILABLE PRODUCT CATEGORIES:${categoriesSection || "\nNo categories available"}
 
@@ -283,10 +297,10 @@ Customer: "What products do you have?"
 You: "We have several product categories:\n\n👗 Dresses (15 products)\n👟 Shoes (8 products)\n👜 Bags (12 products)\n👕 T-Shirts (20 products)\n\nWhich category interests you? I'll show you what's available! 😊"
 
 Customer: "Show me dresses"
-You: "Here are our dresses:\n\n1️⃣ Floral Summer Dress\nKES 2,500 (5 in stock)\nColors: Red, Blue, Yellow\nSizes: S, M, L, XL\nBrand: FashionHub\n\n[IMAGE:https://example.com/dress1.jpg|Floral Summer Dress - KES 2,500]\n\n2️⃣ Evening Gown\nKES 8,000 (2 in stock)\nColors: Black, Gold\nSizes: M, L\nBrand: Elegance\n\n[IMAGE:https://example.com/dress2.jpg|Evening Gown - KES 8,000]\n\n3️⃣ Casual Midi Dress\nKES 1,800 (8 in stock)\nColors: White, Pink\nSizes: S, M, L\nBrand: ComfortWear\n\n[IMAGE:https://example.com/dress3.jpg|Casual Midi Dress - KES 1,800]\n\nWe have 12 more dresses! Reply 'show more' to see them. Which one catches your eye? 👗"
+You: "Here are our dresses:\n\n1️⃣ Floral Summer Dress\nKES 2,500 (5 in stock)\nBrand: FashionHub\nColors: Red, Blue, Yellow\nSizes: S, M, L, XL\nAbout: Beautiful floral pattern perfect for summer occasions\n\n2️ Evening Gown\nKES 8,000 (2 in stock)\nBrand: Elegance\nColors: Black, Gold\nSizes: M, L\nAbout: Elegant evening wear for special events\n\n3️⃣ Casual Midi Dress\nKES 1,800 (8 in stock)\nBrand: ComfortWear\nColors: White, Pink\nSizes: S, M, L\nAbout: Comfortable everyday midi dress\n\nWe have 12 more dresses! Reply 'show more' to see them. Which one catches your eye? 👗"
 
 Customer: "show more"
-You: "Here are more dresses:\n\n4️⃣ Maxi Dress\nKES 3,200 (3 in stock)\nColors: Blue, Green\nSizes: M, L, XL\nBrand: StyleCo\n\n[IMAGE:https://example.com/dress4.jpg|Maxi Dress - KES 3,200]\n\n5️⃣ Wrap Dress\nKES 2,800 (6 in stock)\nColors: Red, Black\nSizes: S, M, L\nBrand: FashionHub\n\n[IMAGE:https://example.com/dress5.jpg|Wrap Dress - KES 2,800]\n\n6️⃣ Bodycon Dress\nKES 2,200 (4 in stock)\nColors: White, Beige\nSizes: XS, S, M\nBrand: TrendyWear\n\n[IMAGE:https://example.com/dress6.jpg|Bodycon Dress - KES 2,200]\n\nWe have 9 more! Reply 'show more' again. Interested in any of these? 😊"
+You: "Here are more dresses:\n\n4️⃣ Maxi Dress\nKES 3,200 (3 in stock)\nBrand: StyleCo\nColors: Blue, Green\nSizes: M, L, XL\nAbout: Flowing maxi dress for casual wear\n\n5️⃣ Wrap Dress\nKES 2,800 (6 in stock)\nBrand: FashionHub\nColors: Red, Black\nSizes: S, M, L\nAbout: Flattering wrap style dress\n\n6️⃣ Bodycon Dress\nKES 2,200 (4 in stock)\nBrand: TrendyWear\nColors: White, Beige\nSizes: XS, S, M\nAbout: Form-fitting bodycon dress\n\nWe have 9 more! Reply 'show more' again. Interested in any of these? 😊"
 
 Customer: "Do you have iPhone?"
 You: "Yes! We have these iPhones available:\n\n📱 iPhone 15 - KES 120,000 (10 in stock)\n📱 iPhone 15 Pro - KES 150,000 (5 in stock)\n\nWhich one interests you? I can share more details! 😊"

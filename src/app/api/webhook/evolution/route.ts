@@ -225,11 +225,13 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
         image: data.image,
         brand: data.brand,
         condition: data.condition,
-        colors: data.filters?.colors || [],
-        sizes: data.filters?.sizes || [],
+        colors: data.filters?.colors || data.colors || [],
+        sizes: data.filters?.sizes || data.sizes || [],
         sku: data.sku,
         warranty: data.warranty,
         orderLink: data.orderLink,
+        productPaymentMethods: data.paymentMethods || [],
+        productShippingMethods: data.shippingMethods || [],
       };
     });
     console.log(`[Webhook] Products loaded: ${products.length}`);
@@ -571,32 +573,35 @@ async function processWithAI(
     // Send response via Evolution API
     console.log("[Webhook] Sending response via Evolution API...");
     
-    // Check if AI response contains product image requests
-    // Format: [IMAGE:url|caption]
-    const imageMatches = aiResponse.match(/\[IMAGE:([^|]+)\|([^\]]+)\]/g);
+    // Extract mentioned products and send their images automatically
+    const mentionedProducts = context.products.filter(p => 
+      aiResponse.toLowerCase().includes(p.name.toLowerCase()) &&
+      (p.images && p.images.length > 0 || p.image)
+    );
     
-    if (imageMatches && imageMatches.length > 0) {
-      // Send images first
-      for (const match of imageMatches) {
-        const urlMatch = match.match(/\[IMAGE:([^|]+)\|([^\]]+)\]/);
-        if (urlMatch) {
-          const imageUrl = urlMatch[1];
-          const caption = urlMatch[2];
-          await sendEvolutionMedia(tenantId, phone, imageUrl, caption);
-          // Small delay between media messages
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+    // Send text first (cleaned of any IMAGE tags just in case)
+    const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
+    await sendEvolutionMessage(tenantId, phone, cleanText);
+    
+    // Then send images for mentioned products (max 3 to avoid spam)
+    const productsToShow = mentionedProducts.slice(0, 3);
+    console.log(`[Webhook] Found ${productsToShow.length} products with images to send`);
+    
+    for (const product of productsToShow) {
+      const imageUrl = product.images?.[0] || product.image;
+      if (imageUrl) {
+        // Small delay between media messages
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await sendEvolutionMedia(
+          tenantId, 
+          phone, 
+          imageUrl, 
+          `*${product.name}* - KES ${product.price.toLocaleString()}`
+        );
       }
-      
-      // Remove image markers from text and send remaining text
-      const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
-      if (cleanText) {
-        await sendEvolutionMessage(tenantId, phone, cleanText);
-      }
-    } else {
-      // No images, just send text
-      await sendEvolutionMessage(tenantId, phone, aiResponse);
     }
+    
+    console.log("[Webhook] All messages sent");
     
     console.log("[Webhook] AI processing complete ✅");
     console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
