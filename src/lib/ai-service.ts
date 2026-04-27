@@ -89,7 +89,7 @@ export async function generateAIResponse(
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = []
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-04-17" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Build system prompt with business context
     const systemPrompt = buildSystemPrompt(context);
@@ -244,7 +244,7 @@ You: "Our return policy:\n\n🔄 Returns: Items can be returned within 7 days of
 
 export async function detectIntent(message: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-04-17" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `Analyze this customer message and classify the intent. Return ONLY one of these categories:
 - greeting
