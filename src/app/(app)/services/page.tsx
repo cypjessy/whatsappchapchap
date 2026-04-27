@@ -434,20 +434,20 @@ export default function ServicesPage() {
         )}
       </div>
 
-      {/* Stats Row - Horizontal Scroll */}
-      <div className="flex gap-3 overflow-x-auto pb-2 mb-6">
+      {/* Stats Row - Responsive Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         {stats.map((stat) => (
           <div 
             key={stat.label} 
             onClick={() => setFilterStatus(stat.label.toLowerCase())}
-            className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 cursor-pointer hover:border-[#8b5cf6] transition-all"
+            className="bg-white px-3 md:px-4 py-3 md:py-4 rounded-xl border border-[#e2e8f0] flex items-center gap-2 md:gap-3 cursor-pointer hover:border-[#8b5cf6] hover:shadow-md transition-all"
           >
-            <div className={`w-8 h-8 rounded-full ${stat.color} flex items-center justify-center`}>
-              <i className={`fas ${stat.icon} text-sm`}></i>
+            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${stat.color} flex items-center justify-center flex-shrink-0`}>
+              <i className={`fas ${stat.icon} text-sm md:text-base`}></i>
             </div>
-            <div>
-              <div className="font-extrabold text-lg">{stat.value}</div>
-              <div className="text-xs text-[#64748b]">{stat.label}</div>
+            <div className="min-w-0">
+              <div className="font-extrabold text-lg md:text-xl truncate">{stat.value}</div>
+              <div className="text-xs text-[#64748b] truncate">{stat.label}</div>
             </div>
           </div>
         ))}
