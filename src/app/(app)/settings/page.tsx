@@ -44,12 +44,23 @@ export default function SettingsPage() {
 
   // Shipping Methods State
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [newShippingMethod, setNewShippingMethod] = useState({
     name: "",
     price: 0,
     estimatedDays: "",
     description: "",
   });
+
+  // Common shipping method presets
+  const shippingPresets = [
+    { name: "Standard Delivery", estimatedDays: "2-3 days", description: "Regular delivery service" },
+    { name: "Express Delivery", estimatedDays: "Same day", description: "Fast delivery within Nairobi" },
+    { name: "Next Day Delivery", estimatedDays: "1 day", description: "Delivery by next business day" },
+    { name: "Pickup", estimatedDays: "Same day", description: "Customer picks up from our location" },
+    { name: "Free Delivery", estimatedDays: "2-4 days", description: "Free shipping for orders above KES 5000" },
+    { name: "Economy Delivery", estimatedDays: "3-5 days", description: "Budget-friendly delivery option" },
+  ];
 
   // WhatsApp Settings State
   const [whatsappSettings, setWhatsappSettings] = useState<Partial<WhatsAppSettings>>({
@@ -284,6 +295,7 @@ export default function SettingsPage() {
     try {
       await shippingService.createShippingMethod(user, newShippingMethod as any);
       setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" });
+      setSelectedPreset("");
       await loadData();
       alert("Shipping method added!");
     } catch (error) {
@@ -291,6 +303,19 @@ export default function SettingsPage() {
       alert("Failed to add shipping method");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const selectPreset = (presetName: string) => {
+    const preset = shippingPresets.find(p => p.name === presetName);
+    if (preset) {
+      setSelectedPreset(presetName);
+      setNewShippingMethod({
+        name: preset.name,
+        price: 0, // User must set price
+        estimatedDays: preset.estimatedDays,
+        description: preset.description,
+      });
     }
   };
 
@@ -840,6 +865,29 @@ export default function SettingsPage() {
           {/* Add New Shipping Method */}
           <div className="mb-6 p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
             <h3 className="font-bold text-lg mb-4">Add Shipping Method</h3>
+            
+            {/* Preset Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                Quick Select (Choose a preset or customize below)
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {shippingPresets.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => selectPreset(preset.name)}
+                    className={`px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+                      selectedPreset === preset.name
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-green-300"
+                    }`}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-[#64748b] mb-2">
