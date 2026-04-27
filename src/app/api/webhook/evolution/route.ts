@@ -506,7 +506,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const from = message?.key?.remoteJid?.replace("@s.whatsapp.net", "") || "";
+    // Extract phone number from remoteJid
+    // Format can be: "254748132692@s.whatsapp.net" or "254748132692:39@s.whatsapp.net"
+    const remoteJid = message?.key?.remoteJid || "";
+    const from = remoteJid
+      .replace(/:\d+@s\.whatsapp\.net$/, "")  // Remove :39@s.whatsapp.net
+      .replace(/@s\.whatsapp\.net$/, "")       // Remove @s.whatsapp.net
+      .replace(/^\+/, "");                      // Remove leading + if present
+    
+    if (!from) {
+      console.log("[Webhook] ❌ No phone number extracted from remoteJid:", remoteJid);
+      return NextResponse.json({ received: true, error: "No phone number" });
+    }
+    
+    console.log(`[Webhook] Extracted phone: ${from} from remoteJid: ${remoteJid}`);
+    
     const text =
       message?.message?.conversation ||
       message?.message?.extendedTextMessage?.text ||
