@@ -59,7 +59,7 @@ async function sendWelcomeMessage(
         },
         body: JSON.stringify({
           number: phoneNumber,
-          text: welcomeMessage,
+          text: messageText, // ✅ Use processed message with business name replaced
         }),
       }
     );
@@ -673,10 +673,12 @@ export async function POST(req: NextRequest) {
 
     // Process with AI and send response (replaces n8n)
     if (text) {
-      // Use async processing to not block webhook response
-      processWithAI(tenantId, from, text).catch(err => {
-        console.error("[Webhook] Async AI processing error:", err);
+      // Await AI processing to prevent Vercel from killing the function
+      console.log("[Webhook] Starting AI processing...");
+      await processWithAI(tenantId, from, text).catch(err => {
+        console.error("[Webhook] AI processing error:", err);
       });
+      console.log("[Webhook] AI processing completed");
     }
 
     // Send welcome message only on first contact
