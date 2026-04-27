@@ -677,9 +677,20 @@ export const shippingService = {
 
   async getShippingMethods(user: User): Promise<ShippingMethod[]> {
     const tenantId = getTenantId(user);
-    const q = query(collection(db, "shippingMethods"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShippingMethod[];
+    try {
+      const q = query(collection(db, "shippingMethods"), where("tenantId", "==", tenantId));
+      const snap = await getDocs(q);
+      const methods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShippingMethod[];
+      // Sort by createdAt client-side to avoid index issues
+      return methods.sort((a, b) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return bTime - aTime; // Newest first
+      });
+    } catch (error) {
+      console.error("Error loading shipping methods:", error);
+      return [];
+    }
   },
 
   async updateShippingMethod(user: User, methodId: string, data: Partial<ShippingMethod>): Promise<void> {

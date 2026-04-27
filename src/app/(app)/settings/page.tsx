@@ -106,10 +106,21 @@ export default function SettingsPage() {
     }
   }, [user]);
 
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user available, skipping data load");
+      return;
+    }
+    
     setLoading(true);
     try {
+      console.log("Loading settings data for user:", user.uid);
+      
       const [profileData, whatsappData, shippingData, productData, serviceData] = await Promise.all([
         businessProfileService.getProfile(user),
         whatsappSettingsService.getSettings(user),
@@ -117,6 +128,12 @@ export default function SettingsPage() {
         productSettingsService.getSettings(user),
         serviceSettingsService.getSettings(user),
       ]);
+
+      console.log("Profile data:", profileData);
+      console.log("WhatsApp data:", whatsappData);
+      console.log("Shipping data:", shippingData);
+      console.log("Product settings:", productData);
+      console.log("Service settings:", serviceData);
 
       if (profileData) {
         setProfile(profileData);
@@ -156,6 +173,7 @@ export default function SettingsPage() {
       }
 
       if (shippingData) {
+        console.log("Setting shipping methods:", shippingData);
         setShippingMethods(shippingData);
       }
 
@@ -166,8 +184,11 @@ export default function SettingsPage() {
       if (serviceData) {
         setServiceSettings(serviceData);
       }
+      
+      console.log("Settings data loaded successfully");
     } catch (error) {
       console.error("Error loading data:", error);
+      alert("Error loading settings. Please refresh the page.");
     } finally {
       setLoading(false);
     }
