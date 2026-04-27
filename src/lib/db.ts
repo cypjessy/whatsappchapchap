@@ -152,6 +152,11 @@ export interface Service {
   
   // NEW FIELDS
   providerName?: string; // Business/Provider name
+  packagePrices?: { // Individual prices for each package tier
+    basic?: number;
+    standard?: number;
+    premium?: number;
+  };
   packageFeatures?: { // Custom features for each package
     basic: string[];
     standard: string[];

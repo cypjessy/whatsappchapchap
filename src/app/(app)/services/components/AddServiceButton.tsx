@@ -475,6 +475,7 @@ export default function AddServiceButton() {
         tags: [selectedBusiness, ...specs.service_type || []].slice(0, 5),
         priceMin,
         priceMax,
+        packagePrices: prices, // Save individual tier prices
         businessType: selectedBusiness,
         specifications: specs,
         tier: selectedTier,

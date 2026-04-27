@@ -96,12 +96,11 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
     }
   };
 
-  // Calculate package prices with auto-calculation
-  const basePrice = service.priceMin || 0;
-  const packagePrices = {
-    basic: basePrice,
-    standard: Math.round(basePrice * 1.5),
-    premium: Math.round(basePrice * 2)
+  // Use saved package prices, fallback to auto-calculation if not saved
+  const packagePrices = service.packagePrices || {
+    basic: service.priceMin || 0,
+    standard: Math.round((service.priceMin || 0) * 1.5),
+    premium: Math.round((service.priceMin || 0) * 2)
   };
 
   // Default package features
@@ -270,7 +269,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                     )}
                   <div className="font-bold text-sm mb-2 text-[#1e293b]">{tierLabels[tier].label}</div>
                   <div className="text-3xl font-extrabold text-[#8b5cf6] mb-1">
-                    {formatCurrency(packagePrices[tier])}
+                    {formatCurrency(packagePrices[tier] || 0)}
                   </div>
                   <div className="text-xs text-[#64748b] mb-3 pb-3 border-b border-[#e2e8f0]">
                     {(() => {
