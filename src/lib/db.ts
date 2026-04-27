@@ -139,6 +139,8 @@ export interface Service {
   priceMin: number;
   priceMax: number;
   businessType: string;
+  businessCategory?: string; // Human-readable business category name (e.g., "Beauty & Hair", "Home Services")
+  serviceName?: string; // Human-readable service name (e.g., "Hair Braiding", "Massage")
   specifications: any;
   tier: string;
   mode: string;
@@ -910,7 +912,72 @@ export const serviceService = {
       updatedAt: serverTimestamp(),
     };
     await setDoc(docRef, serviceData);
+    
+    // Save service category to serviceCategoryNames collection for AI (hierarchical structure)
+    if (service.serviceName && service.businessType && service.businessCategory) {
+      await this.saveServiceCategoryName(user, service.businessType, service.businessCategory, service.serviceName);
+    }
+    
     return serviceData;
+  },
+
+  // Save unique service category name for AI to fetch (hierarchical structure)
+  async saveServiceCategoryName(user: User, businessType: string, businessCategory: string, serviceName: string): Promise<void> {
+    const tenantId = getTenantId(user);
+    
+    // Check if main business category exists for this tenant
+    const categoryQuery = query(
+      collection(db, "serviceCategoryNames"),
+      where("tenantId", "==", tenantId),
+      where("businessType", "==", businessType)
+    );
+    const categorySnap = await getDocs(categoryQuery);
+    
+    if (categorySnap.empty) {
+      // Create new main business category with first service name
+      const categoryDoc = doc(collection(db, "serviceCategoryNames"));
+      await setDoc(categoryDoc, {
+        id: categoryDoc.id,
+        tenantId,
+        businessType: businessType, // e.g., "beauty", "home"
+        businessCategory: businessCategory, // e.g., "Beauty & Hair", "Home Services"
+        serviceNames: [serviceName], // e.g., ["Hair Braiding"]
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      // Main category exists, check if service name already exists
+      const existingDoc = categorySnap.docs[0];
+      const existingData = existingDoc.data();
+      const existingServiceNames = existingData.serviceNames || [];
+      
+      if (!existingServiceNames.includes(serviceName)) {
+        // Add new service name to existing main category
+        await updateDoc(doc(db, "serviceCategoryNames", existingDoc.id), {
+          serviceNames: [...existingServiceNames, serviceName],
+          updatedAt: serverTimestamp(),
+        });
+      }
+    }
+  },
+
+  // Get all service category names for AI (hierarchical structure)
+  async getServiceCategoryNames(user: User): Promise<Array<{businessType: string, businessCategory: string, serviceNames: string[]}>> {
+    const tenantId = getTenantId(user);
+    const q = query(
+      collection(db, "serviceCategoryNames"),
+      where("tenantId", "==", tenantId),
+      orderBy("createdAt", "desc")
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        businessType: data.businessType,
+        businessCategory: data.businessCategory,
+        serviceNames: data.serviceNames || [],
+      };
+    });
   },
 
   async getServices(user: User): Promise<Service[]> {

@@ -463,6 +463,14 @@ export default function AddServiceButton() {
       const priceMin = validPrices.length > 0 ? Math.min(...validPrices) : 0;
       const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : 0;
 
+      // Get the human-readable business category name
+      const businessCategory = businessSpecs[selectedBusiness]?.name || selectedBusiness;
+      
+      // Get the service name from specifications (service_type is the main service identifier)
+      const serviceName = specs.service_type && specs.service_type.length > 0 
+        ? specs.service_type[0] 
+        : name;
+
       // Create service data first (without bookingUrl)
       const serviceDataWithoutUrl = {
         name,
@@ -477,6 +485,8 @@ export default function AddServiceButton() {
         priceMax,
         packagePrices: prices, // Save individual tier prices
         businessType: selectedBusiness,
+        businessCategory: businessCategory,
+        serviceName: serviceName,
         specifications: specs,
         tier: selectedTier,
         mode: selectedMode,
