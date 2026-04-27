@@ -3,6 +3,7 @@ import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
+import { getProductCategories, formatProductList, getProductImage } from "@/lib/product-helper";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -288,10 +289,30 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     const serviceSettings = serviceSettingsSnap.exists ? serviceSettingsSnap.data() : null;
     console.log("[Webhook] Service settings:", serviceSettings ? "found" : "not found");
     
+    // NEW: Get product categories
+    console.log("[Webhook] Fetching product categories...");
+    const categoriesFetchStart = Date.now();
+    const categoriesSnap = await db.collection("productCategories")
+      .where("tenantId", "==", tenantId)
+      .get();
+    console.log(`[Webhook] Categories fetch took ${Date.now() - categoriesFetchStart}ms`);
+    
+    const productCategories = categoriesSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        icon: data.icon,
+        productCount: data.productCount || 0,
+      };
+    });
+    console.log(`[Webhook] Product categories loaded: ${productCategories.length}`);
+    
     console.log("[Webhook] Building context object...");
     const context = {
       businessName,
       products,
+      productCategories: productCategories.length > 0 ? productCategories : undefined,
       services,
       businessProfile: businessProfile ? {
         tagline: businessProfile.tagline,
@@ -411,6 +432,53 @@ async function sendEvolutionMessage(
   }
 }
 
+// Send media message (image) via Evolution API
+async function sendEvolutionMedia(
+  tenantId: string,
+  phoneNumber: string,
+  mediaUrl: string,
+  caption?: string
+): Promise<void> {
+  try {
+    const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
+    const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+
+    if (!evolutionApiUrl || !evolutionApiKey) {
+      console.log("[Webhook] Evolution API not configured, skipping media");
+      return;
+    }
+
+    console.log(`[Webhook] Sending media to ${phoneNumber}: ${mediaUrl}`);
+
+    const response = await fetch(
+      `${evolutionApiUrl}/message/sendMedia/${tenantId}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: evolutionApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          number: phoneNumber,
+          mediatype: "image",
+          mimetype: "image/jpeg",
+          caption: caption || "",
+          media: mediaUrl,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("[Webhook] Media sent:", data);
+
+    if (!response.ok) {
+      console.error("[Webhook] Failed to send media:", data);
+    }
+  } catch (error) {
+    console.error("[Webhook] Error sending media:", error);
+  }
+}
+
 // Process message with AI and send response
 async function processWithAI(
   tenantId: string,
@@ -493,7 +561,33 @@ async function processWithAI(
     
     // Send response via Evolution API
     console.log("[Webhook] Sending response via Evolution API...");
-    await sendEvolutionMessage(tenantId, phone, aiResponse);
+    
+    // Check if AI response contains product image requests
+    // Format: [IMAGE:url|caption]
+    const imageMatches = aiResponse.match(/\[IMAGE:([^|]+)\|([^\]]+)\]/g);
+    
+    if (imageMatches && imageMatches.length > 0) {
+      // Send images first
+      for (const match of imageMatches) {
+        const urlMatch = match.match(/\[IMAGE:([^|]+)\|([^\]]+)\]/);
+        if (urlMatch) {
+          const imageUrl = urlMatch[1];
+          const caption = urlMatch[2];
+          await sendEvolutionMedia(tenantId, phone, imageUrl, caption);
+          // Small delay between media messages
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      // Remove image markers from text and send remaining text
+      const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
+      if (cleanText) {
+        await sendEvolutionMessage(tenantId, phone, cleanText);
+      }
+    } else {
+      // No images, just send text
+      await sendEvolutionMessage(tenantId, phone, aiResponse);
+    }
     
     console.log("[Webhook] AI processing complete ✅");
     console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);

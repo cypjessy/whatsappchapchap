@@ -20,6 +20,13 @@ export interface AIContext {
     images?: string[];
     orderLink?: string;
   }>;
+  // NEW: Product categories for browsing
+  productCategories?: Array<{
+    id: string;
+    name: string;
+    icon?: string;
+    productCount: number;
+  }>;
   services: Array<{
     id: string;
     name: string;
@@ -183,6 +190,13 @@ function buildSystemPrompt(context: AIContext): string {
     ].filter(Boolean).join('\n')
   }` : '';
 
+  // NEW: Product categories section
+  const categoriesSection = context.productCategories && context.productCategories.length > 0
+    ? `\n\nPRODUCT CATEGORIES:\n${context.productCategories.map(c => 
+        `- ${c.name} (${c.productCount} products)`
+      ).join('\n')}`
+    : '';
+
   return `You are a friendly and helpful AI assistant for ${context.businessName}, a business using WhatsApp for customer service.
 
 YOUR ROLE:
@@ -193,6 +207,22 @@ YOUR ROLE:
 - Explain return policies, warranties, and booking policies
 - Be professional, friendly, and concise
 - Use emojis sparingly to make messages engaging
+
+PRODUCT BROWSING FLOW (IMPORTANT):
+When customers ask about products or want to see what you have:
+1. FIRST: Show them the PRODUCT CATEGORIES list and ask them to choose one
+2. WHEN THEY CHOOSE A CATEGORY: 
+   - Send 3-5 products from that category at a time (with names, prices, stock status)
+   - For each product with images, include: [IMAGE:image_url|Product Name - KES price]
+   - Tell them "We have X more [category] products. Reply 'show more' to see them"
+3. WHEN THEY ASK FOR MORE:
+   - Send the next 3-5 products
+   - Repeat until all products are shown
+4. Always mention stock status and prices
+5. Ask which product they're interested in after showing products
+6. Use the IMAGE format for products with images: [IMAGE:url|caption]
+
+AVAILABLE PRODUCT CATEGORIES:${categoriesSection || "\nNo categories available"}
 
 AVAILABLE PRODUCTS:
 ${productsList || "No products currently available"}
@@ -219,6 +249,15 @@ RESPONSE FORMAT:
 - End with a question or next step
 
 EXAMPLE RESPONSES:
+
+Customer: "What products do you have?"
+You: "We have several product categories:\n\n👗 Dresses (15 products)\n👟 Shoes (8 products)\n👜 Bags (12 products)\n👕 T-Shirts (20 products)\n\nWhich category interests you? I'll show you what's available! 😊"
+
+Customer: "Show me dresses"
+You: "Here are our dresses:\n\n1️⃣ Floral Summer Dress - KES 2,500 (5 in stock)\n[IMAGE:https://example.com/dress1.jpg|Floral Summer Dress]\n\n2️⃣ Evening Gown - KES 8,000 (2 in stock)\n[IMAGE:https://example.com/dress2.jpg|Evening Gown]\n\n3️⃣ Casual Midi Dress - KES 1,800 (8 in stock)\n[IMAGE:https://example.com/dress3.jpg|Casual Midi Dress]\n\nWe have 12 more dresses! Reply 'show more' to see them. Which one catches your eye? 👗"
+
+Customer: "show more"
+You: "Here are more dresses:\n\n4️⃣ Maxi Dress - KES 3,200 (3 in stock)\n5️⃣ Wrap Dress - KES 2,800 (6 in stock)\n6️⃣ Bodycon Dress - KES 2,200 (4 in stock)\n\nWe have 9 more! Reply 'show more' again. Interested in any of these? 😊"
 
 Customer: "Do you have iPhone?"
 You: "Yes! We have these iPhones available:\n\n📱 iPhone 15 - KES 120,000 (10 in stock)\n📱 iPhone 15 Pro - KES 150,000 (5 in stock)\n\nWhich one interests you? I can share more details! 😊"
