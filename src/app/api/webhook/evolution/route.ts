@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
-import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
-import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit, addDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { initializeApp as initializeClientApp, type FirebaseApp } from "firebase/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 
 // Initialize Firebase Admin SDK
-let adminDb: ReturnType<typeof getAdminFirestore> | null = null;
+let adminDb: ReturnType<typeof getFirestore> | null = null;
 let adminApp: App | null = null;
 
 function getAdminDb() {
@@ -23,39 +21,9 @@ function getAdminDb() {
     } else {
       adminApp = getApps()[0];
     }
-    adminDb = getAdminFirestore();
+    adminDb = getFirestore();
   }
   return adminDb;
-}
-
-// Initialize Firebase Client SDK for faster reads
-let clientDb: ReturnType<typeof getFirestore> | null = null;
-
-function getClientDb() {
-  if (!clientDb) {
-    // Try to initialize client app
-    if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-      try {
-        const clientApp = initializeClientApp({
-          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        }, "webhook-client");
-        clientDb = getFirestore(clientApp);
-        console.log("[Webhook] Client SDK initialized successfully");
-      } catch (error) {
-        console.log("[Webhook] Client SDK init failed, using Admin SDK:", error);
-        clientDb = getAdminDb() as any;
-      }
-    } else {
-      console.log("[Webhook] No client API key, using Admin SDK");
-      clientDb = getAdminDb() as any;
-    }
-  }
-  return clientDb;
 }
 
 async function sendWelcomeMessage(
@@ -184,16 +152,16 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     console.log("[Webhook] Starting to fetch business context...");
     console.log("[Webhook] Tenant ID:", tenantId);
     console.log("[Webhook] Environment check - Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? "✓" : "✗");
-    console.log("[Webhook] Environment check - API Key:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "✓ (first 8: " + process.env.NEXT_PUBLIC_FIREBASE_API_KEY.substring(0, 8) + "...)" : "✗");
+    console.log("[Webhook] Environment check - Private Key:", process.env.FIREBASE_PRIVATE_KEY ? "✓" : "✗");
     
-    const db = getClientDb();
+    const db = getAdminDb();
     
     if (!db) {
       console.error("[Webhook] ❌ Failed to initialize database");
       return { businessName: "Our Shop", products: [], services: [] };
     }
     
-    console.log("[Webhook] Database object created:", typeof db);
+    console.log("[Webhook] Database initialized:", typeof db);
     
     // Get tenant info with timeout
     console.log("[Webhook] Fetching tenant info...");
@@ -201,19 +169,16 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     let businessName = "Our Shop";
     
     try {
-      const tenantRef = doc(db, "tenants", tenantId);
-      console.log("[Webhook] Tenant ref created:", tenantRef.path);
-      
-      const tenantPromise = getDoc(tenantRef);
+      const tenantPromise = db.collection("tenants").doc(tenantId).get();
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error("Tenant fetch timeout after 5000ms")), 5000)
       );
       
       const tenantSnap = await Promise.race([tenantPromise, timeoutPromise]) as any;
       console.log(`[Webhook] Tenant fetch took ${Date.now() - tenantFetchStart}ms`);
-      console.log("[Webhook] Tenant exists:", tenantSnap.exists());
+      console.log("[Webhook] Tenant exists:", tenantSnap.exists);
       
-      businessName = tenantSnap.exists() ? tenantSnap.data()?.businessName || "Our Shop" : "Our Shop";
+      businessName = tenantSnap.exists ? tenantSnap.data()?.businessName || "Our Shop" : "Our Shop";
       console.log("[Webhook] Business name:", businessName);
     } catch (tenantError) {
       console.error("[Webhook] ❌ Tenant fetch error:", tenantError);
@@ -236,16 +201,14 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     // Get active products (limit to 20 for context)
     console.log("[Webhook] Fetching products...");
     const productsFetchStart = Date.now();
-    const productsQuery = query(
-      collection(db, "products"),
-      where("tenantId", "==", tenantId),
-      where("status", "==", "active"),
-      limit(20)
-    );
-    const productsSnap = await getDocs(productsQuery);
+    const productsSnap = await db.collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .limit(20)
+      .get();
     console.log(`[Webhook] Products fetch took ${Date.now() - productsFetchStart}ms`);
     
-    const products = productsSnap.docs.map(doc => {
+    const products = productsSnap.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -264,16 +227,14 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     // Get active services (limit to 20 for context)
     console.log("[Webhook] Fetching services...");
     const servicesFetchStart = Date.now();
-    const servicesQuery = query(
-      collection(db, "services"),
-      where("tenantId", "==", tenantId),
-      where("status", "==", "active"),
-      limit(20)
-    );
-    const servicesSnap = await getDocs(servicesQuery);
+    const servicesSnap = await db.collection("services")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .limit(20)
+      .get();
     console.log(`[Webhook] Services fetch took ${Date.now() - servicesFetchStart}ms`);
     
-    const services = servicesSnap.docs.map(doc => {
+    const services = servicesSnap.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -292,23 +253,20 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     // NEW: Get business profile
     console.log("[Webhook] Fetching business profile...");
     const profileFetchStart = Date.now();
-    const profileRef = doc(db, "businessProfiles", tenantId);
-    const profileSnap = await getDoc(profileRef);
+    const profileSnap = await db.collection("businessProfiles").doc(tenantId).get();
     console.log(`[Webhook] Profile fetch took ${Date.now() - profileFetchStart}ms`);
-    const businessProfile = profileSnap.exists() ? profileSnap.data() : null;
+    const businessProfile = profileSnap.exists ? profileSnap.data() : null;
     console.log("[Webhook] Business profile:", businessProfile ? "found" : "not found");
     
     // NEW: Get shipping methods
     console.log("[Webhook] Fetching shipping methods...");
     const shippingFetchStart = Date.now();
-    const shippingQuery = query(
-      collection(db, "shippingMethods"),
-      where("tenantId", "==", tenantId)
-    );
-    const shippingSnap = await getDocs(shippingQuery);
+    const shippingSnap = await db.collection("shippingMethods")
+      .where("tenantId", "==", tenantId)
+      .get();
     console.log(`[Webhook] Shipping fetch took ${Date.now() - shippingFetchStart}ms`);
     
-    const shippingMethods = shippingSnap.docs.map(doc => ({
+    const shippingMethods = shippingSnap.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data()
     })) as Array<{ id: string; name: string; price: number; estimatedDays?: string; description?: string }>;
@@ -317,19 +275,17 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     // NEW: Get product settings
     console.log("[Webhook] Fetching product settings...");
     const prodSettingsFetchStart = Date.now();
-    const productSettingsRef = doc(db, "productSettings", tenantId);
-    const productSettingsSnap = await getDoc(productSettingsRef);
+    const productSettingsSnap = await db.collection("productSettings").doc(tenantId).get();
     console.log(`[Webhook] Product settings fetch took ${Date.now() - prodSettingsFetchStart}ms`);
-    const productSettings = productSettingsSnap.exists() ? productSettingsSnap.data() : null;
+    const productSettings = productSettingsSnap.exists ? productSettingsSnap.data() : null;
     console.log("[Webhook] Product settings:", productSettings ? "found" : "not found");
     
     // NEW: Get service settings
     console.log("[Webhook] Fetching service settings...");
     const svcSettingsFetchStart = Date.now();
-    const serviceSettingsRef = doc(db, "serviceSettings", tenantId);
-    const serviceSettingsSnap = await getDoc(serviceSettingsRef);
+    const serviceSettingsSnap = await db.collection("serviceSettings").doc(tenantId).get();
     console.log(`[Webhook] Service settings fetch took ${Date.now() - svcSettingsFetchStart}ms`);
-    const serviceSettings = serviceSettingsSnap.exists() ? serviceSettingsSnap.data() : null;
+    const serviceSettings = serviceSettingsSnap.exists ? serviceSettingsSnap.data() : null;
     console.log("[Webhook] Service settings:", serviceSettings ? "found" : "not found");
     
     console.log("[Webhook] Building context object...");
