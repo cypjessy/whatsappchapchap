@@ -141,7 +141,7 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
   }
 }
 
-// Get business context for AI (products, services, etc.)
+// Get business context for AI (products, services, shipping, payments, policies)
 async function getBusinessContext(tenantId: string): Promise<AIContext> {
   try {
     const adminDb = getAdminDb();
@@ -196,10 +196,60 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       };
     });
     
+    // NEW: Get business profile
+    const profileDoc = await adminDb.collection("businessProfiles").doc(tenantId).get();
+    const businessProfile = profileDoc.exists ? profileDoc.data() : null;
+    
+    // NEW: Get shipping methods
+    const shippingSnap = await adminDb
+      .collection("shippingMethods")
+      .where("tenantId", "==", tenantId)
+      .get();
+    
+    const shippingMethods = shippingSnap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Array<{ id: string; name: string; price: number; estimatedDays?: string; description?: string }>;
+    
+    // NEW: Get product settings
+    const productSettingsDoc = await adminDb.collection("productSettings").doc(tenantId).get();
+    const productSettings = productSettingsDoc.exists ? productSettingsDoc.data() : null;
+    
+    // NEW: Get service settings
+    const serviceSettingsDoc = await adminDb.collection("serviceSettings").doc(tenantId).get();
+    const serviceSettings = serviceSettingsDoc.exists ? serviceSettingsDoc.data() : null;
+    
     return {
       businessName,
       products,
       services,
+      businessProfile: businessProfile ? {
+        tagline: businessProfile.tagline,
+        description: businessProfile.description,
+        email: businessProfile.email,
+        phone: businessProfile.phone,
+        whatsappNumber: businessProfile.whatsappNumber,
+        website: businessProfile.website,
+        address: businessProfile.address,
+        city: businessProfile.city,
+        country: businessProfile.country,
+        businessHours: businessProfile.businessHours,
+        socialMedia: businessProfile.socialMedia,
+      } : undefined,
+      shippingMethods: shippingMethods.length > 0 ? shippingMethods : undefined,
+      paymentMethods: businessProfile?.paymentMethods,
+      productSettings: productSettings ? {
+        enabled: productSettings.enabled,
+        storeDescription: productSettings.storeDescription,
+        returnPolicy: productSettings.returnPolicy,
+        warrantyInfo: productSettings.warrantyInfo,
+      } : undefined,
+      serviceSettings: serviceSettings ? {
+        enabled: serviceSettings.enabled,
+        serviceDescription: serviceSettings.serviceDescription,
+        bookingPolicy: serviceSettings.bookingPolicy,
+        cancellationPolicy: serviceSettings.cancellationPolicy,
+      } : undefined,
     };
   } catch (error) {
     console.error("[Webhook] Error getting business context:", error);
