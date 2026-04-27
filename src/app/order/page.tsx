@@ -82,8 +82,13 @@ function OrderPageContent() {
   const [orderNumber, setOrderNumber] = useState("");
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   
-
+  // Get all product images
+  const allImages = product?.images && product.images.length > 0 
+    ? product.images 
+    : product?.image ? [product.image] : [];
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -458,21 +463,69 @@ function OrderPageContent() {
 
         {/* Product Section */}
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ display: "flex", gap: 16, background: "#f8fafc", borderRadius: 12, padding: 16, border: "1px solid #e2e8f0" }}>
-            {product?.image ? (
-              <img src={product.image} alt={product.name} style={{ width: 100, height: 100, borderRadius: 8, objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: 100, height: 100, background: "linear-gradient(135deg, #DCF8C6 0%, #e0e7ff 100%)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48 }}>{productEmoji || "📦"}</div>
-            )}
-            <div style={{ flex: 1 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "#1e293b" }}>{product?.name}</h2>
-              {product?.description && (
-                <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.5, marginBottom: 12 }}>{product.description}</p>
-              )}
-              <div>
-                <span style={{ fontSize: 24, fontWeight: 800, color: "#25D366" }}>{CURRENCY_SYMBOL}{getBasePrice().toLocaleString()}</span>
+          {/* Image Gallery */}
+          {allImages.length > 0 ? (
+            <div className="product-gallery">
+              {/* Main Image */}
+              <div className="main-image-container">
+                <img 
+                  src={allImages[selectedImageIndex]} 
+                  alt={product?.name} 
+                  className="main-image"
+                />
+                {allImages.length > 1 && (
+                  <>
+                    <button 
+                      className="gallery-nav prev"
+                      onClick={() => setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                    <button 
+                      className="gallery-nav next"
+                      onClick={() => setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                    <div className="image-counter">
+                      {selectedImageIndex + 1} / {allImages.length}
+                    </div>
+                  </>
+                )}
               </div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, marginTop: 8, color: currentStock > 5 ? "#10b981" : currentStock > 0 ? "#f59e0b" : "#ef4444" }}>
+              
+              {/* Thumbnail Strip */}
+              {allImages.length > 1 && (
+                <div className="thumbnail-strip">
+                  {allImages.map((img, index) => (
+                    <button
+                      key={index}
+                      className={`thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
+                      onClick={() => setSelectedImageIndex(index)}
+                    >
+                      <img src={img} alt={`${product?.name} - ${index + 1}`} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ width: "100%", height: 300, background: "linear-gradient(135deg, #DCF8C6 0%, #e0e7ff 100%)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 80, marginBottom: 16 }}>
+              {productEmoji || "📦"}
+            </div>
+          )}
+          
+          {/* Product Info */}
+          <div style={{ marginTop: 16 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#1e293b" }}>{product?.name}</h2>
+            {product?.description && (
+              <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.6, marginBottom: 16 }}>{product.description}</p>
+            )}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <span style={{ fontSize: 28, fontWeight: 800, color: "#25D366" }}>{CURRENCY_SYMBOL}{getBasePrice().toLocaleString()}</span>
+              </div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: currentStock > 5 ? "#10b981" : currentStock > 0 ? "#f59e0b" : "#ef4444" }}>
                 <i className={`fas ${currentStock > 0 ? "fa-check-circle" : "fa-times-circle"}`}></i>
                 <span>{currentStock > 0 ? `In Stock - ${currentStock} available` : "Out of Stock"}</span>
               </div>
@@ -869,6 +922,123 @@ function OrderPageContent() {
             from { transform: translateY(30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
           }
+          
+          /* Product Gallery Styles */
+          .product-gallery {
+            width: 100%;
+          }
+          
+          .main-image-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #f8fafc;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+          }
+          
+          .main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .gallery-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #1e293b;
+            transition: all 0.2s;
+          }
+          
+          .gallery-nav:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          }
+          
+          .gallery-nav.prev {
+            left: 12px;
+          }
+          
+          .gallery-nav.next {
+            right: 12px;
+          }
+          
+          .image-counter {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+          }
+          
+          .thumbnail-strip {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            overflow-x: auto;
+            padding: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+          }
+          
+          .thumbnail-strip::-webkit-scrollbar {
+            height: 6px;
+          }
+          
+          .thumbnail-strip::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .thumbnail-strip::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+          }
+          
+          .thumbnail {
+            flex-shrink: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+          }
+          
+          .thumbnail:hover {
+            border-color: #94a3b8;
+          }
+          
+          .thumbnail.active {
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37,211,102,0.2);
+          }
+          
+          .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          /* Responsive Grid */
           .order-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -878,6 +1048,8 @@ function OrderPageContent() {
             flex-direction: column;
             gap: 12px;
           }
+          
+          /* Tablet (768px - 1024px) */
           @media (min-width: 768px) {
             .order-grid {
               grid-template-columns: 1fr 1fr;
@@ -889,7 +1061,29 @@ function OrderPageContent() {
               flex-direction: row;
               gap: 16px;
             }
+            .main-image-container {
+              aspect-ratio: 1/1;
+            }
+            .thumbnail {
+              width: 70px;
+              height: 70px;
+            }
           }
+          
+          /* Desktop (1024px+) */
+          @media (min-width: 1024px) {
+            .order-grid {
+              grid-template-columns: 1.2fr 0.8fr;
+            }
+            .main-image-container {
+              aspect-ratio: 4/3;
+            }
+            .thumbnail {
+              width: 90px;
+              height: 90px;
+            }
+          }
+          
           input, textarea, select {
             box-sizing: border-box;
           }
