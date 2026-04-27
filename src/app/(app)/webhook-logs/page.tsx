@@ -181,7 +181,7 @@ export default function WebhookLogsPage() {
                           {error.errorType}
                         </span>
                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {error.timestamp?.toDate ? formatDistanceToNow(error.timestamp.toDate(), { addSuffix: true }) : formatTimestamp(error.timestamp)}
+                          {formatTimestamp(error.timestamp)}
                         </span>
                       </div>
                       <p className="text-sm font-mono text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 p-2 rounded">
