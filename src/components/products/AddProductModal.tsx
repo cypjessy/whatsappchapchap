@@ -750,10 +750,23 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         filters[key] = Array.from(set);
       });
 
+      // Get the human-readable category name from subcategory
+      let categoryName = selectedCategory;
+      if (selectedSubcategory) {
+        // Check if it's a custom subcategory
+        if (customSubcategories[selectedSubcategory]) {
+          categoryName = customSubcategories[selectedSubcategory].name || selectedSubcategory;
+        } else {
+          // Get from predefined category data
+          categoryName = categoryData[selectedCategory]?.subcategories?.[selectedSubcategory]?.name || selectedSubcategory;
+        }
+      }
+
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
         category: selectedCategory,
+        categoryName: categoryName,
         price: minPrice,
         stock: stock,
         image: imageUrl,

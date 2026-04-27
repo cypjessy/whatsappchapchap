@@ -254,6 +254,7 @@ export interface Product {
   salePrice?: number; // Sale/discounted price
   costPrice?: number; // Cost price for profit calculation
   category?: string;
+  categoryName?: string; // Human-readable category name (e.g., "Dresses", "Smartphones")
   brand?: string;
   condition?: string; // Product condition (new, used, refurbished)
   imageUrl?: string;
@@ -1122,7 +1123,50 @@ export const productService = {
       updatedAt: serverTimestamp(),
     };
     await setDoc(docRef, productData);
+    
+    // Save category name to categoryNames collection for AI
+    if (product.categoryName) {
+      await this.saveCategoryName(user, product.categoryName);
+    }
+    
     return productData;
+  },
+
+  // Save unique category name for AI to fetch
+  async saveCategoryName(user: User, categoryName: string): Promise<void> {
+    const tenantId = getTenantId(user);
+    
+    // Check if category name already exists for this tenant
+    const q = query(
+      collection(db, "categoryNames"),
+      where("tenantId", "==", tenantId),
+      where("name", "==", categoryName)
+    );
+    const existingSnap = await getDocs(q);
+    
+    // If doesn't exist, create it
+    if (existingSnap.empty) {
+      const categoryDoc = doc(collection(db, "categoryNames"));
+      await setDoc(categoryDoc, {
+        id: categoryDoc.id,
+        tenantId,
+        name: categoryName,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+  },
+
+  // Get all category names for AI
+  async getCategoryNames(user: User): Promise<string[]> {
+    const tenantId = getTenantId(user);
+    const q = query(
+      collection(db, "categoryNames"),
+      where("tenantId", "==", tenantId),
+      orderBy("createdAt", "desc")
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => doc.data().name);
   },
 
   async getProducts(user: User): Promise<Product[]> {
