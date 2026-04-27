@@ -94,11 +94,18 @@ export async function generateAIResponse(
     // Build system prompt with business context
     const systemPrompt = buildSystemPrompt(context);
 
-    // Build conversation history
-    const historyMessages = conversationHistory.map(msg => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.content }]
-    }));
+    // Filter empty messages and ensure history starts with 'user'
+    let historyMessages = conversationHistory
+      .filter(msg => msg.content && msg.content.trim() !== "")
+      .map(msg => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }]
+      }));
+
+    // Drop leading model messages until we hit a user message
+    while (historyMessages.length > 0 && historyMessages[0].role !== "user") {
+      historyMessages = historyMessages.slice(1);
+    }
 
     // Start chat with history AND system instruction
     const chat = model.startChat({
