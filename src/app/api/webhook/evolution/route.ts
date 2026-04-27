@@ -584,17 +584,34 @@ async function processWithAI(
     const productsToShow = mentionedProducts.slice(0, 3);
     console.log(`[Webhook] Found ${productsToShow.length} products with images to send`);
     
+    let imageCount = 0;
+    const maxImages = 9; // WhatsApp limit to avoid spam
+    
     for (const product of productsToShow) {
-      const imageUrl = product.images?.[0] || product.image;
-      if (imageUrl) {
-        await sendEvolutionMedia(
-          tenantId,
-          phone,
-          imageUrl,
-          `*${product.name}* - KES ${product.price.toLocaleString()}`
-        );
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Send ALL images for this product (not just the first one)
+      const allImages = product.images && product.images.length > 0 
+        ? product.images 
+        : product.image ? [product.image] : [];
+      
+      for (const imageUrl of allImages) {
+        if (imageCount >= maxImages) {
+          console.log(`[Webhook] Reached max image limit (${maxImages}), stopping`);
+          break;
+        }
+        
+        if (imageUrl) {
+          await sendEvolutionMedia(
+            tenantId,
+            phone,
+            imageUrl,
+            `*${product.name}* - KES ${product.price.toLocaleString()}`
+          );
+          imageCount++;
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
+      
+      if (imageCount >= maxImages) break;
     }
     
     // Then send text AFTER images
