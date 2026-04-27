@@ -1,9 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-// Initialize Gemini AI
-const apiKey = process.env.GEMINI_API_KEY || "";
-console.log("[AI Service] Initializing with API key:", apiKey ? "✓ Present" : "✗ Missing");
-const genAI = new GoogleGenerativeAI(apiKey);
+// Initialize Groq
+const groq = new Groq({ 
+  apiKey: process.env.GROQ_API_KEY || "",
+});
+
+console.log("[AI Service] Initializing with Groq API key:", process.env.GROQ_API_KEY ? "✓ Present" : "✗ Missing");
 
 export interface AIContext {
   businessName: string;
@@ -91,48 +93,35 @@ export async function generateAIResponse(
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = []
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     // Build system prompt with business context
     const systemPrompt = buildSystemPrompt(context);
 
-    // Filter empty messages and ensure history starts with 'user'
-    let historyMessages = conversationHistory
-      .filter(msg => msg.content && msg.content.trim() !== "")
-      .map(msg => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }]
-      }));
+    // Build messages array for Groq
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory
+        .filter(msg => msg.content && msg.content.trim() !== "")
+        .map((msg): { role: "user" | "assistant"; content: string } => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: msg.content
+        })),
+      { role: "user", content: message }
+    ];
 
-    // Drop leading model messages until we hit a user message
-    while (historyMessages.length > 0 && historyMessages[0].role !== "user") {
-      historyMessages = historyMessages.slice(1);
-    }
-
-    // Start chat with history AND system instruction
-    const chat = model.startChat({
-      history: historyMessages,
-      generationConfig: {
-        maxOutputTokens: 500,
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40,
-      },
-      systemInstruction: {
-        role: "user",
-        parts: [{ text: systemPrompt }],
-      },
+    // Call Groq API
+    const chatCompletion = await groq.chat.completions.create({
+      messages,
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 500,
+      top_p: 0.8,
     });
 
-    // Send user message
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
-
-    return text.trim();
+    const response = chatCompletion.choices[0]?.message?.content || "";
+    return response.trim();
   } catch (error) {
     console.error("[AI] Full error:", JSON.stringify(error, null, 2));
-    console.error("[AI] GEMINI_API_KEY set:", !!process.env.GEMINI_API_KEY);
+    console.error("[AI] GROQ_API_KEY set:", !!process.env.GROQ_API_KEY);
     throw error; // Rethrow so webhook-logger catches it
   }
 }
@@ -246,8 +235,6 @@ You: "Our return policy:\n\n🔄 Returns: Items can be returned within 7 days of
 
 export async function detectIntent(message: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const prompt = `Analyze this customer message and classify the intent. Return ONLY one of these categories:
 - greeting
 - product_inquiry
@@ -263,9 +250,17 @@ Message: "${message}"
 
 Intent:`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text().trim().toLowerCase();
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.3,
+      max_tokens: 20,
+    });
+
+    const response = chatCompletion.choices[0]?.message?.content || "general_question";
+    return response.trim().toLowerCase();
   } catch (error) {
     console.error("[AI] Error detecting intent:", error);
     return "general_question";
