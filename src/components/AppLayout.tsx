@@ -7,7 +7,7 @@ import BottomNav from "./BottomNav";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false); // Start collapsed on desktop
   const [isMobile, setIsMobile] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
   

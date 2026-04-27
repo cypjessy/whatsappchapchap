@@ -21,11 +21,12 @@ type NavItem = {
 
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
-  const [localCollapsed, setLocalCollapsed] = useState(isExpanded);
+  // Start collapsed on desktop, expanded only when isExpanded prop is true (mobile drawer)
+  const [localCollapsed, setLocalCollapsed] = useState(true);
   const { mode, toggleMode } = useMode();
   
   // When isExpanded prop is true (mobile/tablet drawer), always show full sidebar
-  // On desktop, use local state for hover collapse
+  // On desktop, use local state for hover collapse (starts collapsed)
   const isCollapsed = isExpanded ? false : localCollapsed;
 
   const productNavItems: NavItem[] = [

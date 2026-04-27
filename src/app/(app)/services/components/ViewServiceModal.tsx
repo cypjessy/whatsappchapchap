@@ -273,7 +273,18 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                     {formatCurrency(packagePrices[tier])}
                   </div>
                   <div className="text-xs text-[#64748b] mb-3 pb-3 border-b border-[#e2e8f0]">
-                    {service.selectedDuration || parseInt(service.duration)} min duration
+                    {(() => {
+                      // Try to get duration from selectedDuration first (number)
+                      if (service.selectedDuration && !isNaN(service.selectedDuration)) {
+                        return `${service.selectedDuration} min duration`;
+                      }
+                      // Fallback: parse from duration string like "60 min"
+                      const durationMatch = service.duration?.match(/(\d+)/);
+                      if (durationMatch) {
+                        return `${durationMatch[1]} min duration`;
+                      }
+                      return 'Duration TBD';
+                    })()}
                   </div>
                   <ul className="space-y-2">
                     {(packageFeatures[tier] || defaultFeatures[tier]).map((feature: string, idx: number) => (
