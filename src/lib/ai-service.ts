@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const apiKey = process.env.GEMINI_API_KEY || "";
+console.log("[AI Service] Initializing with API key:", apiKey ? "✓ Present" : "✗ Missing");
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export interface AIContext {
   businessName: string;
