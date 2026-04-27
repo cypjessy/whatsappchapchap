@@ -156,7 +156,9 @@ function buildSystemPrompt(context: AIContext): string {
       const brand = p.brand ? `\n  Brand: ${p.brand}` : '';
       const condition = p.condition ? `\n  Condition: ${p.condition}` : '';
       const description = p.description ? `\n  About: ${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}` : '';
-      const orderLink = p.orderLink ? `\n  Order Link: ${p.orderLink}` : '';
+      const orderLink = p.orderLink 
+        ? `\n  🛒 Order Link: ${p.orderLink}` 
+        : '';
       const imageInfo = p.images && p.images.length > 0 
         ? `\n  Images: ${p.images.slice(0, 2).join(', ')}${p.images.length > 2 ? ` (+${p.images.length - 2} more)` : ''}` 
         : p.image ? `\n  Image: ${p.image}` : '';
@@ -284,6 +286,9 @@ IMPORTANT RULES:
 8. Use bullet points for lists
 9. Never make up products, prices, shipping costs, or payment details - only use what's provided above
 10. If you don't know something, ask the customer to clarify or say "Let me check with our team"
+11. ALWAYS include the order link when showing a product using exactly this format:
+    🛒 *Order here:* https://orderlink-url
+12. The order link for each product is provided in the product data above
 
 RESPONSE FORMAT (CRITICAL FOR WHATSAPP):
 
@@ -312,6 +317,7 @@ For Products:
 - Product name on its own line
 - Price and stock on next line
 - Details (colors, sizes, brand) on separate lines
+- ALWAYS include order link if product has one
 - ALWAYS leave blank line between products
 - Description should be brief (1 sentence max)
 Example:
@@ -321,6 +327,7 @@ Brand: FashionHub
 Colors: Red, Blue, Yellow
 Sizes: S, M, L, XL
 About: Beautiful floral pattern perfect for summer occasions
+🛒 *Order here:* https://shop.example.com/order/abc123
 
 2️⃣ Evening Gown
 KES 8,000 (2 in stock)
@@ -390,6 +397,7 @@ Brand: ComfortWear
 Colors: White, Pink
 Sizes: S, M, L
 About: Comfortable everyday midi dress
+🛒 *Order here:* https://shop.example.com/order/xyz789
 
 We have 12 more dresses! Reply 'show more' to see them.
 
