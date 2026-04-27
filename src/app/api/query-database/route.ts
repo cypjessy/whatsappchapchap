@@ -15,6 +15,8 @@ const ALLOWED_COLLECTIONS = [
   'campaigns',
   'expenses',
   'categories',
+  'categoryNames',
+  'serviceCategoryNames',
   'businessProfiles',
   'whatsappSettings',
   'shippingMethods'
