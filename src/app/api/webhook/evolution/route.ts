@@ -20,6 +20,7 @@ import {
   handlePaymentDetailsCollection,
   handleOrderReview
 } from "@/lib/order-flow-handlers";
+import { detectInterruption, handleInterruption } from "@/lib/interruption-handler";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -529,10 +530,57 @@ async function processWithAI(
     
     // CHECK FOR ACTIVE ORDER - State-driven flow
     console.log("[Webhook] Checking for active order...");
-    const orderState = await getOrderState(tenantId, phone);
+    let orderState = await getOrderState(tenantId, phone);
     
     if (orderState && orderState.step !== 'completed' && orderState.step !== 'idle') {
       console.log(`[Webhook] Active order found: step=${orderState.step}`);
+      
+      // CHECK FOR INTERRUPTIONS
+      const interruption = detectInterruption(message, orderState.step);
+      
+      if (interruption !== 'continue_flow') {
+        console.log(`[Webhook] Interruption detected: ${interruption}`);
+        
+        const interruptionResult = await handleInterruption(
+          tenantId,
+          phone,
+          interruption,
+          message,
+          orderState,
+          context
+        );
+        
+        // Send interruption response
+        await sendEvolutionMessage(tenantId, phone, interruptionResult.response);
+        console.log("[Webhook] Interruption handled");
+        
+        // Update conversation metadata
+        const timestamp = new Date();
+        const adminDb = getAdminDb();
+        await adminDb
+          .collection("tenants")
+          .doc(tenantId)
+          .collection("conversations")
+          .doc(phone)
+          .set({
+            lastMessage: interruptionResult.response,
+            lastMessageTime: timestamp,
+            updatedAt: timestamp,
+          }, { merge: true });
+        
+        // If interruption says to continue flow, proceed to step handler
+        if (!interruptionResult.shouldContinue) {
+          console.log("[Webhook] Interruption handled, not continuing flow");
+          console.log("[Webhook] Order processing complete ✅");
+          console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+          await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+          return;
+        }
+        
+        // Continue with normal flow using updated state
+        orderState = interruptionResult.newState;
+        console.log(`[Webhook] Continuing flow with updated state: step=${orderState.step}`);
+      }
       
       // Route to appropriate handler based on current step
       let result: { response: string; newState: OrderState };
