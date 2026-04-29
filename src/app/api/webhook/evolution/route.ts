@@ -556,7 +556,7 @@ async function processWithAI(
     }
     
     // Check if user is asking for products/services
-    const wantsProducts = normalizedMessage.match(/\b(product|shop|browse|catalog|order|buy|show|see|what do you have|what do you sell)\b/);
+    const wantsProducts = normalizedMessage.match(/(product|shop|browse|catalog|order|buy|show|see|what.*have|what.*sell|menu|list|available)/i);
     const wantsServices = normalizedMessage.match(/\b(service|book|appointment)\b/);
     
     if (wantsProducts && context.products.length > 0) {
