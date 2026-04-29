@@ -789,17 +789,7 @@ export async function POST(req: NextRequest) {
 
     console.log("[Webhook] Message saved");
 
-    // Process with AI and send response (replaces n8n)
-    if (text) {
-      // Await AI processing to prevent Vercel from killing the function
-      console.log("[Webhook] Starting AI processing...");
-      await processWithAI(tenantId, from, text).catch(err => {
-        console.error("[Webhook] AI processing error:", err);
-      });
-      console.log("[Webhook] AI processing completed");
-    }
-
-    // Send welcome message only on first contact
+    // Send welcome message only on first contact (BEFORE AI processing)
     if (isNewConversation) {
       console.log("[Webhook] New conversation detected, sending welcome message");
       console.log("[Webhook] Tenant ID for settings:", tenantId);
@@ -808,10 +798,22 @@ export async function POST(req: NextRequest) {
       
       // Only send if welcome message is enabled
       if (settings.welcomeMessageEnabled) {
+        console.log("[Webhook] Sending welcome message...");
         await sendWelcomeMessage(tenantId, from, settings.businessName, settings.welcomeMessage);
+        console.log("[Webhook] Welcome message sent");
       } else {
         console.log("[Webhook] Welcome message is disabled, skipping");
       }
+    }
+
+    // Process with AI and send response (replaces n8n)
+    if (text) {
+      // Await AI processing to prevent Vercel from killing the function
+      console.log("[Webhook] Starting AI processing...");
+      await processWithAI(tenantId, from, text).catch(err => {
+        console.error("[Webhook] AI processing error:", err);
+      });
+      console.log("[Webhook] AI processing completed");
     }
 
     return NextResponse.json({ received: true, status: "saved" });
