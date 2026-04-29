@@ -497,6 +497,67 @@ async function sendEvolutionMedia(
   }
 }
 
+// Send products one-by-one with images
+async function sendProductsSequentially(
+  tenantId: string,
+  phone: string,
+  products: any[],
+  categoryInfo: string,
+  totalProducts: number,
+  startIndex: number
+): Promise<void> {
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i];
+    const productNum = startIndex + i + 1;
+    const price = product.salePrice || product.price;
+    const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
+    
+    // Build product details text
+    let caption = `*${productNum}. ${product.name}*\n`;
+    caption += `💰 KES ${price.toLocaleString()} ${stockInfo}\n`;
+    
+    if (product.description) {
+      caption += `\n${product.description.substring(0, 150)}${product.description.length > 150 ? '...' : ''}\n`;
+    }
+    
+    if (product.colors && product.colors.length > 0) {
+      caption += ` Colors: ${product.colors.join(', ')}\n`;
+    }
+    
+    if (product.sizes && product.sizes.length > 0) {
+      caption += `📏 Sizes: ${product.sizes.join(', ')}\n`;
+    }
+    
+    if (product.orderLink) {
+      caption += `\n Order: ${product.orderLink}`;
+    }
+    
+    // Send image with product details as caption
+    const imageUrl = product.images?.[0] || product.image;
+    if (imageUrl) {
+      await sendEvolutionMedia(tenantId, phone, imageUrl, caption);
+      // Small delay between messages to prevent rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } else {
+      // Fallback: send text only if no image
+      await sendEvolutionMessage(tenantId, phone, caption);
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+  
+  // Send navigation message after all products
+  const hasMore = startIndex + products.length < totalProducts;
+  let navMessage = `\n📦 Showing ${startIndex + 1}-${startIndex + products.length} of ${totalProducts} products in ${categoryInfo}\n\n`;
+  
+  if (hasMore) {
+    navMessage += `Type *"more"* to see next products.\n`;
+  }
+  
+  navMessage += `Type "back" to browse categories.`;
+  
+  await sendEvolutionMessage(tenantId, phone, navMessage);
+}
+
 // Process message with AI and send response
 async function processWithAI(
   tenantId: string,
@@ -604,47 +665,17 @@ async function processWithAI(
           return;
         }
         
-        // Show first 5 products
+        // Show first 5 products one-by-one with images
         const productsToShow = filteredProducts.slice(0, 5);
-        const hasMore = filteredProducts.length > 5;
         
-        let response = `🛍️ *${subCatInfo.mainCategoryName}* (1-${productsToShow.length} of ${filteredProducts.length})\n\n`;
-        
-        productsToShow.forEach((product, index) => {
-          const price = product.salePrice || product.price;
-          const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
-          
-          response += `*${index + 1}. ${product.name}*\n`;
-          response += `💰 KES ${price.toLocaleString()} ${stockInfo}\n`;
-          
-          if (product.description) {
-            response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
-          }
-          
-          if (product.colors && product.colors.length > 0) {
-            response += `   Colors: ${product.colors.join(', ')}\n`;
-          }
-          
-          if (product.sizes && product.sizes.length > 0) {
-            response += `   Sizes: ${product.sizes.join(', ')}\n`;
-          }
-          
-          // Add order link
-          if (product.orderLink) {
-            response += `\n    Order: ${product.orderLink}\n`;
-          }
-          
-          response += '\n';
-        });
-        
-        if (hasMore) {
-          response += `\nType *"more"* to see next 5 products.`;
-        }
-        
-        response += `\n\nType "back" to return to categories.`;
-        response += `\nType "main" to see all main categories.`;
-        
-        await sendEvolutionMessage(tenantId, phone, response);
+        await sendProductsSequentially(
+          tenantId,
+          phone,
+          productsToShow,
+          subCatInfo.mainCategoryName,
+          filteredProducts.length,
+          0
+        );
         
         const timestamp = new Date();
         const adminDb = getAdminDb();
@@ -654,7 +685,7 @@ async function processWithAI(
           .collection("conversations")
           .doc(phone)
           .set({
-            lastMessage: response,
+            lastMessage: `Showing products in ${subCatInfo.mainCategoryName}`,
             lastMessageTime: timestamp,
             updatedAt: timestamp,
           }, { merge: true });
@@ -738,43 +769,15 @@ async function processWithAI(
           }
           
           const productsToShow = filteredProducts.slice(0, 5);
-          const hasMore = filteredProducts.length > 5;
           
-          let response = `🛍️ *${bestMatch.subCatInfo.mainCategoryName}* (1-${productsToShow.length} of ${filteredProducts.length})\n\n`;
-          
-          productsToShow.forEach((product, index) => {
-            const price = product.salePrice || product.price;
-            const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
-            
-            response += `*${index + 1}. ${product.name}*\n`;
-            response += ` KES ${price.toLocaleString()} ${stockInfo}\n`;
-            
-            if (product.description) {
-              response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
-            }
-            
-            if (product.colors && product.colors.length > 0) {
-              response += `   Colors: ${product.colors.join(', ')}\n`;
-            }
-            
-            if (product.sizes && product.sizes.length > 0) {
-              response += `   Sizes: ${product.sizes.join(', ')}\n`;
-            }
-            
-            if (product.orderLink) {
-              response += `\n    Order: ${product.orderLink}\n`;
-            }
-            
-            response += '\n';
-          });
-          
-          if (hasMore) {
-            response += `\nType *"more"* to see next 5 products.`;
-          }
-          
-          response += `\n\nType "back" to browse categories.`;
-          
-          await sendEvolutionMessage(tenantId, phone, response);
+          await sendProductsSequentially(
+            tenantId,
+            phone,
+            productsToShow,
+            bestMatch.subCatInfo.mainCategoryName,
+            filteredProducts.length,
+            0
+          );
           
           const timestamp = new Date();
           const adminDb = getAdminDb();
@@ -784,7 +787,7 @@ async function processWithAI(
             .collection("conversations")
             .doc(phone)
             .set({
-              lastMessage: response,
+              lastMessage: `Showing products in ${bestMatch.subCatInfo.mainCategoryName}`,
               lastMessageTime: timestamp,
               updatedAt: timestamp,
             }, { merge: true });
@@ -826,46 +829,17 @@ async function processWithAI(
         if (matchingProducts.length > 0) {
           console.log(`[Webhook] Fuzzy product match found: ${matchingProducts.length} products`);
           
-          // Show first 5 matching products
+          // Show first 5 products one-by-one with images
           const productsToShow = matchingProducts.slice(0, 5);
-          const hasMore = matchingProducts.length > 5;
           
-          let response = ` *Found ${matchingProducts.length} product(s)*\n\n`;
-          
-          productsToShow.forEach((product, index) => {
-            const price = product.salePrice || product.price;
-            const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
-            
-            response += `*${index + 1}. ${product.name}*\n`;
-            response += `💰 KES ${price.toLocaleString()} ${stockInfo}\n`;
-            
-            if (product.description) {
-              response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
-            }
-            
-            if (product.colors && product.colors.length > 0) {
-              response += `   Colors: ${product.colors.join(', ')}\n`;
-            }
-            
-            if (product.sizes && product.sizes.length > 0) {
-              response += `   Sizes: ${product.sizes.join(', ')}\n`;
-            }
-            
-            // Add order link
-            if (product.orderLink) {
-              response += `\n    Order: ${product.orderLink}\n`;
-            }
-            
-            response += '\n';
-          });
-          
-          if (hasMore) {
-            response += `\nType *"more"* to see next 5 products.`;
-          }
-          
-          response += `\n\nType "back" to browse categories.`;
-          
-          await sendEvolutionMessage(tenantId, phone, response);
+          await sendProductsSequentially(
+            tenantId,
+            phone,
+            productsToShow,
+            "search results",
+            matchingProducts.length,
+            0
+          );
           
           const timestamp = new Date();
           const adminDb = getAdminDb();
@@ -875,7 +849,7 @@ async function processWithAI(
             .collection("conversations")
             .doc(phone)
             .set({
-              lastMessage: response,
+              lastMessage: `Showing ${matchingProducts.length} products from search`,
               lastMessageTime: timestamp,
               updatedAt: timestamp,
             }, { merge: true });
