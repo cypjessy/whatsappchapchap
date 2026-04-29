@@ -10,6 +10,7 @@ import {
   generateProductsList,
   detectBrowseIntent
 } from "@/lib/category-browser";
+import { shortenURL, formatOrderLink } from "@/lib/url-shortener";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -539,7 +540,9 @@ async function sendProductsSequentially(
     }
     
     if (product.orderLink) {
-      caption += `\n Order: ${product.orderLink}`;
+      // Shorten URL and format with vibrant styling
+      const shortUrl = await shortenURL(product.orderLink);
+      caption += formatOrderLink(product.orderLink, shortUrl);
     }
     
     // Send image with product details as caption
