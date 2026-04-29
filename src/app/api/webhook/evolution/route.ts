@@ -511,17 +511,12 @@ async function processWithAI(
     console.log(`[Webhook] Shipping methods: ${context.shippingMethods?.length || 0}`);
     console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
     
-    // Get conversation history
-    console.log("[Webhook] Fetching conversation history...");
-    const history = await getConversationHistory(tenantId, phone);
-    console.log(`[Webhook] Conversation history: ${history.length} messages`);
-    
-    // Generate AI response
+    // Generate AI response (NO conversation history to prevent flow confusion)
     console.log("[Webhook] Calling Gemini AI...");
     const aiStart = Date.now();
     
     // Add timeout to prevent hanging
-    const aiPromise = generateAIResponse(message, context, history);
+    const aiPromise = generateAIResponse(message, context);
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("AI generation timeout after 15000ms")), 15000)
     );

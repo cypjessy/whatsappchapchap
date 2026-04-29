@@ -114,22 +114,17 @@ export interface AIContext {
 
 export async function generateAIResponse(
   message: string,
-  context: AIContext,
-  conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = []
+  context: AIContext
+  // NOTE: Conversation history removed to prevent flow confusion
+  // Order flow uses deterministic state management instead
 ): Promise<string> {
   try {
     // Build system prompt with business context
     const systemPrompt = buildSystemPrompt(context);
 
-    // Build messages array for Groq
-    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+    // Build messages array for Groq (NO conversation history)
+    const messages: Array<{ role: "system" | "user"; content: string }> = [
       { role: "system", content: systemPrompt },
-      ...conversationHistory
-        .filter(msg => msg.content && msg.content.trim() !== "")
-        .map((msg): { role: "user" | "assistant"; content: string } => ({
-          role: msg.role === "user" ? "user" : "assistant",
-          content: msg.content
-        })),
       { role: "user", content: message }
     ];
 
