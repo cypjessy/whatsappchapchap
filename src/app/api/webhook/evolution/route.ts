@@ -16,16 +16,6 @@ import { shortenURL, formatOrderLink } from "@/lib/url-shortener";
 let adminDb: ReturnType<typeof getFirestore> | null = null;
 let adminApp: App | null = null;
 
-// In-memory conversation cache (faster than database reads)
-// Stores: selectedMainCategory for tracking browsing context
-const conversationCache = new Map<string, {
-  selectedMainCategory: string;
-  updatedAt: number;
-}>();
-
-// Cache expiry: 30 seconds (auto-clears old conversations)
-const CACHE_TTL = 30 * 1000;
-
 function getAdminDb() {
   if (!adminDb) {
     if (getApps().length === 0) {
@@ -595,6 +585,19 @@ async function processWithAI(
     console.log("[Webhook] Processing message...");
     const normalizedMessage = message.toLowerCase().trim();
     
+    // Read conversation context (selectedMainCategory for sub-category tracking)
+    const db = getAdminDb();
+    const conversationDoc = await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    const conversationData = conversationDoc.data();
+    const selectedMainCategoryId = conversationData?.selectedMainCategory || null;
+    console.log(`[Webhook] Conversation context: selectedMainCategory=${selectedMainCategoryId}`);
+    
     // Check for greeting (new conversation)
     if (normalizedMessage.match(/^\b(hi|hello|hey|hola|greetings)\b$/)) {
       console.log("[Webhook] New conversation - greeting detected");
@@ -897,7 +900,12 @@ async function processWithAI(
       console.log('[Webhook] User typed "back" - showing main categories');
       
       // Clear any browsing context
-      conversationCache.delete(phone);
+      await db
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .update({ selectedMainCategory: FieldValue.delete() });
       
       if (context.products.length === 0) {
         await sendEvolutionMessage(tenantId, phone, "No products available right now.");
@@ -990,19 +998,21 @@ async function processWithAI(
     if (numberMatch && mainCategories.length > 0) {
       const index = parseInt(numberMatch[0]) - 1;
       
-      // Check cache for context (O(1) - instant, no database call!)
-      const cached = conversationCache.get(phone);
-      const selectedMainCategoryId = cached?.selectedMainCategory;
-      
+      // Check conversation context (from Firestore - works across serverless instances!)
       if (selectedMainCategoryId) {
         // We're at sub-category level - treat number as sub-category selection
-        console.log(`[Webhook] SUB-CATEGORY selection mode - checking number ${numberMatch[0]} (from cache)`);
+        console.log(`[Webhook] SUB-CATEGORY selection mode - checking number ${numberMatch[0]} (from Firestore)`);
         
         // Get the main category info
         const mainCat = mainCategories.find(c => c.id === selectedMainCategoryId);
         if (!mainCat) {
-          console.log("[Webhook] Main category not found, clearing cache");
-          conversationCache.delete(phone);
+          console.log("[Webhook] Main category not found, clearing context");
+          await db
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("conversations")
+            .doc(phone)
+            .update({ selectedMainCategory: FieldValue.delete() });
           // Fall through to main category selection
         } else {
           // Get sub-categories for this main category
@@ -1030,8 +1040,13 @@ async function processWithAI(
               const response = `Sorry, no products available in ${selectedSubCategory} right now.`;
               await sendEvolutionMessage(tenantId, phone, response);
               
-              // Clear cache
-              conversationCache.delete(phone);
+              // Clear context
+              await db
+                .collection("tenants")
+                .doc(tenantId)
+                .collection("conversations")
+                .doc(phone)
+                .update({ selectedMainCategory: FieldValue.delete() });
               
               const timestamp = new Date();
               const adminDb = getAdminDb();
@@ -1074,9 +1089,14 @@ async function processWithAI(
                 lastMessageTime: timestamp,
                 updatedAt: timestamp,
               }, { merge: true });
-            
-            // Clear cache after showing products
-            conversationCache.delete(phone);
+                      
+            // Clear context after showing products
+            await db
+              .collection("tenants")
+              .doc(tenantId)
+              .collection("conversations")
+              .doc(phone)
+              .update({ selectedMainCategory: FieldValue.delete() });
             
             console.log("[Webhook] Products shown from sub-category ✅");
             console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
@@ -1173,27 +1193,17 @@ async function processWithAI(
         
         await sendEvolutionMessage(tenantId, phone, response);
         
-        // Save to CACHE instead of database (O(1) - instant!)
-        conversationCache.set(phone, {
-          selectedMainCategory: selectedCategory.id,
-          updatedAt: Date.now(),
-        });
-        
-        // Also save to database for persistence (but not needed for immediate lookup)
-        const timestamp = new Date();
-        const adminDb = getAdminDb();
-        await adminDb
+        // Save context to Firestore (persists across serverless instances!)
+        await db
           .collection("tenants")
           .doc(tenantId)
           .collection("conversations")
           .doc(phone)
           .set({
-            lastMessage: response,
-            lastMessageTime: timestamp,
-            updatedAt: timestamp,
+            selectedMainCategory: selectedCategory.id,
           }, { merge: true });
         
-        console.log(`[Webhook] Sub-categories shown for ${selectedCategory.name} (cached) ✅`);
+        console.log(`[Webhook] Sub-categories shown for ${selectedCategory.name} (context saved) ✅`);
         console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
         await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
         return;
@@ -1359,9 +1369,8 @@ async function processWithAI(
     console.log("[Webhook] All messages sent");
     
     // Update conversation metadata with AI response
-    const adminDb = getAdminDb();
     const timestamp = new Date();
-    await adminDb
+    await db
       .collection("tenants")
       .doc(tenantId)
       .collection("conversations")
