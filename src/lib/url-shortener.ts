@@ -43,18 +43,36 @@ function generateShortCode(): string {
 export async function shortenURL(longURL: string): Promise<string> {
   try {
     const db = getAdminDb();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://yourapp.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://whatsappchapchap.vercel.app';
+    
+    console.log(`[URL Shortener] Input URL: ${longURL}`);
+    console.log(`[URL Shortener] Base URL: ${baseUrl}`);
+    
+    // Clean up the URL - remove any query parameters, fragments, or webhook paths
+    let cleanUrl = longURL.split('?')[0].split('#')[0];
+    
+    // Remove /api/webhook/whatsapp if present (common mistake in product data)
+    cleanUrl = cleanUrl.replace(/\/api\/webhook\/whatsapp/g, '');
+    
+    // Ensure URL starts with https://
+    if (!cleanUrl.startsWith('http')) {
+      cleanUrl = baseUrl + (cleanUrl.startsWith('/') ? '' : '/') + cleanUrl;
+    }
+    
+    console.log(`[URL Shortener] Cleaned URL: ${cleanUrl}`);
     
     // Check if URL already has a short code (avoid duplicates)
     const existingDoc = await db
       .collection("shortLinks")
-      .where("fullUrl", "==", longURL)
+      .where("fullUrl", "==", cleanUrl)
       .limit(1)
       .get();
     
     if (!existingDoc.empty) {
       const existing = existingDoc.docs[0].data();
-      return `${baseUrl}/go/${existing.code}`;
+      const shortUrl = `${baseUrl}/go/${existing.code}`;
+      console.log(`[URL Shortener] Found existing: ${shortUrl}`);
+      return shortUrl;
     }
     
     // Generate unique short code
@@ -69,13 +87,15 @@ export async function shortenURL(longURL: string): Promise<string> {
       attempts++;
     }
     
+    console.log(`[URL Shortener] Generated code: ${code}`);
+    
     // Save to database
     await db
       .collection("shortLinks")
       .doc(code)
       .set({
         code,
-        fullUrl: longURL,
+        fullUrl: cleanUrl,
         createdAt: new Date(),
         clicks: 0,
       });
@@ -85,6 +105,7 @@ export async function shortenURL(longURL: string): Promise<string> {
     return shortUrl;
   } catch (error) {
     console.error('[URL Shortener] Error:', error);
+    console.error('[URL Shortener] Returning original URL as fallback');
     return longURL; // Fallback to original
   }
 }

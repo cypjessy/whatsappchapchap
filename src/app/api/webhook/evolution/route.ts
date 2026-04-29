@@ -892,6 +892,71 @@ async function processWithAI(
     const wantsProducts = normalizedMessage.match(/(product|shop|browse|catalog|order|buy|show|see|what.*have|what.*sell|menu|list|available)/i);
     const wantsServices = normalizedMessage.match(/\b(service|book|appointment)\b/);
     
+    // BACK/MAIN COMMAND - Return to category browsing
+    if (normalizedMessage === 'back' || normalizedMessage === 'main' || normalizedMessage === 'categories') {
+      console.log('[Webhook] User typed "back" - showing main categories');
+      
+      // Clear any browsing context
+      conversationCache.delete(phone);
+      
+      if (context.products.length === 0) {
+        await sendEvolutionMessage(tenantId, phone, "No products available right now.");
+        return;
+      }
+      
+      // Show main categories
+      const mainCategories: Array<{ id: string; name: string; count: number }> = [];
+      const categoryMap = new Map<string, { name: string; count: number }>();
+      
+      context.products.forEach(product => {
+        if (product.category) {
+          const existing = categoryMap.get(product.category);
+          if (existing) {
+            existing.count++;
+          } else {
+            const displayName = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+            categoryMap.set(product.category, {
+              name: displayName,
+              count: 1
+            });
+          }
+        }
+      });
+      
+      categoryMap.forEach((data, id) => {
+        mainCategories.push({ id, name: data.name, count: data.count });
+      });
+      
+      let response = `🛍️ *BROWSE OUR PRODUCTS*\n\n`;
+      response += `What are you looking for?\n\n`;
+      
+      mainCategories.forEach((cat, idx) => {
+        response += `${idx + 1}. *${cat.name}* (${cat.count} products)\n`;
+      });
+      
+      response += `\nReply with a category name or number to browse!`;
+      
+      await sendEvolutionMessage(tenantId, phone, response);
+      
+      const timestamp = new Date();
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          lastMessage: response,
+          lastMessageTime: timestamp,
+          updatedAt: timestamp,
+        }, { merge: true });
+      
+      console.log('[Webhook] Main categories shown ✅');
+      console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+      await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+      return;
+    }
+    
     // Build main categories list (needed for both browsing and number selection)
     const mainCategories: Array<{ id: string; name: string; count: number }> = [];
     const categoryMap = new Map<string, { name: string; count: number }>();
