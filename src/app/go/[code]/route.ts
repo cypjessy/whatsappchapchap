@@ -33,6 +33,8 @@ export async function GET(
   try {
     const { code } = await params;
     
+    console.log(`[Short Link] Looking up code: ${code}`);
+    
     // Lookup short code in database
     const db = getAdminDb();
     const shortLinkDoc = await db
@@ -41,21 +43,19 @@ export async function GET(
       .get();
     
     if (!shortLinkDoc.exists) {
-      return NextResponse.json(
-        { error: "Link not found" },
-        { status: 404 }
-      );
+      console.error(`[Short Link] Code not found: ${code}`);
+      return NextResponse.redirect(new URL('/', request.url));
     }
     
     const data = shortLinkDoc.data();
     const fullUrl = data?.fullUrl;
     
     if (!fullUrl) {
-      return NextResponse.json(
-        { error: "Invalid link" },
-        { status: 400 }
-      );
+      console.error(`[Short Link] No URL for code: ${code}`);
+      return NextResponse.redirect(new URL('/', request.url));
     }
+    
+    console.log(`[Short Link] Redirecting to: ${fullUrl}`);
     
     // Track click (optional analytics)
     await db
@@ -64,15 +64,12 @@ export async function GET(
       .update({
         clicks: (data?.clicks || 0) + 1,
         lastClicked: new Date(),
-      });
+      }).catch(err => console.error('[Short Link] Click tracking error:', err));
     
-    // Redirect to full URL
-    return NextResponse.redirect(fullUrl);
+    // Redirect to full URL with 301 (permanent) or 302 (temporary)
+    return NextResponse.redirect(fullUrl, 302);
   } catch (error) {
     console.error("[Short Link] Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.redirect(new URL('/', request.url));
   }
 }
