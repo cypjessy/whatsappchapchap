@@ -890,8 +890,10 @@ async function processWithAI(
           if (existing) {
             existing.count++;
           } else {
+            // Use category (main category ID) and capitalize for display
+            const displayName = product.category.charAt(0).toUpperCase() + product.category.slice(1);
             categoryMap.set(product.category, {
-              name: product.categoryName || product.category,
+              name: displayName,
               count: 1
             });
           }
@@ -1028,8 +1030,10 @@ async function processWithAI(
           if (existing) {
             existing.count++;
           } else {
+            // Use category (main category ID) and capitalize for display
+            const displayName = product.category.charAt(0).toUpperCase() + product.category.slice(1);
             categoryMap.set(product.category, {
-              name: product.categoryName || product.category,
+              name: displayName,
               count: 1
             });
           }
