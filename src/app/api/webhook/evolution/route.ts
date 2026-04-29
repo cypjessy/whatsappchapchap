@@ -518,55 +518,77 @@ async function processWithAI(
     console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
     
     // SIMPLE CATEGORY BROWSING - No state management needed
-    console.log("[Webhook] Processing category browsing...");
+    console.log("[Webhook] Processing message...");
     const normalizedMessage = message.toLowerCase().trim();
     
-    // Check if user is selecting a main category by number or name
-    const mainCategories: Array<{ id: string; name: string }> = [];
-    const categoryMap = new Map<string, string>();
-    
-    context.products.forEach(product => {
-      if (product.category && !categoryMap.has(product.category)) {
-        categoryMap.set(product.category, product.categoryName || product.category);
-        mainCategories.push({
-          id: product.category,
-          name: product.categoryName || product.category
-        });
-      }
-    });
-    
-    // Check if message is a category number (e.g., "1", "2")
-    const numberMatch = normalizedMessage.match(/^\d+$/);
-    if (numberMatch && mainCategories.length > 0) {
-      const index = parseInt(numberMatch[0]) - 1;
-      if (index >= 0 && index < mainCategories.length) {
-        const selectedCategory = mainCategories[index];
-        console.log(`[Webhook] User selected category #${index + 1}: ${selectedCategory.name}`);
+    // Check for greeting (new conversation)
+    if (normalizedMessage.match(/^\b(hi|hello|hey|hola|greetings)\b$/)) {
+      console.log("[Webhook] New conversation - greeting detected");
+      
+      // Fetch greeting from database
+      const settings = await getTenantSettings(tenantId);
+      
+      if (settings.welcomeMessageEnabled && settings.welcomeMessage) {
+        const greetingText = settings.welcomeMessage.replace(/\{\{business_name\}\}/g, settings.businessName);
         
-        // Get sub-categories for this main category
-        const subCategories = new Set<string>();
-        context.products.forEach(p => {
-          if (p.category === selectedCategory.id && p.categoryName) {
-            subCategories.add(p.categoryName);
-          }
-        });
-        
-        let response = `📂 *${selectedCategory.name}*\n\n`;
-        response += `Choose a sub-category:\n\n`;
-        
-        Array.from(subCategories).forEach((subCat, idx) => {
-          const count = context.products.filter(p => 
-            p.category === selectedCategory.id && p.categoryName === subCat
-          ).length;
-          response += `${idx + 1}. *${subCat}* (${count} products)\n`;
-        });
-        
-        response += `\nReply with a sub-category name or number.`;
-        response += `\n\nType "back" to return to main categories.`;
-        
-        await sendEvolutionMessage(tenantId, phone, response);
+        await sendEvolutionMessage(tenantId, phone, greetingText);
+        console.log("[Webhook] Greeting sent from database ✅");
         
         // Update conversation metadata
+        const timestamp = new Date();
+        const adminDb = getAdminDb();
+        await adminDb
+          .collection("tenants")
+          .doc(tenantId)
+          .collection("conversations")
+          .doc(phone)
+          .set({
+            lastMessage: greetingText,
+            lastMessageTime: timestamp,
+            updatedAt: timestamp,
+          }, { merge: true });
+        
+        console.log("[Webhook] Greeting complete ✅");
+        console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+        await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+        return; // Exit - don't show products yet, wait for user to ask
+      }
+    }
+    
+    // Check if user is asking for products/services
+    const wantsProducts = normalizedMessage.match(/\b(product|shop|browse|catalog|order|buy|show|see|what do you have|what do you sell)\b/);
+    const wantsServices = normalizedMessage.match(/\b(service|book|appointment)\b/);
+    
+    if (wantsProducts && context.products.length > 0) {
+      console.log("[Webhook] User wants to browse products");
+      
+      // Build main categories list
+      const mainCategories: Array<{ id: string; name: string; count: number }> = [];
+      const categoryMap = new Map<string, { name: string; count: number }>();
+      
+      context.products.forEach(product => {
+        if (product.category) {
+          const existing = categoryMap.get(product.category);
+          if (existing) {
+            existing.count++;
+          } else {
+            categoryMap.set(product.category, {
+              name: product.categoryName || product.category,
+              count: 1
+            });
+          }
+        }
+      });
+      
+      // Convert to array
+      categoryMap.forEach((data, id) => {
+        mainCategories.push({ id, name: data.name, count: data.count });
+      });
+      
+      if (mainCategories.length === 0) {
+        const response = "Sorry, we currently have no products available.";
+        await sendEvolutionMessage(tenantId, phone, response);
+        
         const timestamp = new Date();
         const adminDb = getAdminDb();
         await adminDb
@@ -580,40 +602,41 @@ async function processWithAI(
             updatedAt: timestamp,
           }, { merge: true });
         
-        console.log("[Webhook] Sub-categories shown ✅");
+        console.log("[Webhook] No products available ✅");
         console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
         await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
         return;
       }
-    }
-    
-    // Check if message matches a sub-category name (e.g., "Laptops", "Dresses")
-    const allSubCategories = new Map<string, { mainCategory: string; mainCategoryName: string }>();
-    context.products.forEach(p => {
-      if (p.category && p.categoryName) {
-        const key = p.categoryName.toLowerCase();
-        if (!allSubCategories.has(key)) {
-          allSubCategories.set(key, {
-            mainCategory: p.category,
-            mainCategoryName: p.categoryName || p.category
+      
+      // Check if user is selecting a main category by number or name
+      const numberMatch = normalizedMessage.match(/^\d+$/);
+      if (numberMatch) {
+        const index = parseInt(numberMatch[0]) - 1;
+        if (index >= 0 && index < mainCategories.length) {
+          const selectedCategory = mainCategories[index];
+          console.log(`[Webhook] User selected category #${index + 1}: ${selectedCategory.name}`);
+          
+          // Get sub-categories for this main category
+          const subCategories = new Set<string>();
+          context.products.forEach(p => {
+            if (p.category === selectedCategory.id && p.categoryName) {
+              subCategories.add(p.categoryName);
+            }
           });
-        }
-      }
-    });
-    
-    for (const [subCatKey, subCatInfo] of allSubCategories) {
-      if (normalizedMessage.includes(subCatKey)) {
-        console.log(`[Webhook] User selected sub-category: ${subCatInfo.mainCategoryName}`);
-        
-        // Get products for this sub-category (filter by category AND categoryName)
-        const filteredProducts = context.products.filter(p => 
-          p.category === subCatInfo.mainCategory && 
-          p.categoryName === subCatInfo.mainCategoryName &&
-          p.stock && p.stock > 0
-        );
-        
-        if (filteredProducts.length === 0) {
-          const response = `Sorry, no products available in ${subCatInfo.mainCategoryName} right now.`;
+          
+          let response = `📂 *${selectedCategory.name}*\n\n`;
+          response += `Choose a sub-category:\n\n`;
+          
+          Array.from(subCategories).forEach((subCat, idx) => {
+            const count = context.products.filter(p => 
+              p.category === selectedCategory.id && p.categoryName === subCat
+            ).length;
+            response += `${idx + 1}. *${subCat}* (${count} products)\n`;
+          });
+          
+          response += `\nReply with a sub-category name or number.`;
+          response += `\n\nType "back" to return to main categories.`;
+          
           await sendEvolutionMessage(tenantId, phone, response);
           
           const timestamp = new Date();
@@ -629,123 +652,201 @@ async function processWithAI(
               updatedAt: timestamp,
             }, { merge: true });
           
-          console.log("[Webhook] No products found ✅");
+          console.log("[Webhook] Sub-categories shown ✅");
           console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
           await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
           return;
         }
-        
-        // Show first 5 products
-        const productsToShow = filteredProducts.slice(0, 5);
-        const hasMore = filteredProducts.length > 5;
-        
-        let response = `🛍️ *${subCatInfo.mainCategoryName}* (1-${productsToShow.length} of ${filteredProducts.length})\n\n`;
-        
-        productsToShow.forEach((product, index) => {
-          const price = product.salePrice || product.price;
-          const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
+      }
+      
+      // Check if message matches a main category name
+      for (const cat of mainCategories) {
+        if (normalizedMessage.includes(cat.name.toLowerCase()) || 
+            normalizedMessage.includes(cat.id.toLowerCase())) {
+          console.log(`[Webhook] User selected category: ${cat.name}`);
           
-          response += `*${index + 1}. ${product.name}*\n`;
-          response += `💰 KES ${price.toLocaleString()} ${stockInfo}\n`;
+          // Get sub-categories for this main category
+          const subCategories = new Set<string>();
+          context.products.forEach(p => {
+            if (p.category === cat.id && p.categoryName) {
+              subCategories.add(p.categoryName);
+            }
+          });
           
-          if (product.description) {
-            response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
-          }
+          let response = `📂 *${cat.name}*\n\n`;
+          response += `Choose a sub-category:\n\n`;
           
-          if (product.colors && product.colors.length > 0) {
-            response += `   Colors: ${product.colors.join(', ')}\n`;
-          }
+          Array.from(subCategories).forEach((subCat, idx) => {
+            const count = context.products.filter(p => 
+              p.category === cat.id && p.categoryName === subCat
+            ).length;
+            response += `${idx + 1}. *${subCat}* (${count} products)\n`;
+          });
           
-          if (product.sizes && product.sizes.length > 0) {
-            response += `   Sizes: ${product.sizes.join(', ')}\n`;
-          }
+          response += `\nReply with a sub-category name or number.`;
+          response += `\n\nType "back" to return to main categories.`;
           
-          // Add order link
-          if (product.orderLink) {
-            response += `\n   🔗 Order: ${product.orderLink}\n`;
-          }
+          await sendEvolutionMessage(tenantId, phone, response);
           
-          response += '\n';
-        });
-        
-        if (hasMore) {
-          response += `\nType *"more"* to see next 5 products.`;
+          const timestamp = new Date();
+          const adminDb = getAdminDb();
+          await adminDb
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("conversations")
+            .doc(phone)
+            .set({
+              lastMessage: response,
+              lastMessageTime: timestamp,
+              updatedAt: timestamp,
+            }, { merge: true });
+          
+          console.log("[Webhook] Sub-categories shown ✅");
+          console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+          await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+          return;
         }
-        
-        response += `\n\nType "back" to return to categories.`;
-        response += `\nType "main" to see all main categories.`;
-        
-        await sendEvolutionMessage(tenantId, phone, response);
-        
-        // Update conversation metadata
-        const timestamp = new Date();
-        const adminDb = getAdminDb();
-        await adminDb
-          .collection("tenants")
-          .doc(tenantId)
-          .collection("conversations")
-          .doc(phone)
-          .set({
-            lastMessage: response,
-            lastMessageTime: timestamp,
-            updatedAt: timestamp,
-          }, { merge: true });
-        
-        console.log(`[Webhook] Products shown: ${productsToShow.length} items ✅`);
-        console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
-        await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
-        return;
       }
-    }
-    
-    // Check if message matches a main category name
-    for (const cat of mainCategories) {
-      if (normalizedMessage.includes(cat.name.toLowerCase()) || 
-          normalizedMessage.includes(cat.id.toLowerCase())) {
-        console.log(`[Webhook] User selected category: ${cat.name}`);
-        
-        // Get sub-categories for this main category
-        const subCategories = new Set<string>();
-        context.products.forEach(p => {
-          if (p.category === cat.id && p.categoryName) {
-            subCategories.add(p.categoryName);
+      
+      // Check if message matches a sub-category name (e.g., "Laptops", "Dresses")
+      const allSubCategories = new Map<string, { mainCategory: string; mainCategoryName: string }>();
+      context.products.forEach(p => {
+        if (p.category && p.categoryName) {
+          const key = p.categoryName.toLowerCase();
+          if (!allSubCategories.has(key)) {
+            allSubCategories.set(key, {
+              mainCategory: p.category,
+              mainCategoryName: p.categoryName || p.category
+            });
           }
-        });
-        
-        let response = `📂 *${cat.name}*\n\n`;
-        response += `Choose a sub-category:\n\n`;
-        
-        Array.from(subCategories).forEach((subCat, idx) => {
-          const count = context.products.filter(p => 
-            p.category === cat.id && p.categoryName === subCat
-          ).length;
-          response += `${idx + 1}. *${subCat}* (${count} products)\n`;
-        });
-        
-        response += `\nReply with a sub-category name or number.`;
-        response += `\n\nType "back" to return to main categories.`;
-        
-        await sendEvolutionMessage(tenantId, phone, response);
-        
-        // Update conversation metadata
-        const timestamp = new Date();
-        const adminDb = getAdminDb();
-        await adminDb
-          .collection("tenants")
-          .doc(tenantId)
-          .collection("conversations")
-          .doc(phone)
-          .set({
-            lastMessage: response,
-            lastMessageTime: timestamp,
-            updatedAt: timestamp,
-          }, { merge: true });
-        
-        console.log("[Webhook] Sub-categories shown ✅");
-        console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
-        await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
-        return;
+        }
+      });
+      
+      for (const [subCatKey, subCatInfo] of allSubCategories) {
+        if (normalizedMessage.includes(subCatKey)) {
+          console.log(`[Webhook] User selected sub-category: ${subCatInfo.mainCategoryName}`);
+          
+          // Get products for this sub-category (filter by category AND categoryName)
+          const filteredProducts = context.products.filter(p => 
+            p.category === subCatInfo.mainCategory && 
+            p.categoryName === subCatInfo.mainCategoryName &&
+            p.stock && p.stock > 0
+          );
+          
+          if (filteredProducts.length === 0) {
+            const response = `Sorry, no products available in ${subCatInfo.mainCategoryName} right now.`;
+            await sendEvolutionMessage(tenantId, phone, response);
+            
+            const timestamp = new Date();
+            const adminDb = getAdminDb();
+            await adminDb
+              .collection("tenants")
+              .doc(tenantId)
+              .collection("conversations")
+              .doc(phone)
+              .set({
+                lastMessage: response,
+                lastMessageTime: timestamp,
+                updatedAt: timestamp,
+              }, { merge: true });
+            
+            console.log("[Webhook] No products found ✅");
+            console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+            await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+            return;
+          }
+          
+          // Show first 5 products
+          const productsToShow = filteredProducts.slice(0, 5);
+          const hasMore = filteredProducts.length > 5;
+          
+          let response = `🛍️ *${subCatInfo.mainCategoryName}* (1-${productsToShow.length} of ${filteredProducts.length})\n\n`;
+          
+          productsToShow.forEach((product, index) => {
+            const price = product.salePrice || product.price;
+            const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
+            
+            response += `*${index + 1}. ${product.name}*\n`;
+            response += `💰 KES ${price.toLocaleString()} ${stockInfo}\n`;
+            
+            if (product.description) {
+              response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
+            }
+            
+            if (product.colors && product.colors.length > 0) {
+              response += `   Colors: ${product.colors.join(', ')}\n`;
+            }
+            
+            if (product.sizes && product.sizes.length > 0) {
+              response += `   Sizes: ${product.sizes.join(', ')}\n`;
+            }
+            
+            // Add order link
+            if (product.orderLink) {
+              response += `\n    Order: ${product.orderLink}\n`;
+            }
+            
+            response += '\n';
+          });
+          
+          if (hasMore) {
+            response += `\nType *"more"* to see next 5 products.`;
+          }
+          
+          response += `\n\nType "back" to return to categories.`;
+          response += `\nType "main" to see all main categories.`;
+          
+          await sendEvolutionMessage(tenantId, phone, response);
+          
+          const timestamp = new Date();
+          const adminDb = getAdminDb();
+          await adminDb
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("conversations")
+            .doc(phone)
+            .set({
+              lastMessage: response,
+              lastMessageTime: timestamp,
+              updatedAt: timestamp,
+            }, { merge: true });
+          
+          console.log(`[Webhook] Products shown: ${productsToShow.length} items ✅`);
+          console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+          await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+          return;
+        }
       }
+      
+      // If no match, show main categories
+      let response = `🛍️ *BROWSE OUR PRODUCTS*\n\n`;
+      response += `What are you looking for?\n\n`;
+      
+      mainCategories.forEach((cat, index) => {
+        response += `${index + 1}. *${cat.name}* (${cat.count} products)\n`;
+      });
+      
+      response += `\nReply with a category name or number to browse!`;
+      
+      await sendEvolutionMessage(tenantId, phone, response);
+      
+      const timestamp = new Date();
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          lastMessage: response,
+          lastMessageTime: timestamp,
+          updatedAt: timestamp,
+        }, { merge: true });
+      
+      console.log("[Webhook] Main categories shown ✅");
+      console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+      await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+      return;
     }
     
     // For all other messages, use AI with enhanced prompt
