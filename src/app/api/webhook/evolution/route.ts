@@ -666,6 +666,137 @@ async function processWithAI(
       }
     }
     
+    // FUZZY CATEGORY MATCHING - Handles misspellings and partial names
+    // e.g., "dresss", "laptpos", "shooes", "dress", "lapt"
+    const categoryKeywords = normalizedMessage.replace(/\b(what|do|you|have|show|tell|me|about|the|a|an|is|are|any|looking|for|want|buy|order|need|check|see|find|search|i|we|can|get)\b/g, '').trim();
+    
+    if (categoryKeywords.length > 2) {
+      const keywords = categoryKeywords.split(/\s+/).filter(k => k.length > 2);
+      
+      if (keywords.length > 0) {
+        // Find best matching sub-category using similarity scoring
+        let bestMatch: { subCatKey: string; subCatInfo: { mainCategory: string; mainCategoryName: string }; score: number } | null = null;
+        
+        for (const [subCatKey, subCatInfo] of allSubCategories) {
+          let score = 0;
+          
+          for (const keyword of keywords) {
+            // Exact substring match (highest priority)
+            if (subCatKey.includes(keyword) || keyword.includes(subCatKey)) {
+              score += 10;
+            }
+            // Character-by-character similarity for misspellings
+            else if (keyword.length >= 3 && subCatKey.length >= 3) {
+              const minLen = Math.min(keyword.length, subCatKey.length);
+              let matchChars = 0;
+              for (let i = 0; i < minLen; i++) {
+                if (keyword[i] === subCatKey[i]) matchChars++;
+              }
+              const similarity = matchChars / minLen;
+              if (similarity > 0.6) {
+                score += Math.floor(similarity * 5);
+              }
+            }
+          }
+          
+          if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+            bestMatch = { subCatKey, subCatInfo, score };
+          }
+        }
+        
+        // Only use fuzzy match if score is strong enough (>= 10)
+        if (bestMatch && bestMatch.score >= 10) {
+          console.log(`[Webhook] FUZZY category match: "${categoryKeywords}" → ${bestMatch.subCatInfo.mainCategoryName} (score: ${bestMatch.score})`);
+          
+          const filteredProducts = context.products.filter(p => 
+            p.category === bestMatch!.subCatInfo.mainCategory && 
+            p.categoryName === bestMatch!.subCatInfo.mainCategoryName &&
+            p.stock && p.stock > 0
+          );
+          
+          if (filteredProducts.length === 0) {
+            const response = `Sorry, no products available in ${bestMatch.subCatInfo.mainCategoryName} right now.`;
+            await sendEvolutionMessage(tenantId, phone, response);
+            
+            const timestamp = new Date();
+            const adminDb = getAdminDb();
+            await adminDb
+              .collection("tenants")
+              .doc(tenantId)
+              .collection("conversations")
+              .doc(phone)
+              .set({
+                lastMessage: response,
+                lastMessageTime: timestamp,
+                updatedAt: timestamp,
+              }, { merge: true });
+            
+            console.log("[Webhook] No products found ✅");
+            console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+            await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+            return;
+          }
+          
+          const productsToShow = filteredProducts.slice(0, 5);
+          const hasMore = filteredProducts.length > 5;
+          
+          let response = `🛍️ *${bestMatch.subCatInfo.mainCategoryName}* (1-${productsToShow.length} of ${filteredProducts.length})\n\n`;
+          
+          productsToShow.forEach((product, index) => {
+            const price = product.salePrice || product.price;
+            const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
+            
+            response += `*${index + 1}. ${product.name}*\n`;
+            response += ` KES ${price.toLocaleString()} ${stockInfo}\n`;
+            
+            if (product.description) {
+              response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
+            }
+            
+            if (product.colors && product.colors.length > 0) {
+              response += `   Colors: ${product.colors.join(', ')}\n`;
+            }
+            
+            if (product.sizes && product.sizes.length > 0) {
+              response += `   Sizes: ${product.sizes.join(', ')}\n`;
+            }
+            
+            if (product.orderLink) {
+              response += `\n    Order: ${product.orderLink}\n`;
+            }
+            
+            response += '\n';
+          });
+          
+          if (hasMore) {
+            response += `\nType *"more"* to see next 5 products.`;
+          }
+          
+          response += `\n\nType "back" to browse categories.`;
+          
+          await sendEvolutionMessage(tenantId, phone, response);
+          
+          const timestamp = new Date();
+          const adminDb = getAdminDb();
+          await adminDb
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("conversations")
+            .doc(phone)
+            .set({
+              lastMessage: response,
+              lastMessageTime: timestamp,
+              updatedAt: timestamp,
+            }, { merge: true });
+          
+          console.log(`[Webhook] Fuzzy category products shown: ${productsToShow.length} items ✅`);
+          console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+          await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+          return;
+        }
+      }
+    }
+    
     // FUZZY PRODUCT NAME MATCHING - For partial product name searches
     // e.g., "asus laptop", "bikini", "cups", "iphone"
     const productKeywords = normalizedMessage.replace(/\b(what|do|you|have|show|tell|me|about|the|a|an|is|are|any|looking|for|want|buy|order|need|check|see|find|search)\b/g, '').trim();
