@@ -590,7 +590,22 @@ async function processWithAI(
       const settings = await getTenantSettings(tenantId);
       
       if (settings.welcomeMessageEnabled && settings.welcomeMessage) {
-        const greetingText = settings.welcomeMessage.replace(/\{\{business_name\}\}/g, settings.businessName);
+        // Replace placeholder with business name
+        let greetingText = settings.welcomeMessage.replace(/\{\{business_name\}\}/g, settings.businessName);
+        
+        // Enhance formatting for WhatsApp
+        // Add bold to business name if not already formatted
+        if (!greetingText.includes('*')) {
+          greetingText = greetingText.replace(
+            new RegExp(settings.businessName, 'gi'),
+            `*${settings.businessName}*`
+          );
+        }
+        
+        // Ensure proper line breaks for readability
+        greetingText = greetingText
+          .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
+          .trim();
         
         await sendEvolutionMessage(tenantId, phone, greetingText);
         console.log("[Webhook] Greeting sent from database ✅");
