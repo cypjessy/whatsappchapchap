@@ -526,46 +526,6 @@ async function processWithAI(
     console.log("[Webhook] AI Response generated successfully, length:", aiResponse.length);
     console.log("[Webhook] AI Response preview:", aiResponse.substring(0, 100));
     
-    // Save AI response to messages collection
-    console.log("[Webhook] Saving AI response to database...");
-    const adminDb = getAdminDb();
-    const messageId = `ai_${Date.now()}`;
-    const timestamp = new Date();
-    
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .collection("messages")
-      .doc(messageId)
-      .set({
-        text: aiResponse,
-        from: tenantId,
-        fromMe: true,
-        sender: "business",
-        timestamp,
-        status: "sent",
-        createdAt: timestamp,
-        isAI: true,
-      });
-    
-    console.log("[Webhook] AI response saved to database");
-    
-    // Update conversation with last message
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        lastMessage: aiResponse,
-        lastMessageTime: timestamp,
-        updatedAt: timestamp,
-      }, { merge: true });
-    
-    console.log("[Webhook] Conversation updated");
-    
     // Send response via Evolution API
     console.log("[Webhook] Sending response via Evolution API...");
     
@@ -598,6 +558,22 @@ async function processWithAI(
     await sendEvolutionMessage(tenantId, phone, cleanText);
     
     console.log("[Webhook] All messages sent");
+    
+    // Update conversation metadata with AI response
+    const adminDb = getAdminDb();
+    const timestamp = new Date();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        lastMessage: aiResponse,
+        lastMessageTime: timestamp,
+        updatedAt: timestamp,
+      }, { merge: true });
+    
+    console.log("[Webhook] Conversation metadata updated");
     
     console.log("[Webhook] AI processing complete ✅");
     console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
@@ -769,20 +745,7 @@ export async function POST(req: NextRequest) {
       updatedAt: timestamp,
     }, { merge: true });
 
-    console.log("[Webhook] Conversation saved");
-
-    // Save individual message
-    await conversationRef.collection("messages").doc(messageId).set({
-      text,
-      from,
-      fromMe: false,
-      sender: "customer",
-      timestamp,
-      status: "received",
-      createdAt: timestamp,
-    });
-
-    console.log("[Webhook] Message saved");
+    console.log("[Webhook] Conversation metadata updated");
 
     // Send welcome message only on first contact (BEFORE AI processing)
     if (isNewConversation) {
