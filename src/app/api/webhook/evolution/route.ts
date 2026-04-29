@@ -927,15 +927,16 @@ async function processWithAI(
         await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
         return;
       }
-      
-      // Check if user is selecting a main category by number or name
+          
+      // CATEGORY NUMBER SELECTION - Check BEFORE fuzzy matching
+      // This handles when user types "1" to select a category from the list
       const numberMatch = normalizedMessage.match(/^\d+$/);
       if (numberMatch) {
         const index = parseInt(numberMatch[0]) - 1;
         if (index >= 0 && index < mainCategories.length) {
           const selectedCategory = mainCategories[index];
           console.log(`[Webhook] User selected category #${index + 1}: ${selectedCategory.name}`);
-          
+              
           // Get sub-categories for this main category
           const subCategories = new Set<string>();
           context.products.forEach(p => {
@@ -943,22 +944,47 @@ async function processWithAI(
               subCategories.add(p.categoryName);
             }
           });
-          
+              
+          if (subCategories.size === 0) {
+            // No sub-categories, show products directly
+            const filteredProducts = context.products.filter(p => 
+              p.category === selectedCategory.id && p.stock && p.stock > 0
+            );
+                
+            if (filteredProducts.length === 0) {
+              const response = `Sorry, no products available in ${selectedCategory.name} right now.`;
+              await sendEvolutionMessage(tenantId, phone, response);
+              return;
+            }
+                
+            const productsToShow = filteredProducts.slice(0, 5);
+            await sendProductsSequentially(
+              tenantId,
+              phone,
+              productsToShow,
+              selectedCategory.name,
+              filteredProducts.length,
+              0
+            );
+            return;
+          }
+              
+          // Show sub-categories
           let response = `📂 *${selectedCategory.name}*\n\n`;
           response += `Choose a sub-category:\n\n`;
-          
+              
           Array.from(subCategories).forEach((subCat, idx) => {
             const count = context.products.filter(p => 
               p.category === selectedCategory.id && p.categoryName === subCat
             ).length;
             response += `${idx + 1}. *${subCat}* (${count} products)\n`;
           });
-          
+              
           response += `\nReply with a sub-category name or number.`;
           response += `\n\nType "back" to return to main categories.`;
-          
+              
           await sendEvolutionMessage(tenantId, phone, response);
-          
+              
           const timestamp = new Date();
           const adminDb = getAdminDb();
           await adminDb
@@ -971,7 +997,7 @@ async function processWithAI(
               lastMessageTime: timestamp,
               updatedAt: timestamp,
             }, { merge: true });
-          
+              
           console.log("[Webhook] Sub-categories shown ✅");
           console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
           await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
