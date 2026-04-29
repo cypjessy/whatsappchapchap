@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { getProductCategories, formatProductList, getProductImage } from "@/lib/product-helper";
@@ -911,9 +911,121 @@ async function processWithAI(
     const numberMatch = normalizedMessage.match(/^\d+$/);
     if (numberMatch && mainCategories.length > 0) {
       const index = parseInt(numberMatch[0]) - 1;
+      
+      // Check if we're at sub-category level (selectedMainCategory exists in conversation)
+      const adminDb = getAdminDb();
+      const conversationDoc = await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .get();
+      
+      const conversationData = conversationDoc.data();
+      const selectedMainCategoryId = conversationData?.selectedMainCategory;
+      
+      if (selectedMainCategoryId) {
+        // We're at sub-category level - treat number as sub-category selection
+        console.log(`[Webhook] SUB-CATEGORY selection mode - checking number ${numberMatch[0]}`);
+        
+        // Get the main category info
+        const mainCat = mainCategories.find(c => c.id === selectedMainCategoryId);
+        if (!mainCat) {
+          console.log("[Webhook] Main category not found, clearing context");
+          await adminDb
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("conversations")
+            .doc(phone)
+            .update({ selectedMainCategory: FieldValue.delete() });
+          // Fall through to main category selection
+        } else {
+          // Get sub-categories for this main category
+          const subCategories = new Set<string>();
+          context.products.forEach(p => {
+            if (p.category === mainCat.id && p.categoryName) {
+              subCategories.add(p.categoryName);
+            }
+          });
+          
+          const subCatArray = Array.from(subCategories);
+          
+          if (index >= 0 && index < subCatArray.length) {
+            const selectedSubCategory = subCatArray[index];
+            console.log(`[Webhook] User selected sub-category #${index + 1}: ${selectedSubCategory}`);
+            
+            // Get products for this sub-category
+            const filteredProducts = context.products.filter(p => 
+              p.category === mainCat.id && 
+              p.categoryName === selectedSubCategory &&
+              p.stock && p.stock > 0
+            );
+            
+            if (filteredProducts.length === 0) {
+              const response = `Sorry, no products available in ${selectedSubCategory} right now.`;
+              await sendEvolutionMessage(tenantId, phone, response);
+              
+              // Clear the selectedMainCategory
+              await adminDb
+                .collection("tenants")
+                .doc(tenantId)
+                .collection("conversations")
+                .doc(phone)
+                .update({ selectedMainCategory: FieldValue.delete() });
+              
+              const timestamp = new Date();
+              await adminDb
+                .collection("tenants")
+                .doc(tenantId)
+                .collection("conversations")
+                .doc(phone)
+                .set({
+                  lastMessage: response,
+                  lastMessageTime: timestamp,
+                  updatedAt: timestamp,
+                }, { merge: true });
+              
+              console.log("[Webhook] No products in sub-category ✅");
+              console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+              await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+              return;
+            }
+            
+            const productsToShow = filteredProducts.slice(0, 5);
+            await sendProductsSequentially(
+              tenantId,
+              phone,
+              productsToShow,
+              `${mainCat.name} > ${selectedSubCategory}`,
+              filteredProducts.length,
+              0
+            );
+            
+            const timestamp = new Date();
+            await adminDb
+              .collection("tenants")
+              .doc(tenantId)
+              .collection("conversations")
+              .doc(phone)
+              .set({
+                lastMessage: `Showing products in ${selectedSubCategory}`,
+                lastMessageTime: timestamp,
+                updatedAt: timestamp,
+                selectedMainCategory: FieldValue.delete(), // Clear context
+              }, { merge: true });
+            
+            console.log("[Webhook] Products shown from sub-category ✅");
+            console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+            await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+            return;
+          }
+        }
+      }
+      
+      // Main category selection (original logic)
       if (index >= 0 && index < mainCategories.length) {
         const selectedCategory = mainCategories[index];
-        console.log(`[Webhook] User selected category #${index + 1}: ${selectedCategory.name}`);
+        console.log(`[Webhook] MAIN CATEGORY selection #${index + 1}: ${selectedCategory.name}`);
         
         // Get sub-categories for this main category
         const subCategories = new Set<string>();
@@ -982,7 +1094,7 @@ async function processWithAI(
         }
         
         // Show sub-categories
-        let response = `📂 *${selectedCategory.name}*\n\n`;
+        let response = ` *${selectedCategory.name}*\n\n`;
         response += `Choose a sub-category:\n\n`;
         
         Array.from(subCategories).forEach((subCat, idx) => {
@@ -1008,9 +1120,10 @@ async function processWithAI(
             lastMessage: response,
             lastMessageTime: timestamp,
             updatedAt: timestamp,
+            selectedMainCategory: selectedCategory.id, // Track which main category was selected
           }, { merge: true });
         
-        console.log("[Webhook] Sub-categories shown ✅");
+        console.log(`[Webhook] Sub-categories shown for ${selectedCategory.name} ✅`);
         console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
         await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
         return;
