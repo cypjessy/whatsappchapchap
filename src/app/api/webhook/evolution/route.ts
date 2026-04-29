@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
+import { generateAIResponse, detectIntent, AIContext, OrderState } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { getProductCategories, formatProductList, getProductImage } from "@/lib/product-helper";
+import { getOrderState, saveOrderState, deleteOrderState, createNewOrderState } from "@/lib/order-state-manager";
+import {
+  handleProductSelection,
+  handleVariantSelection,
+  handleQuantityCollection,
+  handleCustomerNameCollection,
+  handleCustomerPhoneCollection,
+  handleCustomerEmailCollection,
+  handleDeliveryMethodSelection,
+  handleDeliveryCountyCollection,
+  handleDeliveryStationCollection,
+  handleDeliveryAddressCollection,
+  handlePaymentMethodSelection,
+  handlePaymentDetailsCollection,
+  handleOrderReview
+} from "@/lib/order-flow-handlers";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -499,7 +515,7 @@ async function processWithAI(
 ): Promise<void> {
   const processStart = Date.now();
   try {
-    console.log("[Webhook] Processing message with AI...");
+    console.log("[Webhook] Processing message...");
     console.log("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
     
     // Get business context (products, services, shipping, payments, policies)
@@ -510,6 +526,143 @@ async function processWithAI(
     console.log(`[Webhook] Context loaded: ${context.products.length} products, ${context.services.length} services`);
     console.log(`[Webhook] Shipping methods: ${context.shippingMethods?.length || 0}`);
     console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
+    
+    // CHECK FOR ACTIVE ORDER - State-driven flow
+    console.log("[Webhook] Checking for active order...");
+    const orderState = await getOrderState(tenantId, phone);
+    
+    if (orderState && orderState.step !== 'completed' && orderState.step !== 'idle') {
+      console.log(`[Webhook] Active order found: step=${orderState.step}`);
+      
+      // Route to appropriate handler based on current step
+      let result: { response: string; newState: OrderState };
+      
+      switch (orderState.step) {
+        case 'selecting_product':
+          result = await handleProductSelection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'selecting_variant':
+          result = await handleVariantSelection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_quantity':
+          result = await handleQuantityCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_customer_name':
+          result = await handleCustomerNameCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_customer_phone':
+          result = await handleCustomerPhoneCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_customer_email':
+          result = await handleCustomerEmailCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'selecting_delivery_method':
+          result = await handleDeliveryMethodSelection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_delivery_county':
+          result = await handleDeliveryCountyCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_delivery_station':
+          result = await handleDeliveryStationCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_delivery_address':
+          result = await handleDeliveryAddressCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'selecting_payment_method':
+          result = await handlePaymentMethodSelection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'collecting_payment_details':
+          result = await handlePaymentDetailsCollection(tenantId, phone, orderState, message, context);
+          break;
+          
+        case 'reviewing_order':
+          result = await handleOrderReview(tenantId, phone, orderState, message, context);
+          break;
+          
+        default:
+          // Unknown step - reset to product selection
+          console.log(`[Webhook] Unknown step: ${orderState.step}, resetting`);
+          result = await handleProductSelection(tenantId, phone, createNewOrderState(), message, context);
+      }
+      
+      console.log(`[Webhook] Order handler response generated`);
+      
+      // Send the deterministic response
+      await sendEvolutionMessage(tenantId, phone, result.response);
+      console.log("[Webhook] Order flow response sent");
+      
+      // Update conversation metadata
+      const timestamp = new Date();
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          lastMessage: result.response,
+          lastMessageTime: timestamp,
+          updatedAt: timestamp,
+        }, { merge: true });
+      
+      console.log("[Webhook] Order processing complete ✅");
+      console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+      
+      // Log success
+      await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+      return; // Exit early - order handled, no need for AI
+    }
+    
+    // NO ACTIVE ORDER - Check if user wants to start one
+    const normalizedMessage = message.toLowerCase().trim();
+    const orderKeywords = ['order', 'buy', 'purchase', 'i want', 'i need', 'get me'];
+    const wantsToOrder = orderKeywords.some(keyword => normalizedMessage.includes(keyword));
+    
+    if (wantsToOrder && context.products.length > 0) {
+      console.log("[Webhook] User wants to place order, starting new order flow");
+      const newState = createNewOrderState();
+      await saveOrderState(tenantId, phone, newState);
+      
+      const result = await handleProductSelection(tenantId, phone, newState, message, context);
+      
+      // Send response
+      await sendEvolutionMessage(tenantId, phone, result.response);
+      console.log("[Webhook] New order started");
+      
+      // Update conversation metadata
+      const timestamp = new Date();
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          lastMessage: result.response,
+          lastMessageTime: timestamp,
+          updatedAt: timestamp,
+        }, { merge: true });
+      
+      console.log("[Webhook] Order processing complete ✅");
+      console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+      
+      await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+      return; // Exit early
+    }
+    
+    // NO ORDER - Use AI for general conversation
+    console.log("[Webhook] No active order, using AI for general conversation");
     
     // Generate AI response (NO conversation history to prevent flow confusion)
     console.log("[Webhook] Calling Gemini AI...");
