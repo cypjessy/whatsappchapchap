@@ -666,7 +666,96 @@ async function processWithAI(
       }
     }
     
-    // Check if user is asking for products/services
+    // FUZZY PRODUCT NAME MATCHING - For partial product name searches
+    // e.g., "asus laptop", "bikini", "cups", "iphone"
+    const productKeywords = normalizedMessage.replace(/\b(what|do|you|have|show|tell|me|about|the|a|an|is|are|any|looking|for|want|buy|order|need|check|see|find|search)\b/g, '').trim();
+    
+    if (productKeywords.length > 2) {
+      // Split into keywords and search products
+      const keywords = productKeywords.split(/\s+/).filter(k => k.length > 2);
+      
+      if (keywords.length > 0) {
+        const matchingProducts = context.products.filter(p => {
+          if (!p.stock || p.stock <= 0) return false;
+          
+          const productName = p.name.toLowerCase();
+          const description = (p.description || '').toLowerCase();
+          const category = (p.category || '').toLowerCase();
+          const categoryName = (p.categoryName || '').toLowerCase();
+          
+          // Check if ANY keyword matches product name, description, or category
+          return keywords.some(keyword => 
+            productName.includes(keyword) ||
+            description.includes(keyword) ||
+            category.includes(keyword) ||
+            categoryName.includes(keyword)
+          );
+        });
+        
+        if (matchingProducts.length > 0) {
+          console.log(`[Webhook] Fuzzy product match found: ${matchingProducts.length} products`);
+          
+          // Show first 5 matching products
+          const productsToShow = matchingProducts.slice(0, 5);
+          const hasMore = matchingProducts.length > 5;
+          
+          let response = ` *Found ${matchingProducts.length} product(s)*\n\n`;
+          
+          productsToShow.forEach((product, index) => {
+            const price = product.salePrice || product.price;
+            const stockInfo = product.stock ? `(${product.stock} in stock)` : '';
+            
+            response += `*${index + 1}. ${product.name}*\n`;
+            response += `💰 KES ${price.toLocaleString()} ${stockInfo}\n`;
+            
+            if (product.description) {
+              response += `   ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
+            }
+            
+            if (product.colors && product.colors.length > 0) {
+              response += `   Colors: ${product.colors.join(', ')}\n`;
+            }
+            
+            if (product.sizes && product.sizes.length > 0) {
+              response += `   Sizes: ${product.sizes.join(', ')}\n`;
+            }
+            
+            // Add order link
+            if (product.orderLink) {
+              response += `\n    Order: ${product.orderLink}\n`;
+            }
+            
+            response += '\n';
+          });
+          
+          if (hasMore) {
+            response += `\nType *"more"* to see next 5 products.`;
+          }
+          
+          response += `\n\nType "back" to browse categories.`;
+          
+          await sendEvolutionMessage(tenantId, phone, response);
+          
+          const timestamp = new Date();
+          const adminDb = getAdminDb();
+          await adminDb
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("conversations")
+            .doc(phone)
+            .set({
+              lastMessage: response,
+              lastMessageTime: timestamp,
+              updatedAt: timestamp,
+            }, { merge: true });
+          
+          console.log(`[Webhook] Fuzzy products shown: ${productsToShow.length} items ✅`);
+          console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+          await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+          return;
+        }
+      }
+    }
     const wantsProducts = normalizedMessage.match(/(product|shop|browse|catalog|order|buy|show|see|what.*have|what.*sell|menu|list|available)/i);
     const wantsServices = normalizedMessage.match(/\b(service|book|appointment)\b/);
     
