@@ -112,6 +112,63 @@ export interface AIContext {
   };
 }
 
+// ============================================================================
+// ORDER STATE MANAGEMENT - State-driven order collection (NO conversation history)
+// ============================================================================
+
+export type OrderStep = 
+  | 'idle'
+  | 'selecting_product'
+  | 'selecting_variant'
+  | 'collecting_quantity'
+  | 'collecting_customer_name'
+  | 'collecting_customer_phone'
+  | 'collecting_customer_email'
+  | 'selecting_delivery_method'
+  | 'collecting_delivery_county'
+  | 'collecting_delivery_station'
+  | 'collecting_delivery_address'
+  | 'selecting_payment_method'
+  | 'collecting_payment_details'
+  | 'collecting_order_notes'
+  | 'reviewing_order'
+  | 'completed';
+
+export interface OrderState {
+  // Flow tracking
+  step: OrderStep;
+  
+  // Product info
+  productId?: string;
+  productName?: string;
+  variantId?: string;
+  variantSpecs?: Record<string, string>;
+  quantity?: number;
+  
+  // Customer info
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  
+  // Delivery info
+  deliveryMethod?: 'pickup' | 'shipping';
+  deliveryCounty?: string;
+  deliveryStation?: string;
+  deliveryAddress?: string;
+  
+  // Payment info
+  paymentMethod?: 'mpesa' | 'bank' | 'cash' | 'card';
+  paymentDetails?: string;
+  
+  // Order notes
+  orderNotes?: string;
+  
+  // Metadata
+  createdAt: Date;
+  updatedAt: Date;
+  expiresAt: Date; // Auto-cancel after 30 minutes
+}
+
 export async function generateAIResponse(
   message: string,
   context: AIContext
