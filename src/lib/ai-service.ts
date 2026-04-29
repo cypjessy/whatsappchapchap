@@ -399,6 +399,8 @@ When customers ask about products or want to see what you have:
 5. Ask which product they're interested in after showing products
 6. NEVER skip product details - always show colors, sizes, brand if available
 7. Include payment and shipping info if product has specific options
+8. CRITICAL: ONLY show products when the customer EXPLICITLY asks to browse, see products, or mentions a specific category/product name
+9. CRITICAL: If the message is unclear, random, or unrelated to shopping, DO NOT show products. Just respond naturally to their question.
 
 AVAILABLE PRODUCT CATEGORIES:${categoriesSection || "\nNo categories available"}
 

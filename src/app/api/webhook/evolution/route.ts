@@ -1103,34 +1103,10 @@ async function processWithAI(
     console.log("[Webhook] AI Response generated successfully, length:", aiResponse.length);
     console.log("[Webhook] AI Response preview:", aiResponse.substring(0, 100));
     
-    // Send response via Evolution API
-    console.log("[Webhook] Sending response via Evolution API...");
+    // Send AI response via Evolution API
+    console.log("[Webhook] Sending AI response via Evolution API...");
     
-    // Extract mentioned products and send their images automatically
-    const mentionedProducts = context.products.filter(p => 
-      aiResponse.toLowerCase().includes(p.name.toLowerCase()) &&
-      (p.images && p.images.length > 0 || p.image)
-    );
-    
-    // Send images FIRST (before text)
-    const productsToShow = mentionedProducts.slice(0, 3);
-    console.log(`[Webhook] Found ${productsToShow.length} products with images to send`);
-    
-    for (const product of productsToShow) {
-      // Send only the first/main image for each product
-      const imageUrl = product.images?.[0] || product.image;
-      if (imageUrl) {
-        await sendEvolutionMedia(
-          tenantId,
-          phone,
-          imageUrl,
-          `*${product.name}* - KES ${product.price.toLocaleString()}`
-        );
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
-    
-    // Then send text AFTER images
+    // Clean any image tags from response (images handled separately now)
     const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
     await sendEvolutionMessage(tenantId, phone, cleanText);
     
