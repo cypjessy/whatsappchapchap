@@ -521,36 +521,124 @@ async function processWithAI(
     console.log("[Webhook] Processing category browsing...");
     const normalizedMessage = message.toLowerCase().trim();
     
-    // Check for navigation commands
-    if (normalizedMessage.match(/\b(hi|hello|hey|start|menu|home|categories)\b/)) {
-      console.log("[Webhook] Showing main categories");
-      const response = generateGreetingWithCategories(context.businessName, context);
-      
-      await sendEvolutionMessage(tenantId, phone, response);
-      
-      // Update conversation metadata
-      const timestamp = new Date();
-      const adminDb = getAdminDb();
-      await adminDb
-        .collection("tenants")
-        .doc(tenantId)
-        .collection("conversations")
-        .doc(phone)
-        .set({
-          lastMessage: response,
-          lastMessageTime: timestamp,
-          updatedAt: timestamp,
-        }, { merge: true });
-      
-      console.log("[Webhook] Category browsing complete ✅");
-      console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
-      await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
-      return;
+    // Check if user is selecting a main category by number or name
+    const mainCategories: Array<{ id: string; name: string }> = [];
+    const categoryMap = new Map<string, string>();
+    
+    context.products.forEach(product => {
+      if (product.category && !categoryMap.has(product.category)) {
+        categoryMap.set(product.category, product.categoryName || product.category);
+        mainCategories.push({
+          id: product.category,
+          name: product.categoryName || product.category
+        });
+      }
+    });
+    
+    // Check if message is a category number (e.g., "1", "2")
+    const numberMatch = normalizedMessage.match(/^\d+$/);
+    if (numberMatch && mainCategories.length > 0) {
+      const index = parseInt(numberMatch[0]) - 1;
+      if (index >= 0 && index < mainCategories.length) {
+        const selectedCategory = mainCategories[index];
+        console.log(`[Webhook] User selected category #${index + 1}: ${selectedCategory.name}`);
+        
+        // Get sub-categories for this main category
+        const subCategories = new Set<string>();
+        context.products.forEach(p => {
+          if (p.category === selectedCategory.id && p.categoryName) {
+            subCategories.add(p.categoryName);
+          }
+        });
+        
+        let response = `📂 *${selectedCategory.name}*\n\n`;
+        response += `Choose a sub-category:\n\n`;
+        
+        Array.from(subCategories).forEach((subCat, idx) => {
+          const count = context.products.filter(p => 
+            p.category === selectedCategory.id && p.categoryName === subCat
+          ).length;
+          response += `${idx + 1}. *${subCat}* (${count} products)\n`;
+        });
+        
+        response += `\nReply with a sub-category name or number.`;
+        response += `\n\nType "back" to return to main categories.`;
+        
+        await sendEvolutionMessage(tenantId, phone, response);
+        
+        // Update conversation metadata
+        const timestamp = new Date();
+        const adminDb = getAdminDb();
+        await adminDb
+          .collection("tenants")
+          .doc(tenantId)
+          .collection("conversations")
+          .doc(phone)
+          .set({
+            lastMessage: response,
+            lastMessageTime: timestamp,
+            updatedAt: timestamp,
+          }, { merge: true });
+        
+        console.log("[Webhook] Sub-categories shown ✅");
+        console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+        await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+        return;
+      }
     }
     
-    // Try to detect if user is selecting a category or sub-category
-    // For now, use AI to understand user intent and respond accordingly
-    // AI will use the system prompt which includes all products and categories
+    // Check if message matches a main category name
+    for (const cat of mainCategories) {
+      if (normalizedMessage.includes(cat.name.toLowerCase()) || 
+          normalizedMessage.includes(cat.id.toLowerCase())) {
+        console.log(`[Webhook] User selected category: ${cat.name}`);
+        
+        // Get sub-categories for this main category
+        const subCategories = new Set<string>();
+        context.products.forEach(p => {
+          if (p.category === cat.id && p.categoryName) {
+            subCategories.add(p.categoryName);
+          }
+        });
+        
+        let response = `📂 *${cat.name}*\n\n`;
+        response += `Choose a sub-category:\n\n`;
+        
+        Array.from(subCategories).forEach((subCat, idx) => {
+          const count = context.products.filter(p => 
+            p.category === cat.id && p.categoryName === subCat
+          ).length;
+          response += `${idx + 1}. *${subCat}* (${count} products)\n`;
+        });
+        
+        response += `\nReply with a sub-category name or number.`;
+        response += `\n\nType "back" to return to main categories.`;
+        
+        await sendEvolutionMessage(tenantId, phone, response);
+        
+        // Update conversation metadata
+        const timestamp = new Date();
+        const adminDb = getAdminDb();
+        await adminDb
+          .collection("tenants")
+          .doc(tenantId)
+          .collection("conversations")
+          .doc(phone)
+          .set({
+            lastMessage: response,
+            lastMessageTime: timestamp,
+            updatedAt: timestamp,
+          }, { merge: true });
+        
+        console.log("[Webhook] Sub-categories shown ✅");
+        console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+        await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
+        return;
+      }
+    }
+    
+    // For all other messages, use AI with enhanced prompt
+    console.log("[Webhook] Using AI for general conversation");
     
     // Generate AI response (NO conversation history to prevent flow confusion)
     console.log("[Webhook] Calling Gemini AI...");
