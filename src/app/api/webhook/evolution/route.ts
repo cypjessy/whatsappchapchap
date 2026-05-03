@@ -770,6 +770,12 @@ async function showProductsForSelection(
     ...doc.data(),
   }));
   
+  // Debug: Log first product structure
+  if (products.length > 0) {
+    console.log('[Product Browse] Sample product fields:', Object.keys(products[0]));
+    console.log('[Product Browse] Sample product data:', JSON.stringify(products[0], null, 2));
+  }
+  
   // Filter by subcategory if specified
   if (selections.subcategory) {
     products = products.filter((p: any) => p.subcategory === selections.subcategory);
@@ -824,29 +830,51 @@ async function showProductsForSelection(
       productText += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
     }
 
-    // Colors
-    if (product.colors && product.colors.length > 0) {
-      productText += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+    // Display all filters (colors, sizes, brand, condition, warranty, etc.)
+    if (product.filters && Object.keys(product.filters).length > 0) {
+      // Map common filter keys to readable labels and icons
+      const filterLabels: Record<string, { label: string; icon: string }> = {
+        'color': { label: 'Colors', icon: '🎨' },
+        'colors': { label: 'Colors', icon: '🎨' },
+        'size': { label: 'Sizes', icon: '' },
+        'sizes': { label: 'Sizes', icon: '📏' },
+        'brand': { label: 'Brand', icon: '🏷️' },
+        'condition': { label: 'Condition', icon: '✨' },
+        'warranty': { label: 'Warranty', icon: '🛡️' },
+        'material': { label: 'Material', icon: '🧵' },
+        'weight': { label: 'Weight', icon: '⚖️' },
+        'capacity': { label: 'Capacity', icon: '📦' },
+        'power': { label: 'Power', icon: '⚡' },
+        'screen_size': { label: 'Screen Size', icon: '📱' },
+        'ram': { label: 'RAM', icon: '💾' },
+        'storage': { label: 'Storage', icon: '💿' },
+      };
+      
+      Object.entries(product.filters).forEach(([filterKey, filterValues]) => {
+        if (Array.isArray(filterValues) && filterValues.length > 0) {
+          const config = filterLabels[filterKey] || { label: filterKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()), icon: '📌' };
+          productText += `   ${config.icon} ${config.label}: ${filterValues.join(', ')}\n`;
+        }
+      });
     }
 
-    // Sizes
-    if (product.sizes && product.sizes.length > 0) {
-      productText += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
-    }
-
-    // Brand
-    if (product.brand) {
-      productText += `   ️ Brand: ${product.brand}\n`;
-    }
-
-    // Condition
-    if (product.condition) {
-      productText += `   ✨ Condition: ${product.condition}\n`;
-    }
-
-    // Warranty
-    if (product.warranty) {
-      productText += `   🛡️ Warranty: ${product.warranty}\n`;
+    // Fallback to individual fields if filters not present (backward compatibility)
+    if (!product.filters) {
+      if (product.colors && product.colors.length > 0) {
+        productText += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+      }
+      if (product.sizes && product.sizes.length > 0) {
+        productText += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
+      }
+      if (product.brand) {
+        productText += `   🏷️ Brand: ${product.brand}\n`;
+      }
+      if (product.condition) {
+        productText += `   ✨ Condition: ${product.condition}\n`;
+      }
+      if (product.warranty) {
+        productText += `   🛡️ Warranty: ${product.warranty}\n`;
+      }
     }
 
     // Variants
@@ -981,29 +1009,51 @@ async function showNextProductPage(
       productText += `    ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
     }
 
-    // Colors
-    if (product.colors && product.colors.length > 0) {
-      productText += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+    // Display all filters (colors, sizes, brand, condition, warranty, etc.)
+    if (product.filters && Object.keys(product.filters).length > 0) {
+      // Map common filter keys to readable labels and icons
+      const filterLabels: Record<string, { label: string; icon: string }> = {
+        'color': { label: 'Colors', icon: '' },
+        'colors': { label: 'Colors', icon: '🎨' },
+        'size': { label: 'Sizes', icon: '' },
+        'sizes': { label: 'Sizes', icon: '📏' },
+        'brand': { label: 'Brand', icon: '🏷️' },
+        'condition': { label: 'Condition', icon: '✨' },
+        'warranty': { label: 'Warranty', icon: '🛡️' },
+        'material': { label: 'Material', icon: '🧵' },
+        'weight': { label: 'Weight', icon: '' },
+        'capacity': { label: 'Capacity', icon: '📦' },
+        'power': { label: 'Power', icon: '' },
+        'screen_size': { label: 'Screen Size', icon: '📱' },
+        'ram': { label: 'RAM', icon: '' },
+        'storage': { label: 'Storage', icon: '' },
+      };
+      
+      Object.entries(product.filters).forEach(([filterKey, filterValues]) => {
+        if (Array.isArray(filterValues) && filterValues.length > 0) {
+          const config = filterLabels[filterKey] || { label: filterKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()), icon: '' };
+          productText += `   ${config.icon} ${config.label}: ${filterValues.join(', ')}\n`;
+        }
+      });
     }
 
-    // Sizes
-    if (product.sizes && product.sizes.length > 0) {
-      productText += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
-    }
-
-    // Brand
-    if (product.brand) {
-      productText += `   🏷️ Brand: ${product.brand}\n`;
-    }
-
-    // Condition
-    if (product.condition) {
-      productText += `   ✨ Condition: ${product.condition}\n`;
-    }
-
-    // Warranty
-    if (product.warranty) {
-      productText += `   🛡️ Warranty: ${product.warranty}\n`;
+    // Fallback to individual fields if filters not present (backward compatibility)
+    if (!product.filters) {
+      if (product.colors && product.colors.length > 0) {
+        productText += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+      }
+      if (product.sizes && product.sizes.length > 0) {
+        productText += `    Sizes: ${product.sizes.join(', ')}\n`;
+      }
+      if (product.brand) {
+        productText += `   🏷️ Brand: ${product.brand}\n`;
+      }
+      if (product.condition) {
+        productText += `    Condition: ${product.condition}\n`;
+      }
+      if (product.warranty) {
+        productText += `   🛡️ Warranty: ${product.warranty}\n`;
+      }
     }
 
     // Variants
