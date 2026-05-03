@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs } from "firebase/firestore";
+import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 
 const firebaseConfig = {
@@ -135,14 +135,18 @@ function OrderPageContent() {
         }
         
         // Fetch business profile for payment methods and business info
-        const profileRef = doc(db, "businessProfiles", tenantId);
-        const profileSnap = await getDoc(profileRef);
+        // Query by tenantId field since document ID is auto-generated
+        const profileQuery = query(collection(db, "businessProfiles"), where("tenantId", "==", tenantId));
+        const profileSnap = await getDocs(profileQuery);
         
         console.log('📊 Order Page - Tenant ID:', tenantId);
-        console.log('📊 Order Page - Business Profile exists:', profileSnap.exists());
-        if (profileSnap.exists()) {
-          console.log(' Order Page - Profile Data:', profileSnap.data());
-          console.log(' Order Page - Payment Methods:', profileSnap.data().paymentMethods);
+        console.log('📊 Order Page - Business Profile query results:', profileSnap.size);
+        
+        const profileData = !profileSnap.empty ? profileSnap.docs[0].data() : null;
+        
+        if (profileData) {
+          console.log('📊 Order Page - Profile Data:', profileData);
+          console.log('📊 Order Page - Payment Methods:', profileData.paymentMethods);
         }
         
         // Fetch shipping methods
@@ -156,7 +160,6 @@ function OrderPageContent() {
           })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
         
         // Set business settings
-        const profileData = profileSnap.exists() ? profileSnap.data() : null;
         
         // Build payment methods array from business profile with new M-Pesa structure
         const paymentMethodsArray: Array<{ id: string; name: string; details: string }> = [];
