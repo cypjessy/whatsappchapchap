@@ -475,7 +475,29 @@ async function handleProductBrowseFlow(
   // TODO: Add handlers for category selection, subcategory, and brand
 }
 
-// Get conversation history for context (last 5 messages)
+// Get flow state ONLY (no conversation history)
+async function getFlowState(
+  tenantId: string,
+  phone: string
+): Promise<any> {
+  try {
+    const adminDb = getAdminDb();
+    
+    const convoDoc = await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    return convoDoc.exists ? convoDoc.data()?.flowState || null : null;
+  } catch (error) {
+    console.error("[Webhook] Error getting flow state:", error);
+    return null;
+  }
+}
+
+// Get conversation history for context (last 5 messages) - DEPRECATED, using flow state instead
 async function getConversationHistory(
   tenantId: string,
   phone: string
@@ -491,13 +513,13 @@ async function getConversationHistory(
       .doc(phone)
       .collection("messages")
       .orderBy("timestamp", "desc")
-      .limit(10)
+      .limit(5)
       .get();
     
     const messages = messagesSnap.docs
       .map(doc => doc.data())
       .reverse()
-      .slice(-10);
+      .slice(-5);
     
     const history = messages.map(msg => ({
       role: (msg.fromMe || msg.sender === "business") ? "assistant" as const : "user" as const,
@@ -505,14 +527,7 @@ async function getConversationHistory(
     }));
     
     // Get flow state
-    const convoDoc = await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .get();
-    
-    const flowState = convoDoc.exists ? convoDoc.data()?.flowState : null;
+    const flowState = await getFlowState(tenantId, phone);
     
     return { history, flowState };
   } catch (error) {
@@ -673,24 +688,23 @@ async function processWithAI(
     console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
     console.log(`[Webhook] Category hierarchy: ${context.productCategoryHierarchy?.length || 0} categories`);
     
-    // Get conversation history AND flow state
-    console.log("[Webhook] Fetching conversation history and flow state...");
-    const { history, flowState } = await getConversationHistory(tenantId, phone);
-    console.log(`[Webhook] Conversation history: ${history.length} messages`);
+    // Get flow state ONLY (NO conversation history to prevent AI from messing up flow)
+    console.log("[Webhook] Fetching flow state...");
+    const flowState = await getFlowState(tenantId, phone);
     console.log(`[Webhook] Flow state:`, flowState);
     
-    // Add flow state to AI context
+    // Add flow state to AI context (NO history)
     const enhancedContext = {
       ...context,
       conversationFlow: flowState,
     };
     
-    // Generate AI response
-    console.log("[Webhook] Calling Gemini AI...");
+    // Generate AI response (NO conversation history - AI only handles natural language queries)
+    console.log("[Webhook] Calling AI for natural language query...");
     const aiStart = Date.now();
     
     // Add timeout to prevent hanging
-    const aiPromise = generateAIResponse(message, enhancedContext, history);
+    const aiPromise = generateAIResponse(message, enhancedContext, []); // Empty history array
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("AI generation timeout after 15000ms")), 15000)
     );
