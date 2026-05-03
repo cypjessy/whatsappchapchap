@@ -301,30 +301,39 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
     const serviceSettings = serviceSettingsSnap.exists ? serviceSettingsSnap.data() : null;
     console.log("[Webhook] Service settings:", serviceSettings ? "found" : "not found");
     
-    // NEW: Get product categories
-    console.log("[Webhook] Fetching product categories...");
-    const categoriesFetchStart = Date.now();
-    const categoriesSnap = await db.collection("productCategories")
+    // NEW: Get product category hierarchy (with subcategories and brands)
+    console.log("[Webhook] Fetching product category hierarchy...");
+    const hierarchyFetchStart = Date.now();
+    const hierarchySnap = await db.collection("productCategories")
       .where("tenantId", "==", tenantId)
       .get();
-    console.log(`[Webhook] Categories fetch took ${Date.now() - categoriesFetchStart}ms`);
+    console.log(`[Webhook] Hierarchy fetch took ${Date.now() - hierarchyFetchStart}ms`);
     
-    const productCategories = categoriesSnap.docs.map((doc: any) => {
+    const productCategoryHierarchy = hierarchySnap.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
-        name: data.name,
-        icon: data.icon,
-        productCount: data.productCount || 0,
+        name: data.name || doc.id,
+        description: data.description || "",
+        subcategories: data.subcategories || [],
+        brands: data.brands || [],
+        productCount: data.productCount || products.filter(p => p.category === doc.id).length,
       };
     });
-    console.log(`[Webhook] Product categories loaded: ${productCategories.length}`);
+    console.log(`[Webhook] Product category hierarchy loaded: ${productCategoryHierarchy.length}`);
+    console.log("[Webhook] Hierarchy details:", JSON.stringify(productCategoryHierarchy.map(c => ({ name: c.name, subcategories: c.subcategories.length, brands: c.brands.length }))));
     
     console.log("[Webhook] Building context object...");
     const context = {
       businessName,
       products,
-      productCategories: productCategories.length > 0 ? productCategories : undefined,
+      productCategories: productCategoryHierarchy.length > 0 ? productCategoryHierarchy.map(c => ({
+        id: c.id,
+        name: c.name,
+        icon: undefined,
+        productCount: c.productCount,
+      })) : undefined,
+      productCategoryHierarchy: productCategoryHierarchy.length > 0 ? productCategoryHierarchy : undefined,
       services,
       businessProfile: businessProfile ? {
         tagline: businessProfile.tagline,
