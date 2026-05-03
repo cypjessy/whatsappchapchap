@@ -797,8 +797,8 @@ async function showProductsForSelection(
     return;
   }
   
-  // Show first 3 products
-  const productsToShow = products.slice(0, 3);
+  // Show first 5 products
+  const productsToShow = products.slice(0, 5);
   const totalProducts = products.length;
   
   // Send category header first
@@ -913,8 +913,8 @@ async function showProductsForSelection(
   
   // Reply instructions
   let replyMessage = '';
-  if (totalProducts > 3) {
-    replyMessage = `\n*Reply:*\n• *next* - See more products (${totalProducts - 3} remaining)\n• *0* - Go back\n• *menu* - Main menu`;
+  if (totalProducts > 5) {
+    replyMessage = `\n*Reply:*\n• *next* - See more products (${totalProducts - 5} remaining)\n• *0* - Go back\n• *menu* - Main menu`;
   } else {
     replyMessage = `\n*Reply:*\n• *0* - Go back\n• *menu* - Main menu`;
   }
@@ -936,7 +936,7 @@ async function showProductsForSelection(
           ...selections,
           allProducts: products.map((p: any) => p.id),
           currentPage: 0,
-          pageSize: 3,
+          pageSize: 5,
         },
         lastActivity: new Date().toISOString(),
       }
@@ -953,7 +953,7 @@ async function showNextProductPage(
   
   const allProductIds = selections.allProducts || [];
   const currentPage = selections.currentPage || 0;
-  const pageSize = selections.pageSize || 3;
+  const pageSize = selections.pageSize || 5;
   
   const startIndex = (currentPage + 1) * pageSize;
   const endIndex = startIndex + pageSize;
