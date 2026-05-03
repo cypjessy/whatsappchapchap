@@ -556,6 +556,12 @@ async function handleFlowInput(
     }
   }
   
+  // Check for main menu option
+  if (message.trim().toLowerCase() === 'menu') {
+    await sendWelcomeMenu(tenantId, phone);
+    return;
+  }
+  
   // Handle product browse flow
   if (flowName === 'product_browse') {
     await handleProductBrowseInput(tenantId, phone, message, flowState);
@@ -599,7 +605,7 @@ async function handleProductBrowseInput(
         .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
         .join('\n');
       
-      const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️ Back to categories`;
+      const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories\n• *menu* - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
       
       // Update flow state
@@ -725,7 +731,7 @@ async function handleProductBrowseInput(
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
           
-        const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n0️ Back to categories`;
+        const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories\n• *menu* - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
           
         await adminDb
@@ -908,9 +914,9 @@ async function showProductsForSelection(
   // Reply instructions
   let replyMessage = '';
   if (totalProducts > 3) {
-    replyMessage = `\n*Reply:*\n• *next* - See more products (${totalProducts - 3} remaining)\n• *0* - Go back`;
+    replyMessage = `\n*Reply:*\n• *next* - See more products (${totalProducts - 3} remaining)\n• *0* - Go back\n• *menu* - Main menu`;
   } else {
-    replyMessage = `\n*Reply 0* to go back`;
+    replyMessage = `\n*Reply:*\n• *0* - Go back\n• *menu* - Main menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1087,9 +1093,9 @@ async function showNextProductPage(
   const remaining = allProductIds.length - endIndex;
   let replyMessage = '';
   if (remaining > 0) {
-    replyMessage = `\n*Reply:*\n• *next* - See more products (${remaining} remaining)\n• *0* - Go back`;
+    replyMessage = `\n*Reply:*\n• *next* - See more products (${remaining} remaining)\n• *0* - Go back\n• *menu* - Main menu`;
   } else {
-    replyMessage = `\n*Reply 0* to go back`;
+    replyMessage = `\n*Reply:*\n• *0* - Go back\n• *menu* - Main menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
