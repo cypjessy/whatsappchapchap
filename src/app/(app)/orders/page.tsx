@@ -1224,8 +1224,18 @@ try {
                     </div>
                     {selectedOrder.paymentDetails && (
                       <div className="py-2 border-b border-[#e2e8f0] text-sm">
-                        <div className="text-[#64748b] mb-1">Payment Reference / Transaction ID</div>
-                        <div className="font-semibold bg-[#f8fafc] p-2.5 rounded-lg border border-[#e2e8f0]">{selectedOrder.paymentDetails}</div>
+                        <div className="text-[#64748b] mb-1">
+                          {selectedOrder.paymentMethod === "mpesa" || selectedOrder.paymentMethod === "M-Pesa" 
+                            ? "M-Pesa Payment Message" 
+                            : "Payment Reference / Transaction ID"}
+                        </div>
+                        <div className={`font-semibold p-2.5 rounded-lg border ${
+                          selectedOrder.paymentMethod === "mpesa" || selectedOrder.paymentMethod === "M-Pesa"
+                            ? "bg-[#ecfdf5] border-[#10b981] text-[#065f46] whitespace-pre-wrap"
+                            : "bg-[#f8fafc] border-[#e2e8f0]"
+                        }`}>
+                          {selectedOrder.paymentDetails}
+                        </div>
                       </div>
                     )}
                     {selectedOrder.orderNotes && (
@@ -1279,6 +1289,15 @@ try {
                 </button>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
+                {/* Confirm Payment Button - Only show for pending orders with payment method */}
+                {selectedOrder.status === "pending" && selectedOrder.paymentMethod && selectedOrder.paymentMethod !== "cod" && selectedOrder.paymentMethod !== "Cash on Delivery" && (
+                  <button 
+                    className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center justify-center gap-2" 
+                    onClick={() => updateOrderStatus("processing")}
+                  >
+                    <i className="fas fa-check-circle"></i> <span className="hidden md:inline">Confirm Payment</span>
+                  </button>
+                )}
                 <div className="relative flex-1 md:flex-none">
                   <button className="w-full md:w-auto px-3 md:px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center justify-center gap-2" onClick={() => setShowStatusMenu(!showStatusMenu)}>
                     <i className="fas fa-tag"></i> <span className="hidden md:inline">Update Status</span> <i className="fas fa-chevron-up ml-1 md:ml-2"></i>
