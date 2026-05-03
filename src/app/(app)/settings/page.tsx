@@ -45,6 +45,7 @@ export default function SettingsPage() {
   // Shipping Methods State
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
+  const [editingMethodId, setEditingMethodId] = useState<string | null>(null);
   const [newShippingMethod, setNewShippingMethod] = useState({
     name: "",
     price: 0,
@@ -342,14 +343,22 @@ export default function SettingsPage() {
     if (!user || !newShippingMethod.name) return;
     setSaving(true);
     try {
-      await shippingService.createShippingMethod(user, newShippingMethod as any);
+      if (editingMethodId) {
+        // Update existing method
+        await shippingService.updateShippingMethod(user, editingMethodId, newShippingMethod as any);
+        setEditingMethodId(null);
+        alert("Shipping method updated!");
+      } else {
+        // Create new method
+        await shippingService.createShippingMethod(user, newShippingMethod as any);
+        alert("Shipping method added!");
+      }
       setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" });
       setSelectedPreset("");
       await loadData();
-      alert("Shipping method added!");
     } catch (error) {
-      console.error("Error adding shipping method:", error);
-      alert("Failed to add shipping method");
+      console.error("Error saving shipping method:", error);
+      alert("Failed to save shipping method");
     } finally {
       setSaving(false);
     }
@@ -373,10 +382,28 @@ export default function SettingsPage() {
     if (!confirm("Delete this shipping method?")) return;
     try {
       await shippingService.deleteShippingMethod(user, methodId);
+      // If we're editing this method, clear the form
+      if (editingMethodId === methodId) {
+        setEditingMethodId(null);
+        setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" });
+      }
       await loadData();
     } catch (error) {
       console.error("Error deleting shipping method:", error);
     }
+  };
+
+  const editShippingMethod = (method: ShippingMethod) => {
+    setEditingMethodId(method.id);
+    setNewShippingMethod({
+      name: method.name,
+      price: method.price,
+      estimatedDays: method.estimatedDays || "",
+      description: method.description || "",
+    });
+    setSelectedPreset("");
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const insertVariable = (variable: string) => {
@@ -988,13 +1015,26 @@ export default function SettingsPage() {
               </div>
             </div>
             <button
-              onClick={addShippingMethod}
+              onClick={editingMethodId ? () => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); } : addShippingMethod}
               disabled={saving || !newShippingMethod.name}
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+              className={`mt-4 px-6 py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 ${
+                editingMethodId 
+                  ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
+                  : "bg-gradient-to-r from-green-500 to-teal-500"
+              }`}
             >
-              <i className="fas fa-plus"></i>
-              Add Shipping Method
+              <i className={`fas ${editingMethodId ? "fa-save" : "fa-plus"}`}></i>
+              {editingMethodId ? "Update Shipping Method" : "Add Shipping Method"}
             </button>
+            {editingMethodId && (
+              <button
+                onClick={() => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); }}
+                className="mt-4 ml-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2"
+              >
+                <i className="fas fa-times"></i>
+                Cancel
+              </button>
+            )}
           </div>
 
           {/* Existing Shipping Methods */}
@@ -1016,12 +1056,20 @@ export default function SettingsPage() {
                       </p>
                       {method.description && <p className="text-sm text-[#64748b]">{method.description}</p>}
                     </div>
-                    <button
-                      onClick={() => deleteShippingMethod(method.id)}
-                      className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => editShippingMethod(method)}
+                        className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        onClick={() => deleteShippingMethod(method.id)}
+                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
