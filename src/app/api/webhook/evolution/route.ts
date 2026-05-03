@@ -868,20 +868,18 @@ async function showNextProductPage(
     return;
   }
   
-  // Fetch next page of products
+  // Get product IDs for this page
+  const pageIds = allProductIds.slice(startIndex, endIndex);
+  
+  // Fetch only the specific product IDs for this page (optimized query)
   const productsSnap = await adminDb.collection('products')
-    .where('tenantId', '==', tenantId)
+    .where('__name__', 'in', pageIds)
     .get();
   
-  const allProducts = productsSnap.docs.map((doc: any) => ({
+  const productsToShow = productsSnap.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
   }));
-  
-  // Filter to get the specific products we want
-  const productsToShow = allProducts
-    .filter((p: any) => allProductIds.includes(p.id))
-    .slice(startIndex, endIndex);
   
   if (productsToShow.length === 0) {
     await sendEvolutionMessage(tenantId, phone, "No more products available.");
