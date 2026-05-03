@@ -827,11 +827,11 @@ function OrderPageContent() {
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Payment Method</div>
           
-          {(product?.paymentMethods?.length ? product.paymentMethods : [
+          {((businessSettings?.paymentMethods?.length ? businessSettings.paymentMethods : [
             { id: "mpesa", name: "M-Pesa", details: "Pay via M-Pesa mobile money" },
             { id: "cod", name: "Cash on Delivery", details: "Pay when you receive the item" },
             { id: "bank", name: "Bank Transfer", details: "Direct bank transfer" }
-          ]).map((option) => (
+          ]) as Array<{ id: string; name: string; details: string }>).map((option: { id: string; name: string; details: string }) => (
             <div 
               key={option.id}
               onClick={() => setPaymentMethod(option.id)}
@@ -867,7 +867,7 @@ function OrderPageContent() {
                 {paymentMethod === "mpesa" ? "M-Pesa Payment Instructions" : "Bank Transfer Details"}
               </div>
               <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap", marginBottom: 16 }}>
-                {product?.paymentMethods?.find(p => p.id === paymentMethod)?.details || 
+                {businessSettings?.paymentMethods?.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || 
                  (paymentMethod === "mpesa" ? "Enter your M-Pesa number and follow prompts" : "Bank: Example Bank\nAccount: 1234567890")}
               </div>
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>
