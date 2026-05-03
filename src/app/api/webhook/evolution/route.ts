@@ -617,6 +617,7 @@ async function handleProductBrowseInput(
               categoryId: selectedCategory.id,
               categoryName: selectedCategory.name,
               categoryBrands: selectedCategory.brands || [],
+              categorySubcategories: selectedCategory.subcategories || [],
             },
             lastActivity: new Date().toISOString(),
           }
@@ -932,8 +933,13 @@ async function showNextProductPage(
     .doc(phone)
     .set({
       flowState: {
-        ...selections,
-        currentPage: currentPage + 1,
+        isActive: true,
+        flowName: 'product_browse',
+        currentStep: 'product_pagination',
+        selections: {
+          ...selections,
+          currentPage: currentPage + 1,
+        },
         lastActivity: new Date().toISOString(),
       }
     }, { merge: true });
