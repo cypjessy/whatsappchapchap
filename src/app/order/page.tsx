@@ -166,6 +166,13 @@ function OrderPageContent() {
         const pm = profileData?.paymentMethods;
         
         console.log('📊 Order Page - Payment Methods Object (pm):', pm);
+        console.log('📊 Order Page - M-Pesa full structure:', JSON.stringify(pm?.mpesa, null, 2));
+        console.log(' Order Page - M-Pesa enabled:', pm?.mpesa?.enabled);
+        console.log(' Order Page - Buy Goods:', pm?.mpesa?.buyGoods);
+        console.log('📊 Order Page - Buy Goods enabled:', pm?.mpesa?.buyGoods?.enabled);
+        console.log('📊 Order Page - Buy Goods tillNumber:', pm?.mpesa?.buyGoods?.tillNumber);
+        console.log('📊 Order Page - Paybill:', pm?.mpesa?.paybill);
+        console.log('📊 Order Page - Personal:', pm?.mpesa?.personal);
         
         if (pm?.mpesa?.enabled) {
           console.log('📊 Order Page - M-Pesa enabled');
