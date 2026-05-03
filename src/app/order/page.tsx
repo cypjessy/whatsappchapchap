@@ -179,18 +179,18 @@ function OrderPageContent() {
           // Build M-Pesa details from all three payment types
           const mpesaDetails: string[] = [];
           
-          if (pm.mpesa.buyGoods?.enabled && pm.mpesa.buyGoods.tillNumber) {
-            console.log('📊 Order Page - Buy Goods enabled:', pm.mpesa.buyGoods);
+          if (pm.mpesa.buyGoods?.tillNumber) {
+            console.log(' Order Page - Buy Goods has tillNumber:', pm.mpesa.buyGoods.tillNumber);
             mpesaDetails.push(`Buy Goods: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`);
           }
           
-          if (pm.mpesa.paybill?.enabled && pm.mpesa.paybill.paybillNumber) {
-            console.log('📊 Order Page - Paybill enabled:', pm.mpesa.paybill);
+          if (pm.mpesa.paybill?.paybillNumber) {
+            console.log('📊 Order Page - Paybill has paybillNumber:', pm.mpesa.paybill.paybillNumber);
             mpesaDetails.push(`Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`);
           }
           
-          if (pm.mpesa.personal?.enabled && pm.mpesa.personal.phoneNumber) {
-            console.log('📊 Order Page - Personal enabled:', pm.mpesa.personal);
+          if (pm.mpesa.personal?.phoneNumber) {
+            console.log(' Order Page - Personal has phoneNumber:', pm.mpesa.personal.phoneNumber);
             mpesaDetails.push(`Send Money: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`);
           }
           
