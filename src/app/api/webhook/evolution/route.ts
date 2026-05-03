@@ -377,7 +377,344 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   }
 }
 
-// Check if message is a greeting
+// Send welcome menu with numbered options
+async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
+  const businessName = await getTenantBusinessName(tenantId);
+  const menuMsg = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?\n\n1️ Browse Products\n2️ Browse Services\n3️ Check Order Status\n4️ Payment Info\n5️ Talk to Support\n\n*Reply with a number (1-5)*`;
+  
+  await sendEvolutionMessage(tenantId, phone, menuMsg);
+  
+  // Save to database
+  const adminDb = getAdminDb();
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .collection("messages")
+    .doc(`ai_${Date.now()}`)
+    .set({
+      text: menuMsg,
+      from: tenantId,
+      fromMe: true,
+      sender: "business",
+      timestamp: new Date(),
+      status: "sent",
+      createdAt: new Date(),
+      isAI: false,
+    });
+    
+  // Set flow state to waiting for main menu selection
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'main_menu',
+        currentStep: 'waiting_for_selection',
+        selections: {},
+        startedAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
+}
+
+// Parse menu selection (numbers 1-5)
+function parseMenuSelection(message: string): number | null {
+  const trimmed = message.trim();
+  
+  // Check if it's a number
+  const num = parseInt(trimmed);
+  if (!isNaN(num) && num >= 1 && num <= 5) {
+    return num;
+  }
+  
+  // Check for keywords
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('product') || lower.includes('browse')) return 1;
+  if (lower.includes('service')) return 2;
+  if (lower.includes('order') || lower.includes('track')) return 3;
+  if (lower.includes('payment') || lower.includes('pay')) return 4;
+  if (lower.includes('support') || lower.includes('help')) return 5;
+  
+  return null;
+}
+
+// Handle main menu selection
+async function handleMenuSelection(tenantId: string, phone: string, selection: number): Promise<void> {
+  const adminDb = getAdminDb();
+  
+  switch (selection) {
+    case 1: // Browse Products
+      console.log("[Webhook] Starting product browse flow");
+      await startProductBrowseFlow(tenantId, phone);
+      break;
+      
+    case 2: // Browse Services
+      console.log("[Webhook] Starting service browse flow");
+      await startServiceBrowseFlow(tenantId, phone);
+      break;
+      
+    case 3: // Check Order
+      console.log("[Webhook] Order status requested");
+      await sendOrderStatusInfo(tenantId, phone);
+      break;
+      
+    case 4: // Payment Info
+      console.log("[Webhook] Payment info requested");
+      await sendPaymentInfo(tenantId, phone);
+      break;
+      
+    case 5: // Support
+      console.log("[Webhook] Support requested");
+      await sendSupportInfo(tenantId, phone);
+      break;
+  }
+}
+
+// Start product browse flow
+async function startProductBrowseFlow(tenantId: string, phone: string): Promise<void> {
+  const adminDb = getAdminDb();
+  
+  // Fetch categories
+  const categoriesSnap = await adminDb
+    .collection("productCategories")
+    .where("tenantId", "==", tenantId)
+    .get();
+  
+  if (categoriesSnap.empty) {
+    await sendEvolutionMessage(tenantId, phone, " We don't have any products listed yet. Please check back soon!");
+    return;
+  }
+  
+  const categories = categoriesSnap.docs.map((doc: any) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name || doc.id,
+      subcategories: data.subcategories || [],
+      brands: data.brands || [],
+      productCount: data.productCount || 0,
+    };
+  });
+  
+  // Format category menu
+  const categoryList = categories
+    .map((cat, idx) => `${idx + 1}️ ${cat.name} (${cat.productCount} products)`)
+    .join('\n');
+  
+  const response = `️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n0️⃣ Back to main menu`;
+  
+  await sendEvolutionMessage(tenantId, phone, response);
+  
+  // Update flow state
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'product_browse',
+        currentStep: 'category_selection',
+        selections: {
+          categories: categories,
+        },
+        startedAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
+}
+
+// Handle flow input based on current flow state
+async function handleFlowInput(
+  tenantId: string,
+  phone: string,
+  message: string,
+  flowState: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  const { flowName, currentStep, selections } = flowState;
+  
+  // Check for back option
+  if (message.trim() === '0') {
+    if (flowName === 'product_browse') {
+      if (currentStep === 'category_selection') {
+        // Back to main menu
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      } else {
+        // Back to categories
+        await startProductBrowseFlow(tenantId, phone);
+        return;
+      }
+    }
+  }
+  
+  // Handle product browse flow
+  if (flowName === 'product_browse') {
+    await handleProductBrowseInput(tenantId, phone, message, flowState);
+    return;
+  }
+  
+  // Handle service browse flow
+  if (flowName === 'service_browse') {
+    // TODO: Implement service browse flow
+    await sendEvolutionMessage(tenantId, phone, "Service browsing coming soon!");
+    return;
+  }
+}
+
+// Handle product browse flow input
+async function handleProductBrowseInput(
+  tenantId: string,
+  phone: string,
+  message: string,
+  flowState: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  const { currentStep, selections } = flowState;
+  
+  // Step 1: Category selection
+  if (currentStep === 'category_selection') {
+    const num = parseInt(message.trim());
+    const categories = selections.categories;
+    
+    if (isNaN(num) || num < 1 || num > categories.length) {
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+      return;
+    }
+    
+    const selectedCategory = categories[num - 1];
+    
+    // Check if category has subcategories
+    if (selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
+      // Show subcategories
+      const subcategoryList = selectedCategory.subcategories
+        .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
+        .join('\n');
+      
+      const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️ Back to categories`;
+      await sendEvolutionMessage(tenantId, phone, response);
+      
+      // Update flow state
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            isActive: true,
+            flowName: 'product_browse',
+            currentStep: 'subcategory_selection',
+            selections: {
+              ...selections,
+              categoryId: selectedCategory.id,
+              categoryName: selectedCategory.name,
+              categoryBrands: selectedCategory.brands || [],
+            },
+            lastActivity: new Date().toISOString(),
+          }
+        }, { merge: true });
+    } else {
+      // No subcategories, check for brands or show products
+      await handleBrandOrProductSelection(tenantId, phone, selectedCategory);
+    }
+  }
+  
+  // Step 2: Subcategory selection
+  else if (currentStep === 'subcategory_selection') {
+    const num = parseInt(message.trim());
+    const categoryBrands = selections.categoryBrands;
+    
+    // TODO: Fetch subcategories and validate selection
+    // For now, proceed to brands/products
+    await sendEvolutionMessage(tenantId, phone, "⏳ Loading products... Please wait.");
+    
+    // Update flow state
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          ...flowState,
+          currentStep: 'brand_or_product',
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  }
+}
+
+// Handle brand or product selection
+async function handleBrandOrProductSelection(
+  tenantId: string,
+  phone: string,
+  category: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  
+  // Filter valid brands
+  const brands = (category.brands || []).filter((b: string) => 
+    b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown'
+  );
+  
+  if (brands.length > 0) {
+    // Show brands
+    const brandList = brands
+      .map((brand: string, idx: number) => `${idx + 1}️ ${brand}`)
+      .join('\n');
+    
+    const response = `🏷️ *${category.name}* - Brands\n\n${brandList}\n\n0️⃣ Back to categories`;
+    await sendEvolutionMessage(tenantId, phone, response);
+    
+    // Update flow state
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          isActive: true,
+          flowName: 'product_browse',
+          currentStep: 'brand_selection',
+          selections: {
+            categoryId: category.id,
+            categoryName: category.name,
+          },
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  } else {
+    // No brands, show products directly
+    await sendEvolutionMessage(tenantId, phone, "⏳ Loading products... Please wait.");
+    // TODO: Fetch and display products
+  }
+}
+
+// Placeholder functions for other menu options
+async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<void> {
+  await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
+}
+
+async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
+  await sendEvolutionMessage(tenantId, phone, "📦 To check your order status, please provide your order ID or tracking number.");
+}
+
+async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
+  await sendEvolutionMessage(tenantId, phone, "💳 We accept:\n\n• M-Pesa\n• Bank Transfer\n• Cash on Delivery\n\nWhich payment method would you like to use?");
+}
+
+async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
+  await sendEvolutionMessage(tenantId, phone, " Our support team is here to help! Please describe your issue and we'll assist you.");
+}
 function checkIfGreeting(message: string): boolean {
   const greetings = [
     'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
@@ -637,46 +974,32 @@ async function processWithAI(
     console.log("[Webhook] Processing message with AI...");
     console.log("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
     
-    // STEP 1: Check for greeting - HARDcoded response
+    // STEP 1: Check for greeting - Send welcome menu with numbered options
     const isGreeting = checkIfGreeting(message);
     if (isGreeting) {
-      console.log("[Webhook] Greeting detected, sending hardcoded welcome");
-      const businessName = await getTenantBusinessName(tenantId);
-      const welcomeMsg = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today? \n\n• Browse products\n• Ask about services\n• Check order status\n• Payment info`;
-      await sendEvolutionMessage(tenantId, phone, welcomeMsg);
-      
-      // Save to database
-      const adminDb = getAdminDb();
-      await adminDb
-        .collection("tenants")
-        .doc(tenantId)
-        .collection("conversations")
-        .doc(phone)
-        .collection("messages")
-        .doc(`ai_${Date.now()}`)
-        .set({
-          text: welcomeMsg,
-          from: tenantId,
-          fromMe: true,
-          sender: "business",
-          timestamp: new Date(),
-          status: "sent",
-          createdAt: new Date(),
-          isAI: false,
-        });
+      console.log("[Webhook] Greeting detected, sending welcome menu");
+      await sendWelcomeMenu(tenantId, phone);
       return;
     }
     
-    // STEP 2: Check for product browsing flow - HARDcoded flow control
-    const productBrowseIntent = detectProductBrowseIntent(message);
-    if (productBrowseIntent) {
-      console.log("[Webhook] Product browse intent detected:", productBrowseIntent);
-      await handleProductBrowseFlow(tenantId, phone, message, productBrowseIntent);
+    // STEP 2: Check if customer is in active flow
+    const currentFlowState = await getFlowState(tenantId, phone);
+    if (currentFlowState && currentFlowState.isActive) {
+      console.log("[Webhook] Customer in active flow:", currentFlowState.flowName);
+      await handleFlowInput(tenantId, phone, message, currentFlowState);
       return;
     }
     
-    // STEP 3: For other intents, use AI with flow context
-    console.log("[Webhook] Using AI for general query...");
+    // STEP 3: Check for menu selection (numbers)
+    const menuSelection = parseMenuSelection(message);
+    if (menuSelection !== null) {
+      console.log("[Webhook] Menu selection detected:", menuSelection);
+      await handleMenuSelection(tenantId, phone, menuSelection);
+      return;
+    }
+    
+    // STEP 4: For other queries, use AI (only for natural language questions)
+    console.log("[Webhook] Using AI for natural language query...");
     
     // Get business context (products, services, shipping, payments, policies)
     console.log("[Webhook] Fetching business context for tenant:", tenantId);
