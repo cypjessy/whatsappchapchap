@@ -493,7 +493,8 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
   const categories = categoriesSnap.docs.map((doc: any) => {
     const data = doc.data();
     return {
-      id: doc.id,
+      id: doc.id,                          // Firestore auto-ID (for doc references)
+      categorySlug: data.id || doc.id,     // The "clothing" slug stored in data.id
       name: data.name || doc.id,
       subcategories: data.subcategories || [],
       brands: data.brands || [],
@@ -614,7 +615,8 @@ async function handleProductBrowseInput(
             currentStep: 'subcategory_selection',
             selections: {
               ...selections,
-              categoryId: selectedCategory.id,
+              categoryId: selectedCategory.id,           // Firestore doc ID
+              categorySlug: selectedCategory.categorySlug, // The "clothing" slug
               categoryName: selectedCategory.name,
               categoryBrands: selectedCategory.brands || [],
               categorySubcategories: selectedCategory.subcategories || [],
@@ -757,7 +759,8 @@ async function showProductsForSelection(
   let query = adminDb.collection('products').where('tenantId', '==', tenantId);
   
   if (selections.categoryId) {
-    query = query.where('categoryId', '==', selections.categoryId);
+    // Query by the slug (e.g., "clothing") not the Firestore doc ID
+    query = query.where('categoryId', '==', selections.categorySlug || selections.categoryId);
   }
   
   // Fetch all matching products
