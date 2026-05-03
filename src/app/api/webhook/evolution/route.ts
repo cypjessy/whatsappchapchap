@@ -792,32 +792,80 @@ async function showProductsForSelection(
   let message = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.brand ? ' → ' + selections.brand : ''}*\n\n`;
   message += `Showing ${productsToShow.length} of ${totalProducts} products:\n\n`;
   
+  // Send product images first
+  for (const product of productsToShow) {
+    const imageUrl = product.images?.[0] || product.imageUrl || product.image;
+    if (imageUrl) {
+      await sendEvolutionMedia(tenantId, phone, imageUrl, `*${product.name}*`);
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
+  }
+
   productsToShow.forEach((product: any, idx: number) => {
     message += `*${idx + 1}. ${product.name}*\n`;
-    message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}`;
+
+    // Price (with sale price support)
     if (product.salePrice) {
-      message += ` (Sale: KES ${product.salePrice.toLocaleString()})`;
+      message += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
+    } else {
+      message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
     }
-    message += `\n`;
-    
+
+    // Stock status
     if (product.stock !== undefined) {
-      message += `   📦 Stock: ${product.stock}\n`;
+      const stockLabel = product.stock === 0
+        ? '❌ Out of stock'
+        : product.stock <= 5
+          ? `⚠️ Only ${product.stock} left`
+          : `✅ In stock (${product.stock})`;
+      message += `    ${stockLabel}\n`;
     }
+
+    // Description
+    if (product.description) {
+      message += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
+    }
+
+    // Colors
     if (product.colors && product.colors.length > 0) {
       message += `   🎨 Colors: ${product.colors.join(', ')}\n`;
     }
+
+    // Sizes
     if (product.sizes && product.sizes.length > 0) {
-      message += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
+      message += `    Sizes: ${product.sizes.join(', ')}\n`;
     }
+
+    // Brand
     if (product.brand) {
-      message += `   ️ Brand: ${product.brand}\n`;
+      message += `   🏷️ Brand: ${product.brand}\n`;
     }
-    if (product.description) {
-      message += `   📝 ${product.description.substring(0, 80)}${product.description.length > 80 ? '...' : ''}\n`;
+
+    // Condition
+    if (product.condition) {
+      message += `   ✨ Condition: ${product.condition}\n`;
     }
+
+    // Warranty
+    if (product.warranty) {
+      message += `    Warranty: ${product.warranty}\n`;
+    }
+
+    // Variants
+    if (product.variants && product.variants.length > 0) {
+      message += `    Variants: ${product.variants.length} options available\n`;
+    }
+
+    // Payment methods
+    if (product.paymentMethods && product.paymentMethods.length > 0) {
+      message += `    Pay via: ${product.paymentMethods.map((m: any) => m.name).join(', ')}\n`;
+    }
+
+    // Order link
     if (product.orderLink) {
-      message += `   🛒 Order: ${product.orderLink}\n`;
+      message += `   🛒 *Order here:* ${product.orderLink}\n`;
     }
+
     message += `\n`;
   });
   
@@ -891,29 +939,80 @@ async function showNextProductPage(
   
   let message = `🛍️ *More Products* (Page ${currentPage + 2})\n\n`;
   
+  // Send product images first
+  for (const product of productsToShow) {
+    const imageUrl = product.images?.[0] || product.imageUrl || product.image;
+    if (imageUrl) {
+      await sendEvolutionMedia(tenantId, phone, imageUrl, `*${product.name}*`);
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
+  }
+
   productsToShow.forEach((product: any, idx: number) => {
     message += `*${idx + 1}. ${product.name}*\n`;
-    message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}`;
+
+    // Price (with sale price support)
     if (product.salePrice) {
-      message += ` (Sale: KES ${product.salePrice.toLocaleString()})`;
+      message += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
+    } else {
+      message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
     }
-    message += `\n`;
-    
+
+    // Stock status
     if (product.stock !== undefined) {
-      message += `   📦 Stock: ${product.stock}\n`;
+      const stockLabel = product.stock === 0
+        ? '❌ Out of stock'
+        : product.stock <= 5
+          ? `⚠️ Only ${product.stock} left`
+          : `✅ In stock (${product.stock})`;
+      message += `    ${stockLabel}\n`;
     }
+
+    // Description
+    if (product.description) {
+      message += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
+    }
+
+    // Colors
     if (product.colors && product.colors.length > 0) {
       message += `   🎨 Colors: ${product.colors.join(', ')}\n`;
     }
+
+    // Sizes
     if (product.sizes && product.sizes.length > 0) {
       message += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
     }
+
+    // Brand
     if (product.brand) {
-      message += `   ️ Brand: ${product.brand}\n`;
+      message += `   🏷️ Brand: ${product.brand}\n`;
     }
+
+    // Condition
+    if (product.condition) {
+      message += `   ✨ Condition: ${product.condition}\n`;
+    }
+
+    // Warranty
+    if (product.warranty) {
+      message += `   🛡️ Warranty: ${product.warranty}\n`;
+    }
+
+    // Variants
+    if (product.variants && product.variants.length > 0) {
+      message += `   🔀 Variants: ${product.variants.length} options available\n`;
+    }
+
+    // Payment methods
+    if (product.paymentMethods && product.paymentMethods.length > 0) {
+      message += `   💳 Pay via: ${product.paymentMethods.map((m: any) => m.name).join(', ')}\n`;
+    }
+
+    // Order link
     if (product.orderLink) {
-      message += `   🛒 Order: ${product.orderLink}\n`;
+      message += `   🛒 *Order here:* ${product.orderLink}\n`;
     }
+
     message += `\n`;
   });
   
