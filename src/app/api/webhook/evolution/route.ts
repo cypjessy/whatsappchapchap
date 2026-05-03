@@ -507,7 +507,7 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
     .map((cat, idx) => `${idx + 1}️ ${cat.name} (${cat.productCount} products)`)
     .join('\n');
   
-  const response = `️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n0️⃣ Back to main menu`;
+  const response = `🛍️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n2️ - Back to main menu`;
   
   await sendEvolutionMessage(tenantId, phone, response);
   
@@ -554,6 +554,12 @@ async function handleFlowInput(
         return;
       }
     }
+  }
+  
+  // Check for main menu option
+  if (message.trim() === '3') {
+    await sendWelcomeMenu(tenantId, phone);
+    return;
   }
   
   // Check for main menu option
@@ -605,7 +611,7 @@ async function handleProductBrowseInput(
         .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
         .join('\n');
       
-      const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories\n• *menu* - Main menu`;
+      const response = ` *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
       
       // Update flow state
@@ -660,7 +666,7 @@ async function handleProductBrowseInput(
         .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
         .join('\n');
         
-      const response = `🏷️ *${selectedSubcategory}* - Brands\n\n${brandList}\n\n0️ Back to subcategories`;
+      const response = ` *${selectedSubcategory}* - Brands\n\n${brandList}\n\n2️ - Back to subcategories\n3️ - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
         
       // Update flow state
@@ -711,44 +717,37 @@ async function handleProductBrowseInput(
   // Step 4: Product pagination
   else if (currentStep === 'product_pagination') {
     const trimmed = message.trim().toLowerCase();
-      
-    if (trimmed === 'next' || trimmed === 'more' || trimmed === 'show more') {
-      // Show next page of products
+    const num = message.trim();
+
+    if (trimmed === 'next' || trimmed === 'more' || num === '1') {
       await showNextProductPage(tenantId, phone, selections);
-    } else if (trimmed === 'back' || trimmed === '0') {
-      // Go back to brands or subcategories
+    } else if (trimmed === 'back' || num === '2') {
       if (selections.brand) {
-        // Was showing products for a brand, go back to brand selection
         await handleBrandOrProductSelection(tenantId, phone, {
           id: selections.categoryId,
+          categorySlug: selections.categorySlug,
           name: selections.categoryName,
           brands: selections.categoryBrands || [],
           subcategories: selections.categorySubcategories || [],
         });
       } else if (selections.subcategory) {
-        // Go back to subcategory selection
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
-          
-        const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories\n• *menu* - Main menu`;
+        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
-          
-        await adminDb
-          .collection("tenants")
-          .doc(tenantId)
-          .collection("conversations")
-          .doc(phone)
-          .set({
-            flowState: {
-              ...flowState,
-              currentStep: 'subcategory_selection',
-              lastActivity: new Date().toISOString(),
-            }
-          }, { merge: true });
+        await adminDb.collection("tenants").doc(tenantId)
+          .collection("conversations").doc(phone)
+          .set({ flowState: { ...flowState, currentStep: 'subcategory_selection', lastActivity: new Date().toISOString() } }, { merge: true });
+      } else {
+        await startProductBrowseFlow(tenantId, phone);
       }
+    } else if (trimmed === 'menu' || num === '3') {
+      await sendWelcomeMenu(tenantId, phone);
     } else {
-      await sendEvolutionMessage(tenantId, phone, "Type *next* to see more products, or *0* to go back.");
+      await sendEvolutionMessage(tenantId, phone, 
+        "*Reply with a number:*\n1️⃣ - Next page\n2️⃣ - Go back\n3️ - Main menu"
+      );
     }
   }
 }
@@ -914,9 +913,9 @@ async function showProductsForSelection(
   // Reply instructions
   let replyMessage = '';
   if (totalProducts > 5) {
-    replyMessage = `\n*Reply:*\n• *next* - See more products (${totalProducts - 5} remaining)\n• *0* - Go back\n• *menu* - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - Main menu`;
   } else {
-    replyMessage = `\n*Reply:*\n• *0* - Go back\n• *menu* - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - Main menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1093,9 +1092,9 @@ async function showNextProductPage(
   const remaining = allProductIds.length - endIndex;
   let replyMessage = '';
   if (remaining > 0) {
-    replyMessage = `\n*Reply:*\n• *next* - See more products (${remaining} remaining)\n• *0* - Go back\n• *menu* - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${remaining} more)\n2️⃣ - Go back\n3️⃣ - Main menu`;
   } else {
-    replyMessage = `\n*Reply:*\n• *0* - Go back\n• *menu* - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - Main menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
