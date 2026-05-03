@@ -388,9 +388,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const [imagePreview, setImagePreview] = useState<string>("");
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [loadingSettings, setLoadingSettings] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customInputKey, setCustomInputKey] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
@@ -402,7 +399,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   useEffect(() => {
     if (isOpen) {
       resetForm();
-      loadBusinessSettings();
       loadCategoriesFromDB();
     }
   }, [isOpen]);
@@ -418,87 +414,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       setCategoriesFromDB([]);
     } finally {
       setLoadingCategories(false);
-    }
-  };
-
-  const loadBusinessSettings = async () => {
-    if (!user) return;
-    
-    setLoadingSettings(true);
-    try {
-      const settings = await getAllBusinessSettings(user);
-      
-      // Convert shipping methods from database to form format
-      const shippingMethodsData = settings.shippingMethods.map(method => ({
-        id: method.id,
-        name: method.name,
-        price: method.price.toString(),
-        enabled: true, // All fetched methods are enabled by default
-      }));
-      
-      // Convert payment methods from business profile to form format
-      const paymentMethodsData: PaymentMethod[] = [];
-      const pm = settings.paymentMethods;
-      
-      if (pm?.mpesa?.enabled) {
-        // Build M-Pesa details from all three payment types
-        const mpesaDetails: string[] = [];
-        
-        if (pm.mpesa.buyGoods?.enabled && pm.mpesa.buyGoods.tillNumber) {
-          mpesaDetails.push(`Buy Goods: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`);
-        }
-        
-        if (pm.mpesa.paybill?.enabled && pm.mpesa.paybill.paybillNumber) {
-          mpesaDetails.push(`Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`);
-        }
-        
-        if (pm.mpesa.personal?.enabled && pm.mpesa.personal.phoneNumber) {
-          mpesaDetails.push(`Send Money: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`);
-        }
-        
-        if (mpesaDetails.length > 0) {
-          paymentMethodsData.push({
-            id: "mpesa",
-            name: "M-Pesa",
-            details: mpesaDetails.join('\n'),
-            enabled: true,
-          });
-        }
-      }
-      
-      if (pm?.bank?.enabled) {
-        paymentMethodsData.push({
-          id: "bank",
-          name: "Bank Transfer",
-          details: `${pm.bank.bankName || ''}\nAccount: ${pm.bank.accountNumber || ''}${pm.bank.branch ? `\nBranch: ${pm.bank.branch}` : ''}`,
-          enabled: true,
-        });
-      }
-      
-      if (pm?.card?.enabled) {
-        paymentMethodsData.push({
-          id: "card",
-          name: "Card Payment",
-          details: pm.card.instructions || "Pay with credit/debit card",
-          enabled: true,
-        });
-      }
-      
-      if (pm?.cash?.enabled) {
-        paymentMethodsData.push({
-          id: "cod",
-          name: "Cash on Delivery",
-          details: pm.cash.instructions || "Pay when you receive",
-          enabled: true,
-        });
-      }
-      
-      setShippingMethods(shippingMethodsData);
-      setPaymentMethods(paymentMethodsData);
-    } catch (error) {
-      console.error("Error loading business settings:", error);
-    } finally {
-      setLoadingSettings(false);
     }
   };
 
@@ -875,24 +790,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         }
       }
 
-      // Filter only enabled shipping methods
-      const enabledShippingMethods = shippingMethods
-        .filter(method => method.enabled)
-        .map(method => ({
-          id: method.id,
-          name: method.name,
-          price: parseFloat(method.price) || 0,
-        }));
-
-      // Filter only enabled payment methods
-      const enabledPaymentMethods = paymentMethods
-        .filter(method => method.enabled)
-        .map(method => ({
-          id: method.id,
-          name: method.name,
-          details: method.details,
-        }));
-
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
@@ -910,8 +807,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         filters: Object.keys(filters).length > 0 ? filters : undefined,
         brand: filters.brand && filters.brand.length > 0 ? filters.brand[0] : undefined,
         condition: filters.condition && filters.condition.length > 0 ? filters.condition[0] : undefined,
-        shippingMethods: enabledShippingMethods.length > 0 ? enabledShippingMethods : undefined,
-        paymentMethods: enabledPaymentMethods.length > 0 ? enabledPaymentMethods : undefined,
         variants: variants.length > 0 ? variants.map((v, index) => ({
           id: `variant_${index + 1}`,
           specs: v.specs,
@@ -1055,94 +950,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     placeholder="5"
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* SECTION 1.6: Shipping Methods */}
-            <div className="mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
-                <i className="fas fa-shipping-fast"></i>
-                Shipping Methods
-              </div>
-              <div className="space-y-4">
-                {shippingMethods.map((method) => (
-                  <div key={method.id} className="flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl">
-                    <input
-                      type="checkbox"
-                      checked={method.enabled}
-                      onChange={(e) => {
-                        const updated = shippingMethods.map(m => 
-                          m.id === method.id ? { ...m, enabled: e.target.checked } : m
-                        );
-                        setShippingMethods(updated);
-                      }}
-                      className="w-5 h-5 text-green-500 rounded focus:ring-green-500"
-                    />
-                    <div className="flex-1">
-                      <div className="font-semibold text-sm">{method.name}</div>
-                      {method.id !== "pickup" && (
-                        <input
-                          type="number"
-                          value={method.price}
-                          onChange={(e) => {
-                            const updated = shippingMethods.map(m =>
-                              m.id === method.id ? { ...m, price: e.target.value } : m
-                            );
-                            setShippingMethods(updated);
-                          }}
-                          disabled={!method.enabled}
-                          className="mt-2 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm w-32"
-                          placeholder="Price (KES)"
-                        />
-                      )}
-                      {method.id === "pickup" && (
-                        <div className="text-xs text-green-500 mt-1">Free - Customer picks up from store</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* SECTION 1.7: Payment Methods */}
-            <div className="mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
-                <i className="fas fa-credit-card"></i>
-                Payment Methods
-              </div>
-              <div className="space-y-4">
-                {paymentMethods.map((method) => (
-                  <div key={method.id} className="p-4 border-2 border-slate-200 rounded-xl">
-                    <div className="flex items-center gap-4 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={method.enabled}
-                        onChange={(e) => {
-                          const updated = paymentMethods.map(m =>
-                            m.id === method.id ? { ...m, enabled: e.target.checked } : m
-                          );
-                          setPaymentMethods(updated);
-                        }}
-                        className="w-5 h-5 text-green-500 rounded focus:ring-green-500"
-                      />
-                      <div className="font-semibold text-sm">{method.name}</div>
-                    </div>
-                    {method.enabled && (
-                      <textarea
-                        value={method.details}
-                        onChange={(e) => {
-                          const updated = paymentMethods.map(m =>
-                            m.id === method.id ? { ...m, details: e.target.value } : m
-                          );
-                          setPaymentMethods(updated);
-                        }}
-                        rows={method.id === "bank" ? 3 : 2}
-                        className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm"
-                        placeholder={method.id === "mpesa" ? "Enter M-Pesa instructions..." : method.id === "bank" ? "Bank: Example Bank\nAccount: 1234567890" : "COD instructions..."}
-                      />
-                    )}
-                  </div>
-                ))}
               </div>
             </div>
 
