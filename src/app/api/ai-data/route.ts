@@ -110,6 +110,20 @@ export async function GET(req: NextRequest) {
     productCount: productsByCategory[cat].length,
   }));
 
+  // Get product category hierarchy from productCategories collection
+  const productCategoriesSnap = await db.collection("productCategories").get();
+  const productCategoryHierarchy = productCategoriesSnap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name || doc.id,
+      description: data.description || "",
+      subcategories: data.subcategories || [],
+      brands: data.brands || [],
+      productCount: productsByCategory[doc.id]?.length || 0,
+    };
+  });
+
   const customersData = customersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const ordersData = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const reviewsData = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -121,6 +135,7 @@ export async function GET(req: NextRequest) {
     products: productsData,
     productsByCategory,
     availableCategories,
+    productCategoryHierarchy,
     customers: customersData,
     orders: ordersData,
     reviews: reviewsData,

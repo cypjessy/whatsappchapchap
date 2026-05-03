@@ -45,6 +45,15 @@ export interface AIContext {
     icon?: string;
     productCount: number;
   }>;
+  // NEW: Product category hierarchy for structured browsing
+  productCategoryHierarchy?: Array<{
+    id: string;
+    name: string;
+    description: string;
+    subcategories: string[];
+    brands: string[];
+    productCount: number;
+  }>;
   services: Array<{
     id: string;
     name: string;
@@ -242,6 +251,13 @@ function buildSystemPrompt(context: AIContext): string {
       ).join('\n')}`
     : '';
 
+  // NEW: Product category hierarchy section
+  const categoryHierarchySection = context.productCategoryHierarchy && context.productCategoryHierarchy.length > 0
+    ? `\n\nPRODUCT CATEGORY HIERARCHY:\n${context.productCategoryHierarchy.map(c => 
+        `- ${c.name} (${c.productCount} products)\n  Subcategories: ${c.subcategories.join(', ')}\n  Brands: ${c.brands.join(', ')}`
+      ).join('\n')}`
+    : '';
+
   return `You are a friendly and helpful AI assistant for ${context.businessName}, a business using WhatsApp for customer service.
 
 YOUR ROLE:
@@ -255,6 +271,37 @@ YOUR ROLE:
 
 PRODUCT BROWSING FLOW (IMPORTANT):
 When customers ask about products or want to see what you have:
+
+OPTION 1 - IF CATEGORY HIERARCHY IS AVAILABLE (PREFERRED):
+1. FIRST: Show them the main categories from PRODUCT CATEGORY HIERARCHY
+2. WHEN THEY CHOOSE A CATEGORY: Show them the subcategories in that category
+3. WHEN THEY CHOOSE A SUBCATEGORY: Show them the available brands
+4. WHEN THEY CHOOSE A BRAND: Show 3-5 products from that brand
+5. FOR EACH PRODUCT, include ALL available details:
+   * Product name
+   * Price (and sale price if on sale)
+   * Stock count
+   * Colors (if available)
+   * Sizes (if available)
+   * Brand (if available)
+   * Condition (if available)
+   * Description (brief)
+   * Available variants with specs, prices, and stock
+   * Payment methods (if product has specific payment options)
+   * Shipping methods (if product has specific shipping options)
+   * Order link
+   - IMPORTANT: Do NOT include image tags or URLs in your response. Images will be sent automatically.
+   - Just describe the products in text with all details.
+   - Tell them "We have X more products. Reply 'show more' to see them"
+6. WHEN THEY ASK FOR MORE:
+   - Send the next 3-5 products with full details
+   - Repeat until all products are shown
+7. Always mention stock status and prices
+8. Ask which product they're interested in after showing products
+9. NEVER skip product details - always show colors, sizes, brand if available
+10. Include payment and shipping info if product has specific options
+
+OPTION 2 - IF ONLY CATEGORIES ARE AVAILABLE (FALLBACK):
 1. FIRST: Show them the PRODUCT CATEGORIES list and ask them to choose one
 2. WHEN THEY CHOOSE A CATEGORY: 
    - Send 3-5 products from that category at a time
@@ -287,7 +334,7 @@ AVAILABLE PRODUCTS:
 ${productsList || "No products currently available"}
 
 AVAILABLE SERVICES:
-${servicesList || "No services currently available"}${shippingSection}${paymentSection}${policiesSection}${businessInfo}
+${servicesList || "No services currently available"}${categoriesSection}${categoryHierarchySection}${shippingSection}${paymentSection}${policiesSection}${businessInfo}
 
 IMPORTANT RULES:
 1. ONLY recommend products/services that are IN STOCK (stock > 0)

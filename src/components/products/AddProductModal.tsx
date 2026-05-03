@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import { getAllBusinessSettings } from "@/lib/business-settings";
+import { getAllProductCategories, getProductCategory } from "@/lib/product-categories";
 
 type StringSet = Set<string>;
 
@@ -61,10 +62,19 @@ interface CategorySubData {
   specs: Record<string, SpecOptions>;
 }
 
+interface CategoryFromDB {
+  id: string;
+  name: string;
+  description: string;
+  subcategories: string[];
+  brands: string[];
+}
+
 interface CategoryData {
   subcategories: Record<string, CategorySubData>;
 }
 
+// Keep existing hardcoded data as fallback
 const categoryData: Record<string, CategoryData> = {
   electronics: {
     subcategories: {
@@ -383,13 +393,32 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customInputKey, setCustomInputKey] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
+  
+  // NEW: State for category hierarchy from database
+  const [categoriesFromDB, setCategoriesFromDB] = useState<CategoryFromDB[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       resetForm();
       loadBusinessSettings();
+      loadCategoriesFromDB();
     }
   }, [isOpen]);
+
+  const loadCategoriesFromDB = async () => {
+    setLoadingCategories(true);
+    try {
+      const categories = await getAllProductCategories();
+      setCategoriesFromDB(categories as any);
+    } catch (error) {
+      console.error("Error loading categories from DB:", error);
+      // Fallback to empty array, will use hardcoded data
+      setCategoriesFromDB([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const loadBusinessSettings = async () => {
     if (!user) return;
@@ -609,6 +638,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedSpecs({});
     setVariants([]);
     setCustomSubcategories({});
+    
+    // Load subcategories from the selected category
+    const categoryFromDB = categoriesFromDB.find(c => c.id === category);
+    if (categoryFromDB && categoryFromDB.subcategories.length > 0) {
+      // Category has subcategories from DB, we'll use those
+      console.log("Loaded subcategories from DB:", categoryFromDB.subcategories);
+    }
   };
 
   const selectSubcategory = (subcategory: string) => {
@@ -844,6 +880,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         description: formData.description || undefined,
         category: selectedCategory,
         categoryName: categoryName,
+        // NEW: Add category hierarchy fields
+        categoryId: selectedCategory,
+        subcategoryId: selectedSubcategory && selectedSubcategory !== selectedCategory ? selectedSubcategory : null,
+        brandId: filters.brand && filters.brand.length > 0 ? filters.brand[0].toLowerCase() : null,
         price: minPrice,
         stock: stock,
         image: imageUrl,
@@ -1090,41 +1130,77 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
               
               {/* Main Categories */}
               <div className="grid grid-cols-4 gap-4 mb-6">
-                {Object.entries(categoryIcons).map(([key, icon]) => (
-                  <button
-                    key={key}
-                    onClick={() => selectCategory(key)}
-                    className={`p-4 border-2 border-slate-200 rounded-xl cursor-pointer text-center transition-all hover:border-green-500 hover:-translate-y-1 hover:shadow-lg ${selectedCategory === key ? "border-green-500 bg-gradient-to-br from-green-100 to-teal-100 shadow-md" : "bg-white"}`}
-                  >
-                    <div className={`text-3xl mb-2 ${selectedCategory === key ? "scale-110" : ""}`}>{icon}</div>
-                    <div className="font-bold text-sm text-slate-700 capitalize">{key}</div>
-                  </button>
-                ))}
+                {loadingCategories ? (
+                  <div className="col-span-4 text-center py-8 text-slate-500">
+                    <i className="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading categories...</p>
+                  </div>
+                ) : categoriesFromDB.length > 0 ? (
+                  // Show categories from database
+                  categoriesFromDB.map((category) => {
+                    const icon = categoryIcons[category.id] || "📦";
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => selectCategory(category.id)}
+                        className={`p-4 border-2 border-slate-200 rounded-xl cursor-pointer text-center transition-all hover:border-green-500 hover:-translate-y-1 hover:shadow-lg ${selectedCategory === category.id ? "border-green-500 bg-gradient-to-br from-green-100 to-teal-100 shadow-md" : "bg-white"}`}
+                      >
+                        <div className={`text-3xl mb-2 ${selectedCategory === category.id ? "scale-110" : ""}`}>{icon}</div>
+                        <div className="font-bold text-sm text-slate-700">{category.name}</div>
+                        {category.subcategories.length > 0 && (
+                          <div className="text-xs text-slate-500 mt-1">{category.subcategories.length} subcategories</div>
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  // Fallback to hardcoded categories
+                  Object.entries(categoryIcons).map(([key, icon]) => (
+                    <button
+                      key={key}
+                      onClick={() => selectCategory(key)}
+                      className={`p-4 border-2 border-slate-200 rounded-xl cursor-pointer text-center transition-all hover:border-green-500 hover:-translate-y-1 hover:shadow-lg ${selectedCategory === key ? "border-green-500 bg-gradient-to-br from-green-100 to-teal-100 shadow-md" : "bg-white"}`}
+                    >
+                      <div className={`text-3xl mb-2 ${selectedCategory === key ? "scale-110" : ""}`}>{icon}</div>
+                      <div className="font-bold text-sm text-slate-700 capitalize">{key}</div>
+                    </button>
+                  ))
+                )}
               </div>
 
               {/* Subcategories */}
-              {selectedCategory && categoryData[selectedCategory] && (
+              {selectedCategory && (
                 <div className="bg-slate-50 rounded-xl p-5 border-2 border-slate-200">
                   <div className="section-title mb-4">Select Subcategory</div>
                   <div className="flex flex-wrap gap-3">
-                    {Object.entries(categoryData[selectedCategory].subcategories).map(([key, value]) => (
-                      <button
-                        key={key}
-                        onClick={() => selectSubcategory(key)}
-                        className={`px-5 py-2.5 border-2 border-slate-200 rounded-full bg-white cursor-pointer font-semibold text-sm transition-all ${selectedSubcategory === key ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-lg" : "hover:border-green-500 hover:text-green-500"}`}
-                      >
-                        {value.name}
-                      </button>
-                    ))}
-                    {Object.entries(customSubcategories).map(([key, value]) => (
-                      <button
-                        key={key}
-                        onClick={() => selectSubcategory(key)}
-                        className={`px-5 py-2.5 border-2 border-slate-200 rounded-full bg-white cursor-pointer font-semibold text-sm transition-all ${selectedSubcategory === key ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-lg" : "hover:border-green-500 hover:text-green-500"}`}
-                      >
-                        {value.name}
-                      </button>
-                    ))}
+                    {(() => {
+                      // Get subcategories from database first
+                      const categoryFromDB = categoriesFromDB.find(c => c.id === selectedCategory);
+                      const dbSubcategories = categoryFromDB?.subcategories || [];
+                      
+                      // Get subcategories from hardcoded data as fallback
+                      const hardcodedSubcategories = categoryData[selectedCategory]?.subcategories || {};
+                      
+                      // Merge both sources
+                      const allSubcategories = new Set([...dbSubcategories, ...Object.keys(hardcodedSubcategories)]);
+                      
+                      return Array.from(allSubcategories).map((key) => {
+                        // Get name from hardcoded data first, then from custom, then use the key
+                        const hardcodedName = hardcodedSubcategories[key]?.name;
+                        const customName = customSubcategories[key]?.name;
+                        const displayName = hardcodedName || customName || key;
+                        
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => selectSubcategory(key)}
+                            className={`px-5 py-2.5 border-2 border-slate-200 rounded-full bg-white cursor-pointer font-semibold text-sm transition-all ${selectedSubcategory === key ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-lg" : "hover:border-green-500 hover:text-green-500"}`}
+                          >
+                            {displayName}
+                          </button>
+                        );
+                      });
+                    })()}
                     <button
                       onClick={() => setShowCustomSubcategory(true)}
                       className="px-5 py-2.5 border-2 border-dashed border-green-500 rounded-full bg-white cursor-pointer font-semibold text-sm text-green-500 hover:bg-green-50 transition-all flex items-center gap-2"

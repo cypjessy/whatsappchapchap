@@ -179,6 +179,8 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
           icon: formData.icon,
           color: formData.color,
           description: formData.description,
+          subcategories: [],
+          brands: [],
         });
         const newCategory: Category = {
           id: newCat.id,

@@ -283,6 +283,12 @@ export interface Product {
   categoryName?: string; // Human-readable category name (e.g., "Dresses", "Smartphones")
   brand?: string;
   condition?: string; // Product condition (new, used, refurbished)
+  
+  // New hybrid structure fields
+  categoryId?: string; // Reference to productCategories collection
+  subcategoryId?: string | null; // Subcategory within the main category
+  brandId?: string | null; // Reference to brand within category
+  
   imageUrl?: string;
   image?: string; // For backward compatibility
   images?: string[]; // Array of product images
@@ -502,11 +508,24 @@ export interface ProductCategory {
   id: string;
   tenantId: string;
   name: string;
+  description?: string;
+  subcategories: string[];
+  brands: string[];
   icon?: string;
   color?: string;
-  description?: string;
   createdAt: any;
   updatedAt: any;
+}
+
+// New hybrid structure category interface (for productCategories collection)
+export interface ProductCategoryHierarchy {
+  id: string;
+  name: string;
+  description: string;
+  subcategories: string[];
+  brands: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TimeSlot {
