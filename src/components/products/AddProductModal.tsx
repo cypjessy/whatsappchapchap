@@ -441,12 +441,29 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const pm = settings.paymentMethods;
       
       if (pm?.mpesa?.enabled) {
-        paymentMethodsData.push({
-          id: "mpesa",
-          name: "M-Pesa",
-          details: `Pay to ${pm.mpesa.phoneNumber || ''}${pm.mpesa.businessName ? ` (${pm.mpesa.businessName})` : ''}`,
-          enabled: true,
-        });
+        // Build M-Pesa details from all three payment types
+        const mpesaDetails: string[] = [];
+        
+        if (pm.mpesa.buyGoods?.enabled && pm.mpesa.buyGoods.tillNumber) {
+          mpesaDetails.push(`Buy Goods: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`);
+        }
+        
+        if (pm.mpesa.paybill?.enabled && pm.mpesa.paybill.paybillNumber) {
+          mpesaDetails.push(`Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`);
+        }
+        
+        if (pm.mpesa.personal?.enabled && pm.mpesa.personal.phoneNumber) {
+          mpesaDetails.push(`Send Money: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`);
+        }
+        
+        if (mpesaDetails.length > 0) {
+          paymentMethodsData.push({
+            id: "mpesa",
+            name: "M-Pesa",
+            details: mpesaDetails.join('\n'),
+            enabled: true,
+          });
+        }
       }
       
       if (pm?.bank?.enabled) {

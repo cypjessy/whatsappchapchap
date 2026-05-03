@@ -76,10 +76,23 @@ export default function SettingsPage() {
   const [paymentMethods, setPaymentMethods] = useState({
     mpesa: {
       enabled: false,
-      phoneNumber: "",
-      businessName: "",
-      paybillNumber: "",
-      accountNumber: "",
+      // Three separate M-Pesa payment types
+      buyGoods: {
+        enabled: false,
+        businessName: "",
+        tillNumber: "",
+      },
+      paybill: {
+        enabled: false,
+        businessName: "",
+        paybillNumber: "",
+        accountNumber: "",
+      },
+      personal: {
+        enabled: false,
+        phoneNumber: "",
+        accountName: "",
+      },
     },
     bank: {
       enabled: false,
@@ -99,6 +112,9 @@ export default function SettingsPage() {
       instructions: "Pay on delivery or at our office",
     },
   });
+
+  // M-Pesa active tab state
+  const [mpesaActiveTab, setMpesaActiveTab] = useState<'buyGoods' | 'paybill' | 'personal'>('buyGoods');
 
   useEffect(() => {
     if (user) {
@@ -142,10 +158,22 @@ export default function SettingsPage() {
           setPaymentMethods({
             mpesa: {
               enabled: profileData.paymentMethods.mpesa?.enabled || false,
-              phoneNumber: profileData.paymentMethods.mpesa?.phoneNumber || "",
-              businessName: profileData.paymentMethods.mpesa?.businessName || "",
-              paybillNumber: profileData.paymentMethods.mpesa?.paybillNumber || "",
-              accountNumber: profileData.paymentMethods.mpesa?.accountNumber || "",
+              buyGoods: {
+                enabled: profileData.paymentMethods.mpesa?.buyGoods?.enabled || false,
+                businessName: profileData.paymentMethods.mpesa?.buyGoods?.businessName || "",
+                tillNumber: profileData.paymentMethods.mpesa?.buyGoods?.tillNumber || "",
+              },
+              paybill: {
+                enabled: profileData.paymentMethods.mpesa?.paybill?.enabled || false,
+                businessName: profileData.paymentMethods.mpesa?.paybill?.businessName || "",
+                paybillNumber: profileData.paymentMethods.mpesa?.paybill?.paybillNumber || "",
+                accountNumber: profileData.paymentMethods.mpesa?.paybill?.accountNumber || "",
+              },
+              personal: {
+                enabled: profileData.paymentMethods.mpesa?.personal?.enabled || false,
+                phoneNumber: profileData.paymentMethods.mpesa?.personal?.phoneNumber || "",
+                accountName: profileData.paymentMethods.mpesa?.personal?.accountName || "",
+              },
             },
             bank: {
               enabled: profileData.paymentMethods.bank?.enabled || false,
@@ -1330,48 +1358,132 @@ export default function SettingsPage() {
               </div>
 
               {paymentMethods.mpesa.enabled && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">M-Pesa Phone Number *</label>
-                    <input
-                      type="text"
-                      value={paymentMethods.mpesa.phoneNumber}
-                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, phoneNumber: e.target.value } }))}
-                      placeholder="254712345678"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
-                    />
-                    <p className="text-xs text-[#64748b] mt-1">Format: 254XXXXXXXXX (no + sign)</p>
+                <div className="mt-4">
+                  {/* M-Pesa Tabs */}
+                  <div className="flex gap-2 mb-4 border-b-2 border-[#e2e8f0]">
+                    <button
+                      onClick={() => setMpesaActiveTab('buyGoods')}
+                      className={`px-4 py-2 font-semibold text-sm rounded-t-lg transition-all ${
+                        mpesaActiveTab === 'buyGoods'
+                          ? 'bg-green-50 text-green-700 border-b-2 border-green-500'
+                          : 'text-[#64748b] hover:text-green-600'
+                      }`}
+                    >
+                       Buy Goods (Till)
+                    </button>
+                    <button
+                      onClick={() => setMpesaActiveTab('paybill')}
+                      className={`px-4 py-2 font-semibold text-sm rounded-t-lg transition-all ${
+                        mpesaActiveTab === 'paybill'
+                          ? 'bg-green-50 text-green-700 border-b-2 border-green-500'
+                          : 'text-[#64748b] hover:text-green-600'
+                      }`}
+                    >
+                      🏦 Paybill
+                    </button>
+                    <button
+                      onClick={() => setMpesaActiveTab('personal')}
+                      className={`px-4 py-2 font-semibold text-sm rounded-t-lg transition-all ${
+                        mpesaActiveTab === 'personal'
+                          ? 'bg-green-50 text-green-700 border-b-2 border-green-500'
+                          : 'text-[#64748b] hover:text-green-600'
+                      }`}
+                    >
+                       Personal
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Business Name *</label>
-                    <input
-                      type="text"
-                      value={paymentMethods.mpesa.businessName}
-                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, businessName: e.target.value } }))}
-                      placeholder="Your Business Name"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Paybill Number (Optional)</label>
-                    <input
-                      type="text"
-                      value={paymentMethods.mpesa.paybillNumber}
-                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybillNumber: e.target.value } }))}
-                      placeholder="123456"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Number (Optional)</label>
-                    <input
-                      type="text"
-                      value={paymentMethods.mpesa.accountNumber}
-                      onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, accountNumber: e.target.value } }))}
-                      placeholder="ACCOUNT123"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
-                    />
-                  </div>
+
+                  {/* Buy Goods Tab */}
+                  {mpesaActiveTab === 'buyGoods' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Business Name *</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.buyGoods.businessName}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, buyGoods: { ...prev.mpesa.buyGoods, businessName: e.target.value } } }))}
+                          placeholder="Your Business Name"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Till Number *</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.buyGoods.tillNumber}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, buyGoods: { ...prev.mpesa.buyGoods, tillNumber: e.target.value } } }))}
+                          placeholder="123456"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                        <p className="text-xs text-[#64748b] mt-1">Lipa Na M-Pesa Till Number</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Paybill Tab */}
+                  {mpesaActiveTab === 'paybill' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Business Name *</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.paybill.businessName}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybill: { ...prev.mpesa.paybill, businessName: e.target.value } } }))}
+                          placeholder="Your Business Name"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Paybill Number *</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.paybill.paybillNumber}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybill: { ...prev.mpesa.paybill, paybillNumber: e.target.value } } }))}
+                          placeholder="123456"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Number (Optional)</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.paybill.accountNumber}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybill: { ...prev.mpesa.paybill, accountNumber: e.target.value } } }))}
+                          placeholder="ACCOUNT123 or Phone Number"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                        <p className="text-xs text-[#64748b] mt-1">Customers will use this as the account number when paying</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Personal Tab */}
+                  {mpesaActiveTab === 'personal' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">M-Pesa Phone Number *</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.personal.phoneNumber}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, personal: { ...prev.mpesa.personal, phoneNumber: e.target.value } } }))}
+                          placeholder="254712345678"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                        <p className="text-xs text-[#64748b] mt-1">Format: 254XXXXXXXXX (no + sign)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Name *</label>
+                        <input
+                          type="text"
+                          value={paymentMethods.mpesa.personal.accountName}
+                          onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, personal: { ...prev.mpesa.personal, accountName: e.target.value } } }))}
+                          placeholder="John Doe"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                        />
+                        <p className="text-xs text-[#64748b] mt-1">Name registered with this M-Pesa number</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

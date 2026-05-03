@@ -72,10 +72,23 @@ export interface BusinessProfile {
   paymentMethods?: {
     mpesa?: {
       enabled: boolean;
-      phoneNumber?: string; // e.g., "254712345678"
-      businessName?: string; // e.g., "Your Business Name"
-      paybillNumber?: string; // Optional for Paybill
-      accountNumber?: string; // Optional for Paybill account
+      // Three separate M-Pesa payment types
+      buyGoods?: {
+        enabled: boolean;
+        businessName?: string;
+        tillNumber?: string;
+      };
+      paybill?: {
+        enabled: boolean;
+        businessName?: string;
+        paybillNumber?: string;
+        accountNumber?: string;
+      };
+      personal?: {
+        enabled: boolean;
+        phoneNumber?: string;
+        accountName?: string;
+      };
     };
     bank?: {
       enabled: boolean;

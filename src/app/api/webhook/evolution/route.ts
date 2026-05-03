@@ -498,13 +498,27 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
       brands: [],
-      productCount: 0,
+      productCount: 0, // Will be calculated below
     };
+  });
+  
+  // Count products for each category
+  const productsSnap = await adminDb
+    .collection('products')
+    .where('tenantId', '==', tenantId)
+    .get();
+  
+  const products = productsSnap.docs.map((doc: any) => doc.data());
+  
+  categories.forEach((category) => {
+    category.productCount = products.filter(
+      (p: any) => p.categoryId === category.categorySlug || p.category === category.categorySlug
+    ).length;
   });
   
   // Format category menu
   const categoryList = categories
-    .map((cat, idx) => `${idx + 1}️ ${cat.name} (${cat.productCount} products)`)
+    .map((cat, idx) => `${idx + 1}️⃣ ${cat.name} (${cat.productCount} products)`)
     .join('\n');
   
   const response = `🛍️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n2️ - Back to main menu`;
@@ -913,9 +927,9 @@ async function showProductsForSelection(
   // Reply instructions
   let replyMessage = '';
   if (totalProducts > 5) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${totalProducts - 5} more)\n2️⃣ - Go back\n3️ - Main menu`;
   } else {
-    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️ - Main menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1092,9 +1106,9 @@ async function showNextProductPage(
   const remaining = allProductIds.length - endIndex;
   let replyMessage = '';
   if (remaining > 0) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${remaining} more)\n2️⃣ - Go back\n3️⃣ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${remaining} more)\n2️⃣ - Go back\n3️ - Main menu`;
   } else {
-    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n2️ - Go back\n3️ - Main menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1135,10 +1149,10 @@ async function handleBrandOrProductSelection(
   if (brands.length > 0) {
     // Show brands
     const brandList = brands
-      .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
+      .map((brand: string, idx: number) => `${idx + 1}. ${brand}`)
       .join('\n');
     
-    const response = `🏷️ *${category.name}* - Brands\n\n${brandList}\n\n0️⃣ Back to categories`;
+    const response = `🏷️ *${category.name}* - Brands\n\n${brandList}\n\n0 Back to categories`;
     await sendEvolutionMessage(tenantId, phone, response);
     
     // Update flow state
