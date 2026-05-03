@@ -138,6 +138,13 @@ function OrderPageContent() {
         const profileRef = doc(db, "businessProfiles", tenantId);
         const profileSnap = await getDoc(profileRef);
         
+        console.log('📊 Order Page - Tenant ID:', tenantId);
+        console.log('📊 Order Page - Business Profile exists:', profileSnap.exists());
+        if (profileSnap.exists()) {
+          console.log(' Order Page - Profile Data:', profileSnap.data());
+          console.log(' Order Page - Payment Methods:', profileSnap.data().paymentMethods);
+        }
+        
         // Fetch shipping methods
         const shippingQuery = collection(db, "shippingMethods");
         const shippingSnap = await getDocs(shippingQuery);
@@ -155,19 +162,25 @@ function OrderPageContent() {
         const paymentMethodsArray: Array<{ id: string; name: string; details: string }> = [];
         const pm = profileData?.paymentMethods;
         
+        console.log('📊 Order Page - Payment Methods Object (pm):', pm);
+        
         if (pm?.mpesa?.enabled) {
+          console.log('📊 Order Page - M-Pesa enabled');
           // Build M-Pesa details from all three payment types
           const mpesaDetails: string[] = [];
           
           if (pm.mpesa.buyGoods?.enabled && pm.mpesa.buyGoods.tillNumber) {
+            console.log('📊 Order Page - Buy Goods enabled:', pm.mpesa.buyGoods);
             mpesaDetails.push(`Buy Goods: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`);
           }
           
           if (pm.mpesa.paybill?.enabled && pm.mpesa.paybill.paybillNumber) {
+            console.log('📊 Order Page - Paybill enabled:', pm.mpesa.paybill);
             mpesaDetails.push(`Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`);
           }
           
           if (pm.mpesa.personal?.enabled && pm.mpesa.personal.phoneNumber) {
+            console.log('📊 Order Page - Personal enabled:', pm.mpesa.personal);
             mpesaDetails.push(`Send Money: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`);
           }
           
@@ -181,6 +194,7 @@ function OrderPageContent() {
         }
         
         if (pm?.bank?.enabled) {
+          console.log(' Order Page - Bank enabled:', pm.bank);
           paymentMethodsArray.push({
             id: "bank",
             name: "Bank Transfer",
@@ -189,6 +203,7 @@ function OrderPageContent() {
         }
         
         if (pm?.card?.enabled) {
+          console.log('📊 Order Page - Card enabled:', pm.card);
           paymentMethodsArray.push({
             id: "card",
             name: "Card Payment",
@@ -197,12 +212,16 @@ function OrderPageContent() {
         }
         
         if (pm?.cash?.enabled) {
+          console.log('📊 Order Page - Cash/COD enabled:', pm.cash);
           paymentMethodsArray.push({
             id: "cod",
             name: "Cash on Delivery",
             details: pm.cash.instructions || "Pay when you receive",
           });
         }
+        
+        console.log('📊 Order Page - Final Payment Methods Array:', paymentMethodsArray);
+        console.log(' Order Page - Setting businessSettings with paymentMethods:', paymentMethodsArray);
         
         setBusinessSettings({
           shippingMethods: shippingMethods.length > 0 ? shippingMethods : undefined,
