@@ -974,7 +974,35 @@ async function processWithAI(
     console.log("[Webhook] Processing message with AI...");
     console.log("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
     
-    // STEP 1: Check for greeting - Send welcome menu with numbered options
+    // STEP 1: Check flow state FIRST (before anything else)
+    const currentFlowState = await getFlowState(tenantId, phone);
+    
+    if (currentFlowState && currentFlowState.isActive) {
+      const { flowName, currentStep } = currentFlowState;
+      console.log("[Webhook] Customer in active flow:", flowName, "- Step:", currentStep);
+      
+      // Handle main_menu flow (waiting for 1-5 selection)
+      if (flowName === 'main_menu' && currentStep === 'waiting_for_selection') {
+        const menuSelection = parseMenuSelection(message);
+        if (menuSelection !== null) {
+          console.log("[Webhook] Main menu selection:", menuSelection);
+          await handleMenuSelection(tenantId, phone, menuSelection);
+        } else {
+          console.log("[Webhook] Invalid main menu input:", message);
+          await sendEvolutionMessage(tenantId, phone, 
+            "Please reply with a number *1-5* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Check Order Status\n4 Payment Info\n5 Talk to Support"
+          );
+        }
+        return;
+      }
+      
+      // Handle other active flows (product_browse, service_browse)
+      console.log("[Webhook] Routing to flow handler:", flowName);
+      await handleFlowInput(tenantId, phone, message, currentFlowState);
+      return;
+    }
+    
+    // STEP 2: Greeting or no prior flow → send welcome menu
     const isGreeting = checkIfGreeting(message);
     if (isGreeting) {
       console.log("[Webhook] Greeting detected, sending welcome menu");
@@ -982,23 +1010,15 @@ async function processWithAI(
       return;
     }
     
-    // STEP 2: Check if customer is in active flow
-    const currentFlowState = await getFlowState(tenantId, phone);
-    if (currentFlowState && currentFlowState.isActive) {
-      console.log("[Webhook] Customer in active flow:", currentFlowState.flowName);
-      await handleFlowInput(tenantId, phone, message, currentFlowState);
-      return;
-    }
-    
-    // STEP 3: Check for menu selection (numbers)
+    // STEP 3: No active flow, not a greeting → parse menu selection (start fresh)
     const menuSelection = parseMenuSelection(message);
     if (menuSelection !== null) {
-      console.log("[Webhook] Menu selection detected:", menuSelection);
+      console.log("[Webhook] Fresh menu selection detected:", menuSelection);
       await handleMenuSelection(tenantId, phone, menuSelection);
       return;
     }
     
-    // STEP 4: For other queries, use AI (only for natural language questions)
+    // STEP 4: Natural language → AI
     console.log("[Webhook] Using AI for natural language query...");
     
     // Get business context (products, services, shipping, payments, policies)
@@ -1305,20 +1325,8 @@ export async function POST(req: NextRequest) {
       console.log("[Webhook] AI processing completed");
     }
 
-    // Send welcome message only on first contact
-    if (isNewConversation) {
-      console.log("[Webhook] New conversation detected, sending welcome message");
-      console.log("[Webhook] Tenant ID for settings:", tenantId);
-      const settings = await getTenantSettings(tenantId);
-      console.log("[Webhook] Settings found:", settings);
-      
-      // Only send if welcome message is enabled
-      if (settings.welcomeMessageEnabled) {
-        await sendWelcomeMessage(tenantId, from, settings.businessName, settings.welcomeMessage);
-      } else {
-        console.log("[Webhook] Welcome message is disabled, skipping");
-      }
-    }
+    // ✅ Welcome message is now handled by processWithAI (sends menu with numbered options)
+    // Removed duplicate sendWelcomeMessage to prevent double messages
 
     return NextResponse.json({ received: true, status: "saved" });
   } catch (error) {
