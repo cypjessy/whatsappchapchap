@@ -479,9 +479,9 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
 async function startProductBrowseFlow(tenantId: string, phone: string): Promise<void> {
   const adminDb = getAdminDb();
   
-  // Fetch categories
+  // Fetch categories from categoryNames collection
   const categoriesSnap = await adminDb
-    .collection("productCategories")
+    .collection("categoryNames")
     .where("tenantId", "==", tenantId)
     .get();
   
@@ -493,12 +493,12 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
   const categories = categoriesSnap.docs.map((doc: any) => {
     const data = doc.data();
     return {
-      id: doc.id,                          // Firestore auto-ID (for doc references)
-      categorySlug: data.id || doc.id,     // The "clothing" slug stored in data.id
-      name: data.name || doc.id,
+      id: doc.id,
+      categorySlug: data.mainCategory,
+      name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
-      brands: data.brands || [],
-      productCount: data.productCount || 0,
+      brands: [],
+      productCount: 0,
     };
   });
   
