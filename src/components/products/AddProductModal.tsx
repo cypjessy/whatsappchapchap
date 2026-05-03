@@ -6,6 +6,7 @@ import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import { getAllBusinessSettings } from "@/lib/business-settings";
 import { getAllProductCategories, getProductCategory } from "@/lib/product-categories";
+import { shortenUrl } from "@/lib/url-shortener";
 
 type StringSet = Set<string>;
 
@@ -903,9 +904,16 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         })) : undefined,
       });
 
+      // Create and shorten the order link
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const longOrderLink = `${baseUrl}/order?tenant=tenant_${user.uid}&product=${productToSave.id}`;
+      console.log('[AddProduct] Original order link:', longOrderLink);
+      
+      const shortOrderLink = await shortenUrl(longOrderLink);
+      console.log('[AddProduct] Shortened order link:', shortOrderLink);
+      
       await productService.updateProduct(user, productToSave.id, {
-        orderLink: `${baseUrl}/order?tenant=tenant_${user.uid}&product=${productToSave.id}`,
+        orderLink: shortOrderLink,
       });
 
       showToast("success", `Product "${formData.name}" with ${variants.length} variants saved!`);
