@@ -630,26 +630,313 @@ async function handleProductBrowseInput(
   // Step 2: Subcategory selection
   else if (currentStep === 'subcategory_selection') {
     const num = parseInt(message.trim());
-    const categoryBrands = selections.categoryBrands;
-    
-    // TODO: Fetch subcategories and validate selection
-    // For now, proceed to brands/products
-    await sendEvolutionMessage(tenantId, phone, "⏳ Loading products... Please wait.");
-    
-    // Update flow state
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        flowState: {
-          ...flowState,
-          currentStep: 'brand_or_product',
-          lastActivity: new Date().toISOString(),
-        }
-      }, { merge: true });
+    const { categoryId, categoryName, categorySubcategories } = selections;
+      
+    if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+      return;
+    }
+      
+    const selectedSubcategory = categorySubcategories[num - 1];
+    console.log("[Webhook] Selected subcategory:", selectedSubcategory);
+      
+    // Check if there are brands for this subcategory
+    const brands = (selections.categoryBrands || []).filter((b: string) => 
+      b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown'
+    );
+      
+    if (brands.length > 0) {
+      // Show brands
+      const brandList = brands
+        .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
+        .join('\n');
+        
+      const response = `🏷️ *${selectedSubcategory}* - Brands\n\n${brandList}\n\n0️ Back to subcategories`;
+      await sendEvolutionMessage(tenantId, phone, response);
+        
+      // Update flow state
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            isActive: true,
+            flowName: 'product_browse',
+            currentStep: 'brand_selection',
+            selections: {
+              ...selections,
+              subcategory: selectedSubcategory,
+              availableBrands: brands,
+            },
+            lastActivity: new Date().toISOString(),
+          }
+        }, { merge: true });
+    } else {
+      // No brands, go directly to products
+      await showProductsForSelection(tenantId, phone, selections);
+    }
   }
+    
+  // Step 3: Brand selection
+  else if (currentStep === 'brand_selection') {
+    const num = parseInt(message.trim());
+    const availableBrands = selections.availableBrands || [];
+      
+    if (isNaN(num) || num < 1 || num > availableBrands.length) {
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+      return;
+    }
+      
+    const selectedBrand = availableBrands[num - 1];
+    console.log("[Webhook] Selected brand:", selectedBrand);
+      
+    // Show products for this brand
+    await showProductsForSelection(tenantId, phone, {
+      ...selections,
+      brand: selectedBrand,
+    });
+  }
+    
+  // Step 4: Product pagination
+  else if (currentStep === 'product_pagination') {
+    const trimmed = message.trim().toLowerCase();
+      
+    if (trimmed === 'next' || trimmed === 'more' || trimmed === 'show more') {
+      // Show next page of products
+      await showNextProductPage(tenantId, phone, selections);
+    } else if (trimmed === 'back' || trimmed === '0') {
+      // Go back to brands or subcategories
+      if (selections.brand) {
+        // Was showing products for a brand, go back to brand selection
+        await handleBrandOrProductSelection(tenantId, phone, {
+          id: selections.categoryId,
+          name: selections.categoryName,
+          brands: selections.categoryBrands || [],
+          subcategories: selections.categorySubcategories || [],
+        });
+      } else if (selections.subcategory) {
+        // Go back to subcategory selection
+        const subcategoryList = (selections.categorySubcategories || [])
+          .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
+          .join('\n');
+          
+        const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n0️ Back to categories`;
+        await sendEvolutionMessage(tenantId, phone, response);
+          
+        await adminDb
+          .collection("tenants")
+          .doc(tenantId)
+          .collection("conversations")
+          .doc(phone)
+          .set({
+            flowState: {
+              ...flowState,
+              currentStep: 'subcategory_selection',
+              lastActivity: new Date().toISOString(),
+            }
+          }, { merge: true });
+      }
+    } else {
+      await sendEvolutionMessage(tenantId, phone, "Type *next* to see more products, or *0* to go back.");
+    }
+  }
+}
+
+// Show products for current selection (category, subcategory, brand)
+async function showProductsForSelection(
+  tenantId: string,
+  phone: string,
+  selections: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  
+  // Build query based on selections
+  let query = adminDb.collection('products').where('tenantId', '==', tenantId);
+  
+  if (selections.categoryId) {
+    query = query.where('categoryId', '==', selections.categoryId);
+  }
+  
+  // Fetch all matching products
+  const productsSnap = await query.get();
+  let products = productsSnap.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  
+  // Filter by subcategory if specified
+  if (selections.subcategory) {
+    products = products.filter((p: any) => p.subcategory === selections.subcategory);
+  }
+  
+  // Filter by brand if specified
+  if (selections.brand) {
+    products = products.filter((p: any) => p.brand === selections.brand);
+  }
+  
+  if (products.length === 0) {
+    await sendEvolutionMessage(tenantId, phone, "😔 No products found for this selection. Please try another category.");
+    return;
+  }
+  
+  // Show first 3 products
+  const productsToShow = products.slice(0, 3);
+  const totalProducts = products.length;
+  
+  let message = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.brand ? ' → ' + selections.brand : ''}*\n\n`;
+  message += `Showing ${productsToShow.length} of ${totalProducts} products:\n\n`;
+  
+  productsToShow.forEach((product: any, idx: number) => {
+    message += `*${idx + 1}. ${product.name}*\n`;
+    message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}`;
+    if (product.salePrice) {
+      message += ` (Sale: KES ${product.salePrice.toLocaleString()})`;
+    }
+    message += `\n`;
+    
+    if (product.stock !== undefined) {
+      message += `   📦 Stock: ${product.stock}\n`;
+    }
+    if (product.colors && product.colors.length > 0) {
+      message += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+    }
+    if (product.sizes && product.sizes.length > 0) {
+      message += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
+    }
+    if (product.brand) {
+      message += `   ️ Brand: ${product.brand}\n`;
+    }
+    if (product.description) {
+      message += `   📝 ${product.description.substring(0, 80)}${product.description.length > 80 ? '...' : ''}\n`;
+    }
+    if (product.orderLink) {
+      message += `   🛒 Order: ${product.orderLink}\n`;
+    }
+    message += `\n`;
+  });
+  
+  if (totalProducts > 3) {
+    message += `\n*Reply:*\n• *next* - See more products (${totalProducts - 3} remaining)\n• *0* - Go back`;
+  } else {
+    message += `\n*Reply 0* to go back`;
+  }
+  
+  await sendEvolutionMessage(tenantId, phone, message);
+  
+  // Update flow state
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'product_browse',
+        currentStep: 'product_pagination',
+        selections: {
+          ...selections,
+          allProducts: products.map((p: any) => p.id),
+          currentPage: 0,
+          pageSize: 3,
+        },
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
+}
+
+// Show next page of products
+async function showNextProductPage(
+  tenantId: string,
+  phone: string,
+  selections: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  
+  const allProductIds = selections.allProducts || [];
+  const currentPage = selections.currentPage || 0;
+  const pageSize = selections.pageSize || 3;
+  
+  const startIndex = (currentPage + 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  
+  if (startIndex >= allProductIds.length) {
+    await sendEvolutionMessage(tenantId, phone, "✅ You've seen all available products! Reply *0* to go back.");
+    return;
+  }
+  
+  // Fetch next page of products
+  const productsSnap = await adminDb.collection('products')
+    .where('tenantId', '==', tenantId)
+    .get();
+  
+  const allProducts = productsSnap.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  
+  // Filter to get the specific products we want
+  const productsToShow = allProducts
+    .filter((p: any) => allProductIds.includes(p.id))
+    .slice(startIndex, endIndex);
+  
+  if (productsToShow.length === 0) {
+    await sendEvolutionMessage(tenantId, phone, "No more products available.");
+    return;
+  }
+  
+  let message = `🛍️ *More Products* (Page ${currentPage + 2})\n\n`;
+  
+  productsToShow.forEach((product: any, idx: number) => {
+    message += `*${idx + 1}. ${product.name}*\n`;
+    message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}`;
+    if (product.salePrice) {
+      message += ` (Sale: KES ${product.salePrice.toLocaleString()})`;
+    }
+    message += `\n`;
+    
+    if (product.stock !== undefined) {
+      message += `   📦 Stock: ${product.stock}\n`;
+    }
+    if (product.colors && product.colors.length > 0) {
+      message += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+    }
+    if (product.sizes && product.sizes.length > 0) {
+      message += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
+    }
+    if (product.brand) {
+      message += `   ️ Brand: ${product.brand}\n`;
+    }
+    if (product.orderLink) {
+      message += `   🛒 Order: ${product.orderLink}\n`;
+    }
+    message += `\n`;
+  });
+  
+  const remaining = allProductIds.length - endIndex;
+  if (remaining > 0) {
+    message += `\n*Reply:*\n• *next* - See more products (${remaining} remaining)\n• *0* - Go back`;
+  } else {
+    message += `\n*Reply 0* to go back`;
+  }
+  
+  await sendEvolutionMessage(tenantId, phone, message);
+  
+  // Update flow state
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        ...selections,
+        currentPage: currentPage + 1,
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
 }
 
 // Handle brand or product selection
@@ -668,7 +955,7 @@ async function handleBrandOrProductSelection(
   if (brands.length > 0) {
     // Show brands
     const brandList = brands
-      .map((brand: string, idx: number) => `${idx + 1}️ ${brand}`)
+      .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
       .join('\n');
     
     const response = `🏷️ *${category.name}* - Brands\n\n${brandList}\n\n0️⃣ Back to categories`;
@@ -688,14 +975,20 @@ async function handleBrandOrProductSelection(
           selections: {
             categoryId: category.id,
             categoryName: category.name,
+            availableBrands: brands,
+            categorySubcategories: category.subcategories || [],
           },
           lastActivity: new Date().toISOString(),
         }
       }, { merge: true });
   } else {
     // No brands, show products directly
-    await sendEvolutionMessage(tenantId, phone, "⏳ Loading products... Please wait.");
-    // TODO: Fetch and display products
+    await showProductsForSelection(tenantId, phone, {
+      categoryId: category.id,
+      categoryName: category.name,
+      categorySubcategories: category.subcategories || [],
+      categoryBrands: category.brands || [],
+    });
   }
 }
 
