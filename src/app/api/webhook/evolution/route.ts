@@ -981,6 +981,7 @@ async function handleBrandOrProductSelection(
           currentStep: 'brand_selection',
           selections: {
             categoryId: category.id,
+            categorySlug: category.categorySlug,
             categoryName: category.name,
             availableBrands: brands,
             categorySubcategories: category.subcategories || [],
@@ -992,6 +993,7 @@ async function handleBrandOrProductSelection(
     // No brands, show products directly
     await showProductsForSelection(tenantId, phone, {
       categoryId: category.id,
+      categorySlug: category.categorySlug,
       categoryName: category.name,
       categorySubcategories: category.subcategories || [],
       categoryBrands: category.brands || [],
