@@ -789,26 +789,24 @@ async function showProductsForSelection(
   const productsToShow = products.slice(0, 3);
   const totalProducts = products.length;
   
-  let message = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.brand ? ' → ' + selections.brand : ''}*\n\n`;
-  message += `Showing ${productsToShow.length} of ${totalProducts} products:\n\n`;
+  // Send category header first
+  let headerMessage = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.brand ? ' → ' + selections.brand : ''}*\n\n`;
+  headerMessage += `Showing ${productsToShow.length} of ${totalProducts} products:\n\n`;
+  await sendEvolutionMessage(tenantId, phone, headerMessage);
   
-  // Send product images first
-  for (const product of productsToShow) {
+  // Send each product with its image and details together
+  for (let idx = 0; idx < productsToShow.length; idx++) {
+    const product = productsToShow[idx];
     const imageUrl = product.images?.[0] || product.imageUrl || product.image;
-    if (imageUrl) {
-      await sendEvolutionMedia(tenantId, phone, imageUrl, `*${product.name}*`);
-      await new Promise(resolve => setTimeout(resolve, 600));
-    }
-  }
-
-  productsToShow.forEach((product: any, idx: number) => {
-    message += `*${idx + 1}. ${product.name}*\n`;
+    
+    // Build product text
+    let productText = `*${idx + 1}. ${product.name}*\n`;
 
     // Price (with sale price support)
     if (product.salePrice) {
-      message += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
+      productText += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
     } else {
-      message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
+      productText += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
     }
 
     // Stock status
@@ -818,64 +816,76 @@ async function showProductsForSelection(
         : product.stock <= 5
           ? `⚠️ Only ${product.stock} left`
           : `✅ In stock (${product.stock})`;
-      message += `    ${stockLabel}\n`;
+      productText += `   📦 ${stockLabel}\n`;
     }
 
     // Description
     if (product.description) {
-      message += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
+      productText += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
     }
 
     // Colors
     if (product.colors && product.colors.length > 0) {
-      message += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+      productText += `   🎨 Colors: ${product.colors.join(', ')}\n`;
     }
 
     // Sizes
     if (product.sizes && product.sizes.length > 0) {
-      message += `    Sizes: ${product.sizes.join(', ')}\n`;
+      productText += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
     }
 
     // Brand
     if (product.brand) {
-      message += `   🏷️ Brand: ${product.brand}\n`;
+      productText += `   ️ Brand: ${product.brand}\n`;
     }
 
     // Condition
     if (product.condition) {
-      message += `   ✨ Condition: ${product.condition}\n`;
+      productText += `   ✨ Condition: ${product.condition}\n`;
     }
 
     // Warranty
     if (product.warranty) {
-      message += `    Warranty: ${product.warranty}\n`;
+      productText += `   🛡️ Warranty: ${product.warranty}\n`;
     }
 
     // Variants
     if (product.variants && product.variants.length > 0) {
-      message += `    Variants: ${product.variants.length} options available\n`;
+      productText += `   🔀 Variants: ${product.variants.length} options available\n`;
     }
 
     // Payment methods
     if (product.paymentMethods && product.paymentMethods.length > 0) {
-      message += `    Pay via: ${product.paymentMethods.map((m: any) => m.name).join(', ')}\n`;
+      productText += `   💳 Pay via: ${product.paymentMethods.map((m: any) => m.name).join(', ')}\n`;
     }
 
     // Order link
     if (product.orderLink) {
-      message += `   🛒 *Order here:* ${product.orderLink}\n`;
+      productText += `    *Order here:* ${product.orderLink}\n`;
     }
 
-    message += `\n`;
-  });
-  
-  if (totalProducts > 3) {
-    message += `\n*Reply:*\n• *next* - See more products (${totalProducts - 3} remaining)\n• *0* - Go back`;
-  } else {
-    message += `\n*Reply 0* to go back`;
+    // Send image with text caption if image exists, otherwise send text only
+    if (imageUrl) {
+      await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
+    } else {
+      await sendEvolutionMessage(tenantId, phone, productText);
+    }
+    
+    // Small delay between products to prevent rate limiting
+    if (idx < productsToShow.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
   }
   
-  await sendEvolutionMessage(tenantId, phone, message);
+  // Reply instructions
+  let replyMessage = '';
+  if (totalProducts > 3) {
+    replyMessage = `\n*Reply:*\n• *next* - See more products (${totalProducts - 3} remaining)\n• *0* - Go back`;
+  } else {
+    replyMessage = `\n*Reply 0* to go back`;
+  }
+  
+  await sendEvolutionMessage(tenantId, phone, replyMessage);
   
   // Update flow state
   await adminDb
@@ -937,25 +947,23 @@ async function showNextProductPage(
     return;
   }
   
-  let message = `🛍️ *More Products* (Page ${currentPage + 2})\n\n`;
+  // Send page header
+  let headerMessage = `🛍️ *More Products* (Page ${currentPage + 2})\n\n`;
+  await sendEvolutionMessage(tenantId, phone, headerMessage);
   
-  // Send product images first
-  for (const product of productsToShow) {
+  // Send each product with its image and details together
+  for (let idx = 0; idx < productsToShow.length; idx++) {
+    const product = productsToShow[idx];
     const imageUrl = product.images?.[0] || product.imageUrl || product.image;
-    if (imageUrl) {
-      await sendEvolutionMedia(tenantId, phone, imageUrl, `*${product.name}*`);
-      await new Promise(resolve => setTimeout(resolve, 600));
-    }
-  }
-
-  productsToShow.forEach((product: any, idx: number) => {
-    message += `*${idx + 1}. ${product.name}*\n`;
+    
+    // Build product text
+    let productText = `*${idx + 1}. ${product.name}*\n`;
 
     // Price (with sale price support)
     if (product.salePrice) {
-      message += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
+      productText += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
     } else {
-      message += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
+      productText += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
     }
 
     // Stock status
@@ -965,65 +973,76 @@ async function showNextProductPage(
         : product.stock <= 5
           ? `⚠️ Only ${product.stock} left`
           : `✅ In stock (${product.stock})`;
-      message += `    ${stockLabel}\n`;
+      productText += `   📦 ${stockLabel}\n`;
     }
 
     // Description
     if (product.description) {
-      message += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
+      productText += `    ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
     }
 
     // Colors
     if (product.colors && product.colors.length > 0) {
-      message += `   🎨 Colors: ${product.colors.join(', ')}\n`;
+      productText += `   🎨 Colors: ${product.colors.join(', ')}\n`;
     }
 
     // Sizes
     if (product.sizes && product.sizes.length > 0) {
-      message += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
+      productText += `   📏 Sizes: ${product.sizes.join(', ')}\n`;
     }
 
     // Brand
     if (product.brand) {
-      message += `   🏷️ Brand: ${product.brand}\n`;
+      productText += `   🏷️ Brand: ${product.brand}\n`;
     }
 
     // Condition
     if (product.condition) {
-      message += `   ✨ Condition: ${product.condition}\n`;
+      productText += `   ✨ Condition: ${product.condition}\n`;
     }
 
     // Warranty
     if (product.warranty) {
-      message += `   🛡️ Warranty: ${product.warranty}\n`;
+      productText += `   🛡️ Warranty: ${product.warranty}\n`;
     }
 
     // Variants
     if (product.variants && product.variants.length > 0) {
-      message += `   🔀 Variants: ${product.variants.length} options available\n`;
+      productText += `   🔀 Variants: ${product.variants.length} options available\n`;
     }
 
     // Payment methods
     if (product.paymentMethods && product.paymentMethods.length > 0) {
-      message += `   💳 Pay via: ${product.paymentMethods.map((m: any) => m.name).join(', ')}\n`;
+      productText += `   💳 Pay via: ${product.paymentMethods.map((m: any) => m.name).join(', ')}\n`;
     }
 
     // Order link
     if (product.orderLink) {
-      message += `   🛒 *Order here:* ${product.orderLink}\n`;
+      productText += `   🛒 *Order here:* ${product.orderLink}\n`;
     }
 
-    message += `\n`;
-  });
-  
-  const remaining = allProductIds.length - endIndex;
-  if (remaining > 0) {
-    message += `\n*Reply:*\n• *next* - See more products (${remaining} remaining)\n• *0* - Go back`;
-  } else {
-    message += `\n*Reply 0* to go back`;
+    // Send image with text caption if image exists, otherwise send text only
+    if (imageUrl) {
+      await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
+    } else {
+      await sendEvolutionMessage(tenantId, phone, productText);
+    }
+    
+    // Small delay between products to prevent rate limiting
+    if (idx < productsToShow.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
   }
   
-  await sendEvolutionMessage(tenantId, phone, message);
+  const remaining = allProductIds.length - endIndex;
+  let replyMessage = '';
+  if (remaining > 0) {
+    replyMessage = `\n*Reply:*\n• *next* - See more products (${remaining} remaining)\n• *0* - Go back`;
+  } else {
+    replyMessage = `\n*Reply 0* to go back`;
+  }
+  
+  await sendEvolutionMessage(tenantId, phone, replyMessage);
   
   // Update flow state
   await adminDb
