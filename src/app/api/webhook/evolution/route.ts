@@ -377,14 +377,113 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   }
 }
 
+// Check if message is a greeting
+function checkIfGreeting(message: string): boolean {
+  const greetings = [
+    'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
+    'greetings', 'howdy', 'sup', 'whats up', 'what\'s up'
+  ];
+  const lowerMsg = message.toLowerCase().trim();
+  return greetings.some(greeting => lowerMsg === greeting || lowerMsg.startsWith(greeting + ' '));
+}
+
+// Detect product browsing intent
+function detectProductBrowseIntent(message: string): 'show_all' | 'show_category' | 'show_subcategory' | 'show_brand' | null {
+  const lowerMsg = message.toLowerCase().trim();
+  
+  // Show all products/categories
+  if (lowerMsg.includes('what products') || lowerMsg.includes('show products') || 
+      lowerMsg.includes('show me') || lowerMsg.includes('browse') || lowerMsg.includes('catalog')) {
+    return 'show_all';
+  }
+  
+  return null;
+}
+
+// Handle product browsing flow
+async function handleProductBrowseFlow(
+  tenantId: string,
+  phone: string,
+  message: string,
+  intent: 'show_all' | 'show_category' | 'show_subcategory' | 'show_brand'
+): Promise<void> {
+  const adminDb = getAdminDb();
+  
+  // Get flow state from database
+  const flowStateDoc = await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .get();
+  
+  const flowState = flowStateDoc.exists ? flowStateDoc.data()?.flowState : {};
+  
+  console.log("[Webhook] Current flow state:", flowState);
+  
+  if (intent === 'show_all') {
+    // STEP 1: Show categories
+    console.log("[Webhook] Showing product categories");
+    const categoriesSnap = await adminDb.collection("productCategories")
+      .where("tenantId", "==", tenantId)
+      .get();
+    
+    if (categoriesSnap.empty) {
+      await sendEvolutionMessage(tenantId, phone, "We don't have any products listed yet. Please check back soon! 🙏");
+      return;
+    }
+    
+    const categories = categoriesSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name || doc.id,
+        subcategories: data.subcategories || [],
+        productCount: data.productCount || 0,
+      };
+    });
+    
+    const categoryList = categories.map(c => 
+      `• *${c.name}* (${c.productCount} products)`
+    ).join('\n');
+    
+    const response = `Here are our product categories:\n\n${categoryList}\n\nWhich category would you like to explore? Just reply with the category name! 😊`;
+    await sendEvolutionMessage(tenantId, phone, response);
+    
+    // Update flow state
+    await flowStateDoc.ref.set({
+      flowState: {
+        step: 'category_selected',
+        waitingFor: 'category',
+        timestamp: new Date().toISOString(),
+      }
+    }, { merge: true });
+    
+    // Save message
+    await flowStateDoc.ref.collection("messages").doc(`ai_${Date.now()}`).set({
+      text: response,
+      from: tenantId,
+      fromMe: true,
+      sender: "business",
+      timestamp: new Date(),
+      status: "sent",
+      createdAt: new Date(),
+      isAI: false,
+    });
+  }
+  
+  // TODO: Add handlers for category selection, subcategory, and brand
+}
+
 // Get conversation history for context (last 5 messages)
 async function getConversationHistory(
   tenantId: string,
   phone: string
-): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
+): Promise<{ history: Array<{ role: "user" | "assistant"; content: string }>; flowState: any }> {
   try {
     const adminDb = getAdminDb();
     
+    // Get messages
     const messagesSnap = await adminDb
       .collection("tenants")
       .doc(tenantId)
@@ -397,16 +496,28 @@ async function getConversationHistory(
     
     const messages = messagesSnap.docs
       .map(doc => doc.data())
-      .reverse() // Reverse to get chronological order
-      .slice(-10); // Take last 10 messages
+      .reverse()
+      .slice(-10);
     
-    return messages.map(msg => ({
-      role: msg.fromMe || msg.sender === "business" ? "assistant" : "user",
+    const history = messages.map(msg => ({
+      role: (msg.fromMe || msg.sender === "business") ? "assistant" as const : "user" as const,
       content: msg.text || "",
     }));
+    
+    // Get flow state
+    const convoDoc = await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    const flowState = convoDoc.exists ? convoDoc.data()?.flowState : null;
+    
+    return { history, flowState };
   } catch (error) {
     console.error("[Webhook] Error getting conversation history:", error);
-    return [];
+    return { history: [], flowState: null };
   }
 }
 
@@ -511,6 +622,47 @@ async function processWithAI(
     console.log("[Webhook] Processing message with AI...");
     console.log("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
     
+    // STEP 1: Check for greeting - HARDcoded response
+    const isGreeting = checkIfGreeting(message);
+    if (isGreeting) {
+      console.log("[Webhook] Greeting detected, sending hardcoded welcome");
+      const businessName = await getTenantBusinessName(tenantId);
+      const welcomeMsg = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today? \n\n• Browse products\n• Ask about services\n• Check order status\n• Payment info`;
+      await sendEvolutionMessage(tenantId, phone, welcomeMsg);
+      
+      // Save to database
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .collection("messages")
+        .doc(`ai_${Date.now()}`)
+        .set({
+          text: welcomeMsg,
+          from: tenantId,
+          fromMe: true,
+          sender: "business",
+          timestamp: new Date(),
+          status: "sent",
+          createdAt: new Date(),
+          isAI: false,
+        });
+      return;
+    }
+    
+    // STEP 2: Check for product browsing flow - HARDcoded flow control
+    const productBrowseIntent = detectProductBrowseIntent(message);
+    if (productBrowseIntent) {
+      console.log("[Webhook] Product browse intent detected:", productBrowseIntent);
+      await handleProductBrowseFlow(tenantId, phone, message, productBrowseIntent);
+      return;
+    }
+    
+    // STEP 3: For other intents, use AI with flow context
+    console.log("[Webhook] Using AI for general query...");
+    
     // Get business context (products, services, shipping, payments, policies)
     console.log("[Webhook] Fetching business context for tenant:", tenantId);
     const contextStart = Date.now();
@@ -519,18 +671,26 @@ async function processWithAI(
     console.log(`[Webhook] Context loaded: ${context.products.length} products, ${context.services.length} services`);
     console.log(`[Webhook] Shipping methods: ${context.shippingMethods?.length || 0}`);
     console.log(`[Webhook] Payment methods: ${context.paymentMethods ? 'loaded' : 'none'}`);
+    console.log(`[Webhook] Category hierarchy: ${context.productCategoryHierarchy?.length || 0} categories`);
     
-    // Get conversation history
-    console.log("[Webhook] Fetching conversation history...");
-    const history = await getConversationHistory(tenantId, phone);
+    // Get conversation history AND flow state
+    console.log("[Webhook] Fetching conversation history and flow state...");
+    const { history, flowState } = await getConversationHistory(tenantId, phone);
     console.log(`[Webhook] Conversation history: ${history.length} messages`);
+    console.log(`[Webhook] Flow state:`, flowState);
+    
+    // Add flow state to AI context
+    const enhancedContext = {
+      ...context,
+      conversationFlow: flowState,
+    };
     
     // Generate AI response
     console.log("[Webhook] Calling Gemini AI...");
     const aiStart = Date.now();
     
     // Add timeout to prevent hanging
-    const aiPromise = generateAIResponse(message, context, history);
+    const aiPromise = generateAIResponse(message, enhancedContext, history);
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("AI generation timeout after 15000ms")), 15000)
     );

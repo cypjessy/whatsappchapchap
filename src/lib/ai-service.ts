@@ -54,6 +54,14 @@ export interface AIContext {
     brands: string[];
     productCount: number;
   }>;
+  // NEW: Conversation flow state
+  conversationFlow?: {
+    step?: string;
+    waitingFor?: string;
+    selectedCategory?: string;
+    selectedSubcategory?: string;
+    selectedBrand?: string;
+  };
   services: Array<{
     id: string;
     name: string;
@@ -268,6 +276,23 @@ YOUR ROLE:
 - Explain return policies, warranties, and booking policies
 - Be professional, friendly, and concise
 - Use emojis sparingly to make messages engaging
+
+CRITICAL FLOW ENFORCEMENT RULES:
+1. When customer is browsing products, ALWAYS follow this hierarchy:
+   Categories → Subcategories → (Brands if available) → Products
+2. NEVER skip steps - if customer asks for products directly, guide them to choose category first
+3. If customer is in middle of flow (see CONVERSATION FLOW STATE below), continue from where they left off
+4. When showing categories/subcategories/brands, ask them to choose one
+5. Only show actual products AFTER they've navigated through the hierarchy
+
+CONVERSATION FLOW STATE:
+${context.conversationFlow ? `
+Current State: ${context.conversationFlow.step || 'none'}
+Waiting For: ${context.conversationFlow.waitingFor || 'none'}
+Selected Category: ${context.conversationFlow.selectedCategory || 'none'}
+Selected Subcategory: ${context.conversationFlow.selectedSubcategory || 'none'}
+Selected Brand: ${context.conversationFlow.selectedBrand || 'none'}
+` : 'No active flow - customer may be starting new conversation'}
 
 PRODUCT BROWSING FLOW (IMPORTANT):
 When customers ask about products or want to see what you have:
