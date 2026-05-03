@@ -60,7 +60,7 @@ function OrderPageContent() {
   const [tenantData, setTenantData] = useState<{evolutionServerUrl?: string; evolutionApiKey?: string; evolutionInstanceId?: string} | null>(null);
   const [businessSettings, setBusinessSettings] = useState<{
     shippingMethods?: Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
-    paymentMethods?: any;
+    paymentMethods?: Array<{ id: string; name: string; details: string }>;
     businessName?: string;
     phone?: string;
     address?: string;
@@ -827,55 +827,65 @@ function OrderPageContent() {
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Payment Method</div>
           
-          {((businessSettings?.paymentMethods?.length ? businessSettings.paymentMethods : [
-            { id: "mpesa", name: "M-Pesa", details: "Pay via M-Pesa mobile money" },
-            { id: "cod", name: "Cash on Delivery", details: "Pay when you receive the item" },
-            { id: "bank", name: "Bank Transfer", details: "Direct bank transfer" }
-          ]) as Array<{ id: string; name: string; details: string }>).map((option: { id: string; name: string; details: string }) => (
-            <div 
-              key={option.id}
-              onClick={() => setPaymentMethod(option.id)}
-              style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 16, 
-                padding: 16, 
-                border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`,
-                borderRadius: 12, 
-                cursor: "pointer", 
-                marginBottom: 12,
-                background: paymentMethod === option.id ? "rgba(37,211,102,0.05)" : "white"
-              }}
-            >
-              <div style={{ width: 24, height: 24, border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: paymentMethod === option.id ? "#25D366" : "white" }}>
-                {paymentMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
-              </div>
-              <div style={{ width: 48, height: 48, background: option.id === "mpesa" ? "#00A650" : option.id === "bank" ? "#64748b" : "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
-                <i className={`fas ${option.id === "mpesa" ? "fa-mobile-alt" : option.id === "bank" ? "fa-university" : "fa-money-bill-wave"}`}></i>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
-                <div style={{ fontSize: 14, color: "#64748b" }}>{option.details}</div>
-              </div>
+          {/* Show loading state if payment methods haven't loaded yet */}
+          {!businessSettings?.paymentMethods ? (
+            <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>
+              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, marginBottom: 8 }}></i>
+              <div>Loading payment methods...</div>
             </div>
-          ))}
+          ) : businessSettings.paymentMethods.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>
+              <i className="fas fa-info-circle" style={{ fontSize: 24, marginBottom: 8, color: "#f59e0b" }}></i>
+              <div>No payment methods configured</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>Please contact the seller</div>
+            </div>
+          ) : (
+            // Render payment methods from Firestore
+            businessSettings.paymentMethods.map((option: { id: string; name: string; details: string }) => (
+              <div 
+                key={option.id}
+                onClick={() => setPaymentMethod(option.id)}
+                style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 16, 
+                  padding: 16, 
+                  border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`,
+                  borderRadius: 12, 
+                  cursor: "pointer", 
+                  marginBottom: 12,
+                  background: paymentMethod === option.id ? "rgba(37,211,102,0.05)" : "white"
+                }}
+              >
+                <div style={{ width: 24, height: 24, border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: paymentMethod === option.id ? "#25D366" : "white" }}>
+                  {paymentMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
+                </div>
+                <div style={{ width: 48, height: 48, background: option.id === "mpesa" ? "#00A650" : option.id === "bank" ? "#64748b" : option.id === "card" ? "#3b82f6" : "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
+                  <i className={`fas ${option.id === "mpesa" ? "fa-mobile-alt" : option.id === "bank" ? "fa-university" : option.id === "card" ? "fa-credit-card" : "fa-money-bill-wave"}`}></i>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
+                  <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap" }}>{option.details}</div>
+                </div>
+              </div>
+            ))
+          )}
 
           {/* Payment Details & Message */}
-          {paymentMethod !== "cod" && (
+          {paymentMethod !== "cod" && businessSettings?.paymentMethods && (
             <div style={{ marginTop: 16, padding: 16, background: "#f8fafc", borderRadius: 12, border: "2px solid #e2e8f0" }}>
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12, color: "#1e293b" }}>
-                {paymentMethod === "mpesa" ? "M-Pesa Payment Instructions" : "Bank Transfer Details"}
+                {paymentMethod === "mpesa" ? "M-Pesa Payment Instructions" : paymentMethod === "bank" ? "Bank Transfer Details" : "Payment Instructions"}
               </div>
               <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap", marginBottom: 16 }}>
-                {businessSettings?.paymentMethods?.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || 
-                 (paymentMethod === "mpesa" ? "Enter your M-Pesa number and follow prompts" : "Bank: Example Bank\nAccount: 1234567890")}
+                {businessSettings.paymentMethods.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || "Payment instructions not available"}
               </div>
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>
-                Enter Payment Details <span className="text-red-500">*</span>
+                Enter Payment Details <span style={{ color: "#ef4444" }}>*</span>
               </div>
               <input
                 type="text"
-                placeholder={paymentMethod === "mpesa" ? "Enter M-Pesa transaction ID" : "Enter transaction/reference number"}
+                placeholder={paymentMethod === "mpesa" ? "Enter M-Pesa transaction ID" : paymentMethod === "bank" ? "Enter transaction/reference number" : "Enter payment reference"}
                 value={paymentDetails}
                 onChange={(e) => setPaymentDetails(e.target.value)}
                 style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, marginBottom: 12 }}
