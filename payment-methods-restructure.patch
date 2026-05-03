@@ -1,0 +1,66 @@
+--- a/src/app/order/page.tsx
++++ b/src/app/order/page.tsx
+@@ -177,29 +177,36 @@ export default function OrderPage() {
+         
+         if (pm?.mpesa?.enabled) {
+           console.log('📊 Order Page - M-Pesa enabled');
+-          // Build M-Pesa details from all three payment types
+-          const mpesaDetails: string[] = [];
+           
+-          if (pm.mpesa.buyGoods?.tillNumber) {
++          // Each M-Pesa subtype becomes its own payment card
++          if (pm.mpesa.buyGoods?.tillNumber) {
+             console.log('📊 Order Page - Buy Goods has tillNumber:', pm.mpesa.buyGoods.tillNumber);
+-            mpesaDetails.push(`Buy Goods: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`);
++            paymentMethodsArray.push({
++              id: "mpesa-buygoods",
++              name: "M-Pesa Buy Goods",
++              details: `Till Number: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`,
++              icon: "fa-store",
++              color: "#00A650"
++            });
+           }
+           
+           if (pm.mpesa.paybill?.paybillNumber) {
+             console.log('📊 Order Page - Paybill has paybillNumber:', pm.mpesa.paybill.paybillNumber);
+-            mpesaDetails.push(`Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`);
++            paymentMethodsArray.push({
++              id: "mpesa-paybill",
++              name: "M-Pesa Paybill",
++              details: `Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`,
++              icon: "fa-building",
++              color: "#059669"
++            });
+           }
+           
+           if (pm.mpesa.personal?.phoneNumber) {
+             console.log('📊 Order Page - Personal has phoneNumber:', pm.mpesa.personal.phoneNumber);
+-            mpesaDetails.push(`Send Money: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`);
++            paymentMethodsArray.push({
++              id: "mpesa-personal",
++              name: "M-Pesa Send Money",
++              details: `Phone: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`,
++              icon: "fa-user",
++              color: "#10b981"
++            });
+           }
+-          
+-          if (mpesaDetails.length > 0) {
+-            paymentMethodsArray.push({
+-              id: "mpesa",
+-              name: "M-Pesa",
+-              details: mpesaDetails.join('\n'),
+-            });
+-          }
+         }
+         
+         if (pm?.bank?.enabled) {
+@@ -208,6 +215,8 @@ export default function OrderPage() {
+             id: "bank",
+             name: "Bank Transfer",
+             details: `${pm.bank.bankName || ''}\nAccount: ${pm.bank.accountNumber || ''}${pm.bank.branch ? `\nBranch: ${pm.bank.branch}` : ''}`,
++            icon: "fa-university",
++            color: "#64748b"
+           });
+         }
+         

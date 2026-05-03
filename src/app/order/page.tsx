@@ -60,7 +60,7 @@ function OrderPageContent() {
   const [tenantData, setTenantData] = useState<{evolutionServerUrl?: string; evolutionApiKey?: string; evolutionInstanceId?: string} | null>(null);
   const [businessSettings, setBusinessSettings] = useState<{
     shippingMethods?: Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
-    paymentMethods?: Array<{ id: string; name: string; details: string }>;
+    paymentMethods?: Array<{ id: string; name: string; details: string; icon: string; color: string }>;
     businessName?: string;
     phone?: string;
     address?: string;
@@ -162,7 +162,8 @@ function OrderPageContent() {
         // Set business settings
         
         // Build payment methods array from business profile with new M-Pesa structure
-        const paymentMethodsArray: Array<{ id: string; name: string; details: string }> = [];
+        // Each payment subtype becomes its own card for better UX
+        const paymentMethodsArray: Array<{ id: string; name: string; details: string; icon: string; color: string }> = [];
         const pm = profileData?.paymentMethods;
         
         console.log('📊 Order Page - Payment Methods Object (pm):', pm);
@@ -176,29 +177,38 @@ function OrderPageContent() {
         
         if (pm?.mpesa?.enabled) {
           console.log('📊 Order Page - M-Pesa enabled');
-          // Build M-Pesa details from all three payment types
-          const mpesaDetails: string[] = [];
           
+          // Each M-Pesa subtype becomes its own payment card
           if (pm.mpesa.buyGoods?.tillNumber) {
-            console.log(' Order Page - Buy Goods has tillNumber:', pm.mpesa.buyGoods.tillNumber);
-            mpesaDetails.push(`Buy Goods: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`);
+            console.log('📊 Order Page - Buy Goods has tillNumber:', pm.mpesa.buyGoods.tillNumber);
+            paymentMethodsArray.push({
+              id: "mpesa-buygoods",
+              name: "M-Pesa Buy Goods",
+              details: `Till Number: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`,
+              icon: "fa-store",
+              color: "#00A650"
+            });
           }
           
           if (pm.mpesa.paybill?.paybillNumber) {
             console.log('📊 Order Page - Paybill has paybillNumber:', pm.mpesa.paybill.paybillNumber);
-            mpesaDetails.push(`Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`);
+            paymentMethodsArray.push({
+              id: "mpesa-paybill",
+              name: "M-Pesa Paybill",
+              details: `Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`,
+              icon: "fa-building",
+              color: "#059669"
+            });
           }
           
           if (pm.mpesa.personal?.phoneNumber) {
             console.log(' Order Page - Personal has phoneNumber:', pm.mpesa.personal.phoneNumber);
-            mpesaDetails.push(`Send Money: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`);
-          }
-          
-          if (mpesaDetails.length > 0) {
             paymentMethodsArray.push({
-              id: "mpesa",
-              name: "M-Pesa",
-              details: mpesaDetails.join('\n'),
+              id: "mpesa-personal",
+              name: "M-Pesa Send Money",
+              details: `Phone: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`,
+              icon: "fa-user",
+              color: "#10b981"
             });
           }
         }
@@ -209,6 +219,8 @@ function OrderPageContent() {
             id: "bank",
             name: "Bank Transfer",
             details: `${pm.bank.bankName || ''}\nAccount: ${pm.bank.accountNumber || ''}${pm.bank.branch ? `\nBranch: ${pm.bank.branch}` : ''}`,
+            icon: "fa-university",
+            color: "#64748b"
           });
         }
         
@@ -218,6 +230,8 @@ function OrderPageContent() {
             id: "card",
             name: "Card Payment",
             details: pm.card.instructions || "Pay with credit/debit card",
+            icon: "fa-credit-card",
+            color: "#3b82f6"
           });
         }
         
@@ -227,6 +241,8 @@ function OrderPageContent() {
             id: "cod",
             name: "Cash on Delivery",
             details: pm.cash.instructions || "Pay when you receive",
+            icon: "fa-money-bill-wave",
+            color: "#10b981"
           });
         }
         
@@ -870,7 +886,7 @@ function OrderPageContent() {
             </div>
           ) : (
             // Render payment methods from Firestore
-            businessSettings.paymentMethods.map((option: { id: string; name: string; details: string }) => (
+            businessSettings.paymentMethods.map((option: { id: string; name: string; details: string; icon: string; color: string }) => (
               <div 
                 key={option.id}
                 onClick={() => setPaymentMethod(option.id)}
@@ -889,8 +905,8 @@ function OrderPageContent() {
                 <div style={{ width: 24, height: 24, border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: paymentMethod === option.id ? "#25D366" : "white" }}>
                   {paymentMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
                 </div>
-                <div style={{ width: 48, height: 48, background: option.id === "mpesa" ? "#00A650" : option.id === "bank" ? "#64748b" : option.id === "card" ? "#3b82f6" : "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
-                  <i className={`fas ${option.id === "mpesa" ? "fa-mobile-alt" : option.id === "bank" ? "fa-university" : option.id === "card" ? "fa-credit-card" : "fa-money-bill-wave"}`}></i>
+                <div style={{ width: 48, height: 48, background: option.color || "#64748b", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
+                  <i className={`fas ${option.icon || "fa-money-bill-wave"}`}></i>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
