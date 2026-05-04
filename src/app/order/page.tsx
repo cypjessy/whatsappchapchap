@@ -98,6 +98,21 @@ function OrderPageContent() {
   const [orderNumber, setOrderNumber] = useState("");
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  
+  // Cart state
+  const [showCartChoice, setShowCartChoice] = useState(false);
+  const [cart, setCart] = useState<Array<{
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    specs: Record<string, string>;
+    image?: string;
+    images?: string[];
+    tenantId: string;
+  }>>([]);
+  const [showCart, setShowCart] = useState(false);
+  const [showCartBadge, setShowCartBadge] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   
   // Get all product images
@@ -320,6 +335,80 @@ function OrderPageContent() {
     fetchData();
   }, [productId, tenantId]);
 
+  // Cart management functions
+  const saveCartToLocalStorage = (newCart: typeof cart) => {
+    try {
+      localStorage.setItem('whatsapp_cart', JSON.stringify(newCart));
+      setShowCartBadge(newCart.length > 0);
+    } catch (err) {
+      console.error('Error saving cart:', err);
+    }
+  };
+
+  const addToCart = () => {
+    if (!product) return;
+    
+    const cartItem = {
+      productId: product.id,
+      name: product.name,
+      price: getBasePrice(),
+      quantity: quantity,
+      specs: { ...selectedSpecs },
+      image: product.image,
+      images: product.images,
+      tenantId: tenantId!,
+    };
+    
+    const newCart = [...cart, cartItem];
+    setCart(newCart);
+    saveCartToLocalStorage(newCart);
+    
+    // Redirect back to WhatsApp
+    const whatsappUrl = `https://wa.me/${customerPhone || ''}?text=${encodeURIComponent('I added items to my cart! Let me find more products...')}`;
+    window.location.href = whatsappUrl;
+  };
+
+  const removeFromCart = (index: number) => {
+    const newCart = cart.filter((_, i) => i !== index);
+    setCart(newCart);
+    saveCartToLocalStorage(newCart);
+  };
+
+  const updateCartItemQuantity = (index: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    const newCart = [...cart];
+    newCart[index].quantity = newQuantity;
+    setCart(newCart);
+    saveCartToLocalStorage(newCart);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem('whatsapp_cart');
+    setShowCartBadge(false);
+  };
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedCart = localStorage.getItem('whatsapp_cart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+        setShowCartBadge(parsedCart.length > 0);
+      }
+    } catch (err) {
+      console.error('Error loading cart:', err);
+    }
+  }, []);
+
+  // Show cart choice modal when product loads
+  useEffect(() => {
+    if (product && !loading && !showCart && cart.length === 0) {
+      setShowCartChoice(true);
+    }
+  }, [product, loading]);
+
   const getBasePrice = () => {
     if (!product) return 0;
     
@@ -376,44 +465,63 @@ function OrderPageContent() {
   };
 
   const handleOrder = async () => {
-    if (!product) return;
-    
+    if (!product && cart.length === 0) return;
+      
     if (!validateForm()) {
       const section = document.querySelector('.specs-section') as HTMLElement;
       if (section) section.scrollIntoView({ behavior: 'smooth' });
       return;
     }
-    
+      
     setOrdering(true);
-    
+      
     try {
       const app = getFirebaseApp()!;
       const db = getFirestore(app);
-      
+        
       const orderNum = "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-      const subtotal = getBasePrice() * quantity;
+        
+      // Use cart items if in cart view, otherwise use current product
+      const orderProducts = showCart ? cart.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        specs: item.specs,
+      })) : [{
+        productId: product!.id,
+        name: product!.name,
+        price: getBasePrice(),
+        quantity: quantity,
+        specs: selectedSpecs,
+      }];
+        
+      const subtotal = orderProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
       const total = subtotal + deliveryCost;
-      
+        
       const now = new Date();
-      
+        
       // Normalize phone and create WhatsApp JID
       const normalizedPhone = normalizePhone(customerPhone);
       const whatsappJid = phoneParam 
         ? `${phoneParam.replace(/[^0-9]/g, '')}@s.whatsapp.net` 
         : createWhatsAppJid(normalizedPhone);
-      
+        
+      const productNames = orderProducts.map(p => `${p.name} x${p.quantity}`).join(', ');
+        
       const docRef = await addDoc(collection(db, "orders"), {
         orderNumber: orderNum,
         tenantId,
-        productId: product.id,
-        productName: product.name,
-        productImage: product.image,
-        basePrice: getBasePrice(),
-        selectedSpecs,
-        selectedVariant: product.variants?.find(v => 
+        productId: showCart ? null : product!.id,
+        productName: productNames,
+        productImage: showCart ? null : product?.image,
+        products: orderProducts,
+        basePrice: showCart ? null : getBasePrice(),
+        selectedSpecs: showCart ? null : selectedSpecs,
+        selectedVariant: showCart ? null : (product?.variants?.find(v => 
           Object.entries(selectedSpecs).every(([key, value]) => v.specs[key] === value)
-        ) || null,
-        quantity,
+        ) || null),
+        quantity: showCart ? null : quantity,
         customerPhone: normalizedPhone,
         whatsappJid,
         customerName: customerName.trim(),
@@ -442,7 +550,7 @@ function OrderPageContent() {
         deliveryCost,
         paymentMethod,
         paymentDetails: paymentDetails.trim() || null,
-        orderNotes: orderNotes.trim() || "",
+        orderNotes: showCart ? "Order from cart" : (orderNotes.trim() || ""),
         subtotal,
         total,
         status: "pending",
@@ -455,12 +563,12 @@ function OrderPageContent() {
         createdAt: now,
         updatedAt: now
       });
-      
+        
       await updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
-
+  
       // Send WhatsApp notification - Order Received
       const customerPhoneClean = normalizePhone(customerPhone);
-      
+        
       // Validate phone number before sending
       if (!isValidWhatsAppPhone(customerPhoneClean)) {
         console.error('❌ Invalid phone number, skipping WhatsApp notification:', customerPhoneClean);
@@ -469,10 +577,10 @@ function OrderPageContent() {
           'pending',
           customerName.trim(),
           orderNum,
-          product.name,
+          productNames,
           address.trim()
         );
-        
+          
         console.log('📲 Sending order received WhatsApp to:', customerPhoneClean);
         sendEvolutionWhatsAppMessage(
           customerPhoneClean,
@@ -484,7 +592,12 @@ function OrderPageContent() {
           console.error('❌ Failed to send order received WhatsApp:', err);
         });
       }
-      
+        
+      // Clear cart if order was placed from cart
+      if (showCart) {
+        clearCart();
+      }
+        
       setOrderNumber(orderNum);
       setOrdered(true);
     } catch (err: any) {
@@ -581,6 +694,63 @@ function OrderPageContent() {
     );
   }
 
+  // Show cart choice modal
+  if (showCartChoice && !showCart) {
+    return (
+      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, rgba(37,211,102,0.1) 0%, rgba(18,140,126,0.1) 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div style={{ background: "white", borderRadius: 16, padding: 32, maxWidth: 440, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ width: 80, height: 80, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 32, color: "white", boxShadow: "0 10px 30px rgba(37,211,102,0.3)" }}>
+              <i className="fas fa-shopping-cart"></i>
+            </div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, color: "#1e293b" }}>What would you like to do?</h1>
+            {product && <p style={{ color: "#64748b" }}>{product.name}</p>}
+          </div>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Order Now Button */}
+            <button 
+              onClick={() => setShowCartChoice(false)}
+              style={{ padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}
+            >
+              <i className="fas fa-bolt"></i>
+              Order Now
+            </button>
+            
+            {/* Add to Cart Button */}
+            <button 
+              onClick={addToCart}
+              style={{ padding: 16, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(59,130,246,0.3)" }}
+            >
+              <i className="fas fa-cart-plus"></i>
+              Add to Cart & Continue Shopping
+            </button>
+            
+            {/* View Cart Button (if cart has items) */}
+            {cart.length > 0 && (
+              <button 
+                onClick={() => {
+                  setShowCartChoice(false);
+                  setShowCart(true);
+                }}
+                style={{ padding: 12, background: "#f8fafc", color: "#64748b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              >
+                <i className="fas fa-shopping-bag"></i>
+                View Cart ({cart.length} items)
+              </button>
+            )}
+          </div>
+          
+          <p style={{ fontSize: 12, textAlign: "center", color: "#64748b", marginTop: 24 }}>
+            {cart.length > 0 
+              ? `You already have ${cart.length} item(s) in your cart` 
+              : 'Your cart is empty'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const productEmoji = product?.image ? "" : (product?.category === "electronics" ? "📱" : product?.category === "footwear" ? "👟" : product?.category === "clothing" ? "👕" : product?.category === "beauty" ? "💄" : product?.category === "furniture" ? "🛋️" : product?.category === "food" ? "🍎" : product?.category === "sports" ? "🏋️" : product?.category === "toys" ? "🧸" : "📦");
   const currentStock = getVariantStock();
   const maxQuantity = Math.min(Math.max(currentStock, 1), 100);
@@ -589,9 +759,22 @@ function OrderPageContent() {
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <div style={{ width: "100%", maxWidth: 960, margin: "0 auto", background: "white", minHeight: "100vh", boxShadow: "0 0 40px rgba(0,0,0,0.06)" }}>
-        <>
-            {/* Header */}
-            <div style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: "28px 32px", textAlign: "center" }}>
+
+        {/* Floating Cart Button */}
+        {cart.length > 0 && !showCart && (
+          <button 
+            onClick={() => setShowCart(true)}
+            style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
+          >
+            <i className="fas fa-shopping-cart"></i>
+            <span style={{ position: "absolute", top: -4, right: -4, width: 24, height: 24, background: "#ef4444", borderRadius: "50%", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
+              {cart.length}
+            </span>
+          </button>
+        )}
+
+        {/* Header */}
+        <div style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: "28px 32px", textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 16 }}>
             <div style={{ width: 50, height: 50, background: "white", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
               {productEmoji || "📦"}
@@ -621,6 +804,133 @@ function OrderPageContent() {
             <div style={{ fontSize: 12, fontWeight: 600, color: "#64748b" }}>Payment</div>
           </div>
         </div>
+
+        {/* Floating Cart Button */}
+        {cart.length > 0 && !showCart && (
+          <button 
+            onClick={() => setShowCart(true)}
+            style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
+          >
+            <i className="fas fa-shopping-cart"></i>
+            <span style={{ position: "absolute", top: -4, right: -4, width: 24, height: 24, background: "#ef4444", borderRadius: "50%", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
+              {cart.length}
+            </span>
+          </button>
+        )}
+
+        {/* Cart View */}
+        {showCart ? (
+          <div style={{ padding: 24 }}>
+            <div style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden" }}>
+              <div style={{ padding: 24, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <h1 style={{ fontSize: 24, fontWeight: 800, color: "white", display: "flex", alignItems: "center", gap: 12 }}>
+                    <i className="fas fa-shopping-cart"></i>
+                    Your Cart
+                  </h1>
+                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 14, marginTop: 4 }}>{cart.length} item(s) in your cart</p>
+                </div>
+                <button 
+                  onClick={() => setShowCart(false)}
+                  style={{ color: "rgba(255,255,255,0.8)", background: "none", border: "none", fontSize: 20, cursor: "pointer", padding: 8 }}
+                >
+                  <i className="fas fa-arrow-left"></i>
+                </button>
+              </div>
+
+              {/* Cart Items */}
+              <div style={{ padding: 24 }}>
+                {cart.map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: 16, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #e2e8f0" }}>
+                    {/* Product Image */}
+                    <div style={{ width: 80, height: 80, borderRadius: 12, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                      {item.image || (item.images && item.images.length > 0) ? (
+                        <img src={item.image || item.images![0]} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <span style={{ fontSize: 32 }}></span>
+                      )}
+                    </div>
+                    
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ fontWeight: 700, fontSize: 14, color: "#1e293b", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</h3>
+                      {Object.keys(item.specs).length > 0 && (
+                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                          {Object.entries(item.specs).map(([key, val]) => (
+                            <span key={key} style={{ marginRight: 8 }}>{key}: {val}</span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <button 
+                            onClick={() => updateCartItemQuantity(idx, item.quantity - 1)}
+                            style={{ width: 28, height: 28, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, cursor: "pointer" }}
+                          >
+                            -
+                          </button>
+                          <span style={{ width: 24, textAlign: "center", fontWeight: 700, fontSize: 14 }}>{item.quantity}</span>
+                          <button 
+                            onClick={() => updateCartItemQuantity(idx, item.quantity + 1)}
+                            style={{ width: 28, height: 28, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, cursor: "pointer" }}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: "#25D366" }}>
+                          {CURRENCY_SYMBOL}{(item.price * item.quantity).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Remove Button */}
+                    <button 
+                      onClick={() => removeFromCart(idx)}
+                      style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", background: "none", border: "none", cursor: "pointer", borderRadius: 8, flexShrink: 0 }}
+                    >
+                      <i className="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                ))}
+
+                {/* Cart Totals */}
+                <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginTop: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px dashed #e2e8f0" }}>
+                    <span style={{ color: "#64748b" }}>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                    <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px dashed #e2e8f0" }}>
+                    <span style={{ color: "#64748b" }}>Shipping</span>
+                    <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{deliveryCost.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 12, marginTop: 8, borderTop: "2px solid #e2e8f0", fontSize: 20, fontWeight: 800 }}>
+                    <span>Total</span>
+                    <span style={{ color: "#25D366" }}>{CURRENCY_SYMBOL}{(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + deliveryCost).toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                {/* Cart Actions */}
+                <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                  <button 
+                    onClick={clearCart}
+                    style={{ flex: 1, padding: 12, background: "#f8fafc", color: "#64748b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  >
+                    <i className="fas fa-trash-alt"></i>
+                    Clear Cart
+                  </button>
+                  <button 
+                    onClick={() => setShowCart(false)}
+                    style={{ flex: 1, padding: 12, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  >
+                    <i className="fas fa-plus"></i>
+                    Add More Items
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+        <>
 
         {/* Desktop Two-Column Layout */}
         <div className="order-grid">
@@ -1204,7 +1514,7 @@ function OrderPageContent() {
         </div>
 
         </>
-
+        )}
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
           @keyframes slideUp {
