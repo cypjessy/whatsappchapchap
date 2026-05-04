@@ -12,29 +12,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Use Evolution config from client (tenant-specific credentials)
-    // This avoids needing Firebase Admin SDK on the server
-    let evolutionUrl, evolutionApiKey, evolutionInstanceId;
+    // Call Evolution API server-side (same method as webhook)
+    const evolutionUrl = evolutionConfig?.evolutionServerUrl?.replace(/\/$/, '') || process.env.EVOLUTION_API_URL?.replace(/\/$/, '');
+    const evolutionApiKey = evolutionConfig?.evolutionApiKey || process.env.EVOLUTION_API_KEY;
+    const instanceName = evolutionConfig?.evolutionInstanceId || tenantId;
     
-    if (evolutionConfig) {
-      // Client passed tenant's Evolution credentials directly
-      evolutionUrl = evolutionConfig.evolutionServerUrl?.replace(/\/$/, ''); // Remove trailing slash
-      evolutionApiKey = evolutionConfig.evolutionApiKey;
-      evolutionInstanceId = evolutionConfig.evolutionInstanceId;
-      console.log('📦 Received evolutionConfig from client:', {
-        url: evolutionUrl,
-        hasApiKey: !!evolutionApiKey,
-        instanceId: evolutionInstanceId
-      });
-    } else {
-      // Fallback to environment variables (single Evolution instance)
-      evolutionUrl = process.env.EVOLUTION_API_URL?.replace(/\/$/, '');
-      evolutionApiKey = process.env.EVOLUTION_API_KEY;
-      evolutionInstanceId = tenantId; // Use tenantId as instance ID
-      console.log(' Using environment variables for Evolution config');
-    }
-    
-    if (!evolutionUrl || !evolutionApiKey || !evolutionInstanceId) {
+    if (!evolutionUrl || !evolutionApiKey || !instanceName) {
       return NextResponse.json(
         { error: "Evolution API credentials not configured" }, 
         { status: 500 }
@@ -45,11 +28,12 @@ export async function POST(req: NextRequest) {
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
     
-    // Call Evolution API server-side
-    const apiUrl = `${evolutionUrl}/message/sendText/${evolutionInstanceId}`;
+    // Use same endpoint as webhook route
+    const apiUrl = `${evolutionUrl}/message/sendText/${instanceName}`;
     
-    console.log(` Sending WhatsApp to ${fullPhone} via Evolution API`);
-    console.log(` Full Evolution URL: ${apiUrl}`);
+    console.log(`[Send WhatsApp] Sending to ${fullPhone}`);
+    console.log(`[Send WhatsApp] URL: ${apiUrl}`);
+    console.log(`[Send WhatsApp] Instance: ${instanceName}`);
     
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -59,7 +43,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({ 
         number: fullPhone, 
-        text: message 
+        text: message
       }),
     });
     
@@ -67,19 +51,19 @@ export async function POST(req: NextRequest) {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
-      console.error(" Evolution API returned non-JSON response:");
+      console.error("[Send WhatsApp] Evolution API returned non-JSON response:");
       console.error("   Status:", response.status);
       console.error("   Content-Type:", contentType);
       console.error("   Response (first 500 chars):", textResponse.substring(0, 500));
       console.error("   URL:", apiUrl);
-      console.error("   Instance ID:", evolutionInstanceId);
+      console.error("   Instance:", instanceName);
       return NextResponse.json(
         { 
           error: "Evolution API returned invalid response",
           status: response.status,
           response: textResponse.substring(0, 200),
           url: apiUrl,
-          instanceId: evolutionInstanceId
+          instanceId: instanceName
         }, 
         { status: 500 }
       );
@@ -88,7 +72,7 @@ export async function POST(req: NextRequest) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error(" Evolution API error response:");
+      console.error("[Send WhatsApp] Evolution API error response:");
       console.error("   Status:", response.status);
       console.error("   Data:", JSON.stringify(data));
       return NextResponse.json(
@@ -97,8 +81,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    console.log("✅ WhatsApp sent successfully via Evolution API");
-    console.log("   Response:", JSON.stringify(data));
+    console.log("[Send WhatsApp] ✅ WhatsApp sent successfully via Evolution API");
     return NextResponse.json({ success: true, data });
     
   } catch (error) {
