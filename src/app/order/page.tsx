@@ -714,6 +714,49 @@ function OrderPageContent() {
               </div>
             </div>
           )}
+          
+          {/* Product Details / Filters Display */}
+          {product?.filters && Object.keys(product.filters).length > 0 && (
+            <div style={{ marginTop: 20, padding: 20, background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16, color: "#1e293b", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="fas fa-info-circle" style={{ color: "#25D366" }}></i>
+                Product Details
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+                {Object.entries(product.filters).map(([key, options]) => {
+                  if (!Array.isArray(options) || options.length === 0) return null;
+                  
+                  const isColorKey = key.toLowerCase().includes('color');
+                  
+                  return (
+                    <div key={key}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#64748b", marginBottom: 8, textTransform: "capitalize" }}>
+                        {key.replace(/_/g, " ")}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {options.map((option, idx) => {
+                          if (isColorKey) {
+                            return (
+                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "white", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                                <div style={{ width: 16, height: 16, borderRadius: "50%", background: option.toLowerCase(), border: "2px solid #e2e8f0" }}></div>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", textTransform: "capitalize" }}>{option}</span>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <span key={idx} style={{ padding: "6px 12px", background: "white", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13, fontWeight: 600, color: "#1e293b", textTransform: "capitalize" }}>
+                              {option}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Specifications Section */}
@@ -725,7 +768,7 @@ function OrderPageContent() {
             </div>
 
             {Object.entries(product.filters).map(([key, options]) => {
-              if (!Array.isArray(options) || options.length <= 1) return null;
+              if (!Array.isArray(options) || options.length === 0) return null;
               
               const isColorKey = key.toLowerCase().includes('color');
               
