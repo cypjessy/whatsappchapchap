@@ -773,26 +773,26 @@ export default function CustomersPage() {
                     </div>
                   </div>
                   {!bulkMode && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           shareCustomerWhatsApp(customer);
                         }}
-                        className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
+                        className="w-10 h-10 flex items-center justify-center text-[#25D366] hover:text-white hover:bg-[#25D366] bg-[rgba(37,211,102,0.1)] rounded-lg transition-all shadow-sm"
                         title="Share via WhatsApp"
                       >
-                        <i className="fab fa-whatsapp text-sm"></i>
+                        <i className="fab fa-whatsapp text-base"></i>
                       </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           printCustomerProfile(customer);
                         }}
-                        className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg"
+                        className="w-10 h-10 flex items-center justify-center text-[#3b82f6] hover:text-white hover:bg-[#3b82f6] bg-[#eff6ff] rounded-lg transition-all shadow-sm"
                         title="Print Profile"
                       >
-                        <i className="fas fa-print text-sm"></i>
+                        <i className="fas fa-print text-base"></i>
                       </button>
                     </div>
                   )}

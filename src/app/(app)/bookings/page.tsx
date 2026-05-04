@@ -714,11 +714,11 @@ export default function BookingsPage() {
                     <div className="flex justify-between items-center pt-3 border-t border-[#e2e8f0]">
                       <span className="font-extrabold text-lg text-[#8b5cf6]">KES {booking.price.toLocaleString()}</span>
                       <div className="flex gap-2">
-                        <button className="w-8 h-8 rounded-lg bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all">
-                          <i className="fab fa-whatsapp"></i>
+                        <button className="w-10 h-10 rounded-lg bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all shadow-sm">
+                          <i className="fab fa-whatsapp text-base"></i>
                         </button>
-                        <button onClick={() => setSelectedBooking(booking)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all">
-                          <i className="fas fa-eye"></i>
+                        <button onClick={() => setSelectedBooking(booking)} className="w-10 h-10 rounded-lg bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all shadow-sm">
+                          <i className="fas fa-eye text-base font-bold"></i>
                         </button>
                       </div>
                     </div>
@@ -883,11 +883,11 @@ export default function BookingsPage() {
                     <div className="flex justify-between items-center pt-3 border-t border-[#e2e8f0]">
                       <span className="font-extrabold text-lg text-[#8b5cf6]">KES {booking.price.toLocaleString()}</span>
                       <div className="flex gap-2">
-                        <button className="w-8 h-8 rounded-lg bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all">
-                          <i className="fab fa-whatsapp"></i>
+                        <button className="w-10 h-10 rounded-lg bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all shadow-sm">
+                          <i className="fab fa-whatsapp text-base"></i>
                         </button>
-                        <button className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all">
-                          <i className="fas fa-eye"></i>
+                        <button className="w-10 h-10 rounded-lg bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all shadow-sm">
+                          <i className="fas fa-eye text-base font-bold"></i>
                         </button>
                       </div>
                     </div>

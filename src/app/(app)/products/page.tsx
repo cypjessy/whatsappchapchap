@@ -911,60 +911,60 @@ export default function ProductsPage() {
                             e.stopPropagation();
                             handleToggleStatus(product);
                           }}
-                          className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
+                          className="w-10 h-10 flex items-center justify-center text-[#10b981] hover:text-white hover:bg-[#10b981] bg-[rgba(16,185,129,0.1)] rounded-lg transition-all shadow-sm"
                           title={product.status === 'active' ? 'Pause' : 'Activate'}
                         >
-                          <i className={`fas ${product.status === 'active' ? 'fa-pause' : 'fa-play'} text-xs`}></i>
+                          <i className={`fas ${product.status === 'active' ? 'fa-pause' : 'fa-play'} text-base`}></i>
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDuplicateProduct(product);
                           }}
-                          className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg"
+                          className="w-10 h-10 flex items-center justify-center text-[#8b5cf6] hover:text-white hover:bg-[#8b5cf6] bg-[#f5f3ff] rounded-lg transition-all shadow-sm"
                           title="Duplicate"
                         >
-                          <i className="fas fa-copy text-xs"></i>
+                          <i className="fas fa-copy text-base"></i>
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleShareProduct(product);
                           }}
-                          className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
+                          className="w-10 h-10 flex items-center justify-center text-[#3b82f6] hover:text-white hover:bg-[#3b82f6] bg-[#eff6ff] rounded-lg transition-all shadow-sm"
                           title="Share"
                         >
-                          <i className="fas fa-share-alt text-xs"></i>
+                          <i className="fas fa-share-alt text-base"></i>
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             shareProductWhatsApp(product);
                           }}
-                          className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
+                          className="w-10 h-10 flex items-center justify-center text-[#25D366] hover:text-white hover:bg-[#25D366] bg-[rgba(37,211,102,0.1)] rounded-lg transition-all shadow-sm"
                           title="Send via WhatsApp"
                         >
-                          <i className="fab fa-whatsapp text-xs"></i>
+                          <i className="fab fa-whatsapp text-base"></i>
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             printProductCatalog(product);
                           }}
-                          className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg"
+                          className="w-10 h-10 flex items-center justify-center text-[#06b6d4] hover:text-white hover:bg-[#06b6d4] bg-[rgba(6,182,212,0.1)] rounded-lg transition-all shadow-sm"
                           title="Print Product"
                         >
-                          <i className="fas fa-print text-xs"></i>
+                          <i className="fas fa-print text-base"></i>
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowDeleteConfirm(product.id);
                           }}
-                          className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-red-500 hover:bg-[#f1f5f9] rounded-lg"
+                          className="w-10 h-10 flex items-center justify-center text-[#ef4444] hover:text-white hover:bg-[#ef4444] bg-[rgba(239,68,68,0.1)] rounded-lg transition-all shadow-sm"
                           title="Delete"
                         >
-                          <i className="fas fa-trash text-xs"></i>
+                          <i className="fas fa-trash text-base"></i>
                         </button>
                       </>
                     )}

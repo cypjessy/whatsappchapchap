@@ -520,9 +520,9 @@ export default function ClientsPage() {
                         e.stopPropagation();
                         whatsappClient(client);
                       }}
-                      className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors"
+                      className="w-10 h-10 rounded-lg bg-[rgba(37,211,102,0.1)] flex items-center justify-center text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all shadow-sm"
                     >
-                      <i className="fab fa-whatsapp"></i>
+                      <i className="fab fa-whatsapp text-base"></i>
                     </button>
                     <button
                       onClick={(e) => {
@@ -530,18 +530,18 @@ export default function ClientsPage() {
                         setEditingClient(client);
                         setShowEditModal(true);
                       }}
-                      className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] transition-colors"
+                      className="w-10 h-10 rounded-lg bg-[#eff6ff] flex items-center justify-center text-[#3b82f6] hover:bg-[#3b82f6] hover:text-white transition-all shadow-sm"
                     >
-                      <i className="fas fa-edit"></i>
+                      <i className="fas fa-edit text-base"></i>
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         callClient(client);
                       }}
-                      className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:bg-[#8b5cf6] hover:text-white hover:border-[#8b5cf6] transition-colors"
+                      className="w-10 h-10 rounded-lg bg-[#f5f3ff] flex items-center justify-center text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white transition-all shadow-sm"
                     >
-                      <i className="fas fa-phone"></i>
+                      <i className="fas fa-phone text-base"></i>
                     </button>
                   </div>
                 </div>

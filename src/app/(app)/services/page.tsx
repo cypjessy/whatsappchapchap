@@ -572,50 +572,50 @@ export default function ServicesPage() {
                           e.stopPropagation();
                           handleShareService(service);
                         }}
-                        className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all"
+                        className="w-10 h-10 rounded-lg bg-[#eff6ff] text-[#3b82f6] flex items-center justify-center hover:bg-[#3b82f6] hover:text-white transition-all shadow-sm"
                         title="Copy Booking Link"
                       >
-                        <i className="fas fa-link text-xs"></i>
+                        <i className="fas fa-link text-base"></i>
                       </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleStatus(service);
                         }}
-                        className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all"
+                        className="w-10 h-10 rounded-lg bg-[rgba(16,185,129,0.1)] text-[#10b981] flex items-center justify-center hover:bg-[#10b981] hover:text-white transition-all shadow-sm"
                         title={service.status === 'active' ? 'Pause' : 'Activate'}
                       >
-                        <i className={`fas ${service.status === 'active' ? 'fa-pause' : 'fa-play'} text-xs`}></i>
+                        <i className={`fas ${service.status === 'active' ? 'fa-pause' : 'fa-play'} text-base`}></i>
                       </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDuplicateService(service);
                         }}
-                        className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#3b82f6] hover:text-white transition-all"
+                        className="w-10 h-10 rounded-lg bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all shadow-sm"
                         title="Duplicate"
                       >
-                        <i className="fas fa-copy text-xs"></i>
+                        <i className="fas fa-copy text-base"></i>
                       </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleShareService(service);
                         }}
-                        className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all"
+                        className="w-10 h-10 rounded-lg bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all shadow-sm"
                         title="Share"
                       >
-                        <i className="fas fa-share-alt text-xs"></i>
+                        <i className="fas fa-share-alt text-base"></i>
                       </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowDeleteConfirm(service.id);
                         }}
-                        className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                        className="w-10 h-10 rounded-lg bg-[rgba(239,68,68,0.1)] text-[#ef4444] flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
                         title="Delete"
                       >
-                        <i className="fas fa-trash text-xs"></i>
+                        <i className="fas fa-trash text-base"></i>
                       </button>
                     </div>
                   )}
@@ -675,20 +675,20 @@ export default function ServicesPage() {
               </div>
               {!bulkMode && (
                 <div className="flex gap-2 flex-shrink-0">
-                  <button onClick={() => handleShareService(service)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all" title="Copy Booking Link">
-                    <i className="fas fa-link text-xs"></i>
+                  <button onClick={() => handleShareService(service)} className="w-10 h-10 rounded-lg bg-[#eff6ff] text-[#3b82f6] flex items-center justify-center hover:bg-[#3b82f6] hover:text-white transition-all shadow-sm" title="Copy Booking Link">
+                    <i className="fas fa-link text-base"></i>
                   </button>
-                  <button onClick={() => handleToggleStatus(service)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all">
-                    <i className={`fas ${service.status === 'active' ? 'fa-pause' : 'fa-play'} text-xs`}></i>
+                  <button onClick={() => handleToggleStatus(service)} className="w-10 h-10 rounded-lg bg-[rgba(16,185,129,0.1)] text-[#10b981] flex items-center justify-center hover:bg-[#10b981] hover:text-white transition-all shadow-sm">
+                    <i className={`fas ${service.status === 'active' ? 'fa-pause' : 'fa-play'} text-base`}></i>
                   </button>
-                  <button onClick={() => handleDuplicateService(service)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#3b82f6] hover:text-white transition-all">
-                    <i className="fas fa-copy text-xs"></i>
+                  <button onClick={() => handleDuplicateService(service)} className="w-10 h-10 rounded-lg bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all shadow-sm">
+                    <i className="fas fa-copy text-base"></i>
                   </button>
-                  <button onClick={() => handleShareService(service)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all">
-                    <i className="fas fa-share-alt text-xs"></i>
+                  <button onClick={() => handleShareService(service)} className="w-10 h-10 rounded-lg bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all shadow-sm">
+                    <i className="fas fa-share-alt text-base"></i>
                   </button>
-                  <button onClick={() => setShowDeleteConfirm(service.id)} className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-                    <i className="fas fa-trash text-xs"></i>
+                  <button onClick={() => setShowDeleteConfirm(service.id)} className="w-10 h-10 rounded-lg bg-[rgba(239,68,68,0.1)] text-[#ef4444] flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                    <i className="fas fa-trash text-base"></i>
                   </button>
                 </div>
               )}

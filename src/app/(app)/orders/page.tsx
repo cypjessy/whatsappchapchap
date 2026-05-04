@@ -957,11 +957,11 @@ try {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => printInvoice(order)} title="Print Invoice"><i className="fas fa-print"></i></button>
-                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => handleDuplicateOrder(order)} title="Duplicate"><i className="fas fa-copy"></i></button>
-                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => sendWhatsAppNotification(order, order.status as OrderStatus)} title="Send WhatsApp"><i className="fab fa-whatsapp"></i></button>
-                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => openOrderModal(order)}><i className="fas fa-eye"></i></button>
-                            <button className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg transition-all" onClick={() => openEditModal(order)}><i className="fas fa-edit"></i></button>
+                            <button className="w-10 h-10 flex items-center justify-center text-[#3b82f6] hover:text-white hover:bg-[#3b82f6] bg-[#eff6ff] rounded-lg transition-all shadow-sm" onClick={() => printInvoice(order)} title="Print Invoice"><i className="fas fa-print text-base"></i></button>
+                            <button className="w-10 h-10 flex items-center justify-center text-[#8b5cf6] hover:text-white hover:bg-[#8b5cf6] bg-[#f5f3ff] rounded-lg transition-all shadow-sm" onClick={() => handleDuplicateOrder(order)} title="Duplicate"><i className="fas fa-copy text-base"></i></button>
+                            <button className="w-10 h-10 flex items-center justify-center text-[#25D366] hover:text-white hover:bg-[#25D366] bg-[rgba(37,211,102,0.1)] rounded-lg transition-all shadow-sm" onClick={() => sendWhatsAppNotification(order, order.status as OrderStatus)} title="Send WhatsApp"><i className="fab fa-whatsapp text-base"></i></button>
+                            <button className="w-10 h-10 flex items-center justify-center text-[#10b981] hover:text-white hover:bg-[#10b981] bg-[rgba(16,185,129,0.1)] rounded-lg transition-all shadow-sm" onClick={() => openOrderModal(order)} title="View Details"><i className="fas fa-eye text-base font-bold"></i></button>
+                            <button className="w-10 h-10 flex items-center justify-center text-[#f59e0b] hover:text-white hover:bg-[#f59e0b] bg-[rgba(245,158,11,0.1)] rounded-lg transition-all shadow-sm" onClick={() => openEditModal(order)} title="Edit Order"><i className="fas fa-edit text-base"></i></button>
                           </div>
                         </td>
                       </tr>
