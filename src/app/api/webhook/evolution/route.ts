@@ -679,7 +679,7 @@ async function handleProductBrowseInput(
         .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
         .join('\n');
         
-      const response = ` *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ - Main menu`;
+      const response = ` *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
       
       // Update flow state
@@ -748,7 +748,7 @@ async function handleProductBrowseInput(
         .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
         .join('\n');
         
-      const response = ` *${selectedSubcategory}* - Brands\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️ - Main menu`;
+      const response = ` *${selectedSubcategory}* - Brands\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
         
       // Update flow state
@@ -795,7 +795,7 @@ async function handleProductBrowseInput(
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
-        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ View Categories\n4️ - Main menu`;
+        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
@@ -837,7 +837,7 @@ async function handleProductBrowseInput(
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
-        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️ - Main menu`;
+        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
@@ -852,7 +852,7 @@ async function handleProductBrowseInput(
       await sendWelcomeMenu(tenantId, phone);
     } else {
       await sendEvolutionMessage(tenantId, phone, 
-        "*Reply with a number:*\n1️⃣ - View More\n2️ - Go back\n3️⃣ - View Categories\n4️ - Main Menu"
+        "*Reply with a number:*\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
       );
     }
   }
@@ -1019,9 +1019,9 @@ async function showProductsForSelection(
   // Reply instructions
   let replyMessage = '';
   if (totalProducts > 5) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
   } else {
-    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1206,7 +1206,7 @@ async function showNextProductPage(
   const remaining = allProductIds.length - endIndex;
   let replyMessage = '';
   if (remaining > 0) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${remaining} more)\n2️⃣ - Go back\n3️ - View Categories\n4️⃣ - Main Menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${remaining} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
   } else {
     replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
   }
