@@ -569,7 +569,7 @@ export default function CheckoutPage() {
                     style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
                   >
                     <option value="">Select County</option>
-                    {[...new Set(pickupStations.map(s => s.county))].map(county => (
+                    {Array.isArray(pickupStations) && [...new Set(pickupStations.map(s => s.county))].map(county => (
                       <option key={county} value={county}>{county}</option>
                     ))}
                   </select>
@@ -650,7 +650,7 @@ export default function CheckoutPage() {
                   Delivery Method
                 </div>
                 
-                {(businessSettings?.shippingMethods?.length ? businessSettings?.shippingMethods : [
+                {(Array.isArray(businessSettings?.shippingMethods) && businessSettings.shippingMethods.length ? businessSettings.shippingMethods : [
                   { id: "standard", name: "Standard Delivery", price: 500, estimatedDays: "2-3 days" },
                   { id: "express", name: "Express Delivery", price: 1000, estimatedDays: "Same day" },
                   { id: "pickup", name: "Store Pickup", price: 0, estimatedDays: "Same day" }
@@ -698,7 +698,7 @@ export default function CheckoutPage() {
                   Payment Method
                 </div>
                 
-                {!businessSettings?.paymentMethods ? (
+                {!businessSettings?.paymentMethods || !Array.isArray(businessSettings.paymentMethods) ? (
                   <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>
                     <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, marginBottom: 8 }}></i>
                     <div>Loading payment methods...</div>
