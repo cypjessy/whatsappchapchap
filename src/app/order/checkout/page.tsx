@@ -78,6 +78,7 @@ export default function CheckoutPage() {
   const [ordered, setOrdered] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string>("");
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -87,18 +88,21 @@ export default function CheckoutPage() {
         const parsedCart = JSON.parse(savedCart);
         setCart(parsedCart);
         
-        // If cart is empty, redirect back
+        // If cart is empty, show error
         if (parsedCart.length === 0) {
-          router.push("/order");
+          setError("Your cart is empty");
+          setLoading(false);
         }
       } catch (e) {
         console.error("Error loading cart:", e);
-        router.push("/order");
+        setError("Error loading cart. Please try again.");
+        setLoading(false);
       }
     } else {
-      router.push("/order");
+      setError("Your cart is empty");
+      setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   // Fetch tenant data and business settings
   useEffect(() => {
@@ -182,10 +186,6 @@ export default function CheckoutPage() {
 
     fetchData();
   }, [cart]);
-
-  const setError = (msg: string) => {
-    console.error(msg);
-  };
 
   const updateCartItemQuantity = (index: number, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -350,6 +350,36 @@ export default function CheckoutPage() {
         <div style={{ textAlign: "center" }}>
           <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 48, color: "#3b82f6", marginBottom: 16 }}></i>
           <div style={{ fontSize: 18, fontWeight: 600, color: "#1e293b" }}>Loading checkout...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
+        <div style={{ textAlign: "center", maxWidth: 400 }}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+            <i className="fas fa-shopping-cart" style={{ fontSize: 32, color: "#ef4444" }}></i>
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>Oops!</h2>
+          <p style={{ fontSize: 16, color: "#64748b", marginBottom: 32 }}>{error}</p>
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              padding: "14px 32px",
+              background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: 50,
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: "pointer"
+            }}
+          >
+            <i className="fas fa-arrow-left" style={{ marginRight: 8 }}></i>
+            Back to Shop
+          </button>
         </div>
       </div>
     );
