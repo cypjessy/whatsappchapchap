@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
@@ -80,28 +80,59 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>("");
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage and database on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem("shopping_cart");
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        setCart(parsedCart);
-        
-        // If cart is empty, show error
-        if (parsedCart.length === 0) {
-          setError("Your cart is empty");
-          setLoading(false);
+    const loadCart = async () => {
+      // First try localStorage (fast)
+      const savedCart = localStorage.getItem("whatsapp_cart");
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          if (parsedCart && parsedCart.length > 0) {
+            setCart(parsedCart);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing localStorage cart:", e);
         }
-      } catch (e) {
-        console.error("Error loading cart:", e);
-        setError("Error loading cart. Please try again.");
-        setLoading(false);
       }
-    } else {
+
+      // If localStorage is empty, try to load from database using tenantId from URL
+      const params = new URLSearchParams(window.location.search);
+      const tenantId = params.get('tenant');
+      const phone = params.get('phone');
+      
+      if (tenantId && phone) {
+        try {
+          const app = getFirebaseApp();
+          if (app) {
+            const db = getFirestore(app);
+            const conversationRef = doc(db, "tenants", tenantId, "conversations", phone);
+            const conversationSnap = await getDoc(conversationRef);
+            
+            if (conversationSnap.exists()) {
+              const data = conversationSnap.data();
+              if (data.cart && data.cart.items && data.cart.items.length > 0) {
+                setCart(data.cart.items);
+                // Also save to localStorage for persistence
+                localStorage.setItem("whatsapp_cart", JSON.stringify(data.cart.items));
+                setLoading(false);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error loading cart from database:", e);
+        }
+      }
+      
+      // If both sources are empty, show error
       setError("Your cart is empty");
       setLoading(false);
-    }
+    };
+    
+    loadCart();
   }, []);
 
   // Fetch tenant data and business settings
@@ -193,23 +224,58 @@ export default function CheckoutPage() {
     const updatedCart = [...cart];
     updatedCart[index].quantity = newQuantity;
     setCart(updatedCart);
-    localStorage.setItem("shopping_cart", JSON.stringify(updatedCart));
+    localStorage.setItem("whatsapp_cart", JSON.stringify(updatedCart));
+    
+    // Also update in database if we have tenantId and phone
+    if (updatedCart.length > 0) {
+      saveCartToDatabase(updatedCart);
+    }
   };
 
   const removeFromCart = (index: number) => {
     const updatedCart = cart.filter((_, i) => i !== index);
     setCart(updatedCart);
-    localStorage.setItem("shopping_cart", JSON.stringify(updatedCart));
+    localStorage.setItem("whatsapp_cart", JSON.stringify(updatedCart));
     
-    if (updatedCart.length === 0) {
-      router.push("/order");
+    // Also update in database
+    if (updatedCart.length > 0) {
+      saveCartToDatabase(updatedCart);
+    } else {
+      setError("Your cart is empty");
     }
   };
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem("shopping_cart");
-    router.push("/order");
+    localStorage.removeItem("whatsapp_cart");
+    setError("Your cart is empty");
+  };
+
+  const saveCartToDatabase = async (cartItems: typeof cart) => {
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('tenant');
+    const phone = params.get('phone');
+    
+    if (!tenantId || !phone || cartItems.length === 0) return;
+    
+    try {
+      const app = getFirebaseApp();
+      if (app) {
+        const db = getFirestore(app);
+        const conversationRef = doc(db, "tenants", tenantId, "conversations", phone);
+        
+        await setDoc(conversationRef, {
+          cart: {
+            items: cartItems,
+            updatedAt: new Date().toISOString(),
+          },
+        }, { merge: true });
+        
+        console.log('✅ Cart saved to database from checkout');
+      }
+    } catch (err) {
+      console.error('Failed to save cart to database:', err);
+    }
   };
 
   const validateForm = () => {
