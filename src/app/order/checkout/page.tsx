@@ -746,7 +746,7 @@ export default function CheckoutPage() {
                       {paymentMethod === "mpesa" ? "M-Pesa Payment Instructions" : paymentMethod === "bank" ? "Bank Transfer Details" : "Payment Instructions"}
                     </div>
                     <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap", marginBottom: 16 }}>
-                      {businessSettings.paymentMethods.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || "Payment instructions not available"}
+                      {Array.isArray(businessSettings.paymentMethods) ? (businessSettings.paymentMethods.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || "Payment instructions not available") : "Payment instructions not available"}
                     </div>
                     <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>
                       Enter Payment Details <span style={{ color: "#ef4444" }}>*</span>
