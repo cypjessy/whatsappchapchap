@@ -203,25 +203,83 @@ export default function CheckoutPage() {
             description?: string;
           }>;
         
-        // Handle paymentMethods - could be array or object
-        let paymentMethodsArray: any[] = [];
-        if (profileData?.paymentMethods) {
-          if (Array.isArray(profileData.paymentMethods)) {
-            paymentMethodsArray = profileData.paymentMethods;
-          } else if (typeof profileData.paymentMethods === 'object') {
-            // Convert object to array (e.g., {mpesa: {...}, bank: {...}})
-            paymentMethodsArray = Object.entries(profileData.paymentMethods).map(([id, data]) => {
-              const methodData = data as any;
-              return {
-                id: methodData.id || id,
-                name: methodData.name || id.charAt(0).toUpperCase() + id.slice(1),
-                details: methodData.details || methodData.description || '',
-                icon: methodData.icon || 'fa-credit-card',
-                color: methodData.color || '#3b82f6',
-                ...methodData
-              };
+        // Build payment methods array from business profile with new M-Pesa structure
+        // Each payment subtype becomes its own card for better UX
+        const paymentMethodsArray: Array<{ id: string; name: string; details: string; icon: string; color: string }> = [];
+        const pm = profileData?.paymentMethods;
+        
+        console.log('📊 Checkout - Payment Methods Object (pm):', pm);
+        console.log('📊 Checkout - M-Pesa full structure:', JSON.stringify(pm?.mpesa, null, 2));
+        
+        if (pm?.mpesa?.enabled) {
+          console.log('📊 Checkout - M-Pesa enabled');
+          
+          // Each M-Pesa subtype becomes its own payment card
+          if (pm.mpesa.buyGoods?.tillNumber) {
+            console.log(' Checkout - Buy Goods has tillNumber:', pm.mpesa.buyGoods.tillNumber);
+            paymentMethodsArray.push({
+              id: "mpesa-buygoods",
+              name: "M-Pesa Buy Goods",
+              details: `Till Number: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`,
+              icon: "fa-store",
+              color: "#00A650"
             });
           }
+          
+          if (pm.mpesa.paybill?.paybillNumber) {
+            console.log('📊 Checkout - Paybill has paybillNumber:', pm.mpesa.paybill.paybillNumber);
+            paymentMethodsArray.push({
+              id: "mpesa-paybill",
+              name: "M-Pesa Paybill",
+              details: `Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`,
+              icon: "fa-building",
+              color: "#059669"
+            });
+          }
+          
+          if (pm.mpesa.personal?.phoneNumber) {
+            console.log(' Checkout - Personal has phoneNumber:', pm.mpesa.personal.phoneNumber);
+            paymentMethodsArray.push({
+              id: "mpesa-personal",
+              name: "M-Pesa Send Money",
+              details: `Phone: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`,
+              icon: "fa-user",
+              color: "#10b981"
+            });
+          }
+        }
+        
+        if (pm?.bank?.enabled) {
+          console.log(' Checkout - Bank enabled:', pm.bank);
+          paymentMethodsArray.push({
+            id: "bank",
+            name: "Bank Transfer",
+            details: `${pm.bank.bankName || ''}\nAccount: ${pm.bank.accountNumber || ''}${pm.bank.branch ? `\nBranch: ${pm.bank.branch}` : ''}`,
+            icon: "fa-university",
+            color: "#64748b"
+          });
+        }
+        
+        if (pm?.card?.enabled) {
+          console.log('📊 Checkout - Card enabled:', pm.card);
+          paymentMethodsArray.push({
+            id: "card",
+            name: "Card Payment",
+            details: pm.card.description || "Pay with credit/debit card",
+            icon: "fa-credit-card",
+            color: "#3b82f6"
+          });
+        }
+        
+        if (pm?.cash?.enabled) {
+          console.log('📊 Checkout - Cash enabled:', pm.cash);
+          paymentMethodsArray.push({
+            id: "cash",
+            name: "Cash on Delivery",
+            details: pm.cash.description || "Pay with cash upon delivery",
+            icon: "fa-money-bill-wave",
+            color: "#10b981"
+          });
         }
         
         console.log('✅ Checkout - Converted paymentMethods to array:', paymentMethodsArray, 'length:', paymentMethodsArray.length);
