@@ -583,8 +583,11 @@ function OrderPageContent() {
     if (!product && cart.length === 0) return;
       
     if (!validateForm()) {
-      const section = document.querySelector('.specs-section') as HTMLElement;
-      if (section) section.scrollIntoView({ behavior: 'smooth' });
+      // Only scroll to specs section if it exists (when product has filters)
+      if (product?.filters && Object.keys(product.filters).length > 0) {
+        const section = document.querySelector('.specs-section') as HTMLElement;
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+      }
       return;
     }
       
@@ -1040,7 +1043,7 @@ function OrderPageContent() {
 
         {/* Specifications Section */}
         {product?.filters && Object.keys(product.filters).length > 0 && (
-          <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
+          <div className="specs-section" style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Select Options</div>
               <span style={{ fontSize: 14, color: "#64748b" }}>Choose your preferences</span>
