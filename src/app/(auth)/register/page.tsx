@@ -154,9 +154,9 @@ export default function RegisterPage() {
     });
     
     const tenantUpdate = {
-      evolutionServerUrl: data?.evolutionUrl || "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+      evolutionServerUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       evolutionInstanceId: data?.instanceId || instanceName,
-      evolutionApiUrl: data?.evolutionUrl || "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+      evolutionApiUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       evolutionApiKey: data?.evolutionKey || "",
       evolutionUUID: data?.evolutionUUID || "",
       whatsappInstanceId: data?.instanceId || instanceName,

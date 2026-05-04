@@ -149,10 +149,10 @@ export default function EvolutionDiagnostic() {
           <div className="bg-gray-50 rounded-xl p-4">
             <h3 className="font-bold mb-2">Current Evolution API URL:</h3>
             <code className="text-sm bg-white px-3 py-2 rounded block break-all">
-              https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io
+              http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io
             </code>
             <p className="text-xs text-gray-600 mt-2">
-              ✅ Now using HTTPS - should work properly!
+              ⚠️ Using HTTP (Evolution server doesn't have valid SSL certificate)
             </p>
           </div>
         </div>

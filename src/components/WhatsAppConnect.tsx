@@ -184,7 +184,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       console.log('Calling onConnected with evolutionKey:', actualApiKey, 'UUID:', evolutionUUID);
       onConnected({
         instanceId: instanceName,
-        evolutionUrl: "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+        evolutionUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
         evolutionKey: actualApiKey,
         evolutionUUID: evolutionUUID
       });
@@ -258,7 +258,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     setFetchedApiKey(actualApiKey);
     setApiKeyFetched(true);
     
-    const evolutionUrl = "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    const evolutionUrl = "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
     
     console.log('Sending to onConnected:', { evolutionKey: actualApiKey, evolutionUUID });
     
