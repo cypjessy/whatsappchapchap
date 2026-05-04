@@ -421,6 +421,21 @@ export interface ShippingMethod {
   updatedAt: any;
 }
 
+export interface PickupStation {
+  id: string;
+  tenantId: string;
+  county: string;
+  town: string;
+  stationName: string;
+  address: string;
+  contactPhone?: string;
+  operatingHours?: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: any;
+  updatedAt: any;
+}
+
 export interface Shipment {
   id: string;
   tenantId: string;
@@ -747,6 +762,80 @@ export const shippingService = {
 
   async deleteShippingMethod(user: User, methodId: string): Promise<void> {
     await deleteDoc(doc(db, "shippingMethods", methodId));
+  },
+
+  // Pickup Stations Service
+  async createPickupStation(user: User, station: Omit<PickupStation, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<PickupStation> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "pickupStations"));
+    const stationData: PickupStation = {
+      ...station,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, stationData);
+    return stationData;
+  },
+
+  async getPickupStations(user: User): Promise<PickupStation[]> {
+    const tenantId = getTenantId(user);
+    console.log('🔍 getPickupStations - Querying for tenantId:', tenantId);
+    try {
+      const q = query(collection(db, "pickupStations"), where("tenantId", "==", tenantId));
+      const snap = await getDocs(q);
+      console.log('📍 getPickupStations - Found', snap.docs.length, 'pickup stations');
+      const stations = snap.docs.map(doc => {
+        console.log('📍 Station:', doc.id, doc.data());
+        return { id: doc.id, ...doc.data() };
+      }) as PickupStation[];
+      
+      // Sort by county, then town, then station name
+      stations.sort((a, b) => {
+        if (a.county !== b.county) return a.county.localeCompare(b.county);
+        if (a.town !== b.town) return a.town.localeCompare(b.town);
+        return a.stationName.localeCompare(b.stationName);
+      });
+      
+      return stations;
+    } catch (error) {
+      console.error("❌ Error loading pickup stations:", error);
+      return [];
+    }
+  },
+
+  async getPickupStationsByCounty(user: User, county: string): Promise<PickupStation[]> {
+    const tenantId = getTenantId(user);
+    const q = query(
+      collection(db, "pickupStations"), 
+      where("tenantId", "==", tenantId),
+      where("county", "==", county),
+      where("isActive", "==", true)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PickupStation[];
+  },
+
+  async getPickupStationsByTown(user: User, county: string, town: string): Promise<PickupStation[]> {
+    const tenantId = getTenantId(user);
+    const q = query(
+      collection(db, "pickupStations"), 
+      where("tenantId", "==", tenantId),
+      where("county", "==", county),
+      where("town", "==", town),
+      where("isActive", "==", true)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PickupStation[];
+  },
+
+  async updatePickupStation(user: User, stationId: string, data: Partial<PickupStation>): Promise<void> {
+    await setDoc(doc(db, "pickupStations", stationId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deletePickupStation(user: User, stationId: string): Promise<void> {
+    await deleteDoc(doc(db, "pickupStations", stationId));
   },
 
   async createShipment(user: User, shipment: Omit<Shipment, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Shipment> {
@@ -1811,6 +1900,81 @@ export const serviceSettingsService = {
     
     if (snap.empty) return null;
     return { id: snap.docs[0].id, ...snap.docs[0].data() } as ServiceSettings;
+  },
+};
+
+export const pickupStationService = {
+  async createPickupStation(user: User, station: Omit<PickupStation, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<PickupStation> {
+    const tenantId = getTenantId(user);
+    const docRef = doc(collection(db, "pickupStations"));
+    const stationData: PickupStation = {
+      ...station,
+      id: docRef.id,
+      tenantId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, stationData);
+    return stationData;
+  },
+
+  async getPickupStations(user: User): Promise<PickupStation[]> {
+    const tenantId = getTenantId(user);
+    console.log('🔍 getPickupStations - Querying for tenantId:', tenantId);
+    try {
+      const q = query(collection(db, "pickupStations"), where("tenantId", "==", tenantId));
+      const snap = await getDocs(q);
+      console.log(' getPickupStations - Found', snap.docs.length, 'pickup stations');
+      const stations = snap.docs.map(doc => {
+        console.log(' Station:', doc.id, doc.data());
+        return { id: doc.id, ...doc.data() };
+      }) as PickupStation[];
+      
+      // Sort by county, then town, then station name
+      stations.sort((a, b) => {
+        if (a.county !== b.county) return a.county.localeCompare(b.county);
+        if (a.town !== b.town) return a.town.localeCompare(b.town);
+        return a.stationName.localeCompare(b.stationName);
+      });
+      
+      return stations;
+    } catch (error) {
+      console.error("❌ Error loading pickup stations:", error);
+      return [];
+    }
+  },
+
+  async getPickupStationsByCounty(user: User, county: string): Promise<PickupStation[]> {
+    const tenantId = getTenantId(user);
+    const q = query(
+      collection(db, "pickupStations"), 
+      where("tenantId", "==", tenantId),
+      where("county", "==", county),
+      where("isActive", "==", true)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PickupStation[];
+  },
+
+  async getPickupStationsByTown(user: User, county: string, town: string): Promise<PickupStation[]> {
+    const tenantId = getTenantId(user);
+    const q = query(
+      collection(db, "pickupStations"), 
+      where("tenantId", "==", tenantId),
+      where("county", "==", county),
+      where("town", "==", town),
+      where("isActive", "==", true)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PickupStation[];
+  },
+
+  async updatePickupStation(user: User, stationId: string, data: Partial<PickupStation>): Promise<void> {
+    await setDoc(doc(db, "pickupStations", stationId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async deletePickupStation(user: User, stationId: string): Promise<void> {
+    await deleteDoc(doc(db, "pickupStations", stationId));
   },
 };
 

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { businessProfileService, whatsappSettingsService, shippingService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, ProductSettings, ServiceSettings } from "@/lib/db";
+import { businessProfileService, whatsappSettingsService, shippingService, pickupStationService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, PickupStation, ProductSettings, ServiceSettings } from "@/lib/db";
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "whatsapp" | "payments">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments">("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -51,6 +51,20 @@ export default function SettingsPage() {
     price: 0,
     estimatedDays: "",
     description: "",
+  });
+
+  // Pickup Stations State
+  const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
+  const [editingStationId, setEditingStationId] = useState<string | null>(null);
+  const [newPickupStation, setNewPickupStation] = useState({
+    county: "",
+    town: "",
+    stationName: "",
+    address: "",
+    contactPhone: "",
+    operatingHours: "",
+    description: "",
+    isActive: true,
   });
 
   // Common shipping method presets
@@ -138,10 +152,11 @@ export default function SettingsPage() {
     try {
       console.log("Loading settings data for user:", user.uid);
       
-      const [profileData, whatsappData, shippingData, productData, serviceData] = await Promise.all([
+      const [profileData, whatsappData, shippingData, pickupStationsData, productData, serviceData] = await Promise.all([
         businessProfileService.getProfile(user),
         whatsappSettingsService.getSettings(user),
         shippingService.getShippingMethods(user),
+        pickupStationService.getPickupStations(user),
         productSettingsService.getSettings(user),
         serviceSettingsService.getSettings(user),
       ]);
@@ -209,6 +224,15 @@ export default function SettingsPage() {
         console.log("✅ Settings Page - Shipping methods set to state");
       } else {
         console.log("⚠️ Settings Page - No shipping data received");
+      }
+
+      if (pickupStationsData) {
+        console.log("📍 Settings Page - Pickup stations data received:", pickupStationsData);
+        console.log("📍 Settings Page - Pickup stations count:", pickupStationsData.length);
+        setPickupStations(pickupStationsData);
+        console.log("✅ Settings Page - Pickup stations set to state");
+      } else {
+        console.log("⚠️ Settings Page - No pickup stations data received");
       }
 
       if (productData) {
@@ -427,6 +451,103 @@ export default function SettingsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Pickup Station Functions
+  const addPickupStation = async () => {
+    if (!user || !newPickupStation.county || !newPickupStation.town || !newPickupStation.stationName) return;
+    setSaving(true);
+    try {
+      await pickupStationService.createPickupStation(user, newPickupStation as any);
+      
+      // Refresh stations list
+      const stations = await pickupStationService.getPickupStations(user);
+      setPickupStations(stations);
+      
+      // Reset form
+      setNewPickupStation({
+        county: "",
+        town: "",
+        stationName: "",
+        address: "",
+        contactPhone: "",
+        operatingHours: "",
+        description: "",
+        isActive: true,
+      });
+      
+      alert("Pickup station added successfully!");
+    } catch (error) {
+      console.error("Error adding pickup station:", error);
+      alert("Failed to add pickup station");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updatePickupStation = async () => {
+    if (!user || !editingStationId) return;
+    setSaving(true);
+    try {
+      await pickupStationService.updatePickupStation(user, editingStationId, newPickupStation as any);
+      
+      // Refresh stations list
+      const stations = await pickupStationService.getPickupStations(user);
+      setPickupStations(stations);
+      
+      // Reset form
+      setEditingStationId(null);
+      setNewPickupStation({
+        county: "",
+        town: "",
+        stationName: "",
+        address: "",
+        contactPhone: "",
+        operatingHours: "",
+        description: "",
+        isActive: true,
+      });
+      
+      alert("Pickup station updated successfully!");
+    } catch (error) {
+      console.error("Error updating pickup station:", error);
+      alert("Failed to update pickup station");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deletePickupStation = async (stationId: string) => {
+    if (!user) return;
+    if (!confirm("Delete this pickup station?")) return;
+    try {
+      await pickupStationService.deletePickupStation(user, stationId);
+      
+      // Refresh stations list
+      const stations = await pickupStationService.getPickupStations(user);
+      setPickupStations(stations);
+      
+      alert("Pickup station deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting pickup station:", error);
+      alert("Failed to delete pickup station");
+    }
+  };
+
+  const editPickupStation = (station: PickupStation) => {
+    setEditingStationId(station.id);
+    setNewPickupStation({
+      county: station.county,
+      town: station.town,
+      stationName: station.stationName,
+      address: station.address,
+      contactPhone: station.contactPhone || "",
+      operatingHours: station.operatingHours || "",
+      description: station.description || "",
+      isActive: station.isActive,
+    });
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const insertVariable = (variable: string) => {
     const textarea = document.getElementById("welcomeMessage") as HTMLTextAreaElement;
     if (textarea) {
@@ -512,6 +633,17 @@ export default function SettingsPage() {
         >
           <i className="fas fa-shipping-fast"></i>
           Shipping
+        </button>
+        <button
+          onClick={() => setActiveTab("pickup-stations")}
+          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+            activeTab === "pickup-stations"
+              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-blue-500"
+          }`}
+        >
+          <i className="fas fa-map-marker-alt"></i>
+          Pickup Stations
         </button>
         <button
           onClick={() => setActiveTab("whatsapp")}
@@ -1103,7 +1235,226 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* WhatsApp Tab */}
+      {/* Pickup Stations Tab */}
+      {activeTab === "pickup-stations" && (
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+            <div className="flex items-start gap-3">
+              <i className="fas fa-map-marker-alt text-2xl text-blue-500"></i>
+              <div>
+                <h3 className="font-bold text-lg mb-1">Pickup Stations</h3>
+                <p className="text-sm text-[#64748b]">
+                  Configure pickup locations for customers. Organized by county and town.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Add New Pickup Station */}
+          <div className="mb-6 p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
+            <h3 className="font-bold text-lg mb-4">{editingStationId ? "Edit Pickup Station" : "Add Pickup Station"}</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  County *
+                </label>
+                <input
+                  type="text"
+                  value={newPickupStation.county}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, county: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., Nairobi"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  Town *
+                </label>
+                <input
+                  type="text"
+                  value={newPickupStation.town}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, town: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., Westlands"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  Station Name *
+                </label>
+                <input
+                  type="text"
+                  value={newPickupStation.stationName}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, stationName: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., Sarit Centre Pickup Point"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  Full Address
+                </label>
+                <input
+                  type="text"
+                  value={newPickupStation.address}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, address: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., 4th Floor, Sarit Centre Mall"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  Contact Phone
+                </label>
+                <input
+                  type="tel"
+                  value={newPickupStation.contactPhone}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, contactPhone: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., +254 7XX XXX XXX"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  Operating Hours
+                </label>
+                <input
+                  type="text"
+                  value={newPickupStation.operatingHours}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, operatingHours: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., Mon-Sat 9AM-6PM"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={newPickupStation.description}
+                  onChange={(e) => setNewPickupStation(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g., Near main entrance, next to ATM"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newPickupStation.isActive}
+                    onChange={(e) => setNewPickupStation(prev => ({ ...prev, isActive: e.target.checked }))}
+                    className="w-5 h-5 rounded border-[#e2e8f0] text-blue-500 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-semibold text-[#64748b]">Active (Show to customers)</span>
+                </label>
+              </div>
+            </div>
+            
+            <button
+              onClick={editingStationId ? updatePickupStation : addPickupStation}
+              disabled={saving || !newPickupStation.county || !newPickupStation.town || !newPickupStation.stationName}
+              className={`mt-4 px-6 py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 ${
+                editingStationId 
+                  ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
+                  : "bg-gradient-to-r from-green-500 to-teal-500"
+              }`}
+            >
+              <i className={`fas ${editingStationId ? "fa-save" : "fa-plus"}`}></i>
+              {editingStationId ? "Update Pickup Station" : "Add Pickup Station"}
+            </button>
+            {editingStationId && (
+              <button
+                onClick={() => { 
+                  setEditingStationId(null); 
+                  setNewPickupStation({
+                    county: "",
+                    town: "",
+                    stationName: "",
+                    address: "",
+                    contactPhone: "",
+                    operatingHours: "",
+                    description: "",
+                    isActive: true,
+                  }); 
+                }}
+                className="mt-4 ml-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2"
+              >
+                <i className="fas fa-times"></i>
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {/* Existing Pickup Stations */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Current Pickup Stations</h3>
+            {pickupStations.length === 0 ? (
+              <div className="text-center py-12 text-[#64748b]">
+                <i className="fas fa-map-marker-alt text-4xl mb-3 opacity-30"></i>
+                <p>No pickup stations added yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pickupStations.map((station) => (
+                  <div key={station.id} className="flex items-start justify-between p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-bold">{station.stationName}</h4>
+                        {!station.isActive && (
+                          <span className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">Inactive</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-[#64748b]">
+                        <i className="fas fa-map-pin mr-1"></i>
+                        {station.county}, {station.town}
+                      </p>
+                      {station.address && (
+                        <p className="text-sm text-[#64748b] mt-1">
+                          <i className="fas fa-location-dot mr-1"></i>
+                          {station.address}
+                        </p>
+                      )}
+                      {station.contactPhone && (
+                        <p className="text-sm text-[#64748b] mt-1">
+                          <i className="fas fa-phone mr-1"></i>
+                          {station.contactPhone}
+                        </p>
+                      )}
+                      {station.operatingHours && (
+                        <p className="text-sm text-[#64748b] mt-1">
+                          <i className="fas fa-clock mr-1"></i>
+                          {station.operatingHours}
+                        </p>
+                      )}
+                      {station.description && (
+                        <p className="text-sm text-[#64748b] mt-1 italic">
+                          {station.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <button
+                        onClick={() => editPickupStation(station)}
+                        className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        onClick={() => deletePickupStation(station.id)}
+                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {activeTab === "whatsapp" && (
         <div className="space-y-6">
           {/* Business Name */}

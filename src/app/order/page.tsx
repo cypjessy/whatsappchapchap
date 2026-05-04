@@ -68,6 +68,19 @@ function OrderPageContent() {
     phone?: string;
     address?: string;
   } | null>(null);
+  const [pickupStations, setPickupStations] = useState<Array<{ 
+    id: string; 
+    county: string; 
+    town: string; 
+    stationName: string; 
+    address: string;
+    contactPhone?: string;
+    operatingHours?: string;
+    description?: string;
+  }>>([]);
+  const [selectedCounty, setSelectedCounty] = useState("");
+  const [selectedTown, setSelectedTown] = useState("");
+  const [selectedStation, setSelectedStation] = useState("");
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
@@ -163,6 +176,29 @@ function OrderPageContent() {
           })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
         
         console.log('📊 Order Page - Shipping methods for tenant:', shippingMethods);
+        
+        // Fetch pickup stations
+        const pickupQuery = collection(db, "pickupStations");
+        const pickupSnap = await getDocs(pickupQuery);
+        console.log('📍 Order Page - Pickup stations query results:', pickupSnap.size);
+        const pickupStationsData = pickupSnap.docs
+          .filter(doc => doc.data().tenantId === tenantId && doc.data().isActive !== false)
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Array<{ 
+            id: string; 
+            county: string; 
+            town: string; 
+            stationName: string; 
+            address: string;
+            contactPhone?: string;
+            operatingHours?: string;
+            description?: string;
+          }>;
+        
+        console.log('📍 Order Page - Pickup stations for tenant:', pickupStationsData);
+        setPickupStations(pickupStationsData);
         
         // Set business settings
         
@@ -333,7 +369,7 @@ function OrderPageContent() {
     
     if (!customerName.trim()) newErrors.name = true;
     if (!customerPhone.trim()) newErrors.phone = true;
-    if (!address.trim()) newErrors.address = true;
+    if (!selectedStation) newErrors.address = true;
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -382,7 +418,26 @@ function OrderPageContent() {
         whatsappJid,
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim() || null,
-        deliveryAddress: address.trim(),
+        deliveryAddress: (() => {
+          const station = pickupStations.find(s => s.id === selectedStation);
+          if (station) {
+            return `${station.stationName}, ${station.address}, ${station.town}, ${station.county}`;
+          }
+          return address.trim();
+        })(),
+        pickupStationId: selectedStation || null,
+        pickupStationDetails: (() => {
+          const station = pickupStations.find(s => s.id === selectedStation);
+          return station ? {
+            id: station.id,
+            name: station.stationName,
+            address: station.address,
+            town: station.town,
+            county: station.county,
+            contactPhone: station.contactPhone,
+            operatingHours: station.operatingHours
+          } : null;
+        })(),
         deliveryMethod,
         deliveryCost,
         paymentMethod,
@@ -818,15 +873,85 @@ function OrderPageContent() {
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Delivery Address <span style={{ color: "#ef4444" }}>*</span></label>
-            <input 
-              type="text" 
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="123 Kimathi Street, Nairobi"
-              style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
-            />
-            {errors.address && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your delivery address</p>}
+            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Select Pickup Location <span style={{ color: "#ef4444" }}>*</span></label>
+            
+            {/* County Selector */}
+            <select
+              value={selectedCounty}
+              onChange={(e) => {
+                setSelectedCounty(e.target.value);
+                setSelectedTown("");
+                setSelectedStation("");
+              }}
+              style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
+            >
+              <option value="">Select County</option>
+              {[...new Set(pickupStations.map(s => s.county))].map(county => (
+                <option key={county} value={county}>{county}</option>
+              ))}
+            </select>
+            
+            {/* Town Selector (only show if county selected) */}
+            {selectedCounty && (
+              <select
+                value={selectedTown}
+                onChange={(e) => {
+                  setSelectedTown(e.target.value);
+                  setSelectedStation("");
+                }}
+                style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
+              >
+                <option value="">Select Town</option>
+                {[...new Set(pickupStations.filter(s => s.county === selectedCounty).map(s => s.town))].map(town => (
+                  <option key={town} value={town}>{town}</option>
+                ))}
+              </select>
+            )}
+            
+            {/* Station Selector (only show if town selected) */}
+            {selectedTown && (
+              <select
+                value={selectedStation}
+                onChange={(e) => setSelectedStation(e.target.value)}
+                style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+              >
+                <option value="">Select Pickup Station</option>
+                {pickupStations.filter(s => s.county === selectedCounty && s.town === selectedTown).map(station => (
+                  <option key={station.id} value={station.id}>
+                    {station.stationName} - {station.address}
+                  </option>
+                ))}
+              </select>
+            )}
+            
+            {/* Show station details when selected */}
+            {selectedStation && (() => {
+              const station = pickupStations.find(s => s.id === selectedStation);
+              return station ? (
+                <div style={{ marginTop: 12, padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #86efac" }}>
+                  <p style={{ fontSize: 14, color: "#166534", margin: "4px 0" }}>
+                    <i className="fas fa-map-marker-alt"></i> {station.address}
+                  </p>
+                  {station.contactPhone && (
+                    <p style={{ fontSize: 14, color: "#166534", margin: "4px 0" }}>
+                      <i className="fas fa-phone"></i> {station.contactPhone}
+                    </p>
+                  )}
+                  {station.operatingHours && (
+                    <p style={{ fontSize: 14, color: "#166534", margin: "4px 0" }}>
+                      <i className="fas fa-clock"></i> {station.operatingHours}
+                    </p>
+                  )}
+                  {station.description && (
+                    <p style={{ fontSize: 13, color: "#166534", margin: "4px 0", fontStyle: "italic" }}>
+                      {station.description}
+                    </p>
+                  )}
+                </div>
+              ) : null;
+            })()}
+            
+            {errors.address && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please select a pickup location</p>}
           </div>
 
           <div>
