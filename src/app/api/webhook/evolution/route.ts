@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { getProductCategories, formatProductList, getProductImage } from "@/lib/product-helper";
@@ -187,15 +187,10 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       console.error("[Webhook] Error message:", tenantError instanceof Error ? tenantError.message : "Unknown");
       console.error("[Webhook] Error stack:", tenantError instanceof Error ? tenantError.stack : "No stack");
       
-      // Log error to Firestore
-      await logWebhookError(
-        tenantId,
-        "TENANT_FETCH_ERROR",
-        tenantError instanceof Error ? tenantError.message : String(tenantError),
-        tenantError instanceof Error ? tenantError.stack : undefined,
-        { step: "getBusinessContext" }
-      );
+      // Don't log to Firestore here - let the outer catch handle it
+      // This prevents double-logging and potential unhandled rejection if DB is unreachable
       
+      // Re-throw to be caught by outer catch which will return empty context
       throw tenantError;
     }
     
@@ -369,6 +364,22 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   } catch (error) {
     console.error("[Webhook] Error getting business context:", error);
     console.error("[Webhook] Error stack:", error instanceof Error ? error.stack : 'No stack');
+    
+    // Log error to Firestore (single logging point for all errors in this function)
+    try {
+      await logWebhookError(
+        tenantId,
+        "BUSINESS_CONTEXT_ERROR",
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : undefined,
+        { step: "getBusinessContext" }
+      );
+    } catch (logError) {
+      // If logging fails, just log to console - don't let it crash the function
+      console.error("[Webhook] Failed to log error to Firestore:", logError);
+    }
+    
+    // Return empty context so the system can continue with defaults
     return {
       businessName: "Our Shop",
       products: [],
@@ -379,7 +390,9 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
 
 // Send welcome menu with numbered options
 async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
-  const businessName = await getTenantBusinessName(tenantId);
+  // Use getTenantSettings to support customizable welcome messages
+  const settings = await getTenantSettings(tenantId);
+  const businessName = settings.businessName;
   
   // Check if user has items in cart
   let cartNote = '';
@@ -400,7 +413,15 @@ async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
     console.error('[Webhook] Error checking cart:', err);
   }
   
-  const menuMsg = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?\n\n1️ Browse Products\n2️ Browse Services\n3️ Check Order Status\n4️ Payment Info\n5️ Talk to Support${cartNote}\n\n*Reply with a number (1-5)*`;
+  // Use customized welcome message if enabled, otherwise use default
+  let welcomeText: string;
+  if (settings.welcomeMessageEnabled && settings.welcomeMessage) {
+    welcomeText = settings.welcomeMessage.replace(/\{\{business_name\}\}/g, businessName);
+  } else {
+    welcomeText = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?`;
+  }
+  
+  const menuMsg = `${welcomeText}\n\n1️⃣ Browse Products\n2️⃣ Browse Services\n3️⃣ Check Order Status\n4️⃣ Payment Info\n5️⃣ Talk to Support${cartNote}\n\n*Reply with a number (1-5)*`;
   
   await sendEvolutionMessage(tenantId, phone, menuMsg);
   
@@ -518,22 +539,10 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
       brands: [],
-      productCount: 0, // Will be calculated below
+      // Use stored productCount if available, otherwise default to 0
+      // TODO: Update category documents to store productCount during product CRUD operations
+      productCount: data.productCount || 0,
     };
-  });
-  
-  // Count products for each category
-  const productsSnap = await adminDb
-    .collection('products')
-    .where('tenantId', '==', tenantId)
-    .get();
-  
-  const products = productsSnap.docs.map((doc: any) => doc.data());
-  
-  categories.forEach((category) => {
-    category.productCount = products.filter(
-      (p: any) => p.categoryId === category.categorySlug || p.category === category.categorySlug
-    ).length;
   });
   
   // Format category menu
@@ -541,7 +550,7 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
     .map((cat, idx) => `${idx + 1}️⃣ ${cat.name} (${cat.productCount} products)`)
     .join('\n');
   
-  const response = `🛍️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n2️ - Back to main menu`;
+  const response = `🛍️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n0️⃣ Back to main menu`;
   
   await sendEvolutionMessage(tenantId, phone, response);
   
@@ -589,6 +598,7 @@ async function handleFlowInput(
   
   // Check for back option
   if (message.trim() === '0') {
+    // Generic back handler for all flows
     if (flowName === 'product_browse') {
       if (currentStep === 'category_selection') {
         // Back to main menu
@@ -600,16 +610,15 @@ async function handleFlowInput(
         return;
       }
     }
-  }
-  
-  // Check for main menu option
-  if (message.trim() === '3') {
-    await sendWelcomeMenu(tenantId, phone);
+    // Future flows can add their own '0' handling here
+    // For now, send a helpful message instead of silence
+    await sendEvolutionMessage(tenantId, phone, "⬅️ Back option not available in this flow. Reply *MENU* to return to main menu.");
     return;
   }
   
-  // Check for main menu option
-  if (message.trim().toLowerCase() === 'menu') {
+  // Check for main menu command (only when NOT in an active flow)
+  // This prevents conflicts with flow-specific numeric selections
+  if (!flowState?.isActive && message.trim().toLowerCase() === 'menu') {
     await sendWelcomeMenu(tenantId, phone);
     return;
   }
@@ -624,6 +633,12 @@ async function handleFlowInput(
   if (flowName === 'service_browse') {
     // TODO: Implement service browse flow
     await sendEvolutionMessage(tenantId, phone, "Service browsing coming soon!");
+    return;
+  }
+  
+  // Handle order status lookup flow
+  if (flowName === 'order_status_lookup') {
+    await handleOrderStatusLookupInput(tenantId, phone, message, flowState);
     return;
   }
 }
@@ -642,21 +657,28 @@ async function handleProductBrowseInput(
   if (currentStep === 'category_selection') {
     const num = parseInt(message.trim());
     const categories = selections.categories;
-    
+    const trimmed = message.trim().toLowerCase();
+      
     if (isNaN(num) || num < 1 || num > categories.length) {
-      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+      // Check for navigation commands
+      if (trimmed === 'menu' || num === 3) {
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      }
+        
+      await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
       return;
     }
-    
+      
     const selectedCategory = categories[num - 1];
-    
+      
     // Check if category has subcategories
     if (selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
       // Show subcategories
       const subcategoryList = selectedCategory.subcategories
         .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
         .join('\n');
-      
+        
       const response = ` *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
       
@@ -692,9 +714,23 @@ async function handleProductBrowseInput(
   else if (currentStep === 'subcategory_selection') {
     const num = parseInt(message.trim());
     const { categoryId, categoryName, categorySubcategories } = selections;
-      
+    const trimmed = message.trim().toLowerCase();
+        
     if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
-      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+      // Check for navigation commands
+      if (trimmed === 'categories' || num === 3) {
+        await startProductBrowseFlow(tenantId, phone);
+        return;
+      } else if (trimmed === 'menu' || num === 4) {
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      } else if (trimmed === 'back' || num === 2) {
+        // Back to categories
+        await startProductBrowseFlow(tenantId, phone);
+        return;
+      }
+        
+      await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
       return;
     }
       
@@ -712,7 +748,7 @@ async function handleProductBrowseInput(
         .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
         .join('\n');
         
-      const response = ` *${selectedSubcategory}* - Brands\n\n${brandList}\n\n2️ - Back to subcategories\n3️ - Main menu`;
+      const response = ` *${selectedSubcategory}* - Brands\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️ - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
         
       // Update flow state
@@ -744,9 +780,30 @@ async function handleProductBrowseInput(
   else if (currentStep === 'brand_selection') {
     const num = parseInt(message.trim());
     const availableBrands = selections.availableBrands || [];
+    const trimmed = message.trim().toLowerCase();
       
     if (isNaN(num) || num < 1 || num > availableBrands.length) {
-      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+      // Check for navigation commands
+      if (trimmed === 'categories' || num === 3) {
+        await startProductBrowseFlow(tenantId, phone);
+        return;
+      } else if (trimmed === 'menu' || num === 4) {
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      } else if (trimmed === 'back' || num === 2) {
+        // Back to subcategories
+        const subcategoryList = (selections.categorySubcategories || [])
+          .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
+          .join('\n');
+        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ View Categories\n4️ - Main menu`;
+        await sendEvolutionMessage(tenantId, phone, response);
+        await adminDb.collection("tenants").doc(tenantId)
+          .collection("conversations").doc(phone)
+          .set({ flowState: { ...flowState, currentStep: 'subcategory_selection', lastActivity: new Date().toISOString() } }, { merge: true });
+        return;
+      }
+      
+      await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
       return;
     }
       
@@ -780,7 +837,7 @@ async function handleProductBrowseInput(
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
-        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️ - Main menu`;
+        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️ - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
@@ -788,11 +845,14 @@ async function handleProductBrowseInput(
       } else {
         await startProductBrowseFlow(tenantId, phone);
       }
-    } else if (trimmed === 'menu' || num === '3') {
+    } else if (trimmed === 'categories' || num === '3') {
+      // View all categories
+      await startProductBrowseFlow(tenantId, phone);
+    } else if (trimmed === 'menu' || num === '4') {
       await sendWelcomeMenu(tenantId, phone);
     } else {
       await sendEvolutionMessage(tenantId, phone, 
-        "*Reply with a number:*\n1️⃣ - Next page\n2️⃣ - Go back\n3️ - Main menu"
+        "*Reply with a number:*\n1️⃣ - Next page\n2️ - Go back\n3️⃣ - View Categories\n4️ - Main Menu"
       );
     }
   }
@@ -959,9 +1019,9 @@ async function showProductsForSelection(
   // Reply instructions
   let replyMessage = '';
   if (totalProducts > 5) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${totalProducts - 5} more)\n2️⃣ - Go back\n3️ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
   } else {
-    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1008,18 +1068,26 @@ async function showNextProductPage(
     return;
   }
   
-  // Get product IDs for this page
+  // Get product IDs for this page (batch if needed due to Firestore 'in' operator 10-item limit)
   const pageIds = allProductIds.slice(startIndex, endIndex);
   
-  // Fetch only the specific product IDs for this page (optimized query)
-  const productsSnap = await adminDb.collection('products')
-    .where('__name__', 'in', pageIds)
-    .get();
+  // Firestore 'in' operator supports max 10 items, so batch if necessary
+  const productsToShow: any[] = [];
+  const batchSize = 10; // Firestore 'in' operator limit
   
-  const productsToShow = productsSnap.docs.map((doc: any) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  for (let i = 0; i < pageIds.length; i += batchSize) {
+    const batch = pageIds.slice(i, i + batchSize);
+    const batchSnap = await adminDb.collection('products')
+      .where('__name__', 'in', batch)
+      .get();
+    
+    batchSnap.docs.forEach((doc: any) => {
+      productsToShow.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+  }
   
   if (productsToShow.length === 0) {
     await sendEvolutionMessage(tenantId, phone, "No more products available.");
@@ -1064,25 +1132,25 @@ async function showNextProductPage(
     if (product.filters && Object.keys(product.filters).length > 0) {
       // Map common filter keys to readable labels and icons
       const filterLabels: Record<string, { label: string; icon: string }> = {
-        'color': { label: 'Colors', icon: '' },
-        'colors': { label: 'Colors', icon: '🎨' },
-        'size': { label: 'Sizes', icon: '' },
+        'color': { label: 'Colors', icon: '🎨' },
+        'colors': { label: 'Colors', icon: '' },
+        'size': { label: 'Sizes', icon: '📏' },
         'sizes': { label: 'Sizes', icon: '📏' },
-        'brand': { label: 'Brand', icon: '🏷️' },
+        'brand': { label: 'Brand', icon: '️' },
         'condition': { label: 'Condition', icon: '✨' },
         'warranty': { label: 'Warranty', icon: '🛡️' },
         'material': { label: 'Material', icon: '🧵' },
-        'weight': { label: 'Weight', icon: '' },
+        'weight': { label: 'Weight', icon: '⚖️' },
         'capacity': { label: 'Capacity', icon: '📦' },
-        'power': { label: 'Power', icon: '' },
+        'power': { label: 'Power', icon: '⚡' },
         'screen_size': { label: 'Screen Size', icon: '📱' },
-        'ram': { label: 'RAM', icon: '' },
-        'storage': { label: 'Storage', icon: '' },
+        'ram': { label: 'RAM', icon: '💾' },
+        'storage': { label: 'Storage', icon: '💿' },
       };
       
       Object.entries(product.filters).forEach(([filterKey, filterValues]) => {
         if (Array.isArray(filterValues) && filterValues.length > 0) {
-          const config = filterLabels[filterKey] || { label: filterKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()), icon: '' };
+          const config = filterLabels[filterKey] || { label: filterKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()), icon: '📌' };
           productText += `   ${config.icon} ${config.label}: ${filterValues.join(', ')}\n`;
         }
       });
@@ -1138,9 +1206,9 @@ async function showNextProductPage(
   const remaining = allProductIds.length - endIndex;
   let replyMessage = '';
   if (remaining > 0) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${remaining} more)\n2️⃣ - Go back\n3️ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${remaining} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
   } else {
-    replyMessage = `\n*Reply with a number:*\n2️ - Go back\n3️ - Main menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
@@ -1220,13 +1288,121 @@ async function handleBrandOrProductSelection(
   }
 }
 
+// Handle order status lookup flow input
+async function handleOrderStatusLookupInput(
+  tenantId: string,
+  phone: string,
+  message: string,
+  flowState: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  const { currentStep } = flowState;
+  
+  if (currentStep === 'waiting_for_order_number') {
+    // Extract order number from message (look for patterns like ORD-XXX, order #XXX, etc.)
+    const orderNumberMatch = message.match(/(ORD-[A-Z0-9]+)/i) || message.match(/order\s*#?\s*([A-Z0-9-]+)/i);
+    const orderNumber = orderNumberMatch ? orderNumberMatch[1].toUpperCase() : message.trim().toUpperCase();
+    
+    console.log('[Webhook] Looking up order:', orderNumber);
+    
+    // Query orders collection for this order number
+    const ordersSnap = await adminDb
+      .collection('orders')
+      .where('orderNumber', '==', orderNumber)
+      .where('tenantId', '==', tenantId)
+      .limit(1)
+      .get();
+    
+    if (ordersSnap.empty) {
+      await sendEvolutionMessage(tenantId, phone, 
+        `❌ Order *${orderNumber}* not found.\n\nPlease check the order number and try again, or reply *MENU* to return to the main menu.`
+      );
+      return;
+    }
+    
+    const orderDoc = ordersSnap.docs[0];
+    const orderData = orderDoc.data();
+    
+    // Format order status message
+    const statusEmoji: Record<string, string> = {
+      'pending': '⏳',
+      'confirmed': '✅',
+      'processing': '🔄',
+      'shipped': '🚚',
+      'delivered': '📦',
+      'cancelled': '❌'
+    };
+    
+    const emoji = statusEmoji[orderData.status] || '📋';
+    const statusText = orderData.status.charAt(0).toUpperCase() + orderData.status.slice(1);
+    
+    let response = `${emoji} *Order Status Update*\n\n`;
+    response += `*Order Number:* ${orderData.orderNumber}\n`;
+    response += `*Status:* ${statusText}\n`;
+    
+    if (orderData.products && orderData.products.length > 0) {
+      const productNames = orderData.products.map((p: any) => `${p.name} x${p.quantity}`).join(', ');
+      response += `*Items:* ${productNames}\n`;
+    }
+    
+    if (orderData.total) {
+      response += `*Total:* KES ${orderData.total.toLocaleString()}\n`;
+    }
+    
+    if (orderData.createdAt) {
+      const orderDate = new Date(orderData.createdAt.seconds * 1000 || orderData.createdAt);
+      response += `*Order Date:* ${orderDate.toLocaleDateString()}\n`;
+    }
+    
+    if (orderData.deliveryAddress) {
+      response += `*Delivery Address:* ${orderData.deliveryAddress}\n`;
+    }
+    
+    response += `\nNeed more help? Reply *SUPPORT* to talk to our team.`;
+    
+    await sendEvolutionMessage(tenantId, phone, response);
+    
+    // Clear flow state after showing order status
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: null
+      }, { merge: true });
+  }
+}
+
 // Placeholder functions for other menu options
 async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<void> {
   await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
 }
 
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
-  await sendEvolutionMessage(tenantId, phone, "📦 To check your order status, please provide your order ID or tracking number.");
+  const adminDb = getAdminDb();
+  
+  // Prompt user for order number
+  await sendEvolutionMessage(tenantId, phone, 
+    "📦 *Check Order Status*\n\nPlease provide your order number (e.g., ORD-ABC123).\n\nYou can find this in your order confirmation message."
+  );
+  
+  // Set flow state to wait for order number
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'order_status_lookup',
+        currentStep: 'waiting_for_order_number',
+        selections: {},
+        startedAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
 }
 
 async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
@@ -1280,10 +1456,29 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
     
     cartMessage += `━━━━━━━━━━━━━━━\n`;
     cartMessage += `*TOTAL: KES ${total.toLocaleString()}*\n\n`;
-    cartMessage += `To checkout, please:\n`;
-    cartMessage += `1. Open your order link (sent when you added items)\n`;
-    cartMessage += `2. Click the floating cart button (bottom-right)\n`;
-    cartMessage += `3. Review and place your order\n\n`;
+    cartMessage += `*To checkout:*\n`;
+    
+    // Generate order link dynamically if not already stored
+    if (cartData.orderLink) {
+      cartMessage += ` Open: ${cartData.orderLink}\n`;
+    } else {
+      // Generate order link on the fly
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
+      const orderLink = `${baseUrl}/order/${tenantId}/${phone}`;
+      cartMessage += `🔗 Open: ${orderLink}\n`;
+      
+      // Store it for future use
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          'cart.orderLink': orderLink
+        }, { merge: true });
+    }
+    
+    cartMessage += `\n💡 Tip: Click the floating cart button (bottom-right) to review and place your order\n\n`;
     cartMessage += `Or reply *CLEAR CART* to empty your cart.`;
     
     await sendEvolutionMessage(tenantId, phone, cartMessage);
@@ -1298,14 +1493,14 @@ async function handleClearCart(tenantId: string, phone: string): Promise<void> {
   try {
     const adminDb = getAdminDb();
     
-    // Clear cart from conversation document
+    // Clear cart from conversation document using deleteField
     await adminDb
       .collection("tenants")
       .doc(tenantId)
       .collection("conversations")
       .doc(phone)
       .set({
-        cart: null, // Remove cart field
+        cart: FieldValue.delete(), // Properly remove field instead of setting to null
       }, { merge: true });
     
     await sendEvolutionMessage(tenantId, phone, "🗑️ *Cart cleared!*\n\nYour cart is now empty. Browse products to add new items!\n\nReply *1* to browse products or *MENU* for main menu.");
@@ -1568,54 +1763,20 @@ async function processWithAI(
     console.log("[Webhook] AI Response generated successfully, length:", aiResponse.length);
     console.log("[Webhook] AI Response preview:", aiResponse.substring(0, 100));
     
-    // Save AI response to messages collection
-    console.log("[Webhook] Saving AI response to database...");
-    const adminDb = getAdminDb();
-    const messageId = `ai_${Date.now()}`;
-    const timestamp = new Date();
-    
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .collection("messages")
-      .doc(messageId)
-      .set({
-        text: aiResponse,
-        from: tenantId,
-        fromMe: true,
-        sender: "business",
-        timestamp,
-        status: "sent",
-        createdAt: timestamp,
-        isAI: true,
-      });
-    
-    console.log("[Webhook] AI response saved to database");
-    
-    // Update conversation with last message
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        lastMessage: aiResponse,
-        lastMessageTime: timestamp,
-        updatedAt: timestamp,
-      }, { merge: true });
-    
-    console.log("[Webhook] Conversation updated");
-    
-    // Send response via Evolution API
+    // Send response via Evolution API FIRST (before saving to DB)
     console.log("[Webhook] Sending response via Evolution API...");
     
     // Extract mentioned products and send their images automatically
-    const mentionedProducts = context.products.filter(p => 
-      aiResponse.toLowerCase().includes(p.name.toLowerCase()) &&
-      (p.images && p.images.length > 0 || p.image)
-    );
+    // Use word boundary matching to avoid false positives (e.g., "bag" in "garbage")
+    const mentionedProducts = context.products.filter(p => {
+      const productName = p.name.toLowerCase();
+      const responseLower = aiResponse.toLowerCase();
+      
+      // Use word boundary regex for accurate matching
+      const wordBoundaryRegex = new RegExp(`\\b${productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return wordBoundaryRegex.test(aiResponse) &&
+             (p.images && p.images.length > 0 || p.image);
+    });
     
     // Send images FIRST (before text)
     const productsToShow = mentionedProducts.slice(0, 3);
@@ -1639,10 +1800,50 @@ async function processWithAI(
     const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
     await sendEvolutionMessage(tenantId, phone, cleanText);
     
-    console.log("[Webhook] All messages sent");
+    console.log("[Webhook] All messages sent successfully");
+    
+    // ONLY NOW save to database (after successful send)
+    console.log("[Webhook] Saving AI response to database...");
+    const adminDb = getAdminDb();
+    const messageId = `ai_${Date.now()}`;
+    const timestamp = new Date();
+    
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .collection("messages")
+      .doc(messageId)
+      .set({
+        text: aiResponse,
+        from: tenantId,
+        fromMe: true,
+        sender: "business",
+        timestamp,
+        status: "sent", // Now accurate - message was actually sent
+        createdAt: timestamp,
+        isAI: true,
+      });
+    
+    console.log("[Webhook] AI response saved to database");
     
     console.log("[Webhook] AI processing complete ✅");
     console.log(`[Webhook] Total processing time: ${Date.now() - processStart}ms`);
+    
+    // Update conversation with last message (after successful send)
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        lastMessage: aiResponse,
+        lastMessageTime: timestamp,
+        updatedAt: timestamp,
+      }, { merge: true });
+    
+    console.log("[Webhook] Conversation updated");
     
     // Log success to Firestore
     await logWebhookSuccess(tenantId, phone, message, Date.now() - processStart);
@@ -1799,7 +2000,8 @@ export async function POST(req: NextRequest) {
       ? (existingConvo.data()?.unreadCount || 0) + 1
       : 1;
 
-    const isNewConversation = !existingConvo.exists;
+    // Note: Welcome message is now handled by sendWelcomeMenu() which uses getTenantSettings()
+    // No longer needed here as flow is managed centrally
 
     await conversationRef.set({
       phone: from,

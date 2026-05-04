@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where, setDoc, deleteField } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
@@ -58,7 +58,7 @@ function OrderPageContent() {
   const productId = searchParams.get("product") || "";
   const phoneParam = searchParams.get("phone") || "";
   
-  const [activeTab, setActiveTab] = useState<"order">("order");
+
   const [product, setProduct] = useState<Product | null>(null);
   const [tenantData, setTenantData] = useState<{evolutionServerUrl?: string; evolutionApiKey?: string; evolutionInstanceId?: string} | null>(null);
   const [businessSettings, setBusinessSettings] = useState<{
@@ -88,6 +88,7 @@ function OrderPageContent() {
   const [address, setAddress] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("");
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -100,7 +101,7 @@ function OrderPageContent() {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   
   // Cart state
-  const [showCartChoice, setShowCartChoice] = useState(false);
+
   const [cart, setCart] = useState<Array<{
     productId: string;
     name: string;
@@ -252,7 +253,7 @@ function OrderPageContent() {
             paymentMethodsArray.push({
               id: "mpesa-paybill",
               name: "M-Pesa Paybill",
-              details: `Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`,
+              details: `Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`,
               icon: "fa-building",
               color: "#059669"
             });
@@ -460,7 +461,7 @@ function OrderPageContent() {
         const conversationRef = doc(db, "tenants", tenantId, "conversations", customerPhone);
         
         await setDoc(conversationRef, {
-          cart: null, // Remove cart field
+          cart: deleteField(), // Properly remove field instead of setting to null
         }, { merge: true });
         
         console.log('✅ Cart cleared from database');
@@ -569,7 +570,10 @@ function OrderPageContent() {
     
     if (!customerName.trim()) newErrors.name = true;
     if (!customerPhone.trim()) newErrors.phone = true;
-    if (!selectedStation) newErrors.address = true;
+    // Only require pickup station if delivery method is pickup and stations are configured
+    if (deliveryMethod === 'pickup' && pickupStations.length > 0 && !selectedStation) {
+      newErrors.address = true;
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -590,7 +594,7 @@ function OrderPageContent() {
       const app = getFirebaseApp()!;
       const db = getFirestore(app);
         
-      const orderNum = "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      const orderNum = `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
         
       // Use cart items if in cart view, otherwise use current product
       const orderProducts = showCart ? cart.map(item => ({
@@ -816,7 +820,7 @@ function OrderPageContent() {
         {/* Floating Cart Button */}
         {cart.length > 0 && !showCart && (
           <button 
-            onClick={() => setShowCart(true)}
+            onClick={() => router.push(`/order/checkout?tenant=${tenantId}`)}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
             <i className="fas fa-shopping-cart"></i>
@@ -887,7 +891,7 @@ function OrderPageContent() {
         {/* Floating Cart Button */}
         {cart.length > 0 && !showCart && (
           <button 
-            onClick={() => setShowCart(true)}
+            onClick={() => router.push(`/order/checkout?tenant=${tenantId}`)}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
             <i className="fas fa-shopping-cart"></i>
@@ -897,121 +901,7 @@ function OrderPageContent() {
           </button>
         )}
 
-        {/* Cart View */}
-        {showCart ? (
-          <div style={{ padding: 24 }}>
-            <div style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden" }}>
-              <div style={{ padding: 24, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <h1 style={{ fontSize: 24, fontWeight: 800, color: "white", display: "flex", alignItems: "center", gap: 12 }}>
-                    <i className="fas fa-shopping-cart"></i>
-                    Your Cart
-                  </h1>
-                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 14, marginTop: 4 }}>{cart.length} item(s) in your cart</p>
-                </div>
-                <button 
-                  onClick={() => setShowCart(false)}
-                  style={{ color: "rgba(255,255,255,0.8)", background: "none", border: "none", fontSize: 20, cursor: "pointer", padding: 8 }}
-                >
-                  <i className="fas fa-arrow-left"></i>
-                </button>
-              </div>
-
-              {/* Cart Items */}
-              <div style={{ padding: 24 }}>
-                {cart.map((item, idx) => (
-                  <div key={idx} style={{ display: "flex", gap: 16, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #e2e8f0" }}>
-                    {/* Product Image */}
-                    <div style={{ width: 80, height: 80, borderRadius: 12, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                      {item.image || (item.images && item.images.length > 0) ? (
-                        <img src={item.image || item.images![0]} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <span style={{ fontSize: 32 }}></span>
-                      )}
-                    </div>
-                    
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h3 style={{ fontWeight: 700, fontSize: 14, color: "#1e293b", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</h3>
-                      {Object.keys(item.specs).length > 0 && (
-                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-                          {Object.entries(item.specs).map(([key, val]) => (
-                            <span key={key} style={{ marginRight: 8 }}>{key}: {val}</span>
-                          ))}
-                        </div>
-                      )}
-                      
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <button 
-                            onClick={() => updateCartItemQuantity(idx, item.quantity - 1)}
-                            style={{ width: 28, height: 28, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, cursor: "pointer" }}
-                          >
-                            -
-                          </button>
-                          <span style={{ width: 24, textAlign: "center", fontWeight: 700, fontSize: 14 }}>{item.quantity}</span>
-                          <button 
-                            onClick={() => updateCartItemQuantity(idx, item.quantity + 1)}
-                            style={{ width: 28, height: 28, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, cursor: "pointer" }}
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: "#25D366" }}>
-                          {CURRENCY_SYMBOL}{(item.price * item.quantity).toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Remove Button */}
-                    <button 
-                      onClick={() => removeFromCart(idx)}
-                      style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", background: "none", border: "none", cursor: "pointer", borderRadius: 8, flexShrink: 0 }}
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
-                  </div>
-                ))}
-
-                {/* Cart Totals */}
-                <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginTop: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px dashed #e2e8f0" }}>
-                    <span style={{ color: "#64748b" }}>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
-                    <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px dashed #e2e8f0" }}>
-                    <span style={{ color: "#64748b" }}>Shipping</span>
-                    <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{deliveryCost.toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 12, marginTop: 8, borderTop: "2px solid #e2e8f0", fontSize: 20, fontWeight: 800 }}>
-                    <span>Total</span>
-                    <span style={{ color: "#25D366" }}>{CURRENCY_SYMBOL}{(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + deliveryCost).toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                {/* Cart Actions */}
-                <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button 
-                    onClick={clearCart}
-                    style={{ flex: 1, padding: 12, background: "#f8fafc", color: "#64748b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                    Clear Cart
-                  </button>
-                  <button 
-                    onClick={() => setShowCart(false)}
-                    style={{ flex: 1, padding: 12, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                  >
-                    <i className="fas fa-plus"></i>
-                    Add More Items
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-        <>
-
-        {/* Desktop Two-Column Layout */}
+        {/* Header */}
         <div className="order-grid">
         {/* Left Column: Product + Options */}
         <div className="order-left-col">
@@ -1614,8 +1504,6 @@ function OrderPageContent() {
           </button>
         </div>
 
-        </>
-        )}
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
           @keyframes slideUp {
