@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
+import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
+import { getOrderStatusMessage } from "@/utils/orderMessages";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -392,6 +394,27 @@ function OrderPageContent() {
         updatedAt: now
       }).then((docRef) => {
         updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
+      });
+
+      // Send WhatsApp notification - Order Confirmed
+      const customerPhoneClean = customerPhone.replace(/^\+/, '').replace(/[^0-9]/g, '');
+      const orderConfirmationMessage = getOrderStatusMessage(
+        'confirmed',
+        customerName.trim(),
+        orderNum,
+        product.name,
+        address.trim()
+      );
+      
+      console.log('📲 Sending order confirmation WhatsApp to:', customerPhoneClean);
+      sendEvolutionWhatsAppMessage(
+        customerPhoneClean,
+        orderConfirmationMessage,
+        tenantId
+      ).then(() => {
+        console.log('✅ Order confirmation WhatsApp sent successfully');
+      }).catch(err => {
+        console.error('❌ Failed to send order confirmation WhatsApp:', err);
       });
 
       await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {

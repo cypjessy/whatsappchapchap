@@ -10,7 +10,7 @@ export const getOrderStatusMessage = (
   const messages: Record<string, string> = {
     pending: `⏳ Order Pending\n\nHi ${customerName}! Your order is awaiting payment confirmation.\n\nOrder: ${productName}\nOrder ID: ${orderId}\n\nWe will notify you once payment is confirmed!`,
     
-    confirmed: `✅ Order Confirmed!\n\nHi ${customerName}! Your order has been confirmed.\n\nOrder: ${productName}\nOrder ID: ${orderId}\n\nWe will prepare your order shortly!`,
+    confirmed: `✅ Order Confirmed!\n\nHi ${customerName}! Your order has been confirmed.\n\nOrder: ${productName}\nOrder ID: ${orderId}\nDelivery to: ${deliveryAddress || ''}\n\nWe will prepare your order shortly!`,
     
     processing: `🔄 Order Processing!\n\nHi ${customerName}! Your order is being prepared.\n\nOrder: ${productName}\nOrder ID: ${orderId}\n\nWe will notify you when it ships!`,
     
