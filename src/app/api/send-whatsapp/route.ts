@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
     const evolutionApiKey = process.env.EVOLUTION_API_KEY;
     
     // Get instance name from evolutionConfig or fallback to tenantId
-    const instanceName = evolutionConfig?.evolutionInstanceId || tenantId;
+    let instanceName = evolutionConfig?.evolutionInstanceId || tenantId;
+    
+    // Ensure instance name has 'tenant_' prefix (Evolution v2 format)
+    if (!instanceName.startsWith('tenant_')) {
+      instanceName = `tenant_${instanceName}`;
+    }
     
     if (!evolutionUrl || !evolutionApiKey || !instanceName) {
       console.error('[Send WhatsApp] Missing credentials:', {

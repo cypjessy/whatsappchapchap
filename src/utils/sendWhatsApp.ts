@@ -1,6 +1,6 @@
 /**
  * Send WhatsApp message via server-side API route
- * Passes tenant's Evolution credentials to avoid Firebase Admin SDK requirement
+ * Server uses global ENV credentials (same as webhook)
  */
 export const sendEvolutionWhatsAppMessage = async (
   phone: string,
@@ -8,38 +8,9 @@ export const sendEvolutionWhatsAppMessage = async (
   tenantId: string
 ): Promise<void> => {
   try {
-    // Get tenant's Evolution credentials from Firestore
-    const { doc, getDoc } = await import('firebase/firestore');
-    const { app } = await import('@/lib/firebase');
-    
-    if (!app) {
-      console.error("No Firebase app");
-      throw new Error("Firebase not initialized");
-    }
-    
-    const { getFirestore } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    
-    const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
-    
-    let evolutionConfig = null;
-    
-    if (tenantDoc.exists()) {
-      const tenant = tenantDoc.data();
-      if (tenant.evolutionServerUrl && tenant.evolutionApiKey && tenant.evolutionInstanceId) {
-        evolutionConfig = {
-          evolutionServerUrl: tenant.evolutionServerUrl,
-          evolutionApiKey: tenant.evolutionApiKey,
-          evolutionInstanceId: tenant.evolutionInstanceId
-        };
-      }
-    }
-    
-    // Call our Next.js API route (runs server-side)
+    // Call our Next.js API route (runs server-side with ENV credentials)
+    // The server route now uses global ENV credentials like the webhook
     const requestBody: any = { phone, message, tenantId };
-    if (evolutionConfig) {
-      requestBody.evolutionConfig = evolutionConfig;
-    }
     
     const response = await fetch('/api/send-whatsapp', {
       method: 'POST',

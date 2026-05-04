@@ -465,12 +465,6 @@ try {
   const sendWhatsAppNotification = async (order: Order, status: OrderStatus) => {
     if (!user) return;
     try {
-      const tenant = await tenantService.getTenant(user);
-      if (!tenant || !tenant.evolutionInstanceId) {
-        alert('WhatsApp not configured. Please connect WhatsApp first.');
-        return;
-      }
-
       const productName = order.products?.[0]?.name || order.productName || 'Order';
       const message = getOrderStatusMessage(
         status,
