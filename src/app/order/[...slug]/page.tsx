@@ -45,12 +45,39 @@ function OrderPageContent() {
   const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
   const [selectedQuantity, setSelectedQuantity] = useState(quantity);
   const [user, setUser] = useState<User | null>(null);
+  
+  // Cart state
+  const [showCartChoice, setShowCartChoice] = useState(false);
+  const [cart, setCart] = useState<Array<{
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    size: string;
+    image?: string;
+    images?: string[];
+    tenantId: string;
+  }>>([]);
+  const [showCart, setShowCart] = useState(false);
+  const [showCartBadge, setShowCartBadge] = useState(false);
 
   useEffect(() => {
     if (!tenantId || productIds.length === 0) {
       setError("Invalid order link. Please ask the seller to generate a new link.");
       setLoading(false);
       return;
+    }
+
+    // Load cart from localStorage on mount
+    try {
+      const savedCart = localStorage.getItem('whatsapp_cart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+        setShowCartBadge(parsedCart.length > 0);
+      }
+    } catch (err) {
+      console.error('Error loading cart:', err);
     }
 
     const app = getFirebaseApp();
@@ -110,6 +137,9 @@ function OrderPageContent() {
 
       setProducts(productsData);
       setLoading(false);
+      
+      // Show cart choice modal after products load
+      setShowCartChoice(true);
     } catch (err: any) {
       console.error("Error loading products:", err);
       setError("Failed to load products. Please try again.");
@@ -121,6 +151,60 @@ function OrderPageContent() {
     return products.reduce((sum, p) => sum + (p.price * (selectedQuantity || 1)), 0);
   };
 
+  // Cart management functions
+  const saveCartToLocalStorage = (newCart: typeof cart) => {
+    try {
+      localStorage.setItem('whatsapp_cart', JSON.stringify(newCart));
+      setShowCartBadge(newCart.length > 0);
+    } catch (err) {
+      console.error('Error saving cart:', err);
+    }
+  };
+
+  const addToCart = () => {
+    if (products.length === 0) return;
+    
+    const product = products[0];
+    const cartItem = {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: selectedQuantity,
+      size: selectedSize || '',
+      image: product.image,
+      images: product.images,
+      tenantId: tenantId!,
+    };
+    
+    const newCart = [...cart, cartItem];
+    setCart(newCart);
+    saveCartToLocalStorage(newCart);
+    
+    // Redirect back to WhatsApp
+    const whatsappUrl = `https://wa.me/${customerPhone || ''}?text=${encodeURIComponent('I added items to my cart! Let me find more products...')}`;
+    window.location.href = whatsappUrl;
+  };
+
+  const removeFromCart = (index: number) => {
+    const newCart = cart.filter((_, i) => i !== index);
+    setCart(newCart);
+    saveCartToLocalStorage(newCart);
+  };
+
+  const updateCartItemQuantity = (index: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    const newCart = [...cart];
+    newCart[index].quantity = newQuantity;
+    setCart(newCart);
+    saveCartToLocalStorage(newCart);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem('whatsapp_cart');
+    setShowCartBadge(false);
+  };
+
   const placeOrder = async () => {
     if (!user || !tenantId) return;
     
@@ -128,6 +212,23 @@ function OrderPageContent() {
     try {
       const db = getFirestore(getFirebaseApp()!);
       const orderRef = doc(collection(db, "orders"));
+      
+      // Use cart items if in cart view, otherwise use current product
+      const orderProducts = showCart ? cart.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.size || null,
+      })) : products.map(p => ({
+        productId: p.id,
+        name: p.name,
+        price: p.price,
+        quantity: selectedQuantity,
+        size: selectedSize || null,
+      }));
+      
+      const orderTotal = orderProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
       
       const orderData = {
         id: orderRef.id,
@@ -137,26 +238,25 @@ function OrderPageContent() {
         customerPhone: customerPhone,
         customerEmail: "",
         customerAddress: deliveryAddress,
-        products: products.map(p => ({
-          productId: p.id,
-          name: p.name,
-          price: p.price,
-          quantity: selectedQuantity,
-          size: selectedSize || null,
-        })),
-        subtotal: calculateTotal(),
+        products: orderProducts,
+        subtotal: orderTotal,
         shipping: 0,
-        tax: Math.round(calculateTotal() * 0.16),
+        tax: Math.round(orderTotal * 0.16),
         discount: 0,
-        total: Math.round(calculateTotal() * 1.16),
+        total: Math.round(orderTotal * 1.16),
         paymentMethod,
         status: "pending",
-        notes: "",
+        notes: showCart ? "Order from cart" : "",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
       await setDoc(orderRef, orderData);
+      
+      // Clear cart if order was placed from cart
+      if (showCart) {
+        clearCart();
+      }
       
       setOrderDetails({
         orderId: orderRef.id,
@@ -177,6 +277,63 @@ function OrderPageContent() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[#64748b]">Loading your order...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show cart choice modal
+  if (showCartChoice && !showCart) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <i className="fas fa-shopping-cart text-3xl text-white"></i>
+            </div>
+            <h1 className="text-2xl font-bold text-[#1e293b] mb-2">What would you like to do?</h1>
+            <p className="text-[#64748b]">{products[0]?.name}</p>
+          </div>
+          
+          <div className="space-y-3">
+            {/* Order Now Button */}
+            <button 
+              onClick={() => setShowCartChoice(false)}
+              className="w-full py-4 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+            >
+              <i className="fas fa-bolt"></i>
+              Order Now
+            </button>
+            
+            {/* Add to Cart Button */}
+            <button 
+              onClick={addToCart}
+              className="w-full py-4 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+            >
+              <i className="fas fa-cart-plus"></i>
+              Add to Cart & Continue Shopping
+            </button>
+            
+            {/* View Cart Button (if cart has items) */}
+            {cart.length > 0 && (
+              <button 
+                onClick={() => {
+                  setShowCartChoice(false);
+                  setShowCart(true);
+                }}
+                className="w-full py-3 bg-[#f8fafc] border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-semibold hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-shopping-bag"></i>
+                View Cart ({cart.length} items)
+              </button>
+            )}
+          </div>
+          
+          <p className="text-xs text-center text-[#64748b] mt-6">
+            {cart.length > 0 
+              ? `You already have ${cart.length} item(s) in your cart` 
+              : 'Your cart is empty'}
+          </p>
         </div>
       </div>
     );
@@ -234,7 +391,123 @@ function OrderPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10">
+      {/* Floating Cart Button */}
+      {cart.length > 0 && !showCart && (
+        <button 
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white rounded-full shadow-2xl flex items-center justify-center hover:-translate-y-1 transition-all z-50"
+        >
+          <i className="fas fa-shopping-cart text-xl"></i>
+          <span className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
+            {cart.length}
+          </span>
+        </button>
+      )}
+      
       <div className="max-w-2xl mx-auto p-4">
+        {showCart ? (
+          // Cart View
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-4">
+            <div className="p-6 bg-gradient-to-r from-[#3b82f6] to-[#2563eb]">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-extrabold text-white flex items-center gap-2">
+                  <i className="fas fa-shopping-cart"></i>Your Cart
+                </h1>
+                <button 
+                  onClick={() => setShowCart(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <i className="fas fa-arrow-left text-xl"></i>
+                </button>
+              </div>
+              <p className="text-white/80 text-sm mt-1">{cart.length} item(s) in your cart</p>
+            </div>
+
+            {/* Cart Items */}
+            <div className="p-6">
+              {cart.map((item, idx) => (
+                <div key={idx} className="flex gap-4 mb-4 pb-4 border-b border-[#e2e8f0] last:border-b-0">
+                  {/* Product Image */}
+                  <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
+                    {item.image || (item.images && item.images.length > 0) ? (
+                      <img src={item.image || item.images![0]} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl">📦</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-[#1e293b] text-sm truncate">{item.name}</h3>
+                    {item.size && (
+                      <p className="text-xs text-[#64748b]">Size: {item.size}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => updateCartItemQuantity(idx, item.quantity - 1)}
+                          className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors text-sm"
+                        >
+                          -
+                        </button>
+                        <span className="w-6 text-center font-bold text-sm">{item.quantity}</span>
+                        <button 
+                          onClick={() => updateCartItemQuantity(idx, item.quantity + 1)}
+                          className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors text-sm"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="font-bold text-sm text-[#25D366]">
+                        {CURRENCY_SYMBOL}{(item.price * item.quantity).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Remove Button */}
+                  <button 
+                    onClick={() => removeFromCart(idx)}
+                    className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                  >
+                    <i className="fas fa-trash-alt text-sm"></i>
+                  </button>
+                </div>
+              ))}
+
+              {/* Cart Totals */}
+              <div className="bg-[#f8fafc] rounded-xl p-4 mt-4">
+                <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
+                  <span className="text-[#64748b]">Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                  <span className="font-semibold">{CURRENCY_SYMBOL}{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
+                  <span className="text-[#64748b]">Tax (16%)</span>
+                  <span className="font-semibold">{CURRENCY_SYMBOL}{Math.round(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.16).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between pt-3 mt-2 border-t-2 border-[#e2e8f0] text-xl font-extrabold">
+                  <span>Total</span>
+                  <span className="text-[#25D366]">{CURRENCY_SYMBOL}{Math.round(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.16).toLocaleString()}</span>
+                </div>
+              </div>
+              
+              {/* Cart Actions */}
+              <div className="flex gap-2 mt-4">
+                <button 
+                  onClick={clearCart}
+                  className="flex-1 py-3 bg-[#f8fafc] border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-semibold hover:border-red-300 hover:text-red-500 transition-all"
+                >
+                  <i className="fas fa-trash-alt mr-2"></i>Clear Cart
+                </button>
+                <button 
+                  onClick={() => setShowCart(false)}
+                  className="flex-1 py-3 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                >
+                  <i className="fas fa-plus mr-2"></i>Add More Items
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-4">
           <div className="p-6 bg-gradient-to-r from-[#25D366] to-[#128C7E]">
             <h1 className="text-2xl font-extrabold text-white flex items-center gap-2">
@@ -485,6 +758,7 @@ function OrderPageContent() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Customer Details */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-4">
@@ -542,6 +816,11 @@ function OrderPageContent() {
             <div className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               Processing...
+            </div>
+          ) : showCart ? (
+            <div className="flex items-center justify-center gap-2">
+              <i className="fas fa-check-circle"></i>
+              Place Order ({cart.length} items) - {CURRENCY_SYMBOL}{Math.round(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.16).toLocaleString()}
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
