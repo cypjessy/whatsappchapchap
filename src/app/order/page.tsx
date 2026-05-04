@@ -839,6 +839,7 @@ function OrderPageContent() {
         {/* Floating Cart Button */}
         {cart.length > 0 && !showCart && (
           <button 
+            className="floating-cart-btn"
             onClick={() => router.push(`/order/checkout?tenant=${tenantId}&phone=${encodeURIComponent(customerPhone || '')}`)}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
@@ -910,6 +911,7 @@ function OrderPageContent() {
         {/* Floating Cart Button */}
         {cart.length > 0 && !showCart && (
           <button 
+            className="floating-cart-btn"
             onClick={() => router.push(`/order/checkout?tenant=${tenantId}&phone=${encodeURIComponent(customerPhone || '')}`)}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
@@ -1693,6 +1695,23 @@ function OrderPageContent() {
           
           input, textarea, select {
             box-sizing: border-box;
+          }
+          
+          /* Mobile responsive cart button */
+          @media (max-width: 768px) {
+            .floating-cart-btn {
+              top: 16px !important;
+              bottom: auto !important;
+              right: 16px !important;
+              width: 56px !important;
+              height: 56px !important;
+              font-size: 20px !important;
+            }
+            .floating-cart-btn span {
+              width: 20px !important;
+              height: 20px !important;
+              font-size: 11px !important;
+            }
           }
         `}</style>
       </div>
