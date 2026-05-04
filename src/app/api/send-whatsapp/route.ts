@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
     
     let response;
     try {
-      response = await fetch(apiUrl, {
+      // Create a custom fetch that ignores SSL errors if needed
+      const fetchOptions: RequestInit = {
         method: "POST",
         headers: {
           apikey: evolutionApiKey,
@@ -63,15 +64,25 @@ export async function POST(req: NextRequest) {
           number: fullPhone, 
           text: message 
         }),
-      });
+      };
+          
+      // Note: Node.js fetch in Vercel handles SSL better than browser
+      // If SSL errors persist, Evolution server needs a valid certificate
+      response = await fetch(apiUrl, fetchOptions);
     } catch (fetchError: any) {
       console.error("❌ Fetch failed:", fetchError.message);
       console.error("❌ Evolution URL:", apiUrl);
-      console.error("❌ Error details:", fetchError);
+      console.error(" Error name:", fetchError.name);
+      console.error("❌ Error type:", fetchError.type);
+      console.error("❌ Error code:", fetchError.code);
+      console.error("❌ Error cause:", fetchError.cause);
+          
       return NextResponse.json(
         { 
           error: `Failed to connect to Evolution API: ${fetchError.message}`,
           url: apiUrl,
+          errorType: fetchError.name,
+          errorCode: fetchError.code || 'UNKNOWN',
           details: fetchError.message
         }, 
         { status: 500 }
