@@ -130,9 +130,19 @@ export default function OrdersPage() {
   const saveEditOrder = async () => {
     if (!user || !selectedOrder) return;
     try {
+      // Normalize the edited phone number
+      const editedPhone = normalizePhone(editForm.customerPhone);
+      
+      // Check if phone changed - if so, regenerate JID; otherwise keep existing
+      const originalPhone = normalizePhone(selectedOrder.customerPhone);
+      const whatsappJid = editedPhone === originalPhone 
+        ? selectedOrder.whatsappJid   // Phone unchanged, keep existing JID
+        : createWhatsAppJid(editedPhone);  // Phone changed, regenerate JID
+      
       await orderService.updateOrder(user, selectedOrder.id, {
         customerName: editForm.customerName,
-        customerPhone: editForm.customerPhone,
+        customerPhone: editedPhone,
+        whatsappJid,
         customerEmail: editForm.customerEmail,
         customerAddress: editForm.customerAddress,
         paymentMethod: editForm.paymentMethod,
@@ -429,6 +439,7 @@ try {
         customerId: order.customerId || "",
         customerName: order.customerName,
         customerPhone: order.customerPhone,
+        whatsappJid: order.whatsappJid, // Carry over verified JID
         customerEmail: order.customerEmail || "",
         customerAddress: order.customerAddress || "",
         products: order.products || [],
