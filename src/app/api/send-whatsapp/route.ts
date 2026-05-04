@@ -12,23 +12,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Call Evolution API server-side (same method as webhook)
-    const evolutionUrl = evolutionConfig?.evolutionServerUrl?.replace(/\/$/, '') || process.env.EVOLUTION_API_URL?.replace(/\/$/, '');
-    const evolutionApiKey = evolutionConfig?.evolutionApiKey || process.env.EVOLUTION_API_KEY;
+    // Use global ENV credentials (same as webhook route)
+    // The webhook works because it uses ENV credentials, not tenant-specific ones
+    const evolutionUrl = process.env.EVOLUTION_API_URL?.replace(/\/$/, '');
+    const evolutionApiKey = process.env.EVOLUTION_API_KEY;
+    
+    // Get instance name from evolutionConfig or fallback to tenantId
     const instanceName = evolutionConfig?.evolutionInstanceId || tenantId;
     
     if (!evolutionUrl || !evolutionApiKey || !instanceName) {
+      console.error('[Send WhatsApp] Missing credentials:', {
+        hasUrl: !!evolutionUrl,
+        hasKey: !!evolutionApiKey,
+        hasInstance: !!instanceName,
+        evolutionConfig: JSON.stringify(evolutionConfig),
+        tenantId
+      });
       return NextResponse.json(
         { error: "Evolution API credentials not configured" }, 
         { status: 500 }
       );
     }
+    
+    console.log(`[Send WhatsApp] Using global ENV credentials (same as webhook)`);
+    console.log(`[Send WhatsApp] URL: ${evolutionUrl}`);
+    console.log(`[Send WhatsApp] Instance: ${instanceName}`);
+    console.log(`[Send WhatsApp] API Key (first 8): ${evolutionApiKey.substring(0, 8)}...`);
 
     // Clean phone number
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
     
-    // Use same endpoint as webhook route
+    // Call Evolution API server-side using v2 endpoint format
+    // Try with instanceName in URL path (like webhook does)
     const apiUrl = `${evolutionUrl}/message/sendText/${instanceName}`;
     
     console.log(`[Send WhatsApp] Sending to ${fullPhone}`);
@@ -46,7 +62,9 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({ 
         number: fullPhone, 
-        text: message
+        text: message,
+        // Evolution API v2 requires instanceName in the body
+        // Note: Some versions use 'number' as instance identifier
       }),
     });
     
