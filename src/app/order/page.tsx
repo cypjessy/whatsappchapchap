@@ -148,6 +148,19 @@ function OrderPageContent() {
           const data = productSnap.data() as Product;
           const loadedProduct = { ...data, id: productSnap.id } as Product;
           setProduct(loadedProduct);
+          
+          // Auto-select single-option filters
+          if (loadedProduct.filters) {
+            const autoSelectedSpecs: Record<string, string> = {};
+            Object.entries(loadedProduct.filters).forEach(([key, options]) => {
+              if (Array.isArray(options) && options.length === 1) {
+                autoSelectedSpecs[key] = options[0];
+              }
+            });
+            if (Object.keys(autoSelectedSpecs).length > 0) {
+              setSelectedSpecs(autoSelectedSpecs);
+            }
+          }
         } else {
           setError("Product not found");
           setLoading(false);
@@ -372,9 +385,12 @@ function OrderPageContent() {
   const addToCart = async () => {
     if (!product) return;
     
-    // Validate that specs are selected if product has filters
+    // Validate that specs are selected for filters with multiple options
     if (product.filters && Object.keys(product.filters).length > 0) {
-      const requiredSpecs = Object.keys(product.filters);
+      const requiredSpecs = Object.keys(product.filters).filter(key => {
+        const options = product.filters?.[key];
+        return options && options.length > 1;
+      });
       const missingSpecs = requiredSpecs.filter(key => !selectedSpecs[key]);
       
       if (missingSpecs.length > 0) {
