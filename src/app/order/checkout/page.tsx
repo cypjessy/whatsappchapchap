@@ -503,9 +503,9 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
+    <div style={{ minHeight: "100vh", background: "#f8fafc" }} className="checkout-page">
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="checkout-header" style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button 
           onClick={() => router.back()}
           style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "white", width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 18 }}
@@ -519,13 +519,13 @@ export default function CheckoutPage() {
         <div style={{ width: 40 }}></div>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 24 }}>
+      <div className="checkout-main-container" style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
+        <div className="checkout-grid" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 24 }}>
           {/* Left Column - Checkout Form */}
           <div>
             {/* Customer Details */}
-            <div style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden", marginBottom: 24 }}>
-              <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
+            <div className="checkout-card" style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden", marginBottom: 24 }}>
+              <div className="checkout-card-inner" style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
                 <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: "#1e293b", display: "flex", alignItems: "center", gap: 8 }}>
                   <i className="fas fa-user" style={{ color: "#3b82f6" }}></i>
                   Delivery Details
@@ -539,6 +539,7 @@ export default function CheckoutPage() {
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="John Doe"
                     style={{ width: "100%", padding: 16, border: `2px solid ${errors.name ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+                    className="checkout-input"
                   />
                   {errors.name && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your full name</p>}
                 </div>
@@ -551,6 +552,7 @@ export default function CheckoutPage() {
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="+254 712 345 678"
                     style={{ width: "100%", padding: 16, border: `2px solid ${errors.phone ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+                    className="checkout-input"
                   />
                   <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>We'll send order updates via WhatsApp</p>
                   {errors.phone && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your phone number</p>}
@@ -567,6 +569,7 @@ export default function CheckoutPage() {
                       setSelectedStation("");
                     }}
                     style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
+                    className="checkout-input"
                   >
                     <option value="">Select County</option>
                     {Array.isArray(pickupStations) && [...new Set(pickupStations.map(s => s.county))].map(county => (
@@ -582,6 +585,7 @@ export default function CheckoutPage() {
                         setSelectedStation("");
                       }}
                       style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
+                    className="checkout-input"
                     >
                       <option value="">Select Town</option>
                       {[...new Set(pickupStations.filter(s => s.county === selectedCounty).map(s => s.town))].map(town => (
@@ -595,6 +599,7 @@ export default function CheckoutPage() {
                       value={selectedStation}
                       onChange={(e) => setSelectedStation(e.target.value)}
                       style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+                      className="checkout-input"
                     >
                       <option value="">Select Pickup Station</option>
                       {pickupStations.filter(s => s.county === selectedCounty && s.town === selectedTown).map(station => (
@@ -637,14 +642,15 @@ export default function CheckoutPage() {
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="john@example.com"
                     style={{ width: "100%", padding: 16, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+                    className="checkout-input"
                   />
                 </div>
               </div>
             </div>
 
             {/* Delivery Options */}
-            <div style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden", marginBottom: 24 }}>
-              <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
+            <div className="checkout-card" style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden", marginBottom: 24 }}>
+              <div className="checkout-card-inner" style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
                 <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: "#1e293b", display: "flex", alignItems: "center", gap: 8 }}>
                   <i className="fas fa-truck" style={{ color: "#3b82f6" }}></i>
                   Delivery Method
@@ -691,8 +697,8 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Methods */}
-            <div style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden", marginBottom: 24 }}>
-              <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
+            <div className="checkout-card" style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden", marginBottom: 24 }}>
+              <div className="checkout-card-inner" style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
                 <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: "#1e293b", display: "flex", alignItems: "center", gap: 8 }}>
                   <i className="fas fa-credit-card" style={{ color: "#3b82f6" }}></i>
                   Payment Method
@@ -783,13 +789,14 @@ export default function CheckoutPage() {
                   onChange={(e) => setOrderNotes(e.target.value)}
                   placeholder="Any special instructions for delivery? E.g., Call when you arrive, Leave with security, etc."
                   style={{ width: "100%", padding: 16, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 15, resize: "vertical", minHeight: 100, outline: "none", fontFamily: "inherit" }}
+                  className="checkout-input"
                 />
               </div>
             </div>
           </div>
 
           {/* Right Column - Cart Summary */}
-          <div style={{ position: "sticky", top: 24, alignSelf: "start" }}>
+          <div className="checkout-sticky" style={{ position: "sticky", top: 24, alignSelf: "start" }}>
             <div style={{ background: "white", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", overflow: "hidden" }}>
               <div style={{ padding: 24, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white" }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -933,6 +940,40 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .checkout-page {
+            min-height: 100vh;
+          }
+          .checkout-main-container {
+            padding: 0 !important;
+            max-width: 100% !important;
+          }
+          .checkout-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0 !important;
+          }
+          .checkout-card {
+            margin-bottom: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+          .checkout-card-inner {
+            padding: 16px !important;
+          }
+          .checkout-header {
+            padding: 16px !important;
+          }
+          .checkout-sticky {
+            position: static !important;
+          }
+          .checkout-input {
+            padding: 14px !important;
+            font-size: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
