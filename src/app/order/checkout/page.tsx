@@ -83,26 +83,12 @@ export default function CheckoutPage() {
   // Load cart from localStorage and database on mount
   useEffect(() => {
     const loadCart = async () => {
-      // First try localStorage (fast)
-      const savedCart = localStorage.getItem("whatsapp_cart");
-      if (savedCart) {
-        try {
-          const parsedCart = JSON.parse(savedCart);
-          if (parsedCart && parsedCart.length > 0) {
-            setCart(parsedCart);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.error("Error parsing localStorage cart:", e);
-        }
-      }
-
-      // If localStorage is empty, try to load from database using tenantId from URL
+      // Parse URL parameters
       const params = new URLSearchParams(window.location.search);
       const tenantId = params.get('tenant');
       const phone = params.get('phone');
       
+      // If we have tenant and phone, load from database (works across devices)
       if (tenantId && phone) {
         try {
           const app = getFirebaseApp();
@@ -115,7 +101,7 @@ export default function CheckoutPage() {
               const data = conversationSnap.data();
               if (data.cart && data.cart.items && data.cart.items.length > 0) {
                 setCart(data.cart.items);
-                // Also save to localStorage for persistence
+                // Also save to localStorage for offline access
                 localStorage.setItem("whatsapp_cart", JSON.stringify(data.cart.items));
                 setLoading(false);
                 return;
@@ -124,6 +110,21 @@ export default function CheckoutPage() {
           }
         } catch (e) {
           console.error("Error loading cart from database:", e);
+        }
+      }
+      
+      // Fallback: try localStorage (same device only)
+      const savedCart = localStorage.getItem("whatsapp_cart");
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          if (parsedCart && parsedCart.length > 0) {
+            setCart(parsedCart);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing localStorage cart:", e);
         }
       }
       
