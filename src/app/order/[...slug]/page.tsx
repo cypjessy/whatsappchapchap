@@ -250,67 +250,218 @@ function OrderPageContent() {
             </h2>
             
             {products.map((product, idx) => (
-              <div key={idx} className="flex gap-4 mb-4 pb-4 border-b border-[#e2e8f0]">
+              <div key={idx} className="mb-6 pb-6 border-b border-[#e2e8f0] last:border-b-0">
                 {/* Product Image Gallery */}
-                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center text-4xl overflow-hidden shadow-md relative">
+                <div className="w-full h-64 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center overflow-hidden shadow-md relative mb-4">
                   {product.image || (product.images && product.images.length > 0) ? (
                     <img src={product.image || product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
-                    "📦"
+                    <span className="text-6xl"></span>
                   )}
                   {/* Image count badge if multiple images */}
                   {(product.images && product.images.length > 0) && (
-                    <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-white rounded-full text-[10px] font-semibold">
-                      {product.images.length + (product.image ? 1 : 0)}
+                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 backdrop-blur-sm text-white rounded-lg text-xs font-semibold">
+                      {product.images.length + (product.image ? 1 : 0)} photos
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-[#1e293b]">{product.name}</h3>
-                  <p className="text-sm text-[#64748b] capitalize">{product.category}</p>
-                  {selectedSize && (
-                    <p className="text-sm text-[#64748b]">Size: {selectedSize}</p>
+                
+                <div>
+                  <h3 className="font-bold text-xl text-[#1e293b] mb-2">{product.name}</h3>
+                  
+                  {/* Product Description */}
+                  {product.description && (
+                    <p className="text-sm text-[#64748b] mb-3 line-clamp-3">{product.description}</p>
                   )}
                   
-                  {/* Show thumbnail gallery if multiple images */}
-                  {product.images && product.images.length > 0 && (
-                    <div className="flex gap-1 mt-2">
-                      {product.image && (
-                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#e2e8f0]">
-                          <img src={product.image} alt="Main" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      {product.images.slice(0, 3).map((img: string, imgIdx: number) => (
-                        <div key={imgIdx} className="w-8 h-8 rounded-lg overflow-hidden border border-[#e2e8f0]">
-                          <img src={img} alt={`Variant ${imgIdx + 1}`} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                      {product.images.length > 3 && (
-                        <div className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center text-xs font-semibold text-[#64748b]">
-                          +{product.images.length - 3}
-                        </div>
-                      )}
+                  {/* Product Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    {/* Category */}
+                    {product.categoryName && (
+                      <div className="bg-[#f8fafc] rounded-lg p-2">
+                        <div className="text-xs text-[#64748b] mb-1">Category</div>
+                        <div className="text-sm font-semibold text-[#1e293b] capitalize">{product.categoryName}</div>
+                      </div>
+                    )}
+                    
+                    {/* Brand */}
+                    {product.brand && (
+                      <div className="bg-[#f8fafc] rounded-lg p-2">
+                        <div className="text-xs text-[#64748b] mb-1">Brand</div>
+                        <div className="text-sm font-semibold text-[#1e293b]">{product.brand}</div>
+                      </div>
+                    )}
+                    
+                    {/* Condition */}
+                    {product.condition && (
+                      <div className="bg-[#f8fafc] rounded-lg p-2">
+                        <div className="text-xs text-[#64748b] mb-1">Condition</div>
+                        <div className="text-sm font-semibold text-[#1e293b] capitalize">{product.condition}</div>
+                      </div>
+                    )}
+                    
+                    {/* SKU */}
+                    {product.sku && (
+                      <div className="bg-[#f8fafc] rounded-lg p-2">
+                        <div className="text-xs text-[#64748b] mb-1">SKU</div>
+                        <div className="text-sm font-semibold text-[#1e293b] font-mono">{product.sku}</div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Filters (Colors, Sizes, Custom) */}
+                  {product.filters && Object.keys(product.filters).length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[#64748b] mb-2 uppercase tracking-wide">Available Options</div>
+                      <div className="space-y-2">
+                        {Object.entries(product.filters).map(([filterName, filterValues]) => {
+                          if (!filterValues || !Array.isArray(filterValues) || filterValues.length === 0) return null;
+                          
+                          return (
+                            <div key={filterName}>
+                              <div className="text-xs text-[#64748b] mb-1 capitalize">{filterName.replace(/([A-Z])/g, ' $1').trim()}</div>
+                              <div className="flex flex-wrap gap-2">
+                                {filterValues.map((value: string, vIdx: number) => {
+                                  // Check if this is a color filter
+                                  const isColor = filterName.toLowerCase() === 'color' || filterName.toLowerCase() === 'colors';
+                                  
+                                  if (isColor) {
+                                    // Display as color swatches
+                                    const colorValue = value.toLowerCase();
+                                    return (
+                                      <div 
+                                        key={vIdx}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e2e8f0] bg-[#f8fafc]"
+                                      >
+                                        <div 
+                                          className="w-4 h-4 rounded-full border border-[#e2e8f0]" 
+                                          style={{ backgroundColor: colorValue }}
+                                        />
+                                        <span className="text-xs font-semibold text-[#1e293b] capitalize">{value}</span>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  // Display as tags for other filters
+                                  return (
+                                    <span 
+                                      key={vIdx}
+                                      className="px-3 py-1.5 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#1e293b] capitalize"
+                                    >
+                                      {value}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2">
+                  {/* Selected Size (from URL params) */}
+                  {selectedSize && (
+                    <div className="bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 rounded-lg p-3 mb-3 border border-[#25D366]/20">
+                      <div className="text-xs text-[#64748b] mb-1">Selected Option</div>
+                      <div className="text-sm font-bold text-[#25D366]">{selectedSize}</div>
+                    </div>
+                  )}
+                  
+                  {/* Product Variants (if available) */}
+                  {product.variants && product.variants.length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-[#64748b] mb-2 uppercase tracking-wide">Product Variants</div>
+                      <div className="space-y-2">
+                        {product.variants.slice(0, 3).map((variant: any, vIdx: number) => (
+                          <div key={vIdx} className="bg-[#f8fafc] rounded-lg p-3 border border-[#e2e8f0]">
+                            <div className="flex justify-between items-start mb-1">
+                              <div className="text-sm font-semibold text-[#1e293b]">
+                                {Object.entries(variant.specs || {}).map(([key, val]) => (
+                                  <span key={key} className="capitalize">{key}: {val as string}</span>
+                                )).reduce((prev, curr) => [prev, ', ', curr] as any)}
+                              </div>
+                              <div className="text-sm font-bold text-[#25D366]">
+                                {CURRENCY_SYMBOL}{variant.price?.toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="text-xs text-[#64748b]">
+                              SKU: {variant.sku} • Stock: {variant.stock}
+                            </div>
+                          </div>
+                        ))}
+                        {product.variants.length > 3 && (
+                          <div className="text-xs text-[#64748b] text-center">+{product.variants.length - 3} more variants</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Additional Info (Warranty, Weight, etc.) */}
+                  {(product.warranty || product.weight || product.barcode) && (
+                    <div className="bg-[#f8fafc] rounded-lg p-3 mb-3">
+                      <div className="text-xs font-semibold text-[#64748b] mb-2 uppercase tracking-wide">Additional Info</div>
+                      <div className="space-y-1 text-sm">
+                        {product.warranty && (
+                          <div className="flex justify-between">
+                            <span className="text-[#64748b]">Warranty</span>
+                            <span className="font-semibold text-[#1e293b]">{product.warranty}</span>
+                          </div>
+                        )}
+                        {product.weight && (
+                          <div className="flex justify-between">
+                            <span className="text-[#64748b]">Weight</span>
+                            <span className="font-semibold text-[#1e293b]">{product.weight} {product.weightUnit || 'kg'}</span>
+                          </div>
+                        )}
+                        {product.barcode && (
+                          <div className="flex justify-between">
+                            <span className="text-[#64748b]">Barcode</span>
+                            <span className="font-semibold text-[#1e293b] font-mono">{product.barcode}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Thumbnail gallery if multiple images */}
+                  {product.images && product.images.length > 0 && (
+                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                      {product.image && (
+                        <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-[#25D366] flex-shrink-0">
+                          <img src={product.image} alt="Main" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      {product.images.map((img: string, imgIdx: number) => (
+                        <div key={imgIdx} className="w-16 h-16 rounded-lg overflow-hidden border border-[#e2e8f0] flex-shrink-0">
+                          <img src={img} alt={`Photo ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Quantity Selector and Price */}
+                  <div className="flex items-center justify-between pt-3 border-t border-[#e2e8f0]">
+                    <div className="flex items-center gap-3">
                       <button 
                         onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
-                        className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
+                        className="w-10 h-10 rounded-xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
                       >
                         -
                       </button>
-                      <span className="w-8 text-center font-bold">{selectedQuantity}</span>
+                      <span className="w-12 text-center font-bold text-lg">{selectedQuantity}</span>
                       <button 
                         onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                        className="w-8 h-8 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
+                        className="w-10 h-10 rounded-xl bg-[#f8fafc] border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
                       >
                         +
                       </button>
                     </div>
-                    <div className="font-bold text-lg text-[#25D366]">
-                      {CURRENCY_SYMBOL}{(product.price * selectedQuantity).toLocaleString()}
+                    <div className="text-right">
+                      <div className="text-xs text-[#64748b] mb-1">Total Price</div>
+                      <div className="font-bold text-2xl text-[#25D366]">
+                        {CURRENCY_SYMBOL}{(product.price * selectedQuantity).toLocaleString()}
+                      </div>
                     </div>
                   </div>
                 </div>
