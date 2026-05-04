@@ -184,7 +184,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       console.log('Calling onConnected with evolutionKey:', actualApiKey, 'UUID:', evolutionUUID);
       onConnected({
         instanceId: instanceName,
-        evolutionUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
+        evolutionUrl: "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
         evolutionKey: actualApiKey,
         evolutionUUID: evolutionUUID
       });
@@ -193,7 +193,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
 
   const handleContinue = async () => {
     setStatus('loading');
-    const webhookUrl = "http://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/whatsapp";
+    const webhookUrl = "https://whatsappchapchap.vercel.app/api/webhook/evolution";
     console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl);
     
     try {
@@ -258,7 +258,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     setFetchedApiKey(actualApiKey);
     setApiKeyFetched(true);
     
-    const evolutionUrl = "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
+    const evolutionUrl = "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io";
     
     console.log('Sending to onConnected:', { evolutionKey: actualApiKey, evolutionUUID });
     

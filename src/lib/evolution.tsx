@@ -15,7 +15,7 @@ async function getEvolutionConfig() {
     return cachedApiConfig;
   } catch {
     return { 
-      apiUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io", 
+      apiUrl: "https://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       apiKey: "lhnGSMQrQmC54PyPUBqILuWWeau20gDn" 
     };
   }
