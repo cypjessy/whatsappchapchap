@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
     console.log(`[Send WhatsApp] Sending to ${fullPhone}`);
     console.log(`[Send WhatsApp] URL: ${apiUrl}`);
     console.log(`[Send WhatsApp] Instance: ${instanceName}`);
+    console.log(`[Send WhatsApp] evolutionUrl: ${evolutionUrl}`);
+    console.log(`[Send WhatsApp] evolutionApiKey exists: ${!!evolutionApiKey}`);
+    console.log(`[Send WhatsApp] evolutionConfig:`, JSON.stringify(evolutionConfig));
     
     const response = await fetch(apiUrl, {
       method: "POST",
