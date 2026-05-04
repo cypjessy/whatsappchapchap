@@ -152,12 +152,15 @@ function OrderPageContent() {
         // Fetch shipping methods
         const shippingQuery = collection(db, "shippingMethods");
         const shippingSnap = await getDocs(shippingQuery);
+        console.log('📊 Order Page - Shipping methods query results:', shippingSnap.size);
         const shippingMethods = shippingSnap.docs
           .filter(doc => doc.data().tenantId === tenantId)
           .map(doc => ({
             id: doc.id,
             ...doc.data()
           })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
+        
+        console.log('📊 Order Page - Shipping methods for tenant:', shippingMethods);
         
         // Set business settings
         
@@ -829,10 +832,10 @@ function OrderPageContent() {
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Delivery Method</div>
           
-          {(product?.shippingMethods?.length ? product.shippingMethods : [
-            { id: "standard", name: "Standard Delivery", price: 500 },
-            { id: "express", name: "Express Delivery", price: 1000 },
-            { id: "pickup", name: "Store Pickup", price: 0 }
+          {(businessSettings?.shippingMethods?.length ? businessSettings?.shippingMethods : [
+            { id: "standard", name: "Standard Delivery", price: 500, estimatedDays: "2-3 days" },
+            { id: "express", name: "Express Delivery", price: 1000, estimatedDays: "Same day" },
+            { id: "pickup", name: "Store Pickup", price: 0, estimatedDays: "Same day" }
           ]).map((option) => (
             <div 
               key={option.id}
@@ -858,7 +861,7 @@ function OrderPageContent() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
                 <div style={{ fontSize: 14, color: "#64748b" }}>
-                  {option.id === "pickup" ? "Available today after 2PM" : option.id === "express" ? "1-2 business days" : "3-5 business days"}
+                  {option.estimatedDays || (option.id === "pickup" ? "Available today after 2PM" : option.id === "express" ? "1-2 business days" : "3-5 business days")}
                 </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: 18, color: option.price === 0 ? "#10b981" : "#25D366" }}>

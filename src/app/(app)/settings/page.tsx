@@ -1045,6 +1045,10 @@ export default function SettingsPage() {
           {/* Existing Shipping Methods */}
           <div>
             <h3 className="font-bold text-lg mb-4">Current Shipping Methods</h3>
+            {/* Debug: Show count */}
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+              Debug: shippingMethods.length = {shippingMethods.length}
+            </div>
             {shippingMethods.length === 0 ? (
               <div className="text-center py-12 text-[#64748b]">
                 <i className="fas fa-shipping-fast text-4xl mb-3 opacity-30"></i>
