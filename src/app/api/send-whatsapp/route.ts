@@ -49,41 +49,30 @@ export async function POST(req: NextRequest) {
     const apiUrl = `${evolutionUrl}/message/sendText/${evolutionInstanceId}`;
     
     console.log(` Sending WhatsApp to ${fullPhone} via Evolution API`);
-    console.log(`🔗 Full Evolution URL: ${apiUrl}`);
+    console.log(` Full Evolution URL: ${apiUrl}`);
     
-    let response;
-    try {
-      // Create a custom fetch that ignores SSL errors if needed
-      const fetchOptions: RequestInit = {
-        method: "POST",
-        headers: {
-          apikey: evolutionApiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          number: fullPhone, 
-          text: message 
-        }),
-      };
-          
-      // Note: Node.js fetch in Vercel handles SSL better than browser
-      // If SSL errors persist, Evolution server needs a valid certificate
-      response = await fetch(apiUrl, fetchOptions);
-    } catch (fetchError: any) {
-      console.error("❌ Fetch failed:", fetchError.message);
-      console.error("❌ Evolution URL:", apiUrl);
-      console.error(" Error name:", fetchError.name);
-      console.error("❌ Error type:", fetchError.type);
-      console.error("❌ Error code:", fetchError.code);
-      console.error("❌ Error cause:", fetchError.cause);
-          
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        apikey: evolutionApiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 
+        number: fullPhone, 
+        text: message 
+      }),
+    });
+    
+    // Handle non-JSON responses from Evolution API
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error(" Evolution API returned non-JSON response:", textResponse.substring(0, 200));
       return NextResponse.json(
         { 
-          error: `Failed to connect to Evolution API: ${fetchError.message}`,
-          url: apiUrl,
-          errorType: fetchError.name,
-          errorCode: fetchError.code || 'UNKNOWN',
-          details: fetchError.message
+          error: "Evolution API returned invalid response",
+          status: response.status,
+          response: textResponse.substring(0, 200)
         }, 
         { status: 500 }
       );
@@ -92,7 +81,7 @@ export async function POST(req: NextRequest) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error("❌ Evolution API error:", response.status, JSON.stringify(data));
+      console.error(" Evolution API error:", response.status, JSON.stringify(data));
       return NextResponse.json(
         { error: data, status: response.status }, 
         { status: response.status }

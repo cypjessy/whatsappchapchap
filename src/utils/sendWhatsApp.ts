@@ -47,10 +47,25 @@ export const sendEvolutionWhatsAppMessage = async (
       body: JSON.stringify(requestBody),
     });
     
+    // Handle non-JSON responses
+    const contentType = response.headers.get('content-type');
     if (!response.ok) {
-      const error = await response.json();
-      console.error("❌ WhatsApp API error:", error);
-      throw new Error(`Failed to send WhatsApp: ${JSON.stringify(error)}`);
+      let errorMessage = `Failed to send WhatsApp (HTTP ${response.status})`;
+      
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+          console.error("❌ WhatsApp API error:", error);
+        } catch (e) {
+          console.error(" Failed to parse error response");
+        }
+      } else {
+        const textResponse = await response.text();
+        console.error(" WhatsApp API returned non-JSON:", textResponse.substring(0, 200));
+      }
+      
+      throw new Error(errorMessage);
     }
     
     const result = await response.json();
