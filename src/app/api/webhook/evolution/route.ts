@@ -581,6 +581,12 @@ async function handleFlowInput(
     return;
   }
   
+  // Check for CLEAR CART command
+  if (message.trim().toUpperCase() === 'CLEAR CART') {
+    await handleClearCart(tenantId, phone);
+    return;
+  }
+  
   // Check for back option
   if (message.trim() === '0') {
     if (flowName === 'product_browse') {
@@ -1284,6 +1290,28 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
   } catch (err) {
     console.error('[Webhook] Error viewing cart:', err);
     await sendEvolutionMessage(tenantId, phone, "❌ Unable to retrieve your cart. Please try again later.");
+  }
+}
+
+// Handle CLEAR CART command
+async function handleClearCart(tenantId: string, phone: string): Promise<void> {
+  try {
+    const adminDb = getAdminDb();
+    
+    // Clear cart from conversation document
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        cart: null, // Remove cart field
+      }, { merge: true });
+    
+    await sendEvolutionMessage(tenantId, phone, "🗑️ *Cart cleared!*\n\nYour cart is now empty. Browse products to add new items!\n\nReply *1* to browse products or *MENU* for main menu.");
+  } catch (err) {
+    console.error('[Webhook] Error clearing cart:', err);
+    await sendEvolutionMessage(tenantId, phone, "❌ Unable to clear cart. Please try again later.");
   }
 }
 function checkIfGreeting(message: string): boolean {

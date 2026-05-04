@@ -447,25 +447,78 @@ function OrderPageContent() {
     saveCartToLocalStorage(newCart);
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([]);
     localStorage.removeItem('whatsapp_cart');
     setShowCartBadge(false);
+    
+    // Also clear from database
+    if (customerPhone && tenantId) {
+      try {
+        const app = getFirebaseApp()!;
+        const db = getFirestore(app);
+        const conversationRef = doc(db, "tenants", tenantId, "conversations", customerPhone);
+        
+        await setDoc(conversationRef, {
+          cart: null, // Remove cart field
+        }, { merge: true });
+        
+        console.log('✅ Cart cleared from database');
+      } catch (err) {
+        console.error('Failed to clear cart from database:', err);
+      }
+    }
   };
 
-  // Load cart from localStorage on mount
+  // Load cart from database first, fallback to localStorage
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem('whatsapp_cart');
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        setCart(parsedCart);
-        setShowCartBadge(parsedCart.length > 0);
+    const loadCart = async () => {
+      let loadedCart: typeof cart = [];
+      
+      // Try to load from database first (if phone number available)
+      if (customerPhone && tenantId) {
+        try {
+          const app = getFirebaseApp()!;
+          const db = getFirestore(app);
+          const conversationRef = doc(db, "tenants", tenantId, "conversations", customerPhone);
+          const convoSnap = await getDoc(conversationRef);
+          
+          if (convoSnap.exists()) {
+            const cartData = convoSnap.data()?.cart;
+            if (cartData?.items && Array.isArray(cartData.items)) {
+              loadedCart = cartData.items;
+              console.log('✅ Cart loaded from database:', loadedCart.length, 'items');
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load cart from database:', err);
+        }
       }
-    } catch (err) {
-      console.error('Error loading cart:', err);
-    }
-  }, []);
+      
+      // Fallback to localStorage if no database cart
+      if (loadedCart.length === 0) {
+        try {
+          const savedCart = localStorage.getItem('whatsapp_cart');
+          if (savedCart) {
+            loadedCart = JSON.parse(savedCart);
+            console.log('✅ Cart loaded from localStorage:', loadedCart.length, 'items');
+          }
+        } catch (err) {
+          console.error('Error loading cart from localStorage:', err);
+        }
+      }
+      
+      // Set cart state
+      if (loadedCart.length > 0) {
+        setCart(loadedCart);
+        setShowCartBadge(true);
+        // Sync to localStorage for consistency
+        localStorage.setItem('whatsapp_cart', JSON.stringify(loadedCart));
+      }
+    };
+    
+    loadCart();
+  }, [customerPhone, tenantId]);
 
   const getBasePrice = () => {
     if (!product) return 0;
@@ -651,10 +704,9 @@ function OrderPageContent() {
         });
       }
         
-      // Clear cart if order was placed from cart
-      if (showCart) {
-        clearCart();
-      }
+      // Clear cart after successful order (always, not just from cart view)
+      await clearCart();
+      console.log('✅ Cart cleared after order placement');
         
       setOrderNumber(orderNum);
       setOrdered(true);
