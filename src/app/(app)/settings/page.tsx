@@ -202,8 +202,13 @@ export default function SettingsPage() {
       }
 
       if (shippingData) {
-        console.log("Setting shipping methods:", shippingData);
+        console.log("📦 Settings Page - Shipping data received:", shippingData);
+        console.log("📦 Settings Page - Shipping data length:", shippingData.length);
+        console.log("📦 Settings Page - Setting shipping methods to state");
         setShippingMethods(shippingData);
+        console.log("✅ Settings Page - Shipping methods set to state");
+      } else {
+        console.log("⚠️ Settings Page - No shipping data received");
       }
 
       if (productData) {

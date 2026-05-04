@@ -718,10 +718,16 @@ export const shippingService = {
 
   async getShippingMethods(user: User): Promise<ShippingMethod[]> {
     const tenantId = getTenantId(user);
+    console.log('🔍 getShippingMethods - Querying for tenantId:', tenantId);
     try {
       const q = query(collection(db, "shippingMethods"), where("tenantId", "==", tenantId));
       const snap = await getDocs(q);
-      const methods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShippingMethod[];
+      console.log('📦 getShippingMethods - Found', snap.docs.length, 'documents');
+      const methods = snap.docs.map(doc => {
+        console.log('📄 Document:', doc.id, doc.data());
+        return { id: doc.id, ...doc.data() };
+      }) as ShippingMethod[];
+      console.log('✅ getShippingMethods - Returning methods:', methods);
       // Sort by createdAt client-side to avoid index issues
       return methods.sort((a, b) => {
         const aTime = a.createdAt?.seconds || 0;
@@ -729,7 +735,7 @@ export const shippingService = {
         return bTime - aTime; // Newest first
       });
     } catch (error) {
-      console.error("Error loading shipping methods:", error);
+      console.error("❌ Error loading shipping methods:", error);
       return [];
     }
   },
