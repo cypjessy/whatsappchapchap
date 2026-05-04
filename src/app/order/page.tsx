@@ -8,7 +8,7 @@ import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimesta
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
-import { normalizePhone, createWhatsAppJid } from "@/utils/phoneUtils";
+import { normalizePhone, createWhatsAppJid, isValidWhatsAppPhone } from "@/utils/phoneUtils";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -405,25 +405,31 @@ function OrderPageContent() {
       });
 
       // Send WhatsApp notification - Order Received
-      const customerPhoneClean = customerPhone.replace(/^\+/, '').replace(/[^0-9]/g, '');
-      const orderConfirmationMessage = getOrderStatusMessage(
-        'pending',
-        customerName.trim(),
-        orderNum,
-        product.name,
-        address.trim()
-      );
+      const customerPhoneClean = normalizePhone(customerPhone);
       
-      console.log('📲 Sending order received WhatsApp to:', customerPhoneClean);
-      sendEvolutionWhatsAppMessage(
-        customerPhoneClean,
-        orderConfirmationMessage,
-        tenantId
-      ).then(() => {
-        console.log('✅ Order received WhatsApp sent successfully');
-      }).catch(err => {
-        console.error('❌ Failed to send order received WhatsApp:', err);
-      });
+      // Validate phone number before sending
+      if (!isValidWhatsAppPhone(customerPhoneClean)) {
+        console.error('❌ Invalid phone number, skipping WhatsApp notification:', customerPhoneClean);
+      } else {
+        const orderConfirmationMessage = getOrderStatusMessage(
+          'pending',
+          customerName.trim(),
+          orderNum,
+          product.name,
+          address.trim()
+        );
+        
+        console.log('📲 Sending order received WhatsApp to:', customerPhoneClean);
+        sendEvolutionWhatsAppMessage(
+          customerPhoneClean,
+          orderConfirmationMessage,
+          tenantId
+        ).then(() => {
+          console.log('✅ Order received WhatsApp sent successfully');
+        }).catch(err => {
+          console.error('❌ Failed to send order received WhatsApp:', err);
+        });
+      }
 
       await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {
         method: 'POST',

@@ -8,7 +8,7 @@ import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
-import { getWhatsAppPhone, normalizePhone, createWhatsAppJid } from "@/utils/phoneUtils";
+import { getWhatsAppPhone, normalizePhone, createWhatsAppJid, isValidWhatsAppPhone } from "@/utils/phoneUtils";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -474,6 +474,12 @@ try {
         customerPhone: order.customerPhone,
         whatsappJid: order.whatsappJid
       });
+      
+      // Validate phone number before sending
+      if (!isValidWhatsAppPhone(phone)) {
+        console.error('❌ Invalid phone number, skipping WhatsApp notification:', phone);
+        return;
+      }
       
       console.log('📱 Sending WhatsApp to:', phone, '(from JID:', order.whatsappJid || 'none', ')');
       
