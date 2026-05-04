@@ -852,7 +852,7 @@ async function handleProductBrowseInput(
       await sendWelcomeMenu(tenantId, phone);
     } else {
       await sendEvolutionMessage(tenantId, phone, 
-        "*Reply with a number:*\n1️⃣ - Next page\n2️ - Go back\n3️⃣ - View Categories\n4️ - Main Menu"
+        "*Reply with a number:*\n1️⃣ - View More\n2️ - Go back\n3️⃣ - View Categories\n4️ - Main Menu"
       );
     }
   }
@@ -1019,7 +1019,7 @@ async function showProductsForSelection(
   // Reply instructions
   let replyMessage = '';
   if (totalProducts > 5) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalProducts - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
   } else {
     replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
   }
@@ -1048,7 +1048,7 @@ async function showProductsForSelection(
     }, { merge: true });
 }
 
-// Show next page of products
+// Show View More of products
 async function showNextProductPage(
   tenantId: string,
   phone: string,
@@ -1206,9 +1206,9 @@ async function showNextProductPage(
   const remaining = allProductIds.length - endIndex;
   let replyMessage = '';
   if (remaining > 0) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - Next page (${remaining} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
+    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${remaining} more)\n2️⃣ - Go back\n3️ - View Categories\n4️⃣ - Main Menu`;
   } else {
-    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️ - Main Menu`;
+    replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
   }
   
   await sendEvolutionMessage(tenantId, phone, replyMessage);
