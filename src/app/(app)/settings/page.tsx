@@ -247,9 +247,25 @@ export default function SettingsPage() {
     
     setSaving(true);
     try {
-      // Include payment methods in profile - filter out disabled ones completely
+      // Prepare payment methods data with auto-enabled subtypes
       const paymentMethodsData: any = {};
-      if (paymentMethods.mpesa.enabled) paymentMethodsData.mpesa = paymentMethods.mpesa;
+      
+      // M-Pesa with auto-enabled subtypes
+      if (paymentMethods.mpesa.enabled) {
+        const mpesaData = { ...paymentMethods.mpesa };
+        // Auto-enable subtypes if they have required data
+        if (mpesaData.buyGoods?.tillNumber) {
+          mpesaData.buyGoods.enabled = true;
+        }
+        if (mpesaData.paybill?.paybillNumber) {
+          mpesaData.paybill.enabled = true;
+        }
+        if (mpesaData.personal?.phoneNumber) {
+          mpesaData.personal.enabled = true;
+        }
+        paymentMethodsData.mpesa = mpesaData;
+      }
+      
       if (paymentMethods.bank.enabled) paymentMethodsData.bank = paymentMethods.bank;
       if (paymentMethods.card.enabled) paymentMethodsData.card = paymentMethods.card;
       if (paymentMethods.cash.enabled) paymentMethodsData.cash = paymentMethods.cash;

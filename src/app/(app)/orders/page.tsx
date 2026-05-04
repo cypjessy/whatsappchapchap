@@ -296,6 +296,23 @@ try {
     if (!user || !selectedOrder || !newStatus) return;
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: newStatus });
+      
+      // Send WhatsApp notification for payment confirmation (pending -> processing)
+      if (newStatus === "processing" && selectedOrder.status === "pending") {
+        console.log(' Sending payment confirmation WhatsApp to:', selectedOrder.customerPhone);
+        sendWhatsAppNotification(selectedOrder, "processing").catch(err => {
+          console.error(' Failed to send WhatsApp notification:', err);
+        });
+      }
+      
+      // Send WhatsApp notification for delivery (any status -> delivered)
+      if (newStatus === "delivered") {
+        console.log(' Sending delivery confirmation WhatsApp to:', selectedOrder.customerPhone);
+        sendWhatsAppNotification(selectedOrder, "delivered").catch(err => {
+          console.error(' Failed to send WhatsApp notification:', err);
+        });
+      }
+      
       loadOrders();
       loadCounts();
       setShowStatusMenu(false);
@@ -318,6 +335,13 @@ try {
     if (!user || !selectedOrder) return;
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: "delivered" });
+      
+      // Send WhatsApp notification for delivery
+      console.log('📲 Sending delivery confirmation WhatsApp to:', selectedOrder.customerPhone);
+      sendWhatsAppNotification(selectedOrder, "delivered").catch(err => {
+        console.error('❌ Failed to send WhatsApp notification:', err);
+      });
+      
       loadOrders();
       loadCounts();
       setShowStatusMenu(false);
