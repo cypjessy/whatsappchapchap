@@ -67,12 +67,19 @@ export async function POST(req: NextRequest) {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
-      console.error(" Evolution API returned non-JSON response:", textResponse.substring(0, 200));
+      console.error(" Evolution API returned non-JSON response:");
+      console.error("   Status:", response.status);
+      console.error("   Content-Type:", contentType);
+      console.error("   Response (first 500 chars):", textResponse.substring(0, 500));
+      console.error("   URL:", apiUrl);
+      console.error("   Instance ID:", evolutionInstanceId);
       return NextResponse.json(
         { 
           error: "Evolution API returned invalid response",
           status: response.status,
-          response: textResponse.substring(0, 200)
+          response: textResponse.substring(0, 200),
+          url: apiUrl,
+          instanceId: evolutionInstanceId
         }, 
         { status: 500 }
       );
@@ -81,7 +88,9 @@ export async function POST(req: NextRequest) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error(" Evolution API error:", response.status, JSON.stringify(data));
+      console.error(" Evolution API error response:");
+      console.error("   Status:", response.status);
+      console.error("   Data:", JSON.stringify(data));
       return NextResponse.json(
         { error: data, status: response.status }, 
         { status: response.status }
@@ -89,6 +98,7 @@ export async function POST(req: NextRequest) {
     }
     
     console.log("✅ WhatsApp sent successfully via Evolution API");
+    console.log("   Response:", JSON.stringify(data));
     return NextResponse.json({ success: true, data });
     
   } catch (error) {
