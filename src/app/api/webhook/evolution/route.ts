@@ -539,11 +539,20 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
       brands: [],
-      // Use stored productCount if available, otherwise default to 0
-      // TODO: Update category documents to store productCount during product CRUD operations
-      productCount: data.productCount || 0,
+      productCount: 0,
     };
   });
+  
+  // Count products for each category
+  for (const category of categories) {
+    const productCountSnap = await adminDb
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("categoryId", "==", category.categorySlug)
+      .count()
+      .get();
+    category.productCount = productCountSnap.data().count || 0;
+  }
   
   // Format category menu
   const categoryList = categories
