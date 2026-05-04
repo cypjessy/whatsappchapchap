@@ -201,14 +201,17 @@ export default function OrdersPage() {
     setCreatingOrder(true);
     try {
       const totals = calculateOrderTotal();
+      const orderNumber = "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      
       console.log("Creating order with data:", {
         customerName: newOrderForm.customerName,
         customerPhone: newOrderForm.customerPhone,
         products: newOrderForm.selectedProducts,
         total: totals.total
       });
+      
       await orderService.createOrder(user, {
-        orderNumber: "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
+        orderNumber,
         customerId: "",
         customerName: newOrderForm.customerName,
         customerPhone: newOrderForm.customerPhone,
@@ -224,6 +227,23 @@ export default function OrdersPage() {
         status: "pending",
         notes: newOrderForm.notes,
       });
+      
+      // Send WhatsApp notification for new order
+      const newOrder = {
+        id: '',
+        orderNumber,
+        customerName: newOrderForm.customerName,
+        customerPhone: newOrderForm.customerPhone,
+        customerAddress: newOrderForm.customerAddress,
+        products: newOrderForm.selectedProducts,
+        total: totals.total,
+        status: 'pending' as const
+      } as Order;
+      
+      sendWhatsAppNotification(newOrder, 'pending').catch(err => {
+        console.error(' Failed to send new order WhatsApp notification:', err);
+      });
+      
       loadOrders();
       loadCounts();
       setNewOrderModalOpen(false);
@@ -305,9 +325,9 @@ try {
         });
       }
       
-      // Send WhatsApp notification for payment confirmation (pending -> processing)
-      if (newStatus === "processing" && selectedOrder.status === "pending") {
-        console.log(' Sending payment confirmation WhatsApp to:', selectedOrder.customerPhone);
+      // Send WhatsApp notification for payment confirmation (any status -> processing)
+      if (newStatus === "processing") {
+        console.log('📲 Sending payment confirmation WhatsApp to:', selectedOrder.customerPhone);
         sendWhatsAppNotification(selectedOrder, "processing").catch(err => {
           console.error(' Failed to send WhatsApp notification:', err);
         });
@@ -365,21 +385,7 @@ try {
 
   const processOrder = async () => {
     if (!user || !selectedOrder) return;
-    try {
-      await orderService.updateOrder(user, selectedOrder.id, { status: "delivered" });
-      
-      // Send WhatsApp notification for delivery
-      console.log('📲 Sending delivery confirmation WhatsApp to:', selectedOrder.customerPhone);
-      sendWhatsAppNotification(selectedOrder, "delivered").catch(err => {
-        console.error('❌ Failed to send WhatsApp notification:', err);
-      });
-      
-      loadOrders();
-      loadCounts();
-      setShowStatusMenu(false);
-    } catch (error) {
-      console.error("Error processing order:", error);
-    }
+    await updateOrderStatus("delivered");
   };
 
   const toggleSelect = (orderId: string) => {
