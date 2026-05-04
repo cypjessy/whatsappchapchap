@@ -374,6 +374,7 @@ export interface Order {
   customerId?: string;
   customerName: string;
   customerPhone: string;
+  whatsappJid?: string; // WhatsApp JID for verified sender (e.g., "254712345678@s.whatsapp.net")
   customerEmail?: string;
   customerAddress?: string;
   deliveryAddress?: string;

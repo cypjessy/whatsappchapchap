@@ -8,6 +8,7 @@ import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimesta
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
+import { normalizePhone, createWhatsAppJid } from "@/utils/phoneUtils";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -360,6 +361,12 @@ function OrderPageContent() {
       
       const now = new Date();
       
+      // Normalize phone and create WhatsApp JID
+      const normalizedPhone = normalizePhone(customerPhone);
+      const whatsappJid = phoneParam 
+        ? `${phoneParam.replace(/[^0-9]/g, '')}@s.whatsapp.net` 
+        : createWhatsAppJid(normalizedPhone);
+      
       await addDoc(collection(db, "orders"), {
         orderNumber: orderNum,
         tenantId,
@@ -372,7 +379,8 @@ function OrderPageContent() {
           Object.entries(selectedSpecs).every(([key, value]) => v.specs[key] === value)
         ) || null,
         quantity,
-        customerPhone: customerPhone.replace(/^\+/, ''),
+        customerPhone: normalizedPhone,
+        whatsappJid,
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim() || null,
         deliveryAddress: address.trim(),
@@ -423,7 +431,8 @@ function OrderPageContent() {
         body: JSON.stringify({
           orderId: orderNum,
           orderNumber: orderNum,
-          customerPhone: customerPhone.replace(/^\+/, ''),
+          customerPhone: normalizedPhone,
+          whatsappJid,
           customerName: customerName.trim(),
           productName: product.name,
           price: getBasePrice(),
@@ -437,7 +446,7 @@ function OrderPageContent() {
           tenantId: tenantId,
           evolutionServerUrl: tenantData?.evolutionServerUrl || null,
           evolutionApiKey: tenantData?.evolutionApiKey || null,
-          evolutionInstanceId: tenantId
+          evolutionInstanceId: tenantData?.evolutionInstanceId || tenantId
         })
       }).catch(err => console.error('Webhook error:', err));
       

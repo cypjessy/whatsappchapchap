@@ -8,6 +8,7 @@ import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
+import { getWhatsAppPhone, normalizePhone, createWhatsAppJid } from "@/utils/phoneUtils";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -203,9 +204,14 @@ export default function OrdersPage() {
       const totals = calculateOrderTotal();
       const orderNumber = "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
       
+      // Normalize phone number to international format
+      const normalizedPhone = normalizePhone(newOrderForm.customerPhone);
+      const whatsappJid = createWhatsAppJid(normalizedPhone);
+      
       console.log("Creating order with data:", {
         customerName: newOrderForm.customerName,
-        customerPhone: newOrderForm.customerPhone,
+        customerPhone: normalizedPhone,
+        whatsappJid,
         products: newOrderForm.selectedProducts,
         total: totals.total
       });
@@ -214,7 +220,8 @@ export default function OrdersPage() {
         orderNumber,
         customerId: "",
         customerName: newOrderForm.customerName,
-        customerPhone: newOrderForm.customerPhone,
+        customerPhone: normalizedPhone,
+        whatsappJid,
         customerEmail: newOrderForm.customerEmail,
         customerAddress: newOrderForm.customerAddress,
         products: newOrderForm.selectedProducts,
@@ -233,7 +240,8 @@ export default function OrdersPage() {
         id: '',
         orderNumber,
         customerName: newOrderForm.customerName,
-        customerPhone: newOrderForm.customerPhone,
+        customerPhone: normalizedPhone,
+        whatsappJid,
         customerAddress: newOrderForm.customerAddress,
         products: newOrderForm.selectedProducts,
         total: totals.total,
@@ -460,7 +468,14 @@ try {
         productName,
         order.deliveryAddress || order.customerAddress
       );
-      const phone = order.customerPhone.replace(/[^0-9]/g, '');
+      
+      // Use verified WhatsApp JID if available, fallback to normalized typed number
+      const phone = getWhatsAppPhone({
+        customerPhone: order.customerPhone,
+        whatsappJid: order.whatsappJid
+      });
+      
+      console.log('📱 Sending WhatsApp to:', phone, '(from JID:', order.whatsappJid || 'none', ')');
       
       await sendEvolutionWhatsAppMessage(
         phone,
