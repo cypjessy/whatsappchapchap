@@ -121,11 +121,9 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   };
 
   const handleConnected = async () => {
-    // Use Vercel deployment URL for webhook (has valid SSL)
-    const webhookUrl = process.env.NEXT_PUBLIC_VERCEL_URL 
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/api/webhook/evolution`
-      : "https://whatsappchapchap.vercel.app/api/webhook/evolution";
-    
+    // Always use production Vercel URL for webhook (stable, not preview URLs)
+    const webhookUrl = "https://whatsappchapchap.vercel.app/api/webhook/evolution";
+      
     console.log('Setting webhook for:', instanceName, 'with URL:', webhookUrl);
     
     try {
