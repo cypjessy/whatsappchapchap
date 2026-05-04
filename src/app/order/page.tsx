@@ -113,6 +113,7 @@ function OrderPageContent() {
   }>>([]);
   const [showCart, setShowCart] = useState(false);
   const [showCartBadge, setShowCartBadge] = useState(false);
+  const [showAddedNotification, setShowAddedNotification] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   
   // Get all product images
@@ -348,6 +349,19 @@ function OrderPageContent() {
   const addToCart = () => {
     if (!product) return;
     
+    // Validate that specs are selected if product has filters
+    if (product.filters && Object.keys(product.filters).length > 0) {
+      const requiredSpecs = Object.keys(product.filters);
+      const missingSpecs = requiredSpecs.filter(key => !selectedSpecs[key]);
+      
+      if (missingSpecs.length > 0) {
+        setErrors(prev => ({ ...prev, specs: true }));
+        const section = document.querySelector('.specs-section') as HTMLElement;
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    
     const cartItem = {
       productId: product.id,
       name: product.name,
@@ -363,9 +377,9 @@ function OrderPageContent() {
     setCart(newCart);
     saveCartToLocalStorage(newCart);
     
-    // Redirect back to WhatsApp
-    const whatsappUrl = `https://wa.me/${customerPhone || ''}?text=${encodeURIComponent('I added items to my cart! Let me find more products...')}`;
-    window.location.href = whatsappUrl;
+    // Show success notification instead of redirecting
+    setShowAddedNotification(true);
+    setTimeout(() => setShowAddedNotification(false), 3000);
   };
 
   const removeFromCart = (index: number) => {
@@ -401,13 +415,6 @@ function OrderPageContent() {
       console.error('Error loading cart:', err);
     }
   }, []);
-
-  // Show cart choice modal when product loads
-  useEffect(() => {
-    if (product && !loading && !showCart && cart.length === 0) {
-      setShowCartChoice(true);
-    }
-  }, [product, loading]);
 
   const getBasePrice = () => {
     if (!product) return 0;
@@ -694,63 +701,6 @@ function OrderPageContent() {
     );
   }
 
-  // Show cart choice modal
-  if (showCartChoice && !showCart) {
-    return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, rgba(37,211,102,0.1) 0%, rgba(18,140,126,0.1) 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-        <div style={{ background: "white", borderRadius: 16, padding: 32, maxWidth: 440, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ width: 80, height: 80, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 32, color: "white", boxShadow: "0 10px 30px rgba(37,211,102,0.3)" }}>
-              <i className="fas fa-shopping-cart"></i>
-            </div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, color: "#1e293b" }}>What would you like to do?</h1>
-            {product && <p style={{ color: "#64748b" }}>{product.name}</p>}
-          </div>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {/* Order Now Button */}
-            <button 
-              onClick={() => setShowCartChoice(false)}
-              style={{ padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}
-            >
-              <i className="fas fa-bolt"></i>
-              Order Now
-            </button>
-            
-            {/* Add to Cart Button */}
-            <button 
-              onClick={addToCart}
-              style={{ padding: 16, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(59,130,246,0.3)" }}
-            >
-              <i className="fas fa-cart-plus"></i>
-              Add to Cart & Continue Shopping
-            </button>
-            
-            {/* View Cart Button (if cart has items) */}
-            {cart.length > 0 && (
-              <button 
-                onClick={() => {
-                  setShowCartChoice(false);
-                  setShowCart(true);
-                }}
-                style={{ padding: 12, background: "#f8fafc", color: "#64748b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              >
-                <i className="fas fa-shopping-bag"></i>
-                View Cart ({cart.length} items)
-              </button>
-            )}
-          </div>
-          
-          <p style={{ fontSize: 12, textAlign: "center", color: "#64748b", marginTop: 24 }}>
-            {cart.length > 0 
-              ? `You already have ${cart.length} item(s) in your cart` 
-              : 'Your cart is empty'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const productEmoji = product?.image ? "" : (product?.category === "electronics" ? "📱" : product?.category === "footwear" ? "👟" : product?.category === "clothing" ? "👕" : product?.category === "beauty" ? "💄" : product?.category === "furniture" ? "🛋️" : product?.category === "food" ? "🍎" : product?.category === "sports" ? "🏋️" : product?.category === "toys" ? "🧸" : "📦");
   const currentStock = getVariantStock();
   const maxQuantity = Math.min(Math.max(currentStock, 1), 100);
@@ -771,6 +721,32 @@ function OrderPageContent() {
               {cart.length}
             </span>
           </button>
+        )}
+
+        {/* Added to Cart Notification */}
+        {showAddedNotification && (
+          <div style={{ 
+            position: "fixed", 
+            top: 24, 
+            left: "50%", 
+            transform: "translateX(-50%)", 
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", 
+            color: "white", 
+            padding: "16px 24px", 
+            borderRadius: 12, 
+            boxShadow: "0 8px 24px rgba(16,185,129,0.4)",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            zIndex: 1001,
+            animation: "slideUp 0.3s ease-out"
+          }}>
+            <i className="fas fa-check-circle" style={{ fontSize: 24 }}></i>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>Added to Cart!</div>
+              <div style={{ fontSize: 13, opacity: 0.9 }}>Continue shopping or view your cart</div>
+            </div>
+          </div>
         )}
 
         {/* Header */}
@@ -1477,7 +1453,29 @@ function OrderPageContent() {
             style={{ padding: 18, background: "white", color: "#1e293b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
           >
             <i className="fab fa-whatsapp"></i>
-            Ask Seller a Question
+            Ask Seller
+          </button>
+          <button 
+            onClick={addToCart}
+            style={{ 
+              padding: 18, 
+              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+              color: "white", 
+              border: "none", 
+              borderRadius: 12, 
+              fontSize: 16, 
+              fontWeight: 700, 
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              boxShadow: "0 4px 12px rgba(59,130,246,0.3)",
+              flex: 1
+            }}
+          >
+            <i className="fas fa-cart-plus"></i>
+            Add to Cart
           </button>
           <button 
             onClick={handleOrder}
