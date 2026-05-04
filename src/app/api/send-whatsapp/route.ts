@@ -1,48 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, message, tenantId } = await req.json();
+    const body = await req.json();
+    const { phone, message, tenantId, evolutionConfig } = body;
     
-    if (!phone || !message || !tenantId) {
+    if (!phone || !message) {
       return NextResponse.json(
-        { error: "Missing required fields: phone, message, tenantId" }, 
+        { error: "Missing required fields: phone, message" }, 
         { status: 400 }
       );
     }
 
-    // Check if Firebase Admin is initialized
-    if (!adminDb) {
-      console.error("Firebase Admin SDK not initialized. Check environment variables.");
+    // Use Evolution config from client (tenant-specific credentials)
+    // This avoids needing Firebase Admin SDK on the server
+    let evolutionUrl, evolutionApiKey, evolutionInstanceId;
+    
+    if (evolutionConfig) {
+      // Client passed tenant's Evolution credentials directly
+      evolutionUrl = evolutionConfig.evolutionServerUrl;
+      evolutionApiKey = evolutionConfig.evolutionApiKey;
+      evolutionInstanceId = evolutionConfig.evolutionInstanceId;
+    } else {
+      // Fallback to environment variables (single Evolution instance)
+      evolutionUrl = process.env.EVOLUTION_API_URL;
+      evolutionApiKey = process.env.EVOLUTION_API_KEY;
+      evolutionInstanceId = tenantId; // Use tenantId as instance ID
+    }
+    
+    if (!evolutionUrl || !evolutionApiKey || !evolutionInstanceId) {
       return NextResponse.json(
-        { error: "Firebase Admin SDK not configured" }, 
-        { status: 500 }
-      );
-    }
-
-    // Get tenant data from Firestore using Admin SDK
-    const tenantDoc = await adminDb.collection('tenants').doc(tenantId).get();
-    
-    if (!tenantDoc.exists) {
-      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
-    }
-    
-    const tenant = tenantDoc.data();
-    
-    if (!tenant) {
-      return NextResponse.json({ error: "Tenant data is empty" }, { status: 500 });
-    }
-    
-    // Check if Evolution API is configured
-    if (!tenant.evolutionServerUrl || !tenant.evolutionApiKey || !tenant.evolutionInstanceId) {
-      console.error("Evolution API not configured for tenant:", tenantId, {
-        hasServerUrl: !!tenant.evolutionServerUrl,
-        hasApiKey: !!tenant.evolutionApiKey,
-        hasInstanceId: !!tenant.evolutionInstanceId
-      });
-      return NextResponse.json(
-        { error: "Evolution API not configured for this tenant" }, 
+        { error: "Evolution API credentials not configured" }, 
         { status: 500 }
       );
     }
@@ -52,15 +40,15 @@ export async function POST(req: NextRequest) {
     const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
     
     // Call Evolution API server-side
-    const evolutionUrl = `${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`;
+    const apiUrl = `${evolutionUrl}/message/sendText/${evolutionInstanceId}`;
     
     console.log(`📤 Sending WhatsApp to ${fullPhone} via Evolution API`);
-    console.log(`🔗 Evolution URL: ${evolutionUrl}`);
+    console.log(`🔗 Evolution URL: ${apiUrl}`);
     
-    const response = await fetch(evolutionUrl, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        apikey: tenant.evolutionApiKey,
+        apikey: evolutionApiKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ 
