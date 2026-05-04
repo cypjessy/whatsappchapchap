@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, getDocs, query, where, deleteField } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
@@ -447,8 +447,22 @@ export default function CheckoutPage() {
       const orderRef = await addDoc(collection(db, "orders"), orderData);
 
       // Clear cart
-      localStorage.removeItem("shopping_cart");
+      localStorage.removeItem("whatsapp_cart");
       setCart([]);
+      
+      // Also clear from database
+      try {
+        const app = getFirebaseApp();
+        if (app && customerPhone && tenantId) {
+          const db = getFirestore(app);
+          const conversationRef = doc(db, "tenants", tenantId, "conversations", customerPhone);
+          await setDoc(conversationRef, {
+            cart: deleteField(),
+          }, { merge: true });
+        }
+      } catch (e) {
+        console.error("Error clearing cart from database:", e);
+      }
 
       // Send WhatsApp notification to business
       if (tenantData?.evolutionServerUrl && tenantData?.evolutionApiKey && tenantData?.evolutionInstanceId) {

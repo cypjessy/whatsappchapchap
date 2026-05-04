@@ -454,6 +454,7 @@ function OrderPageContent() {
     const newCart = cart.filter((_, i) => i !== index);
     setCart(newCart);
     saveCartToLocalStorage(newCart);
+    saveCartToDatabase(newCart);
   };
 
   const updateCartItemQuantity = (index: number, newQuantity: number) => {
@@ -462,6 +463,7 @@ function OrderPageContent() {
     newCart[index].quantity = newQuantity;
     setCart(newCart);
     saveCartToLocalStorage(newCart);
+    saveCartToDatabase(newCart);
   };
 
   const clearCart = async () => {
