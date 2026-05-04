@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,27 +12,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get tenant data from Firestore to get Evolution credentials
-    const { doc, getDoc } = await import('firebase/firestore');
-    const { app } = await import('@/lib/firebase');
-    
-    if (!app) {
-      return NextResponse.json({ error: "Firebase not initialized" }, { status: 500 });
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      console.error("Firebase Admin SDK not initialized. Check environment variables.");
+      return NextResponse.json(
+        { error: "Firebase Admin SDK not configured" }, 
+        { status: 500 }
+      );
     }
+
+    // Get tenant data from Firestore using Admin SDK
+    const tenantDoc = await adminDb.collection('tenants').doc(tenantId).get();
     
-    const { getFirestore } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    
-    const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
-    
-    if (!tenantDoc.exists()) {
+    if (!tenantDoc.exists) {
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
     
     const tenant = tenantDoc.data();
     
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant data is empty" }, { status: 500 });
+    }
+    
     // Check if Evolution API is configured
     if (!tenant.evolutionServerUrl || !tenant.evolutionApiKey || !tenant.evolutionInstanceId) {
+      console.error("Evolution API not configured for tenant:", tenantId, {
+        hasServerUrl: !!tenant.evolutionServerUrl,
+        hasApiKey: !!tenant.evolutionApiKey,
+        hasInstanceId: !!tenant.evolutionInstanceId
+      });
       return NextResponse.json(
         { error: "Evolution API not configured for this tenant" }, 
         { status: 500 }
@@ -46,6 +55,7 @@ export async function POST(req: NextRequest) {
     const evolutionUrl = `${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`;
     
     console.log(`📤 Sending WhatsApp to ${fullPhone} via Evolution API`);
+    console.log(`🔗 Evolution URL: ${evolutionUrl}`);
     
     const response = await fetch(evolutionUrl, {
       method: "POST",
@@ -62,7 +72,7 @@ export async function POST(req: NextRequest) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error("❌ Evolution API error:", response.status, data);
+      console.error("❌ Evolution API error:", response.status, JSON.stringify(data));
       return NextResponse.json(
         { error: data, status: response.status }, 
         { status: response.status }
