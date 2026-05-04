@@ -10,7 +10,11 @@ export interface OrderPhoneData {
 
 /**
  * Normalizes a phone number by stripping non-digits and converting local formats
- * Handles various input formats: +254..., 254..., 07xx, (555) 123-4567
+ * Handles various input formats: +254..., 254..., 07xx, (555) 123-4567, +07xx
+ * 
+ * NOTE: Local format normalization is Kenya-specific (converts 07xx/01xx → 254xx)
+ * For multi-country support, this needs to be tenant-aware with country code detection.
+ * Currently assumes all 10-digit numbers starting with 0 are Kenyan.
  * 
  * @param phone - Raw phone number input in any format
  * @returns Normalized digits-only phone number
@@ -19,6 +23,7 @@ export const normalizePhone = (phone: string): string => {
   const digits = phone.replace(/[^0-9]/g, '');
   
   // Convert Kenyan local format 07xx/01xx → 2547xx/2541xx
+  // WARNING: This is Kenya-specific. International users may need different logic.
   if (digits.startsWith('0') && digits.length === 10) {
     return '254' + digits.slice(1);
   }
