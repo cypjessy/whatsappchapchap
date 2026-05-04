@@ -18,14 +18,20 @@ export async function POST(req: NextRequest) {
     
     if (evolutionConfig) {
       // Client passed tenant's Evolution credentials directly
-      evolutionUrl = evolutionConfig.evolutionServerUrl;
+      evolutionUrl = evolutionConfig.evolutionServerUrl?.replace(/\/$/, ''); // Remove trailing slash
       evolutionApiKey = evolutionConfig.evolutionApiKey;
       evolutionInstanceId = evolutionConfig.evolutionInstanceId;
+      console.log('📦 Received evolutionConfig from client:', {
+        url: evolutionUrl,
+        hasApiKey: !!evolutionApiKey,
+        instanceId: evolutionInstanceId
+      });
     } else {
       // Fallback to environment variables (single Evolution instance)
-      evolutionUrl = process.env.EVOLUTION_API_URL;
+      evolutionUrl = process.env.EVOLUTION_API_URL?.replace(/\/$/, '');
       evolutionApiKey = process.env.EVOLUTION_API_KEY;
       evolutionInstanceId = tenantId; // Use tenantId as instance ID
+      console.log(' Using environment variables for Evolution config');
     }
     
     if (!evolutionUrl || !evolutionApiKey || !evolutionInstanceId) {
@@ -42,20 +48,35 @@ export async function POST(req: NextRequest) {
     // Call Evolution API server-side
     const apiUrl = `${evolutionUrl}/message/sendText/${evolutionInstanceId}`;
     
-    console.log(`📤 Sending WhatsApp to ${fullPhone} via Evolution API`);
-    console.log(`🔗 Evolution URL: ${apiUrl}`);
+    console.log(` Sending WhatsApp to ${fullPhone} via Evolution API`);
+    console.log(`🔗 Full Evolution URL: ${apiUrl}`);
     
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        apikey: evolutionApiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 
-        number: fullPhone, 
-        text: message 
-      }),
-    });
+    let response;
+    try {
+      response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          apikey: evolutionApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          number: fullPhone, 
+          text: message 
+        }),
+      });
+    } catch (fetchError: any) {
+      console.error("❌ Fetch failed:", fetchError.message);
+      console.error("❌ Evolution URL:", apiUrl);
+      console.error("❌ Error details:", fetchError);
+      return NextResponse.json(
+        { 
+          error: `Failed to connect to Evolution API: ${fetchError.message}`,
+          url: apiUrl,
+          details: fetchError.message
+        }, 
+        { status: 500 }
+      );
+    }
     
     const data = await response.json();
     
