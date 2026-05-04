@@ -91,7 +91,6 @@ function OrderPageContent() {
   const allImages = product?.images && product.images.length > 0 
     ? product.images 
     : product?.image ? [product.image] : [];
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -367,7 +366,7 @@ function OrderPageContent() {
         ? `${phoneParam.replace(/[^0-9]/g, '')}@s.whatsapp.net` 
         : createWhatsAppJid(normalizedPhone);
       
-      await addDoc(collection(db, "orders"), {
+      const docRef = await addDoc(collection(db, "orders"), {
         orderNumber: orderNum,
         tenantId,
         productId: product.id,
@@ -400,9 +399,9 @@ function OrderPageContent() {
         notificationSent: false,
         createdAt: now,
         updatedAt: now
-      }).then((docRef) => {
-        updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
       });
+      
+      await updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
 
       // Send WhatsApp notification - Order Received
       const customerPhoneClean = normalizePhone(customerPhone);
@@ -431,7 +430,8 @@ function OrderPageContent() {
         });
       }
 
-      await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {
+      // Fire n8n webhook (fire-and-forget, don't block order completion)
+      fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -476,7 +476,8 @@ function OrderPageContent() {
   const continueToWhatsApp = () => {
     const cleanTenantId = tenantId.replace('tenant_', '');
     const phone = cleanTenantId.replace(/[^0-9]/g, '');
-    const message = `Hi, I just placed order ${orderNumber}. Here's my details:\n\nName: ${customerName}\nPhone: ${customerPhone}\nAddress: ${address}\n\nOrder Total: ${CURRENCY_SYMBOL}${total.toLocaleString()}\nPayment: ${paymentMethod}`;
+    const currentTotal = getBasePrice() * quantity + deliveryCost;
+    const message = `Hi, I just placed order ${orderNumber}. Here's my details:\n\nName: ${customerName}\nPhone: ${customerPhone}\nAddress: ${address}\n\nOrder Total: ${CURRENCY_SYMBOL}${currentTotal.toLocaleString()}\nPayment: ${paymentMethod}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
