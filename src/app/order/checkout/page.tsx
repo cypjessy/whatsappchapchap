@@ -358,28 +358,21 @@ export default function CheckoutPage() {
   if (error) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
-        <div style={{ textAlign: "center", maxWidth: 400 }}>
+        <div style={{ textAlign: "center", maxWidth: 400, padding: 24 }}>
           <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
             <i className="fas fa-shopping-cart" style={{ fontSize: 32, color: "#ef4444" }}></i>
           </div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>Oops!</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>Cart is Empty</h2>
           <p style={{ fontSize: 16, color: "#64748b", marginBottom: 32 }}>{error}</p>
-          <button
-            onClick={() => router.push("/")}
-            style={{
-              padding: "14px 32px",
-              background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-              color: "white",
-              border: "none",
-              borderRadius: 50,
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-          >
-            <i className="fas fa-arrow-left" style={{ marginRight: 8 }}></i>
-            Back to Shop
-          </button>
+          <div style={{ background: "#f0f9ff", borderRadius: 12, padding: 20, marginBottom: 24, border: "2px solid #bae6fd" }}>
+            <p style={{ fontSize: 14, color: "#0369a1", margin: 0 }}>
+              <i className="fas fa-info-circle" style={{ marginRight: 8 }}></i>
+              Please browse products from our WhatsApp catalog and add items to your cart before checking out.
+            </p>
+          </div>
+          <p style={{ fontSize: 14, color: "#94a3b8" }}>
+            Need help? Contact us on WhatsApp
+          </p>
         </div>
       </div>
     );
@@ -430,13 +423,12 @@ export default function CheckoutPage() {
               </ul>
             </div>
             
-            <button 
-              onClick={() => router.push("/order")}
-              style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              <i className="fas fa-shopping-bag"></i>
-              Continue Shopping
-            </button>
+            <div style={{ background: "#f0f9ff", borderRadius: 12, padding: 20, marginBottom: 24, border: "2px solid #bae6fd" }}>
+              <p style={{ fontSize: 14, color: "#0369a1", margin: 0 }}>
+                <i className="fas fa-info-circle" style={{ marginRight: 8 }}></i>
+                You can continue browsing our products on WhatsApp and add more items anytime.
+              </p>
+            </div>
           </div>
         </div>
       </div>
