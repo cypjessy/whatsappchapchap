@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
+import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where, setDoc } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
@@ -346,7 +346,29 @@ function OrderPageContent() {
     }
   };
 
-  const addToCart = () => {
+  const saveCartToDatabase = async (newCart: typeof cart) => {
+    if (!customerPhone || !tenantId) return;
+    
+    try {
+      const app = getFirebaseApp()!;
+      const db = getFirestore(app);
+      
+      const conversationRef = doc(db, "tenants", tenantId, "conversations", customerPhone);
+      
+      await setDoc(conversationRef, {
+        cart: {
+          items: newCart,
+          updatedAt: new Date().toISOString(),
+        },
+      }, { merge: true });
+      
+      console.log('✅ Cart saved to database');
+    } catch (err) {
+      console.error('Failed to save cart to database:', err);
+    }
+  };
+
+  const addToCart = async () => {
     if (!product) return;
     
     // Validate that specs are selected if product has filters
@@ -376,6 +398,35 @@ function OrderPageContent() {
     const newCart = [...cart, cartItem];
     setCart(newCart);
     saveCartToLocalStorage(newCart);
+    saveCartToDatabase(newCart); // Save to Firestore for WhatsApp access
+    
+    // Send WhatsApp notification about cart addition
+    if (customerPhone && tenantData?.evolutionServerUrl && tenantData?.evolutionApiKey && tenantData?.evolutionInstanceId) {
+      try {
+        const businessName = businessSettings?.businessName || 'Our Store';
+        const specDetails = Object.entries(selectedSpecs)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join(', ');
+        
+        const cartMessage = `✅ *Added to Cart!*\n\n*${product.name}*\n💰 KES ${getBasePrice().toLocaleString()} x ${quantity}\n${specDetails ? `📝 ${specDetails}\n` : ''}\n🛒 You now have ${newCart.length} item(s) in your cart\n\nReply *VIEW CART* to see your cart or continue shopping!`;
+        
+        await fetch(`${tenantData.evolutionServerUrl}/message/sendText/${tenantData.evolutionInstanceId}`, {
+          method: 'POST',
+          headers: {
+            apikey: tenantData.evolutionApiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            number: customerPhone,
+            text: cartMessage,
+          }),
+        });
+        
+        console.log('✅ Cart notification sent to WhatsApp');
+      } catch (err) {
+        console.error('Failed to send cart notification:', err);
+      }
+    }
     
     // Show success notification instead of redirecting
     setShowAddedNotification(true);

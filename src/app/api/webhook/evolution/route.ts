@@ -380,7 +380,27 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
 // Send welcome menu with numbered options
 async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
   const businessName = await getTenantBusinessName(tenantId);
-  const menuMsg = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?\n\n1️ Browse Products\n2️ Browse Services\n3️ Check Order Status\n4️ Payment Info\n5️ Talk to Support\n\n*Reply with a number (1-5)*`;
+  
+  // Check if user has items in cart
+  let cartNote = '';
+  try {
+    const adminDb = getAdminDb();
+    const convoDoc = await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    const cartData = convoDoc.data()?.cart;
+    if (cartData && cartData.items && cartData.items.length > 0) {
+      cartNote = `\n\n🛒 *You have ${cartData.items.length} item(s) in your cart*\nReply *VIEW CART* to checkout`;
+    }
+  } catch (err) {
+    console.error('[Webhook] Error checking cart:', err);
+  }
+  
+  const menuMsg = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?\n\n1️ Browse Products\n2️ Browse Services\n3️ Check Order Status\n4️ Payment Info\n5️ Talk to Support${cartNote}\n\n*Reply with a number (1-5)*`;
   
   await sendEvolutionMessage(tenantId, phone, menuMsg);
   
@@ -554,6 +574,12 @@ async function handleFlowInput(
 ): Promise<void> {
   const adminDb = getAdminDb();
   const { flowName, currentStep, selections } = flowState;
+  
+  // Check for VIEW CART command (available in all flows)
+  if (message.trim().toUpperCase() === 'VIEW CART' || message.trim().toUpperCase() === 'CART') {
+    await handleViewCart(tenantId, phone);
+    return;
+  }
   
   // Check for back option
   if (message.trim() === '0') {
@@ -1203,6 +1229,62 @@ async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
 
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
   await sendEvolutionMessage(tenantId, phone, " Our support team is here to help! Please describe your issue and we'll assist you.");
+}
+
+// Handle VIEW CART command
+async function handleViewCart(tenantId: string, phone: string): Promise<void> {
+  try {
+    const adminDb = getAdminDb();
+    
+    // Get cart from conversation document
+    const convoDoc = await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    const cartData = convoDoc.data()?.cart;
+    
+    if (!cartData || !cartData.items || cartData.items.length === 0) {
+      await sendEvolutionMessage(tenantId, phone, "🛒 *Your cart is empty*\n\nBrowse products and add items to your cart to see them here!\n\nReply *1* to browse products or *MENU* for main menu.");
+      return;
+    }
+    
+    // Build cart summary
+    let cartMessage = `🛒 *Your Cart* (${cartData.items.length} item(s))\n\n`;
+    let total = 0;
+    
+    cartData.items.forEach((item: any, idx: number) => {
+      const itemTotal = (item.price || 0) * (item.quantity || 1);
+      total += itemTotal;
+      
+      cartMessage += `${idx + 1}. *${item.name}*\n`;
+      cartMessage += `   💰 KES ${(item.price || 0).toLocaleString()} x ${item.quantity || 1}\n`;
+      
+      if (item.specs && Object.keys(item.specs).length > 0) {
+        const specDetails = Object.entries(item.specs)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join(', ');
+        cartMessage += `   📝 ${specDetails}\n`;
+      }
+      
+      cartMessage += `   Subtotal: KES ${itemTotal.toLocaleString()}\n\n`;
+    });
+    
+    cartMessage += `━━━━━━━━━━━━━━━\n`;
+    cartMessage += `*TOTAL: KES ${total.toLocaleString()}*\n\n`;
+    cartMessage += `To checkout, please:\n`;
+    cartMessage += `1. Open your order link (sent when you added items)\n`;
+    cartMessage += `2. Click the floating cart button (bottom-right)\n`;
+    cartMessage += `3. Review and place your order\n\n`;
+    cartMessage += `Or reply *CLEAR CART* to empty your cart.`;
+    
+    await sendEvolutionMessage(tenantId, phone, cartMessage);
+  } catch (err) {
+    console.error('[Webhook] Error viewing cart:', err);
+    await sendEvolutionMessage(tenantId, phone, "❌ Unable to retrieve your cart. Please try again later.");
+  }
 }
 function checkIfGreeting(message: string): boolean {
   const greetings = [
