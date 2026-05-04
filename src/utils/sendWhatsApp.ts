@@ -24,35 +24,53 @@ export const sendEvolutionWhatsAppMessage = async (
     
     const tenant = tenantDoc.data();
     
+    // Check if Evolution API is configured
+    if (!tenant.evolutionServerUrl || !tenant.evolutionApiKey || !tenant.evolutionInstanceId) {
+      console.error("Evolution API not configured for tenant:", tenantId);
+      // Fallback: Open WhatsApp Web with message
+      const cleanPhone = phone.replace(/[^0-9]/g, "");
+      const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+      const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, '_blank');
+      console.log("Opened WhatsApp Web (Evolution not configured)");
+      return;
+    }
+    
     // Clean phone number
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
     
-    // Try webhook first
-    try {
-      const response = await fetch('http://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          number: fullPhone,
-          text: message
-        })
-      });
-      
-      if (response.ok) {
-        console.log("WhatsApp sent via webhook");
-        return;
-      }
-    } catch (e) {
-      console.log("Webhook failed, opening WhatsApp Web instead");
-    }
+    // Send via Evolution API directly
+    const evolutionUrl = `${tenant.evolutionServerUrl}/message/sendText/${tenant.evolutionInstanceId}`;
     
-    // Fallback: Open WhatsApp Web with message
-    const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank');
-    console.log("Opened WhatsApp Web");
+    const response = await fetch(evolutionUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'apikey': tenant.evolutionApiKey
+      },
+      body: JSON.stringify({
+        number: fullPhone,
+        text: message
+      })
+    });
+    
+    if (response.ok) {
+      console.log("✅ WhatsApp sent via Evolution API");
+      return;
+    } else {
+      const errorData = await response.json().catch(() => null);
+      console.error("❌ Evolution API error:", response.status, errorData);
+      throw new Error(`Evolution API returned ${response.status}`);
+    }
     
   } catch (err) {
     console.error('sendEvolutionWhatsAppMessage error:', err);
+    // Fallback: Open WhatsApp Web with message
+    const cleanPhone = phone.replace(/[^0-9]/g, "");
+    const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+    const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+    console.log("Opened WhatsApp Web (fallback after error)");
   }
 };

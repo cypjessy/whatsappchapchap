@@ -429,32 +429,6 @@ function OrderPageContent() {
           console.error('❌ Failed to send order received WhatsApp:', err);
         });
       }
-
-      // Fire n8n webhook (fire-and-forget, don't block order completion)
-      fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: orderNum,
-          orderNumber: orderNum,
-          customerPhone: normalizedPhone,
-          whatsappJid,
-          customerName: customerName.trim(),
-          productName: product.name,
-          price: getBasePrice(),
-          quantity: quantity,
-          selectedSpecs: selectedSpecs,
-          deliveryAddress: address.trim(),
-          deliveryMethod: deliveryMethod,
-          deliveryCost: deliveryCost,
-          paymentMethod: paymentMethod,
-          total: total,
-          tenantId: tenantId,
-          evolutionServerUrl: tenantData?.evolutionServerUrl || null,
-          evolutionApiKey: tenantData?.evolutionApiKey || null,
-          evolutionInstanceId: tenantData?.evolutionInstanceId || tenantId
-        })
-      }).catch(err => console.error('Webhook error:', err));
       
       setOrderNumber(orderNum);
       setOrdered(true);
