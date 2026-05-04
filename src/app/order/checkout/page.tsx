@@ -171,7 +171,8 @@ export default function CheckoutPage() {
         const profileData = !profileSnap.empty ? profileSnap.docs[0].data() : null;
         
         console.log('🔍 Checkout - Profile data found:', !!profileData);
-        console.log(' Checkout - Payment methods from profile:', profileData?.paymentMethods);
+        console.log('📦 Checkout - Payment methods from profile:', profileData?.paymentMethods);
+        console.log('📦 Checkout - Payment methods type:', typeof profileData?.paymentMethods, Array.isArray(profileData?.paymentMethods));
         
         // Fetch shipping methods
         const shippingQuery = collection(db, "shippingMethods");
@@ -202,16 +203,37 @@ export default function CheckoutPage() {
             description?: string;
           }>;
         
+        // Handle paymentMethods - could be array or object
+        let paymentMethodsArray: any[] = [];
+        if (profileData?.paymentMethods) {
+          if (Array.isArray(profileData.paymentMethods)) {
+            paymentMethodsArray = profileData.paymentMethods;
+          } else if (typeof profileData.paymentMethods === 'object') {
+            // Convert object to array (e.g., {mpesa: {...}, bank: {...}})
+            paymentMethodsArray = Object.entries(profileData.paymentMethods).map(([id, data]) => {
+              const methodData = data as any;
+              return {
+                id: methodData.id || id,
+                name: methodData.name || id.charAt(0).toUpperCase() + id.slice(1),
+                details: methodData.details || methodData.description || '',
+                icon: methodData.icon || 'fa-credit-card',
+                color: methodData.color || '#3b82f6',
+                ...methodData
+              };
+            });
+          }
+        }
+        
+        console.log('✅ Checkout - Converted paymentMethods to array:', paymentMethodsArray, 'length:', paymentMethodsArray.length);
+        
         setPickupStations(pickupStationsData);
         setBusinessSettings({
           shippingMethods: shippingMethods.length > 0 ? shippingMethods : undefined,
-          paymentMethods: profileData?.paymentMethods || [],
+          paymentMethods: paymentMethodsArray,
           businessName: profileData?.businessName,
           phone: profileData?.phone,
           address: profileData?.address
         });
-        
-        console.log('✅ Checkout - Business settings set with paymentMethods:', profileData?.paymentMethods || [], 'length:', (profileData?.paymentMethods || []).length);
         
         setLoading(false);
       } catch (error) {
