@@ -396,25 +396,25 @@ function OrderPageContent() {
         updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
       });
 
-      // Send WhatsApp notification - Order Confirmed
+      // Send WhatsApp notification - Order Received
       const customerPhoneClean = customerPhone.replace(/^\+/, '').replace(/[^0-9]/g, '');
       const orderConfirmationMessage = getOrderStatusMessage(
-        'confirmed',
+        'pending',
         customerName.trim(),
         orderNum,
         product.name,
         address.trim()
       );
       
-      console.log('📲 Sending order confirmation WhatsApp to:', customerPhoneClean);
+      console.log('📲 Sending order received WhatsApp to:', customerPhoneClean);
       sendEvolutionWhatsAppMessage(
         customerPhoneClean,
         orderConfirmationMessage,
         tenantId
       ).then(() => {
-        console.log('✅ Order confirmation WhatsApp sent successfully');
+        console.log('✅ Order received WhatsApp sent successfully');
       }).catch(err => {
-        console.error('❌ Failed to send order confirmation WhatsApp:', err);
+        console.error('❌ Failed to send order received WhatsApp:', err);
       });
 
       await fetch('https://n8n-lfk9ps3h72dezxj6jwy4905s.173.249.50.98.sslip.io/webhook/order-confirmation', {

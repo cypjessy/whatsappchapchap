@@ -365,7 +365,7 @@ export interface OrderItem {
   price: number;
 }
 
-export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 
 export interface Order {
   id: string;

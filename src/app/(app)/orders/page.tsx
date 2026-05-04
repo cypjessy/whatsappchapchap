@@ -297,6 +297,14 @@ try {
     try {
       await orderService.updateOrder(user, selectedOrder.id, { status: newStatus });
       
+      // Send WhatsApp notification for order confirmation (pending -> confirmed)
+      if (newStatus === "confirmed") {
+        console.log('📲 Sending order confirmed WhatsApp to:', selectedOrder.customerPhone);
+        sendWhatsAppNotification(selectedOrder, "confirmed").catch(err => {
+          console.error('❌ Failed to send WhatsApp notification:', err);
+        });
+      }
+      
       // Send WhatsApp notification for payment confirmation (pending -> processing)
       if (newStatus === "processing" && selectedOrder.status === "pending") {
         console.log(' Sending payment confirmation WhatsApp to:', selectedOrder.customerPhone);
@@ -305,11 +313,35 @@ try {
         });
       }
       
+      // Send WhatsApp notification for shipping (confirmed/processing -> shipped)
+      if (newStatus === "shipped") {
+        console.log('📲 Sending order shipped WhatsApp to:', selectedOrder.customerPhone);
+        sendWhatsAppNotification(selectedOrder, "shipped").catch(err => {
+          console.error('❌ Failed to send WhatsApp notification:', err);
+        });
+      }
+      
       // Send WhatsApp notification for delivery (any status -> delivered)
       if (newStatus === "delivered") {
         console.log(' Sending delivery confirmation WhatsApp to:', selectedOrder.customerPhone);
         sendWhatsAppNotification(selectedOrder, "delivered").catch(err => {
           console.error(' Failed to send WhatsApp notification:', err);
+        });
+      }
+      
+      // Send WhatsApp notification for cancellation
+      if (newStatus === "cancelled") {
+        console.log('📲 Sending order cancelled WhatsApp to:', selectedOrder.customerPhone);
+        sendWhatsAppNotification(selectedOrder, "cancelled").catch(err => {
+          console.error('❌ Failed to send WhatsApp notification:', err);
+        });
+      }
+      
+      // Send WhatsApp notification for refund
+      if (newStatus === "refunded") {
+        console.log('📲 Sending refund processed WhatsApp to:', selectedOrder.customerPhone);
+        sendWhatsAppNotification(selectedOrder, "refunded").catch(err => {
+          console.error('❌ Failed to send WhatsApp notification:', err);
         });
       }
       
@@ -1313,6 +1345,24 @@ try {
                 </button>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
+                {/* Confirm Order Button - Only show for pending orders */}
+                {selectedOrder.status === "pending" && (
+                  <button 
+                    className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center justify-center gap-2" 
+                    onClick={() => updateOrderStatus("confirmed")}
+                  >
+                    <i className="fas fa-check-circle"></i> <span className="hidden md:inline">Confirm Order</span>
+                  </button>
+                )}
+                {/* Mark as Shipped Button - Only show for confirmed/processing orders */}
+                {(selectedOrder.status === "confirmed" || selectedOrder.status === "processing") && (
+                  <button 
+                    className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm hover:shadow-lg flex items-center justify-center gap-2" 
+                    onClick={() => updateOrderStatus("shipped")}
+                  >
+                    <i className="fas fa-shipping-fast"></i> <span className="hidden md:inline">Mark Shipped</span>
+                  </button>
+                )}
                 {/* Confirm Payment Button - Only show for pending orders with payment method */}
                 {selectedOrder.status === "pending" && selectedOrder.paymentMethod && selectedOrder.paymentMethod !== "cod" && selectedOrder.paymentMethod !== "Cash on Delivery" && (
                   <button 
@@ -1326,10 +1376,16 @@ try {
                   <button className="w-full md:w-auto px-3 md:px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] flex items-center justify-center gap-2" onClick={() => setShowStatusMenu(!showStatusMenu)}>
                     <i className="fas fa-tag"></i> <span className="hidden md:inline">Update Status</span> <i className="fas fa-chevron-up ml-1 md:ml-2"></i>
                   </button>
-                  <div className={`absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-[#e2e8f0] min-w-[180px] z-50 ${showStatusMenu ? "block" : "hidden"}`}>
+                  <div className={`absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-[#e2e8f0] min-w-[200px] z-50 ${showStatusMenu ? "block" : "hidden"}`}>
                     <div className="py-1">
                       <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("delivered")}>
                         <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span> Mark Delivered
+                      </div>
+                      <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("cancelled")}>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span> Cancel Order
+                      </div>
+                      <div className="px-4 py-2 cursor-pointer text-sm flex items-center gap-3 hover:bg-[#f8fafc]" onClick={() => updateOrderStatus("refunded")}>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span> Mark Refunded
                       </div>
                     </div>
                   </div>

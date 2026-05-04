@@ -8,7 +8,7 @@ export const getOrderStatusMessage = (
   const trackingUrl = `https://whatsappchapchap.vercel.app/track?order=${orderId}`;
 
   const messages: Record<string, string> = {
-    pending: `⏳ Order Pending\n\nHi ${customerName}! Your order is awaiting payment confirmation.\n\nOrder: ${productName}\nOrder ID: ${orderId}\n\nWe will notify you once payment is confirmed!`,
+    pending: `📦 Order Received - Pending Approval\n\nHi ${customerName}! We have received your order and it's pending approval.\n\nOrder: ${productName}\nOrder ID: ${orderId}\n\nWe will review and confirm your order shortly!`,
     
     confirmed: `✅ Order Confirmed!\n\nHi ${customerName}! Your order has been confirmed.\n\nOrder: ${productName}\nOrder ID: ${orderId}\nDelivery to: ${deliveryAddress || ''}\n\nWe will prepare your order shortly!`,
     
