@@ -170,6 +170,9 @@ export default function CheckoutPage() {
         const profileSnap = await getDocs(profileQuery);
         const profileData = !profileSnap.empty ? profileSnap.docs[0].data() : null;
         
+        console.log('🔍 Checkout - Profile data found:', !!profileData);
+        console.log(' Checkout - Payment methods from profile:', profileData?.paymentMethods);
+        
         // Fetch shipping methods
         const shippingQuery = collection(db, "shippingMethods");
         const shippingSnap = await getDocs(shippingQuery);
@@ -207,6 +210,8 @@ export default function CheckoutPage() {
           phone: profileData?.phone,
           address: profileData?.address
         });
+        
+        console.log('✅ Checkout - Business settings set with paymentMethods:', profileData?.paymentMethods || [], 'length:', (profileData?.paymentMethods || []).length);
         
         setLoading(false);
       } catch (error) {
