@@ -691,6 +691,7 @@ async function handleFlowInput(
   }
   
   if (message.trim() === '0') {
+    // Main menu shortcut for all flows
     if (flowName === 'product_browse') {
       if (currentStep === 'category_selection') {
         await sendWelcomeMenu(tenantId, phone);
@@ -716,7 +717,8 @@ async function handleFlowInput(
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
-    await sendEvolutionMessage(tenantId, phone, "⬅️ Back option not available in this flow. Reply *MENU* to return to main menu.");
+    // Default: Clear flow and show main menu
+    await sendWelcomeMenu(tenantId, phone);
     return;
   }
   
