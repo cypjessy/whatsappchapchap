@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { initializeApp, getApps, getApp } from "firebase/app";
@@ -107,6 +107,9 @@ function OrderPageContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   
+  // Debounce ref for search
+  const debounceRef = useRef<NodeJS.Timeout>();
+  
   // Cart state
 
   const [cart, setCart] = useState<Array<{
@@ -129,8 +132,11 @@ function OrderPageContent() {
     ? product.images 
     : product?.image ? [product.image] : [];
 
-  const handleSearch = async (searchTerm: string) => {
+  const handleSearch = (searchTerm: string) => {
     setSearchQuery(searchTerm);
+    
+    // Clear previous debounce timer
+    clearTimeout(debounceRef.current);
     
     if (searchTerm.trim().length < 2) {
       setSearchResults([]);
@@ -138,45 +144,49 @@ function OrderPageContent() {
       return;
     }
     
-    setIsSearching(true);
-    
-    try {
-      // Use AI-enhanced search API
-      const response = await fetch('/api/ai-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchQuery: searchTerm,
-          tenantId: tenantId,
-        }),
-      });
+    // Debounce search by 400ms
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
       
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log('[AI Search] Enhanced queries:', data.enhancedQueries);
-        setSearchResults(data.results.slice(0, 10));
-        setShowSearchResults(true);
-      } else {
-        throw new Error(data.error || 'Search failed');
-      }
-    } catch (err) {
-      console.error('Search error:', err);
-      // Fallback to basic search if AI fails
       try {
-        const app = getFirebaseApp();
-        if (!app) return;
+        // Use AI-enhanced search API
+        const response = await fetch('/api/ai-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            searchQuery: searchTerm,
+            tenantId: tenantId,
+          }),
+        });
         
-        const db = getFirestore(app);
+        if (!response.ok) {
+          throw new Error('Search failed');
+        }
         
-        const productsQuery = query(
-          collection(db, "products"),
-          where("tenantId", "==", tenantId)
-        );
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('[AI Search] Enhanced queries:', data.enhancedQueries);
+          setSearchResults(data.results.slice(0, 10));
+          setShowSearchResults(true);
+        } else {
+          throw new Error(data.error || 'Search failed');
+        }
+      } catch (err) {
+        console.error('Search error:', err);
+        // Fallback to basic search if AI fails
+        try {
+          const app = getFirebaseApp();
+          if (!app) return;
+          
+          const db = getFirestore(app);
+          
+          // Add active status filter
+          const productsQuery = query(
+            collection(db, "products"),
+            where("tenantId", "==", tenantId),
+            where("status", "==", "active")
+          );
         
         const productsSnap = await getDocs(productsQuery);
         const allProducts = productsSnap.docs.map((doc: any) => ({
@@ -205,6 +215,7 @@ function OrderPageContent() {
     } finally {
       setIsSearching(false);
     }
+    }, 400); // 400ms debounce
   };
   
   const selectSearchResult = (product: Product) => {
@@ -1049,20 +1060,6 @@ function OrderPageContent() {
           </div>
         </div>
 
-        {/* Floating Cart Button */}
-        {cart.length > 0 && !showCart && (
-          <button 
-            className="floating-cart-btn"
-            onClick={() => router.push(`/order/checkout?tenant=${tenantId}&phone=${encodeURIComponent(customerPhone || '')}`)}
-            style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
-          >
-            <i className="fas fa-shopping-cart"></i>
-            <span style={{ position: "absolute", top: -4, right: -4, width: 24, height: 24, background: "#ef4444", borderRadius: "50%", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
-              {cart.length}
-            </span>
-          </button>
-        )}
-
         {/* Added to Cart Notification */}
         {showAddedNotification && (
           <div style={{ 
@@ -1633,9 +1630,9 @@ function OrderPageContent() {
                 style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, marginBottom: 12 }}
               />
               <textarea
-                placeholder="Add a message to the seller (optional)"
-                value={orderNotes}
-                onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder="Add a message about your payment (optional)"
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
                 rows={2}
                 style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, resize: "none" }}
               />
