@@ -188,11 +188,21 @@ export default function OrdersPage() {
         await updateDoc(orderDoc.ref, {
           status: isApproving ? 'cancelled' : 'confirmed',
           cancellationStatus: isApproving ? 'approved' : 'rejected',
+          refunded: isApproving ? true : false, // Mark as refunded when approved
           refundReference: isApproving ? (refundNote || null) : null,
+          refundAmount: isApproving ? (orderData.total || 0) : null, // Store refund amount
+          refundedAt: isApproving ? new Date() : null, // Store refund timestamp
           updatedAt: new Date(),
         });
             
         console.log(`[Cancellation] Updated order ${orderId} status to ${isApproving ? 'cancelled' : 'confirmed'}`);
+        if (isApproving) {
+          console.log(`[Cancellation] Order marked as refunded:`, {
+            refundAmount: orderData.total || 0,
+            refundReference: refundNote || 'No reference provided',
+            refundedAt: new Date().toISOString()
+          });
+        }
             
         // Send WhatsApp notification to customer
         const customerPhone = orderData.customerPhone;
