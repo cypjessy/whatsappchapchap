@@ -1722,25 +1722,7 @@ async function handleProductSearch(
     
     console.log(`[Webhook] Extracted search term: "${searchTerm}"`);
     
-    // Get tenant evolution credentials
-    const adminDb = getAdminDb();
-    const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
-    if (!tenantDoc.exists) {
-      await sendEvolutionMessage(tenantId, phone, "❌ Unable to process search. Please try again later.");
-      return;
-    }
-    
-    const tenantData = tenantDoc.data();
-    const evolutionServerUrl = tenantData?.evolutionServerUrl;
-    const evolutionApiKey = tenantData?.evolutionApiKey;
-    const evolutionInstanceId = tenantData?.evolutionInstanceId;
-    
-    if (!evolutionServerUrl || !evolutionApiKey || !evolutionInstanceId) {
-      await sendEvolutionMessage(tenantId, phone, "❌ WhatsApp integration not configured.");
-      return;
-    }
-    
-    // Call AI search API - use Next.js app URL, not Evolution server
+    // Call AI search API - use Next.js app URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
     if (!baseUrl) {
       console.error('[Webhook] NEXT_PUBLIC_APP_URL or VERCEL_URL not configured');
