@@ -1897,50 +1897,140 @@ async function handleProductSearch(
     
     debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
     
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-    if (!baseUrl) {
-      console.error('[Webhook] NEXT_PUBLIC_APP_URL or VERCEL_URL not configured');
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(tenantId, phone, "❌ Search service unavailable. Please try again later.");
-      return;
+    // Direct Firestore query (no API call needed - more reliable!)
+    const adminDb = getAdminDb();
+    
+    const productsSnap = await adminDb
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .get();
+    
+    // Score products with fuzzy matching
+    const searchLower = searchTerm.toLowerCase();
+    const allProducts = productsSnap.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    const scoredProducts = allProducts.map((product: any) => {
+      let score = 0;
+      
+      const name = (product.name || "").toLowerCase();
+      const brand = (product.brand || "").toLowerCase();
+      const category = (product.category || product.categoryName || "").toLowerCase();
+      const description = (product.description || "").toLowerCase();
+      
+      // EXACT NAME MATCH (Highest)
+      if (name === searchLower) {
+        score += 200;
+      }
+      
+      // NAME STARTS WITH
+      if (name.startsWith(searchLower)) {
+        score += 150;
+      }
+      
+      // NAME CONTAINS
+      if (name.includes(searchLower)) {
+        score += 100;
+      }
+      
+      // FUZZY NAME MATCH (for typos)
+      if (isFuzzyMatch(name, searchLower, 2) && !name.includes(searchLower)) {
+        score += 80;
+      }
+      
+      // Split into words for multi-word matching
+      const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
+      const nameWords = name.split(/\s+/);
+      
+      for (const searchWord of searchWords) {
+        for (const nameWord of nameWords) {
+          if (nameWord === searchWord) {
+            score += 60;
+          } else if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) {
+            score += 30;
+          }
+        }
+      }
+      
+      // BRAND MATCH
+      if (brand === searchLower) {
+        score += 80;
+      } else if (brand.includes(searchLower)) {
+        score += 50;
+      } else if (isFuzzyMatch(brand, searchLower, 2)) {
+        score += 30;
+      }
+      
+      // CATEGORY MATCH
+      if (category === searchLower) {
+        score += 60;
+      } else if (category.includes(searchLower)) {
+        score += 40;
+      } else if (isFuzzyMatch(category, searchLower, 2)) {
+        score += 20;
+      }
+      
+      // DESCRIPTION MATCH (lower weight)
+      if (description.includes(searchLower)) {
+        score += 15;
+      } else if (isFuzzyMatch(description, searchLower, 3)) {
+        score += 10;
+      }
+      
+      return { ...product, score };
+    }).filter((p: any) => p.score > 0);
+    
+    // Sort by score (highest first)
+    scoredProducts.sort((a: any, b: any) => b.score - a.score);
+    
+    debugLog(`[Webhook] Search found ${scoredProducts.length} matching products for "${searchTerm}"`);
+    
+    // Debug: Log sample products and scores
+    if (DEBUG && scoredProducts.length > 0) {
+      console.log(`[Webhook] Sample product names:`, allProducts.slice(0, 3).map(p => p.name));
+      console.log(`[Webhook] First scored product:`, scoredProducts[0]?.name, scoredProducts[0]?.score);
     }
     
-    // Call the enhanced product search API
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    const searchResponse = await fetch(`${baseUrl}/api/product-search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: searchTerm,
-        tenantId: tenantId,
-        limit: 20
-      }),
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!searchResponse.ok) {
-      throw new Error(`Search API failed with status ${searchResponse.status}`);
-    }
-    
-    const searchData = await searchResponse.json();
-    debugLog(`[Webhook] Search API returned: success=${searchData.success}, results=${searchData.results?.length || 0}, similar=${searchData.similarProducts?.length || 0}`);
-    
-    if (!searchData.success) {
-      throw new Error(searchData.error || 'Search API returned failure');
+    // Find similar products for suggestions (if no exact matches)
+    let similarProducts: any[] = [];
+    if (scoredProducts.length === 0) {
+      // Look for products with any word match
+      const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
+      
+      for (const product of allProducts) {
+        const name = (product.name || "").toLowerCase();
+        let matchScore = 0;
+        
+        for (const searchWord of searchWords) {
+          if (name.includes(searchWord)) {
+            matchScore += 10;
+          }
+        }
+        
+        if (matchScore > 0) {
+          similarProducts.push({
+            ...product,
+            matchScore: matchScore
+          });
+        }
+      }
+      
+      // Sort by match score and take top 5
+      similarProducts.sort((a, b) => b.matchScore - a.matchScore);
+      similarProducts.splice(5);
     }
     
     // CASE 1: No results but have similar products suggestions
-    if (searchData.results.length === 0 && searchData.similarProducts?.length > 0) {
+    if (scoredProducts.length === 0 && similarProducts.length > 0) {
       await stopTypingIndicator(tenantId, phone);
       
       let suggestionMessage = `🔍 *No exact match for "${searchTerm}"*\n\n` +
         `💡 *Did you mean?*\n\n`;
       
-      searchData.similarProducts.forEach((product: any, idx: number) => {
+      similarProducts.forEach((product: any, idx: number) => {
         suggestionMessage += `${idx + 1}. *${product.name}* - KES ${product.price?.toLocaleString()}\n`;
         if (product.brand) suggestionMessage += `   🏷️ ${product.brand}\n`;
         if (product.category || product.categoryName) {
@@ -1958,7 +2048,7 @@ async function handleProductSearch(
       await setFlowState(tenantId, phone, {
         flowName: 'similar_products_selection',
         currentStep: 'waiting_for_selection',
-        similarProducts: searchData.similarProducts,
+        similarProducts: similarProducts,
         originalQuery: searchTerm,
         isActive: true,
         lastActivity: new Date().toISOString(),
@@ -1967,7 +2057,7 @@ async function handleProductSearch(
     }
     
     // CASE 2: No results at all
-    if (searchData.results.length === 0) {
+    if (scoredProducts.length === 0) {
       await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(
         tenantId,
@@ -1978,18 +2068,22 @@ async function handleProductSearch(
     }
     
     // CASE 3: Has results - display them
-    const results = searchData.results.slice(0, 5);
-    const totalResults = searchData.totalResults;
+    const results = scoredProducts.slice(0, 5);
+    const totalResults = scoredProducts.length;
     
     // Send search header
     let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\n`;
     headerMessage += `Found ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
     await sendEvolutionMessage(tenantId, phone, headerMessage);
     
+    // Get baseUrl for order links
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://yourdomain.com');
+    
     // Send each product with full details
     for (let idx = 0; idx < results.length; idx++) {
       const product = results[idx];
-      const imageUrl = product.image || product.images?.[0];
+      const imageUrl = product.image || product.images?.[0] || product.imageUrl;
       
       let productText = `*${idx + 1}. ${product.name}*\n`;
 
@@ -2012,7 +2106,8 @@ async function handleProductSearch(
 
       // Description preview
       if (product.description) {
-        productText += `   📝 ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
+        const shortDesc = product.description.substring(0, 100);
+        productText += `   📝 ${shortDesc}${product.description.length > 100 ? '...' : ''}\n`;
       }
 
       // Brand
@@ -2057,7 +2152,7 @@ async function handleProductSearch(
       flowName: 'product_search',
       currentStep: 'search_results',
       searchQuery: searchTerm,
-      allResults: searchData.results,
+      allResults: scoredProducts,
       currentIndex: 0,
       isActive: true,
       lastActivity: new Date().toISOString(),
