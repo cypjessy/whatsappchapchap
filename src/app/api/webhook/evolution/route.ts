@@ -4,6 +4,12 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { generateAIResponse, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { shortenUrl } from "@/lib/url-shortener";
+import { 
+  startOrderStatusFlow, 
+  handleOrderStatusLookup,
+  handleOrderStatusSelection,
+  type OrderStatusDeps 
+} from "./handlers/order-status";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -786,7 +792,14 @@ async function handleFlowInput(
   }
   
   if (flowName === 'order_status_lookup') {
-    await handleOrderStatusLookupInput(tenantId, phone, message, flowState);
+    const deps: OrderStatusDeps = { sendMessage: sendEvolutionMessage };
+    await handleOrderStatusLookup(tenantId, phone, message, deps);
+    return;
+  }
+  
+  if (flowName === 'order_status_selection') {
+    const deps: OrderStatusDeps = { sendMessage: sendEvolutionMessage };
+    await handleOrderStatusSelection(tenantId, phone, message, flowState, deps);
     return;
   }
   
@@ -1673,7 +1686,8 @@ async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<
 }
 
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
+  const deps: OrderStatusDeps = { sendMessage: sendEvolutionMessage };
+  await startOrderStatusFlow(tenantId, phone, deps);
   
   const adminDb = getAdminDb();
   
