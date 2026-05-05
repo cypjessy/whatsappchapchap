@@ -117,12 +117,20 @@ export default function OrdersPage() {
         orderBy("requestedAt", "desc")
       );
       
+      console.log('[Orders] Loading cancellation requests for tenant:', user.uid);
       const snap = await getDocs(q);
+      console.log('[Orders] Found', snap.size, 'cancellation requests');
+      
       const requests = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
       setCancellationRequests(requests);
       setCounts(prev => ({ ...prev, cancellations: requests.length }));
     } catch (error) {
       console.error("Error loading cancellation requests:", error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
     }
   };
 
@@ -657,6 +665,7 @@ try {
       shipped: { bg: "bg-[rgba(139,92,246,0.1)]", color: "text-[#8b5cf6]", label: "Shipped" },
       delivered: { bg: "bg-[rgba(37,211,102,0.1)]", color: "text-[#25D366]", label: "Completed" },
       cancelled: { bg: "bg-[rgba(239,68,68,0.1)]", color: "text-[#ef4444]", label: "Cancelled" },
+      cancellation_requested: { bg: "bg-[rgba(239,68,68,0.1)]", color: "text-[#ef4444]", label: "Cancellation Requested" },
     };
     return styles[status || "pending"] || styles.pending;
   };
