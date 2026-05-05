@@ -650,6 +650,112 @@ async function handleFlowInput(
     await handleOrderStatusLookupInput(tenantId, phone, message, flowState);
     return;
   }
+  
+  // Handle product search flow
+  if (flowName === 'product_search') {
+    await handleProductSearchInput(tenantId, phone, message, flowState);
+    return;
+  }
+}
+
+// Handle product search flow input (View More, Go back, etc.)
+async function handleProductSearchInput(
+  tenantId: string,
+  phone: string,
+  message: string,
+  flowState: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  const { currentStep, allResults, searchQuery } = flowState;
+  const trimmed = message.trim();
+  const num = parseInt(trimmed);
+  
+  // Handle numeric selections
+  if (!isNaN(num)) {
+    if (num === 1 && currentStep === 'search_results') {
+      // View More - show next batch of results
+      const currentIndex = flowState.currentIndex || 0;
+      const nextIndex = currentIndex + 5;
+      const nextBatch = allResults.slice(nextIndex, nextIndex + 5);
+      
+      if (nextBatch.length === 0) {
+        await sendEvolutionMessage(tenantId, phone, " No more products to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu");
+        return;
+      }
+      
+      let message = `🔍 *More Results for "${searchQuery}"*\n\n`;
+      
+      nextBatch.forEach((product: any, index: number) => {
+        const emoji = ['1️', '2️', '3️⃣', '4️⃣', '5️'][index] || `${index + 1}️`;
+        const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
+        const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
+        const category = product.category ? ` • ${product.category}` : '';
+        const brand = product.brand ? ` • ${product.brand}` : '';
+        
+        message += `${emoji} *${product.name}*\n`;
+        message += `${price} ${stock}\n`;
+        if (category || brand) {
+          message += `${category}${brand}\n`;
+        }
+        if (product.description) {
+          const shortDesc = product.description.substring(0, 80);
+          message += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
+        }
+        
+        const orderLink = `https://orderlink.co/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+        message += `🛒 Order: ${orderLink}\n\n`;
+      });
+      
+      const remaining = allResults.length - (nextIndex + 5);
+      if (remaining > 0) {
+        message += `*Reply with a number:*\n`;
+        message += `1️ - View More (${remaining} more)\n`;
+        message += `2️ - Go back\n`;
+        message += `3️⃣ - View Categories\n`;
+        message += `4️⃣ - Main Menu`;
+      } else {
+        message += `*Reply with a number:*\n`;
+        message += `2️⃣ - Go back\n`;
+        message += `3️⃣ - View Categories\n`;
+        message += `4️⃣ - Main Menu`;
+      }
+      
+      await sendEvolutionMessage(tenantId, phone, message);
+      
+      // Update flow state
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            ...flowState,
+            currentIndex: nextIndex,
+            lastActivity: new Date().toISOString(),
+          }
+        }, { merge: true });
+      
+      return;
+    } else if (num === 2) {
+      // Go back - restart search or go to categories
+      await startProductBrowseFlow(tenantId, phone);
+      return;
+    } else if (num === 3) {
+      // View Categories
+      await startProductBrowseFlow(tenantId, phone);
+      return;
+    } else if (num === 4) {
+      // Main Menu
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
+  }
+  
+  // Invalid input
+  await sendEvolutionMessage(tenantId, phone,
+    " Invalid selection. Please reply with a number:\n\n1️⃣ - View More\n2️ - Go back\n3️ - View Categories\n4️⃣ - Main Menu"
+  );
 }
 
 // Handle product browse flow input
@@ -1527,6 +1633,176 @@ function checkIfGreeting(message: string): boolean {
   return greetings.some(greeting => lowerMsg === greeting || lowerMsg.startsWith(greeting + ' '));
 }
 
+// Save flow state to conversation document
+async function setFlowState(
+  tenantId: string,
+  phone: string,
+  flowState: any
+): Promise<void> {
+  const adminDb = getAdminDb();
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({ flowState }, { merge: true });
+}
+
+// Detect if message is a product search query
+function checkIfSearchQuery(message: string): boolean {
+  const lowerMsg = message.toLowerCase().trim();
+  
+  // Search indicators
+  const searchPatterns = [
+    /looking for/i,
+    /searching for/i,
+    /want to buy/i,
+    /need to buy/i,
+    /do you have/i,
+    /show me/i,
+    /find/i,
+    /i want/i,
+    /i need/i,
+    /can i get/i,
+  ];
+  
+  // If message is short (1-3 words), it's likely a search
+  const wordCount = lowerMsg.split(/\s+/).length;
+  
+  // Check if it matches search patterns
+  const hasSearchPattern = searchPatterns.some(pattern => pattern.test(lowerMsg));
+  
+  // Short messages without menu numbers are likely searches
+  const isShortMessage = wordCount <= 3 && !/^\d+$/.test(lowerMsg.trim());
+  
+  return hasSearchPattern || isShortMessage;
+}
+
+// Handle product search with AI enhancement
+async function handleProductSearch(
+  tenantId: string,
+  phone: string,
+  query: string
+): Promise<void> {
+  try {
+    console.log(`[Webhook] Handling product search: "${query}"`);
+    
+    // Extract search term (remove conversational parts)
+    let searchTerm = query
+      .replace(/looking for|searching for|want to buy|need to buy|do you have|show me|find|i want|i need|can i get/gi, '')
+      .trim();
+    
+    if (!searchTerm) {
+      searchTerm = query;
+    }
+    
+    console.log(`[Webhook] Extracted search term: "${searchTerm}"`);
+    
+    // Get tenant evolution credentials
+    const adminDb = getAdminDb();
+    const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+    if (!tenantDoc.exists) {
+      await sendEvolutionMessage(tenantId, phone, "❌ Unable to process search. Please try again later.");
+      return;
+    }
+    
+    const tenantData = tenantDoc.data();
+    const evolutionServerUrl = tenantData?.evolutionServerUrl;
+    const evolutionApiKey = tenantData?.evolutionApiKey;
+    const evolutionInstanceId = tenantData?.evolutionInstanceId;
+    
+    if (!evolutionServerUrl || !evolutionApiKey || !evolutionInstanceId) {
+      await sendEvolutionMessage(tenantId, phone, "❌ WhatsApp integration not configured.");
+      return;
+    }
+    
+    // Call AI search API
+    const searchResponse = await fetch(`${evolutionServerUrl.replace(/\/api\/.*/, '')}/api/ai-search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        searchQuery: searchTerm,
+        tenantId: tenantId,
+      }),
+    });
+    
+    if (!searchResponse.ok) {
+      throw new Error('Search API failed');
+    }
+    
+    const searchData = await searchResponse.json();
+    
+    if (!searchData.success || !searchData.results || searchData.results.length === 0) {
+      await sendEvolutionMessage(
+        tenantId,
+        phone,
+        ` No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+      );
+      return;
+    }
+    
+    // Format search results
+    const results = searchData.results.slice(0, 5); // Show top 5
+    const totalResults = searchData.totalResults;
+    
+    let message = ` *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
+          
+    results.forEach((product: any, index: number) => {
+      const emoji = ['1️', '2️⃣', '3️⃣', '4️', '5️⃣'][index];
+      const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
+      const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
+      const category = product.category ? ` • ${product.category}` : '';
+      const brand = product.brand ? ` • ${product.brand}` : '';
+      
+      message += `${emoji} *${product.name}*\n`;
+      message += `${price} ${stock}\n`;
+      if (category || brand) {
+        message += `${category}${brand}\n`;
+      }
+      if (product.description) {
+        const shortDesc = product.description.substring(0, 80);
+        message += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
+      }
+      
+      // Generate order link
+      const orderLink = `https://orderlink.co/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+      message += `🛒 Order: ${orderLink}\n\n`;
+    });
+    
+    // Add navigation options
+    if (totalResults > 5) {
+      message += `*Reply with a number:*\n`;
+      message += `1️⃣ - View More (${totalResults - 5} more)\n`;
+      message += `2️⃣ - Go back\n`;
+      message += `3️⃣ - View Categories\n`;
+      message += `4️⃣ - Main Menu`;
+    } else {
+      message += `*Reply with a number:*\n`;
+      message += `2️⃣ - Go back\n`;
+      message += `3️⃣ - View Categories\n`;
+      message += `4️⃣ - Main Menu`;
+    }
+    
+    await sendEvolutionMessage(tenantId, phone, message);
+    
+    // Save search to flow state for "View More" functionality
+    await setFlowState(tenantId, phone, {
+      flowName: 'product_search',
+      currentStep: 'search_results',
+      searchQuery: searchTerm,
+      enhancedQueries: searchData.enhancedQueries || [],
+      allResults: searchData.results || [],
+      currentIndex: 0,
+      isActive: true,
+    });
+    
+    console.log(`[Webhook] Sent ${results.length} search results for "${searchTerm}"`);
+  } catch (error) {
+    console.error('[Webhook] Error handling product search:', error);
+    await sendEvolutionMessage(tenantId, phone, " Search failed. Please try again or browse categories.");
+  }
+}
+
 // Get flow state ONLY (no conversation history)
 async function getFlowState(
   tenantId: string,
@@ -1730,6 +2006,14 @@ async function processWithAI(
     if (menuSelection !== null) {
       console.log("[Webhook] Fresh menu selection detected:", menuSelection);
       await handleMenuSelection(tenantId, phone, menuSelection);
+      return;
+    }
+    
+    // STEP 3.5: Detect product search queries (before AI)
+    const isSearchQuery = checkIfSearchQuery(message);
+    if (isSearchQuery) {
+      console.log("[Webhook] Search query detected:", message);
+      await handleProductSearch(tenantId, phone, message);
       return;
     }
     
