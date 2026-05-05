@@ -683,7 +683,7 @@ async function handleProductSearchInput(
         return;
       }
       
-      let message = `🔍 *More Results for "${searchQuery}"*\n\n`;
+      let responseText = `🔍 *More Results for "${searchQuery}"*\n\n`;
       
       nextBatch.forEach((product: any, index: number) => {
         const emoji = ['1️', '2️', '3️⃣', '4️⃣', '5️'][index] || `${index + 1}️`;
@@ -692,18 +692,19 @@ async function handleProductSearchInput(
         const category = product.category ? ` • ${product.category}` : '';
         const brand = product.brand ? ` • ${product.brand}` : '';
         
-        message += `${emoji} *${product.name}*\n`;
-        message += `${price} ${stock}\n`;
+        responseText += `${emoji} *${product.name}*\n`;
+        responseText += `${price} ${stock}\n`;
         if (category || brand) {
-          message += `${category}${brand}\n`;
+          responseText += `${category}${brand}\n`;
         }
         if (product.description) {
           const shortDesc = product.description.substring(0, 80);
-          message += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
+          responseText += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
         }
         
-        const orderLink = `https://orderlink.co/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
-        message += `🛒 Order: ${orderLink}\n\n`;
+        const orderBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
+        const orderLink = `${orderBaseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+        responseText += `🛒 Order: ${orderLink}\n\n`;
       });
       
       const remaining = allResults.length - (nextIndex + 5);
@@ -1507,7 +1508,7 @@ async function handleOrderStatusLookupInput(
       .collection("conversations")
       .doc(phone)
       .set({
-        flowState: null
+        flowState: FieldValue.delete()
       }, { merge: true });
   }
 }
@@ -1602,7 +1603,7 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
     } else {
       // Generate order link on the fly
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
-      const orderLink = `${baseUrl}/order/${tenantId}/${phone}`;
+      const orderLink = `${baseUrl}/order?tenant=${tenantId}&phone=${phone}`;
       cartMessage += `🔗 Open: ${orderLink}\n`;
       
       // Store it for future use
@@ -1695,8 +1696,8 @@ function checkIfSearchQuery(message: string): boolean {
   // Check if it matches search patterns
   const hasSearchPattern = searchPatterns.some(pattern => pattern.test(lowerMsg));
   
-  // Short messages without menu numbers are likely searches
-  const isShortMessage = wordCount <= 3 && !/^\d+$/.test(lowerMsg.trim());
+  // Short messages without menu numbers are likely searches (require at least 2 words)
+  const isShortMessage = wordCount >= 2 && wordCount <= 3 && !/^\d+$/.test(lowerMsg.trim());
   
   return hasSearchPattern || isShortMessage;
 }
@@ -1739,8 +1740,15 @@ async function handleProductSearch(
       return;
     }
     
-    // Call AI search API
-    const searchResponse = await fetch(`${evolutionServerUrl.replace(/\/api\/.*/, '')}/api/ai-search`, {
+    // Call AI search API - use Next.js app URL, not Evolution server
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
+    if (!baseUrl) {
+      console.error('[Webhook] NEXT_PUBLIC_APP_URL or VERCEL_URL not configured');
+      await sendEvolutionMessage(tenantId, phone, "❌ Search service unavailable. Please try again later.");
+      return;
+    }
+    
+    const searchResponse = await fetch(`${baseUrl}/api/ai-search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1787,8 +1795,9 @@ async function handleProductSearch(
         message += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
       }
       
-      // Generate order link
-      const orderLink = `https://orderlink.co/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+      // Generate order link with correct base URL
+      const orderBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
+      const orderLink = `${orderBaseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
       message += `🛒 Order: ${orderLink}\n\n`;
     });
     
@@ -2002,10 +2011,16 @@ async function processWithAI(
           console.log("[Webhook] Main menu selection:", menuSelection);
           await handleMenuSelection(tenantId, phone, menuSelection);
         } else {
-          console.log("[Webhook] Invalid main menu input:", message);
-          await sendEvolutionMessage(tenantId, phone, 
-            "Please reply with a number *1-5* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Check Order Status\n4 Payment Info\n5 Talk to Support"
-          );
+          // Natural language query → route to search
+          if (checkIfSearchQuery(message) || message.trim().length > 3) {
+            console.log("[Webhook] Natural language query from main menu:", message);
+            await handleProductSearch(tenantId, phone, message);
+          } else {
+            console.log("[Webhook] Invalid main menu input:", message);
+            await sendEvolutionMessage(tenantId, phone, 
+              "Please reply with a number *1-5* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Check Order Status\n4 Payment Info\n5 Talk to Support"
+            );
+          }
         }
         return;
       }
