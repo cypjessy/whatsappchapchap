@@ -2,6 +2,38 @@ import { NextRequest, NextResponse } from "next/server";
 import { enhanceSearchQuery } from "@/lib/ai-service";
 import { adminDb } from "@/lib/firebase-admin";
 
+// Relevance scoring function
+function scoreProduct(product: any, term: string): number {
+  let score = 0;
+  const termLower = term.toLowerCase();
+  
+  // Name match - highest priority
+  if (product.name?.toLowerCase().includes(termLower)) score += 10;
+  
+  // Category match - high priority
+  if (product.category?.toLowerCase().includes(termLower)) score += 5;
+  
+  // Brand match - medium-high priority
+  if (product.brand?.toLowerCase().includes(termLower)) score += 4;
+  
+  // Subcategory match - medium priority
+  if (product.subcategory?.toLowerCase().includes(termLower)) score += 3;
+  
+  // Description match - lower priority
+  if (product.description?.toLowerCase().includes(termLower)) score += 2;
+  
+  // Filter values match - lowest priority
+  if (Object.values(product.filters || {}).some((arr: any) =>
+    Array.isArray(arr) && arr.some((val: any) =>
+      String(val).toLowerCase().includes(termLower)
+    )
+  )) {
+    score += 1;
+  }
+  
+  return score;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { searchQuery, tenantId } = await req.json();
@@ -29,27 +61,29 @@ export async function POST(req: NextRequest) {
       .where("status", "==", "active")
       .get();
 
-    const allProducts = productsSnap.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // Strip down to essential fields for memory efficiency
+    const allProducts = productsSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        category: data.category,
+        subcategory: data.subcategory,
+        brand: data.brand,
+        description: data.description,
+        price: data.price,
+        stock: data.stock,
+        images: data.images,
+        filters: data.filters,
+        tenantId: data.tenantId,
+        status: data.status,
+      };
+    });
 
     console.log(`[AI Search] Found ${allProducts.length} active products for tenant ${tenantId}`);
 
-    // Get business profile for business name
-    const profileSnap = await adminDb
-      .collection("businessProfiles")
-      .where("tenantId", "==", tenantId)
-      .limit(1)
-      .get();
-
-    const businessName = !profileSnap.empty 
-      ? profileSnap.docs[0].data().businessName || "Our Store"
-      : "Our Store";
-
-    // Prepare context for AI enhancement
+    // Prepare minimal context for AI enhancement (no businessName needed for query expansion)
     const aiContext = {
-      businessName,
       products: allProducts.map((p: any) => ({
         name: p.name,
         category: p.category,
@@ -76,39 +110,33 @@ export async function POST(req: NextRequest) {
       enhancedQueries = [searchQuery];
     }
 
-    // Search using all enhanced queries
-    const searchResults = new Map<string, any>();
+    // Search using all enhanced queries with scoring
+    // Map stores: productId -> { product, totalScore }
+    const scoredResults = new Map<string, { product: any; score: number }>();
 
     for (const searchTerm of enhancedQueries) {
-      const filtered = allProducts.filter((p: any) => {
-        const term = searchTerm.toLowerCase();
+      for (const product of allProducts) {
+        const score = scoreProduct(product, searchTerm);
         
-        return (
-          p.name?.toLowerCase().includes(term) ||
-          p.description?.toLowerCase().includes(term) ||
-          p.category?.toLowerCase().includes(term) ||
-          p.subcategory?.toLowerCase().includes(term) ||
-          p.brand?.toLowerCase().includes(term) ||
-          Object.values(p.filters || {}).some((arr: any) =>
-            Array.isArray(arr) && arr.some((val: any) =>
-              String(val).toLowerCase().includes(term) // Safe string conversion
-            )
-          )
-        );
-      });
-
-      // Add results to map (avoid duplicates)
-      filtered.forEach((product: any) => {
-        if (!searchResults.has(product.id)) {
-          searchResults.set(product.id, product);
+        if (score > 0) {
+          const existing = scoredResults.get(product.id);
+          if (existing) {
+            // Accumulate scores across multiple enhanced queries
+            existing.score += score;
+          } else {
+            scoredResults.set(product.id, { product, score });
+          }
         }
-      });
+      }
     }
 
-    // Convert map to array and limit results
-    const results = Array.from(searchResults.values()).slice(0, 15);
+    // Sort by total score (highest first) and limit to top 15
+    const results = Array.from(scoredResults.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15)
+      .map(item => item.product);
 
-    console.log(`[AI Search] Returning ${results.length} results`);
+    console.log(`[AI Search] Returning ${results.length} results (sorted by relevance)`);
 
     return NextResponse.json({
       success: true,

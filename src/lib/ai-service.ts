@@ -551,7 +551,7 @@ Intent:`;
 export async function enhanceSearchQuery(
   userQuery: string,
   context: {
-    businessName: string;
+    businessName?: string;
     products: Array<{ name: string; category?: string; brand?: string; description?: string }>;
   }
 ): Promise<string[]> {
@@ -560,7 +560,9 @@ export async function enhanceSearchQuery(
       .map(p => `- ${p.name}${p.category ? ` (${p.category})` : ''}${p.brand ? ` - ${p.brand}` : ''}`)
       .join('\n');
 
-    const prompt = `You are a search query enhancer for ${context.businessName}. 
+    const businessContext = context.businessName ? ` for ${context.businessName}` : '';
+    
+    const prompt = `You are a search query enhancer${businessContext}. 
 
 The customer typed: "${userQuery}"
 
