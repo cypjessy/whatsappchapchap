@@ -169,18 +169,62 @@ export default function OrdersPage() {
           
       console.log(`[Cancellation] Updated cancellation request status to ${isApproving ? 'approved' : 'rejected'}`);
           
-      // Update order status - Query by orderId only (more flexible)
+      // Update order status - Try multiple approaches to find the order
       const ordersRef = collection(db, "orders");
-      const orderQuery = query(ordersRef, where("orderId", "==", orderId));
+      const tenantId = `tenant_${user.uid}`;
+      let orderDoc: any = null;
+      let orderData: any = null;
           
-      console.log(`[Cancellation] Searching for order with orderId: ${orderId}`);
-      const orderSnap = await getDocs(orderQuery);
+      console.log(`[Cancellation] Searching for order: ${orderId}`);
+      
+      // Approach 1: Try to find by document ID (most common)
+      try {
+        const docRef = doc(db, "orders", orderId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          console.log(`[Cancellation] Found order by document ID: ${orderId}`);
+          orderDoc = docSnap;
+          orderData = docSnap.data();
+        }
+      } catch (err) {
+        console.log(`[Cancellation] Document ID search failed:`, err);
+      }
+      
+      // Approach 2: Try to find by orderId field with tenantId
+      if (!orderDoc) {
+        console.log(`[Cancellation] Trying query by orderId field and tenantId...`);
+        const orderQuery = query(
+          ordersRef, 
+          where("tenantId", "==", tenantId),
+          where("orderId", "==", orderId)
+        );
+        const orderSnap = await getDocs(orderQuery);
+        
+        if (!orderSnap.empty) {
+          console.log(`[Cancellation] Found order by orderId field query`);
+          orderDoc = orderSnap.docs[0];
+          orderData = orderDoc.data();
+        }
+      }
+      
+      // Approach 3: Try to find by orderNumber field
+      if (!orderDoc) {
+        console.log(`[Cancellation] Trying query by orderNumber field...`);
+        const orderQuery = query(
+          ordersRef,
+          where("tenantId", "==", tenantId),
+          where("orderNumber", "==", orderId)
+        );
+        const orderSnap = await getDocs(orderQuery);
+        
+        if (!orderSnap.empty) {
+          console.log(`[Cancellation] Found order by orderNumber field`);
+          orderDoc = orderSnap.docs[0];
+          orderData = orderDoc.data();
+        }
+      }
           
-      console.log(`[Cancellation] Found ${orderSnap.size} matching orders`);
-          
-      if (!orderSnap.empty) {
-        const orderDoc = orderSnap.docs[0];
-        const orderData = orderDoc.data();
+      if (orderDoc && orderData) {
             
         console.log(`[Cancellation] Order found:`, orderData);
         console.log(`[Cancellation] Order tenantId: ${orderData.tenantId}`);
@@ -259,8 +303,12 @@ export default function OrdersPage() {
         }
       } else {
         console.error(`[Cancellation] Order ${orderId} not found in database`);
-        console.error(`[Cancellation] Searched with orderId: ${orderId}`);
-        alert(`Error: Order ${orderId} not found. Please refresh the page and try again.`);
+        console.error(`[Cancellation] Searched using:`);
+        console.error(`[Cancellation] - Document ID: ${orderId}`);
+        console.error(`[Cancellation] - orderId field: ${orderId}`);
+        console.error(`[Cancellation] - orderNumber field: ${orderId}`);
+        console.error(`[Cancellation] - tenantId: ${tenantId}`);
+        alert(`Error: Order ${orderId} not found. Please check the console for details and refresh the page.`);
         return; // Exit early if order not found
       }
           
