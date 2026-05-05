@@ -126,20 +126,26 @@ export async function POST(req: NextRequest) {
     let enhancedQueries: string[] = [];
     
     try {
-      // Add 5-second timeout to AI call
-      enhancedQueries = await Promise.race([
-        enhanceSearchQuery(searchQuery, aiContext),
-        new Promise<string[]>((_, reject) => 
-          setTimeout(() => reject(new Error("AI timeout after 5s")), 5000)
-        )
-      ]);
-      
-      console.log(`[AI Search] Enhanced queries:`, enhancedQueries);
-      
-      // Validate enhanced queries - ensure we have at least the original query
-      if (!enhancedQueries || !Array.isArray(enhancedQueries) || enhancedQueries.length === 0) {
-        console.warn('[AI Search] No valid enhanced queries, using original');
+      // Check if GROQ_API_KEY is configured
+      if (!process.env.GROQ_API_KEY) {
+        console.warn('[AI Search] GROQ_API_KEY not configured, using original query');
         enhancedQueries = [searchQuery];
+      } else {
+        // Add 5-second timeout to AI call
+        enhancedQueries = await Promise.race([
+          enhanceSearchQuery(searchQuery, aiContext),
+          new Promise<string[]>((_, reject) => 
+            setTimeout(() => reject(new Error("AI timeout after 5s")), 5000)
+          )
+        ]);
+        
+        console.log(`[AI Search] Enhanced queries:`, enhancedQueries);
+        
+        // Validate enhanced queries - ensure we have at least the original query
+        if (!enhancedQueries || !Array.isArray(enhancedQueries) || enhancedQueries.length === 0) {
+          console.warn('[AI Search] No valid enhanced queries, using original');
+          enhancedQueries = [searchQuery];
+        }
       }
     } catch (aiError) {
       console.error('[AI Search] AI enhancement failed or timed out, falling back to original query:', aiError);

@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     productsQuery.get(),
     db.collection("customers").where("tenantId", "==", tenantId).limit(100).get(), // Limit to prevent huge payloads
     db.collection("orders").where("tenantId", "==", tenantId).orderBy("createdAt", "desc").limit(50).get(),
-    db.collection("reviews").where("tenantId", "==", tenantId).limit(20).get(),
+    db.collection("reviews").where("tenantId", "==", tenantId).orderBy("createdAt", "desc").limit(20).get(), // Fixed: added orderBy
     db.collection("campaigns").where("tenantId", "==", tenantId).limit(20).get(), // Limit campaigns
   ]);
 
@@ -84,11 +84,14 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const settingsData = (settingsSnap as any).exists() ? (settingsSnap as any).data() : null;
+  // Fixed: settingsSnap.exists is a property, not a method
+  const settingsData = settingsSnap.exists ? settingsSnap.data() : null;
+  
+  // Fixed: Build products data with explicit shaping
   const productsData = productsSnap.docs.map(d => {
     const data = d.data();
     const category = data.category || "other";
-    // Build a comprehensive product description for AI
+    // Build a comprehensive product description for AI - now included in response
     const aiDescription = buildProductDescription(data);
     // Include ONLY public pricing info (NO costPrice or taxRate)
     const pricing = {
@@ -116,7 +119,8 @@ export async function GET(req: NextRequest) {
     return {
       id: d.id,
       name: data.name,
-      description: data.description, // Use raw description (aiDescription is for internal AI context only)
+      description: data.description, // Use raw description
+      aiDescription, // Fixed: Now included in response
       category,
       subcategory: data.subcategory,
       images: data.images,
@@ -141,16 +145,16 @@ export async function GET(req: NextRequest) {
     productsByCategory[cat].push(product);
   });
 
-  // Get ALL available categories from product data (not just filtered)
-  // This ensures dashboard sidebar shows all categories even when filtering
-  const allProductsForCategories = await db
-    .collection("products")
-    .where("tenantId", "==", tenantId)
-    .where("status", "==", "active")
-    .get();
-  
+  // Fixed: Only fetch all products when category filter is active to avoid double scan
+  const sourceForCategories = (category && category !== "all")
+    ? await db.collection("products")
+        .where("tenantId", "==", tenantId)
+        .where("status", "==", "active")
+        .get()
+    : productsSnap;
+
   const allCategoriesCount: Record<string, number> = {};
-  allProductsForCategories.docs.forEach(doc => {
+  sourceForCategories.docs.forEach(doc => {
     const cat = doc.data().category || "other";
     allCategoriesCount[cat] = (allCategoriesCount[cat] || 0) + 1;
   });
@@ -166,6 +170,7 @@ export async function GET(req: NextRequest) {
     .collection("productCategories")
     .where("tenantId", "==", tenantId)
     .get();
+  
   const productCategoryHierarchy = productCategoriesSnap.docs.map(doc => {
     const data = doc.data();
     return {
@@ -174,14 +179,88 @@ export async function GET(req: NextRequest) {
       description: data.description || "",
       subcategories: data.subcategories || [],
       brands: data.brands || [],
-      productCount: productsByCategory[doc.id]?.length || 0,
+      productCount: allCategoriesCount[doc.id] || 0, // Fixed: Use allCategoriesCount instead of filtered productsByCategory
     };
   });
 
-  const customersData = customersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const ordersData = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const reviewsData = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const campaignsData = campaignsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Fixed: Shape customers data - only expose necessary fields
+  const customersData = customersSnap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      totalOrders: data.totalOrders,
+      totalSpent: data.totalSpent,
+      createdAt: data.createdAt,
+      lastOrderAt: data.lastOrderAt,
+    };
+  });
+
+  // Fixed: Shape orders data - exclude sensitive payment details
+  const ordersData = ordersSnap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      orderNumber: data.orderNumber,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      customerEmail: data.customerEmail,
+      totalAmount: data.totalAmount,
+      status: data.status,
+      paymentStatus: data.paymentStatus,
+      items: data.items?.map((item: any) => ({
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.total,
+      })),
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      shippingAddress: data.shippingAddress ? {
+        street: data.shippingAddress.street,
+        city: data.shippingAddress.city,
+        state: data.shippingAddress.state,
+        zipCode: data.shippingAddress.zipCode,
+        country: data.shippingAddress.country,
+      } : null,
+    };
+  });
+
+  // Fixed: Shape reviews data
+  const reviewsData = reviewsSnap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      productId: data.productId,
+      productName: data.productName,
+      customerName: data.customerName,
+      rating: data.rating,
+      comment: data.comment,
+      createdAt: data.createdAt,
+      status: data.status,
+      verified: data.verified,
+    };
+  });
+
+  // Fixed: Shape campaigns data
+  const campaignsData = campaignsSnap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      name: data.name,
+      type: data.type,
+      status: data.status,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      discountType: data.discountType,
+      discountValue: data.discountValue,
+      applicableProducts: data.applicableProducts?.slice(0, 50), // Limit to first 50 products
+      createdAt: data.createdAt,
+    };
+  });
 
   return NextResponse.json({
     settings: settingsData,
