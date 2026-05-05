@@ -93,7 +93,8 @@ async function lookupOrderById(
     }
     
     const orderData = orderDoc.docs[0].data();
-    await sendOrderDetails(tenantId, phone, orderId, orderData, deps);
+    const actualOrderId = orderData.orderId || orderData.orderNumber || orderId;
+    await sendOrderDetails(tenantId, phone, actualOrderId, orderData, deps);
     
   } catch (error) {
     console.error('[OrderStatus] Error looking up order:', error);
@@ -142,6 +143,11 @@ async function showRecentOrders(
     
     ordersSnap.docs.forEach((doc, idx) => {
       const order = doc.data();
+      
+      // Debug: log all available fields
+      console.log(`[OrderStatus] Order ${idx} fields:`, Object.keys(order));
+      console.log(`[OrderStatus] Order ${idx} data:`, JSON.stringify(order, null, 2));
+      
       const statusEmoji = getStatusEmoji(order.status);
       const date = order.createdAt?.toDate 
         ? order.createdAt.toDate().toLocaleDateString('en-US', { 
@@ -151,8 +157,8 @@ async function showRecentOrders(
           })
         : 'N/A';
       
-      message += `${idx + 1}️⃣ *${order.orderId}*\n`;
-      message += `   📅 ${date}\n`;
+      message += `${idx + 1}️⃣ *${order.orderId || order.orderNumber || doc.id}*\n`;
+      message += `    ${date}\n`;
       message += `   💰 KES ${order.total?.toLocaleString() || 0}\n`;
       message += `   Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
     });
