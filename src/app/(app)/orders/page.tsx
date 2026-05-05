@@ -52,6 +52,7 @@ export default function OrdersPage() {
   const [amountMax, setAmountMax] = useState<number | "">("");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [viewMode, setViewMode] = useState<'orders' | 'cancellations'>('orders'); // Track if viewing orders or cancellation requests
 
   useEffect(() => {
     if (!user) return;
@@ -832,7 +833,18 @@ try {
     { id: "processing", label: "Processing", count: counts.processing },
     { id: "completed", label: "Completed", count: counts.completed },
     { id: "cancelled", label: "Cancelled", count: counts.cancelled },
+    { id: "cancellation_requests", label: "Cancellation Requests", count: counts.cancellations, icon: "fa-exclamation-triangle" },
   ];
+
+  // Handle tab click - if clicking cancellation requests, switch view mode
+  const handleTabClick = (tabId: string) => {
+    if (tabId === 'cancellation_requests') {
+      setViewMode('cancellations');
+    } else {
+      setViewMode('orders');
+      setActiveStatus(tabId);
+    }
+  };
 
   return (
     <div className="animate-fadeIn">
@@ -868,7 +880,16 @@ try {
 
       <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 hide-scrollbar">
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveStatus(tab.id)} className={`px-3 md:px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all ${activeStatus === tab.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"}`}>
+          <button 
+            key={tab.id} 
+            onClick={() => handleTabClick(tab.id)} 
+            className={`px-3 md:px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all ${
+              (tab.id === 'cancellation_requests' && viewMode === 'cancellations') || (tab.id !== 'cancellation_requests' && activeStatus === tab.id) 
+                ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" 
+                : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"
+            }`}
+          >
+            {'icon' in tab && tab.icon && <i className={`fas ${tab.icon} text-xs`}></i>}
             {tab.label}
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20">{tab.count}</span>
           </button>
@@ -1002,87 +1023,107 @@ try {
           )}
         </div>
 
-        {/* Cancellation Requests Section - Moved after filters for better flow */}
-        {cancellationRequests.length > 0 && (
-          <div className="p-4 md:p-6 border-b-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
-                <i className="fas fa-exclamation-triangle text-lg"></i>
+        {/* Conditional Rendering: Orders View or Cancellation Requests View */}
+        {viewMode === 'cancellations' ? (
+          /* Cancellation Requests Full Page View */
+          <div className="animate-fadeIn">
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
+                  <i className="fas fa-exclamation-triangle text-xl"></i>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#1e293b]">Cancellation Requests</h2>
+                  <p className="text-sm text-[#64748b]">Manage pending customer cancellation requests</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-[#1e293b]">Cancellation Requests</h2>
-                <p className="text-sm text-[#64748b]">{cancellationRequests.length} pending approval{cancellationRequests.length > 1 ? 's' : ''}</p>
-              </div>
-              <span className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold animate-pulse shadow-lg">
-                <i className="fas fa-bell mr-1"></i>Action Required
-              </span>
             </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {cancellationRequests.map((request: any) => (
-                <div key={request.id} className="bg-white border-2 border-red-300 rounded-xl p-4 hover:border-red-500 hover:shadow-lg transition-all">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="font-bold text-[#25D366] text-lg">{request.orderId}</div>
-                      <div className="text-xs text-[#64748b] mt-1">
-                        {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
+
+            {cancellationRequests.length === 0 ? (
+              <div className="p-12 text-center bg-white border-2 border-dashed border-gray-300 rounded-xl">
+                <div className="text-6xl mb-4">📭</div>
+                <h3 className="text-xl font-bold text-[#1e293b] mb-2">No Pending Cancellations</h3>
+                <p className="text-[#64748b]">All orders are processing normally. No cancellation requests at this time.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {cancellationRequests.map((request: any) => (
+                  <div key={request.id} className="bg-white border-2 border-red-300 rounded-xl p-5 hover:border-red-500 hover:shadow-xl transition-all">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="font-bold text-[#25D366] text-xl">{request.orderId}</div>
+                        <div className="text-xs text-[#64748b] mt-1">
+                          <i className="fas fa-calendar mr-1"></i>
+                          {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
+                          {' '}
+                          {request.requestedAt?.toDate ? `at ${request.requestedAt.toDate().toLocaleTimeString()}` : ''}
+                        </div>
+                      </div>
+                      <span className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold animate-pulse shadow-lg">
+                        <i className="fas fa-clock mr-1"></i>Pending
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-[#64748b] bg-gray-50 p-2 rounded-lg">
+                        <i className="fas fa-user text-sm"></i>
+                        <span className="font-medium">{request.customerPhone || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#64748b] bg-gray-50 p-2 rounded-lg">
+                        <i className="fas fa-user-tag text-sm"></i>
+                        <span className="font-medium">{request.orderData?.customerName || 'N/A'}</span>
+                      </div>
+                      <div className="font-bold text-[#1e293b] text-2xl bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
+                        <i className="fas fa-coins mr-2 text-green-600"></i>
+                        {formatCurrency(request.orderData?.total || 0)}
                       </div>
                     </div>
-                    <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold animate-pulse">
-                      <i className="fas fa-clock mr-1"></i>Pending
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm mb-3 space-y-1">
-                    <div className="flex items-center gap-2 text-[#64748b]">
-                      <i className="fas fa-user text-xs"></i>
-                      <span>{request.customerPhone || 'N/A'}</span>
+                    
+                    <div className="text-sm text-[#64748b] mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <i className="fas fa-info-circle mr-2 text-blue-500"></i>
+                      <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
                     </div>
-                    <div className="font-bold text-[#1e293b] text-lg">
-                      {formatCurrency(request.orderData?.total || 0)}
+                    
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
+                        className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-check-circle text-lg"></i>
+                        <span>Approve & Refund</span>
+                      </button>
+                      <button
+                        onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
+                        className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-bold text-sm hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-times-circle text-lg"></i>
+                        <span>Reject</span>
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="text-xs text-[#64748b] mb-4 bg-gray-50 p-2 rounded-lg">
-                    <i className="fas fa-info-circle mr-1 text-blue-500"></i>
-                    <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
-                      className="flex-1 px-3 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold text-sm hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg"
-                    >
-                      <i className="fas fa-check mr-2"></i>Approve & Refund
-                    </button>
-                    <button
-                      onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
-                      className="flex-1 px-3 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold text-sm hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg"
-                    >
-                      <i className="fas fa-times mr-2"></i>Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto"></div>
-            <p className="mt-4 text-[#64748b]">Loading orders...</p>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="w-14 h-14 md:w-16 md:h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-shopping-bag text-xl md:text-2xl text-[#64748b]"></i>
-            </div>
-            <h4 className="font-bold text-[#1e293b] mb-2">No orders yet</h4>
-            <p className="text-sm text-[#64748b]">When customers order from you, they will appear here.</p>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
+          /* Orders View - Show orders list */
           <>
-            {/* Mobile List View */}
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto"></div>
+                <p className="mt-4 text-[#64748b]">Loading orders...</p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="w-14 h-14 md:w-16 md:h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-shopping-bag text-xl md:text-2xl text-[#64748b]"></i>
+                </div>
+                <h4 className="font-bold text-[#1e293b] mb-2">No orders yet</h4>
+                <p className="text-sm text-[#64748b]">When customers order from you, they will appear here.</p>
+              </div>
+            ) : (
+              <>
+                {/* Stats Row */}
             <div className="md:hidden divide-y divide-[#e2e8f0]">
               {filteredOrders.map(order => {
                 const statusStyle = getStatusBadge(order.status);
@@ -1216,6 +1257,8 @@ try {
                 <button className="px-3 py-2 border-2 border-[#e2e8f0] rounded-lg text-[#64748b] font-semibold text-sm hover:border-[#25D366]"><i className="fas fa-chevron-right"></i></button>
               </div>
             </div>
+              </>
+            )}
           </>
         )}
       </div>
