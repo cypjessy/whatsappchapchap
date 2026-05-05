@@ -4,15 +4,23 @@
  * Orders are stored with phone number for cross-device access
  */
 
-import { getFirestore } from "firebase-admin/firestore";
-
-const adminDb = getFirestore();
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 /**
- * Dependencies passed from main route to avoid circular imports
+ * Lazy initialization - get Firestore instance only when needed
+ * This prevents "app not initialized" errors at module load time
+ */
+function getDb() {
+  return getFirestore();
+}
+
+/**
+ * Dependencies passed from main route
  */
 export interface OrderStatusDeps {
   sendMessage: (tenantId: string, phone: string, message: string) => Promise<void>;
+  startTyping?: (tenantId: string, phone: string) => Promise<void>;
+  stopTyping?: (tenantId: string, phone: string) => Promise<void>;
 }
 
 /**
@@ -23,12 +31,15 @@ export async function startOrderStatusFlow(
   phone: string,
   deps: OrderStatusDeps
 ): Promise<void> {
+  if (deps.startTyping) await deps.startTyping(tenantId, phone);
+  
   const message = `📦 *Check Your Order Status*\n\n` +
     `Please enter your **Order Number**\n` +
     `(e.g., ORD-1234567890)\n\n` +
     `💡 Or type *RECENT* to see your last 3 orders\n\n` +
     `Reply *0* to go back to main menu`;
   
+  if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, message);
 }
 
@@ -41,6 +52,8 @@ export async function handleOrderStatusLookup(
   userInput: string,
   deps: OrderStatusDeps
 ): Promise<void> {
+  if (deps.startTyping) await deps.startTyping(tenantId, phone);
+  
   const input = userInput.trim().toUpperCase();
   
   // Handle "RECENT" request
@@ -66,13 +79,15 @@ async function lookupOrderById(
   try {
     console.log(`[OrderStatus] Looking up order: ${orderId} for phone: ${phone}`);
     
-    const orderDoc = await adminDb
+    const db = getDb();
+    const orderDoc = await db
       .collection("orders")
       .where("orderId", "==", orderId)
       .where("tenantId", "==", tenantId)
       .get();
     
     if (orderDoc.empty) {
+      if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
@@ -88,6 +103,7 @@ async function lookupOrderById(
     
   } catch (error) {
     console.error('[OrderStatus] Error looking up order:', error);
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
@@ -107,7 +123,8 @@ async function showRecentOrders(
   try {
     console.log(`[OrderStatus] Fetching recent orders for phone: ${phone}`);
     
-    const ordersSnap = await adminDb
+    const db = getDb();
+    const ordersSnap = await db
       .collection("orders")
       .where("customerPhone", "==", phone)
       .where("tenantId", "==", tenantId)
@@ -116,6 +133,7 @@ async function showRecentOrders(
       .get();
     
     if (ordersSnap.empty) {
+      if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
@@ -141,17 +159,18 @@ async function showRecentOrders(
       
       message += `${idx + 1}️⃣ *${order.orderId}*\n`;
       message += `   📅 ${date}\n`;
-      message += `    KES ${order.total?.toLocaleString() || 0}\n`;
-      message += `    Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
+      message += `   💰 KES ${order.total?.toLocaleString() || 0}\n`;
+      message += `   Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
     });
     
     message += `Reply with a number (1-${ordersSnap.docs.length}) to see details,\n` +
       `or *0* for main menu`;
     
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, message);
     
     // Store flow state for selection
-    await adminDb
+    await db
       .collection("tenants")
       .doc(tenantId)
       .collection("conversations")
@@ -171,6 +190,7 @@ async function showRecentOrders(
     
   } catch (error) {
     console.error('[OrderStatus] Error fetching recent orders:', error);
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
@@ -208,8 +228,12 @@ async function sendOrderDetails(
   if (orderData.items && orderData.items.length > 0) {
     message += `📋 *Items:*\n`;
     orderData.items.forEach((item: any, idx: number) => {
-      message += `${idx + 1}. ${item.name || item.productName} x ${item.quantity}\n`;
-      message += `   💰 KES ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}\n`;
+      const itemName = item.name || item.productName || 'Product';
+      const quantity = item.quantity || 1;
+      const itemPrice = item.price || 0;
+      const itemTotal = itemPrice * quantity;
+      message += `${idx + 1}. ${itemName} x ${quantity}\n`;
+      message += `   💰 KES ${itemTotal.toLocaleString()}\n`;
     });
     message += `\n`;
   }
@@ -218,10 +242,11 @@ async function sendOrderDetails(
   if (orderData.shippingAddress) {
     const addr = orderData.shippingAddress;
     message += `📍 *Delivery Address:*\n`;
-    message += `${addr.fullName || ''}\n`;
+    if (addr.fullName) message += `${addr.fullName}\n`;
     if (addr.phone) message += `📱 ${addr.phone}\n`;
-    if (addr.city || addr.town) message += `${addr.city || addr.town}, `;
-    if (addr.area) message += `${addr.area}\n`;
+    if (addr.city || addr.town) message += `${addr.city || addr.town}`;
+    if (addr.area) message += `, ${addr.area}`;
+    if (addr.city || addr.town || addr.area) message += `\n`;
     message += `\n`;
   }
   
@@ -244,20 +269,18 @@ async function sendOrderDetails(
   message += `\n━━━━━━━━━━━━━━━\n`;
   message += `Reply *0* for main menu`;
   
+  if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, message);
   
   // Clear flow state
-  await adminDb
+  const db = getDb();
+  await db
     .collection("tenants")
     .doc(tenantId)
     .collection("conversations")
     .doc(phone)
     .set({
-      flowState: {
-        flowName: null,
-        currentStep: null,
-        isActive: false
-      }
+      flowState: FieldValue.delete()
     }, { merge: true });
 }
 
@@ -305,7 +328,7 @@ function getStatusEmoji(status: string): string {
 }
 
 /**
- * Helper: Capitalize first letter
+ * Helper: Capitalize first letter and replace underscores with spaces
  */
 function capitalizeFirst(str: string): string {
   if (!str) return '';

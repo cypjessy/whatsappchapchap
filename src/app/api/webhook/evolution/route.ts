@@ -704,11 +704,15 @@ async function handleFlowInput(
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
+    if (flowName === 'order_status_lookup' || flowName === 'order_status_selection') {
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
     await sendEvolutionMessage(tenantId, phone, "⬅️ Back option not available in this flow. Reply *MENU* to return to main menu.");
     return;
   }
   
-  // NEW: Handle similar products selection
+  // Handle similar products selection
   if (flowName === 'similar_products_selection') {
     if (currentStep === 'waiting_for_selection') {
       const num = parseInt(message.trim());
@@ -791,14 +795,23 @@ async function handleFlowInput(
     return;
   }
   
+  // Handle order status flows
   if (flowName === 'order_status_lookup') {
-    const deps: OrderStatusDeps = { sendMessage: sendEvolutionMessage };
+    const deps: OrderStatusDeps = { 
+      sendMessage: sendEvolutionMessage,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator
+    };
     await handleOrderStatusLookup(tenantId, phone, message, deps);
     return;
   }
   
   if (flowName === 'order_status_selection') {
-    const deps: OrderStatusDeps = { sendMessage: sendEvolutionMessage };
+    const deps: OrderStatusDeps = { 
+      sendMessage: sendEvolutionMessage,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator
+    };
     await handleOrderStatusSelection(tenantId, phone, message, flowState, deps);
     return;
   }
@@ -834,8 +847,6 @@ async function handleProductSearchInput(
         await sendEvolutionMessage(tenantId, phone, " No more products to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu");
         return;
       }
-      
-      let responseText = `🔍 *More Results for "${searchQuery}"*\n\n`;
       
       for (let idx = 0; idx < nextBatch.length; idx++) {
         const product = nextBatch[idx];
@@ -873,7 +884,7 @@ async function handleProductSearchInput(
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
         const longOrderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
         const orderLink = await shortenUrl(longOrderLink);
-        productText += `    Order: ${orderLink}\n\n`;
+        productText += `   🛒 Order: ${orderLink}\n\n`;
 
         if (imageUrl) {
           await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
@@ -887,6 +898,7 @@ async function handleProductSearchInput(
       }
       
       const remaining = allResults.length - (nextIndex + 5);
+      let responseText = '';
       if (remaining > 0) {
         responseText = `\n*Reply with a number:*\n1️⃣ - View More (${remaining} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
       } else {
@@ -1594,108 +1606,26 @@ async function handleBrandOrProductSelection(
   }
 }
 
-async function handleOrderStatusLookupInput(
-  tenantId: string,
-  phone: string,
-  message: string,
-  flowState: any
-): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
-  const adminDb = getAdminDb();
-  const { currentStep } = flowState;
-  
-  if (currentStep === 'waiting_for_order_number') {
-    const orderNumberMatch = message.match(/(ORD-[A-Z0-9]+)/i) || message.match(/order\s*#?\s*([A-Z0-9-]+)/i);
-    const orderNumber = orderNumberMatch ? orderNumberMatch[1].toUpperCase() : message.trim().toUpperCase();
-    
-    debugLog('[Webhook] Looking up order:', orderNumber);
-    
-    const ordersSnap = await adminDb
-      .collection('orders')
-      .where('orderNumber', '==', orderNumber)
-      .where('tenantId', '==', tenantId)
-      .limit(1)
-      .get();
-    
-    if (ordersSnap.empty) {
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(tenantId, phone, 
-        `❌ Order *${orderNumber}* not found.\n\nPlease check the order number and try again, or reply *MENU* to return to the main menu.`
-      );
-      return;
-    }
-    
-    const orderDoc = ordersSnap.docs[0];
-    const orderData = orderDoc.data();
-    
-    const statusEmoji: Record<string, string> = {
-      'pending': '⏳',
-      'confirmed': '✅',
-      'processing': '🔄',
-      'shipped': '🚚',
-      'delivered': '📦',
-      'cancelled': '❌'
-    };
-    
-    const emoji = statusEmoji[orderData.status] || '📋';
-    const statusText = orderData.status.charAt(0).toUpperCase() + orderData.status.slice(1);
-    
-    let response = `${emoji} *Order Status Update*\n\n`;
-    response += `*Order Number:* ${orderData.orderNumber}\n`;
-    response += `*Status:* ${statusText}\n`;
-    
-    if (orderData.products && orderData.products.length > 0) {
-      const productNames = orderData.products.map((p: any) => `${p.name} x${p.quantity}`).join(', ');
-      response += `*Items:* ${productNames}\n`;
-    }
-    
-    if (orderData.total) {
-      response += `*Total:* KES ${orderData.total.toLocaleString()}\n`;
-    }
-    
-    if (orderData.createdAt) {
-      const orderDate = new Date(orderData.createdAt.seconds * 1000 || orderData.createdAt);
-      response += `*Order Date:* ${orderDate.toLocaleDateString()}\n`;
-    }
-    
-    if (orderData.deliveryAddress) {
-      response += `*Delivery Address:* ${orderData.deliveryAddress}\n`;
-    }
-    
-    response += `\nNeed more help? Reply *SUPPORT* to talk to our team.`;
-    
-    await stopTypingIndicator(tenantId, phone);
-    await sendEvolutionMessage(tenantId, phone, response);
-    
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        flowState: FieldValue.delete()
-      }, { merge: true });
-  }
-}
-
 async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
 }
 
+// FIXED: Corrected sendOrderStatusInfo - no duplicate message
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
-  const deps: OrderStatusDeps = { sendMessage: sendEvolutionMessage };
+  await startTypingIndicator(tenantId, phone);
+  
+  const deps: OrderStatusDeps = { 
+    sendMessage: sendEvolutionMessage,
+    startTyping: startTypingIndicator,
+    stopTyping: stopTypingIndicator
+  };
+  
+  // This sends the message - don't send another one!
   await startOrderStatusFlow(tenantId, phone, deps);
   
   const adminDb = getAdminDb();
-  
-  await stopTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, 
-    "📦 *Check Order Status*\n\nPlease provide your order number (e.g., ORD-ABC123).\n\nYou can find this in your order confirmation message."
-  );
-  
   await adminDb
     .collection("tenants")
     .doc(tenantId)
@@ -1711,6 +1641,8 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
         lastActivity: new Date().toISOString(),
       }
     }, { merge: true });
+    
+  await stopTypingIndicator(tenantId, phone);
 }
 
 async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
@@ -1892,7 +1824,7 @@ function checkIfSearchQuery(message: string): boolean {
 }
 
 // ============================================
-// UPDATED: ENHANCED PRODUCT SEARCH with Similar Products Support
+// ENHANCED PRODUCT SEARCH with Similar Products Support
 // ============================================
 async function handleProductSearch(
   tenantId: string,
@@ -1914,7 +1846,7 @@ async function handleProductSearch(
     
     debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
     
-    // Direct Firestore query (no API call needed - more reliable!)
+    // Direct Firestore query
     const adminDb = getAdminDb();
     
     const productsSnap = await adminDb
@@ -1922,6 +1854,16 @@ async function handleProductSearch(
       .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
       .get();
+    
+    if (productsSnap.empty) {
+      await stopTypingIndicator(tenantId, phone);
+      await sendEvolutionMessage(
+        tenantId,
+        phone,
+        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+      );
+      return;
+    }
     
     // Score products with fuzzy matching
     const searchLower = searchTerm.toLowerCase();
@@ -2005,16 +1947,15 @@ async function handleProductSearch(
     
     debugLog(`[Webhook] Search found ${scoredProducts.length} matching products for "${searchTerm}"`);
     
-    // Debug: Log sample products and scores
+    // Debug logging
     if (DEBUG && scoredProducts.length > 0) {
       console.log(`[Webhook] Sample product names:`, allProducts.slice(0, 3).map(p => p.name));
       console.log(`[Webhook] First scored product:`, scoredProducts[0]?.name, scoredProducts[0]?.score);
     }
     
-    // Find similar products for suggestions (if no exact matches)
+    // Find similar products for suggestions
     let similarProducts: any[] = [];
     if (scoredProducts.length === 0) {
-      // Look for products with any word match
       const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
       
       for (const product of allProducts) {
@@ -2035,7 +1976,6 @@ async function handleProductSearch(
         }
       }
       
-      // Sort by match score and take top 5
       similarProducts.sort((a, b) => b.matchScore - a.matchScore);
       similarProducts.splice(5);
     }
@@ -2061,7 +2001,6 @@ async function handleProductSearch(
       
       await sendEvolutionMessage(tenantId, phone, suggestionMessage);
       
-      // Store similar products for selection
       await setFlowState(tenantId, phone, {
         flowName: 'similar_products_selection',
         currentStep: 'waiting_for_selection',
@@ -2088,30 +2027,25 @@ async function handleProductSearch(
     const results = scoredProducts.slice(0, 5);
     const totalResults = scoredProducts.length;
     
-    // Send search header
     let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\n`;
     headerMessage += `Found ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
     await sendEvolutionMessage(tenantId, phone, headerMessage);
     
-    // Get baseUrl for order links
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://yourdomain.com');
     
-    // Send each product with full details
     for (let idx = 0; idx < results.length; idx++) {
       const product = results[idx];
       const imageUrl = product.image || product.images?.[0] || product.imageUrl;
       
       let productText = `*${idx + 1}. ${product.name}*\n`;
 
-      // Price (with sale price support)
       if (product.salePrice && product.salePrice < product.price) {
         productText += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
       } else {
         productText += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
       }
 
-      // Stock status
       if (product.stock !== undefined) {
         const stockLabel = product.stock === 0
           ? '❌ Out of stock'
@@ -2121,41 +2055,34 @@ async function handleProductSearch(
         productText += `   📦 ${stockLabel}\n`;
       }
 
-      // Description preview
       if (product.description) {
         const shortDesc = product.description.substring(0, 100);
         productText += `   📝 ${shortDesc}${product.description.length > 100 ? '...' : ''}\n`;
       }
 
-      // Brand
       if (product.brand) {
         productText += `   🏷️ Brand: ${product.brand}\n`;
       }
       
-      // Category
       if (product.category || product.categoryName) {
         productText += `   📂 Category: ${product.category || product.categoryName}\n`;
       }
 
-      // Order link (shortened)
       const longOrderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
       const orderLink = await shortenUrl(longOrderLink);
       productText += `   🛒 Order: ${orderLink}\n`;
 
-      // Send image with caption
       if (imageUrl) {
         await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
       } else {
         await sendEvolutionMessage(tenantId, phone, productText);
       }
       
-      // Small delay between products
       if (idx < results.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 600));
       }
     }
     
-    // Send navigation options
     let replyMessage = '';
     if (totalResults > 5) {
       replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
@@ -2165,7 +2092,6 @@ async function handleProductSearch(
     
     await sendEvolutionMessage(tenantId, phone, replyMessage);
     
-    // Store search results for pagination
     await setFlowState(tenantId, phone, {
       flowName: 'product_search',
       currentStep: 'search_results',
