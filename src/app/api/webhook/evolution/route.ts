@@ -92,9 +92,6 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
 
 /**
  * Send typing indicator to show "..." in WhatsApp
- * @param tenantId - The tenant ID
- * @param phoneNumber - Customer's phone number
- * @param action - "composing" to start typing, "paused" to stop
  */
 async function sendTypingIndicator(
   tenantId: string,
@@ -106,11 +103,9 @@ async function sendTypingIndicator(
     const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
 
     if (!evolutionApiUrl || !evolutionApiKey) {
-      debugLog(`[Webhook] Evolution API credentials not configured, skipping typing indicator`);
       return;
     }
 
-    // Map action to Evolution API format
     const typingAction = action === "composing" ? "composing" : "paused";
 
     await fetch(`${evolutionApiUrl}/chat/updatePresence/${tenantId}`, {
@@ -127,7 +122,6 @@ async function sendTypingIndicator(
     
     debugLog(`[Webhook] Typing indicator sent: ${typingAction}`);
   } catch (error) {
-    // Don't fail the main flow if typing indicator fails
     debugLog(`[Webhook] Typing indicator error:`, error);
   }
 }
@@ -136,16 +130,13 @@ async function sendTypingIndicator(
  * Start continuous typing indicator that refreshes every 4 seconds
  */
 async function startTypingIndicator(tenantId: string, phone: string): Promise<void> {
-  // Clear any existing interval for this user
   const existingInterval = activeTypingIntervals.get(phone);
   if (existingInterval) {
     clearInterval(existingInterval);
   }
   
-  // Send initial typing indicator
   await sendTypingIndicator(tenantId, phone, "composing");
   
-  // Set up interval to keep typing indicator alive (refresh every 4 seconds)
   const interval = setInterval(async () => {
     await sendTypingIndicator(tenantId, phone, "composing");
   }, 4000);
@@ -343,6 +334,8 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
 }
 
 async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const settings = await getTenantSettings(tenantId);
   const businessName = settings.businessName;
   
@@ -373,6 +366,7 @@ async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
   
   const menuMsg = `${welcomeText}\n\n1️⃣ Browse Products\n2️⃣ Browse Services\n3️⃣ Check Order Status\n4️⃣ Payment Info\n5️⃣ Talk to Support${cartNote}\n\n*Reply with a number (1-5)*`;
   
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, menuMsg);
   
   const adminDb = getAdminDb();
@@ -458,6 +452,8 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
 }
 
 async function startProductBrowseFlow(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   
   const categoriesSnap = await adminDb
@@ -466,6 +462,7 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
     .get();
   
   if (categoriesSnap.empty) {
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, " We don't have any products listed yet. Please check back soon!");
     return;
   }
@@ -477,7 +474,7 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       categorySlug: data.mainCategory,
       name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
-      brands: [] as string[], // Fixed: Explicitly type as string array
+      brands: [] as string[],
       productCount: 0,
     };
   });
@@ -540,6 +537,7 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
   
   const response = `🛍️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n0️⃣ Back to main menu`;
   
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, response);
   
   await adminDb
@@ -625,6 +623,8 @@ async function handleProductSearchInput(
   message: string,
   flowState: any
 ): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   const { currentStep, searchQuery } = flowState;
   const allResults = flowState.allResults || [];
@@ -638,6 +638,7 @@ async function handleProductSearchInput(
       const nextBatch = allResults.slice(nextIndex, nextIndex + 5);
       
       if (nextBatch.length === 0) {
+        await stopTypingIndicator(tenantId, phone);
         await sendEvolutionMessage(tenantId, phone, " No more products to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu");
         return;
       }
@@ -680,6 +681,7 @@ async function handleProductSearchInput(
         responseText += `4️⃣ - Main Menu`;
       }
       
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, responseText);
       
       await adminDb
@@ -697,27 +699,31 @@ async function handleProductSearchInput(
       
       return;
     } else if (num === 2) {
+      await stopTypingIndicator(tenantId, phone);
       await startProductBrowseFlow(tenantId, phone);
       return;
     } else if (num === 3) {
+      await stopTypingIndicator(tenantId, phone);
       await startProductBrowseFlow(tenantId, phone);
       return;
     } else if (num === 4) {
+      await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
   }
   
   if (checkIfSearchQuery(trimmed)) {
+    await stopTypingIndicator(tenantId, phone);
     await handleProductSearch(tenantId, phone, trimmed);
   } else {
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone,
       "❌ Invalid selection. Please reply with a number:\n\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
     );
   }
 }
 
-// FIXED: handleProductBrowseInput with proper navigation
 async function handleProductBrowseInput(
   tenantId: string,
   phone: string,
@@ -727,6 +733,8 @@ async function handleProductBrowseInput(
   const adminDb = getAdminDb();
   const { currentStep, selections } = flowState;
   
+  await startTypingIndicator(tenantId, phone);
+  
   if (currentStep === 'category_selection') {
     const num = parseInt(message.trim());
     const categories = selections.categories;
@@ -734,20 +742,24 @@ async function handleProductBrowseInput(
       
     if (isNaN(num) || num < 1 || num > categories.length) {
       if (trimmed === 'menu' || num === 3) {
+        await stopTypingIndicator(tenantId, phone);
         await sendWelcomeMenu(tenantId, phone);
         return;
       }
       
       if (trimmed === 'back' || num === 0) {
+        await stopTypingIndicator(tenantId, phone);
         await sendWelcomeMenu(tenantId, phone);
         return;
       }
       
       if (checkIfSearchQuery(message)) {
+        await stopTypingIndicator(tenantId, phone);
         await handleProductSearch(tenantId, phone, message);
         return;
       }
         
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list (1-2 for categories, 3 for menu).");
       return;
     }
@@ -760,6 +772,7 @@ async function handleProductBrowseInput(
         .join('\n');
         
       const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ Main menu`;
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, response);
       
       await adminDb
@@ -784,56 +797,58 @@ async function handleProductBrowseInput(
           }
         }, { merge: true });
     } else {
+      await stopTypingIndicator(tenantId, phone);
       await handleBrandOrProductSelection(tenantId, phone, selectedCategory);
     }
   }
-  
-  // FIXED: subcategory_selection with proper navigation
+      
   else if (currentStep === 'subcategory_selection') {
     const num = parseInt(message.trim());
     const { categoryId, categoryName, categorySubcategories, categoryBrands } = selections;
     const trimmed = message.trim().toLowerCase();
-    
-    // Check if input is a valid subcategory number
+        
     if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
-      // Check navigation commands FIRST
       if (trimmed === 'categories' || num === 2) {
+        await stopTypingIndicator(tenantId, phone);
         await startProductBrowseFlow(tenantId, phone);
         return;
       } else if (trimmed === 'menu' || trimmed === 'main' || num === 3) {
+        await stopTypingIndicator(tenantId, phone);
         await sendWelcomeMenu(tenantId, phone);
         return;
       } else if (trimmed === 'back' || num === 0) {
+        await stopTypingIndicator(tenantId, phone);
         await startProductBrowseFlow(tenantId, phone);
         return;
       }
-      
-      // Check if it's a search query
+          
       if (checkIfSearchQuery(message)) {
+        await stopTypingIndicator(tenantId, phone);
         await handleProductSearch(tenantId, phone, message);
         return;
       }
-        
+            
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose 1 for subcategory, 2 for categories, 3 for main menu.");
       return;
     }
-    
-    // Valid subcategory selected
+        
     const selectedSubcategory = categorySubcategories[num - 1];
     debugLog("[Webhook] Selected subcategory:", selectedSubcategory);
-    
+        
     const brands = (categoryBrands || []).filter((b: string) => 
       b && b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown'
     );
-    
+        
     console.log(`[Webhook] Brands for subcategory "${selectedSubcategory}":`, brands);
-      
+          
     if (brands.length > 0) {
       const brandList = brands
         .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
         .join('\n');
-        
+            
       const response = `🏷️ *${selectedSubcategory}* - Choose a brand\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, response);
         
       await adminDb
@@ -855,7 +870,6 @@ async function handleProductBrowseInput(
           }
         }, { merge: true });
     } else {
-      // No brands, show products directly
       await showProductsForSelection(tenantId, phone, {
         ...selections,
         subcategory: selectedSubcategory,
@@ -863,26 +877,26 @@ async function handleProductBrowseInput(
     }
   }
     
-  // FIXED: brand_selection with proper navigation
   else if (currentStep === 'brand_selection') {
     const num = parseInt(message.trim());
     const availableBrands = selections.availableBrands || [];
     const trimmed = message.trim().toLowerCase();
       
     if (isNaN(num) || num < 1 || num > availableBrands.length) {
-      // Check navigation commands
       if (trimmed === 'categories' || num === 3) {
+        await stopTypingIndicator(tenantId, phone);
         await startProductBrowseFlow(tenantId, phone);
         return;
       } else if (trimmed === 'menu' || trimmed === 'main' || num === 4) {
+        await stopTypingIndicator(tenantId, phone);
         await sendWelcomeMenu(tenantId, phone);
         return;
       } else if (trimmed === 'back' || num === 2) {
-        // Go back to subcategories
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
         const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
+        await stopTypingIndicator(tenantId, phone);
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
@@ -891,10 +905,12 @@ async function handleProductBrowseInput(
       }
       
       if (checkIfSearchQuery(message)) {
+        await stopTypingIndicator(tenantId, phone);
         await handleProductSearch(tenantId, phone, message);
         return;
       }
       
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list (1-2 for brands, 2 for back, 3 for categories, 4 for menu).");
       return;
     }
@@ -928,21 +944,27 @@ async function handleProductBrowseInput(
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
         const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
+        await stopTypingIndicator(tenantId, phone);
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
           .set({ flowState: { ...flowState, currentStep: 'subcategory_selection', lastActivity: new Date().toISOString() } }, { merge: true });
       } else {
+        await stopTypingIndicator(tenantId, phone);
         await startProductBrowseFlow(tenantId, phone);
       }
     } else if (trimmed === 'categories' || num === '3') {
+      await stopTypingIndicator(tenantId, phone);
       await startProductBrowseFlow(tenantId, phone);
     } else if (trimmed === 'menu' || num === '4') {
+      await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
     } else {
       if (checkIfSearchQuery(message)) {
+        await stopTypingIndicator(tenantId, phone);
         await handleProductSearch(tenantId, phone, message);
       } else {
+        await stopTypingIndicator(tenantId, phone);
         await sendEvolutionMessage(tenantId, phone, 
           "*Reply with a number:*\n1️⃣ - View More\n2️ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
         );
@@ -956,6 +978,8 @@ async function showProductsForSelection(
   phone: string,
   selections: any
 ): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   
   debugLog(`[Webhook] showProductsForSelection called with:`, JSON.stringify({
@@ -978,12 +1002,6 @@ async function showProductsForSelection(
   
   let products = productsSnap.docs.map((doc: any) => {
     const data = doc.data();
-    debugLog(`[Webhook] Product ${doc.id}:`, JSON.stringify({
-      name: data.name,
-      brand: data.brand,
-      filters_brand: data.filters?.brand,
-      subcategory: data.subcategory,
-    }));
     return {
       id: doc.id,
       ...data,
@@ -991,30 +1009,23 @@ async function showProductsForSelection(
   });
   
   if (selections.subcategory) {
-    const beforeFilter = products.length;
     products = products.filter((p: any) => {
-      // Check both subcategory field and categoryName (some products store subcategory in categoryName)
       const matchesSubcategory = p.subcategory === selections.subcategory || 
                                 p.categoryName === selections.subcategory;
-      debugLog(`[Webhook] Product '${p.name}' subcategory check: p.subcategory='${p.subcategory}', p.categoryName='${p.categoryName}', matches=${matchesSubcategory}`);
       return matchesSubcategory;
     });
-    debugLog(`[Webhook] Filtered by subcategory '${selections.subcategory}': ${beforeFilter} -> ${products.length}`);
   }
   
   if (selections.brand) {
-    const beforeFilter = products.length;
     products = products.filter((p: any) => {
-      // Check both top-level brand field and filters.brand
       const matchesBrand = p.brand === selections.brand || 
                           p.filters?.brand?.includes(selections.brand);
-      debugLog(`[Webhook] Product '${p.name}' brand check: p.brand='${p.brand}', filters.brand=${JSON.stringify(p.filters?.brand)}, matches=${matchesBrand}`);
       return matchesBrand;
     });
-    debugLog(`[Webhook] Filtered by brand '${selections.brand}': ${beforeFilter} -> ${products.length}`);
   }
   
   if (products.length === 0) {
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "😔 No products found for this selection. Please try another category.");
     return;
   }
@@ -1024,6 +1035,7 @@ async function showProductsForSelection(
   
   let headerMessage = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.brand ? ' → ' + selections.brand : ''}*\n\n`;
   headerMessage += `Showing ${productsToShow.length} of ${totalProducts} products:\n\n`;
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, headerMessage);
   
   for (let idx = 0; idx < productsToShow.length; idx++) {
@@ -1153,6 +1165,8 @@ async function showNextProductPage(
   phone: string,
   selections: any
 ): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   
   const allProductIds = selections.allProducts || [];
@@ -1163,6 +1177,7 @@ async function showNextProductPage(
   const endIndex = startIndex + pageSize;
   
   if (startIndex >= allProductIds.length) {
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "✅ You've seen all available products! Reply *0* to go back.");
     return;
   }
@@ -1187,11 +1202,13 @@ async function showNextProductPage(
   }
   
   if (productsToShow.length === 0) {
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "No more products available.");
     return;
   }
   
   let headerMessage = `🛍️ *More Products* (Page ${currentPage + 2})\n\n`;
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, headerMessage);
   
   for (let idx = 0; idx < productsToShow.length; idx++) {
@@ -1320,6 +1337,8 @@ async function handleBrandOrProductSelection(
   phone: string,
   category: any
 ): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   
   const brands = (category.brands || []).filter((b: string) => 
@@ -1332,6 +1351,7 @@ async function handleBrandOrProductSelection(
       .join('\n');
     
     const response = `🏷️ *${category.name}* - Brands\n\n${brandList}\n\n0 Back to categories`;
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, response);
     
     await adminDb
@@ -1355,6 +1375,7 @@ async function handleBrandOrProductSelection(
         }
       }, { merge: true });
   } else {
+    await stopTypingIndicator(tenantId, phone);
     await showProductsForSelection(tenantId, phone, {
       categoryId: category.id,
       categorySlug: category.categorySlug,
@@ -1371,6 +1392,8 @@ async function handleOrderStatusLookupInput(
   message: string,
   flowState: any
 ): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   const { currentStep } = flowState;
   
@@ -1388,6 +1411,7 @@ async function handleOrderStatusLookupInput(
       .get();
     
     if (ordersSnap.empty) {
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, 
         `❌ Order *${orderNumber}* not found.\n\nPlease check the order number and try again, or reply *MENU* to return to the main menu.`
       );
@@ -1433,6 +1457,7 @@ async function handleOrderStatusLookupInput(
     
     response += `\nNeed more help? Reply *SUPPORT* to talk to our team.`;
     
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, response);
     
     await adminDb
@@ -1447,12 +1472,17 @@ async function handleOrderStatusLookupInput(
 }
 
 async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
 }
 
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   const adminDb = getAdminDb();
   
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, 
     "📦 *Check Order Status*\n\nPlease provide your order number (e.g., ORD-ABC123).\n\nYou can find this in your order confirmation message."
   );
@@ -1475,28 +1505,39 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
 }
 
 async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   try {
     const adminDb = getAdminDb();
     const profileSnap = await adminDb.collection("businessProfiles").doc(tenantId).get();
     const paymentMethods = profileSnap.exists ? profileSnap.data()?.paymentMethods : null;
     
+    let response: string;
     if (paymentMethods && paymentMethods.length > 0) {
       const paymentList = paymentMethods.map((method: any) => `• ${method.name}${method.details ? ` - ${method.details}` : ''}`).join('\n');
-      await sendEvolutionMessage(tenantId, phone, `💳 *Payment Methods*\n\n${paymentList}\n\nWhich payment method would you like to use?`);
+      response = `💳 *Payment Methods*\n\n${paymentList}\n\nWhich payment method would you like to use?`;
     } else {
-      await sendEvolutionMessage(tenantId, phone, "💳 We accept:\n\n• M-Pesa\n• Bank Transfer\n• Cash on Delivery\n\nWhich payment method would you like to use?");
+      response = "💳 We accept:\n\n• M-Pesa\n• Bank Transfer\n• Cash on Delivery\n\nWhich payment method would you like to use?";
     }
+    
+    await stopTypingIndicator(tenantId, phone);
+    await sendEvolutionMessage(tenantId, phone, response);
   } catch (error) {
     console.error('[Webhook] Error fetching payment methods:', error);
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "💳 We accept:\n\n• M-Pesa\n• Bank Transfer\n• Cash on Delivery\n\nWhich payment method would you like to use?");
   }
 }
 
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, " Our support team is here to help! Please describe your issue and we'll assist you.");
 }
 
 async function handleViewCart(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   try {
     const adminDb = getAdminDb();
     
@@ -1510,6 +1551,7 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
     const cartData = convoDoc.data()?.cart;
     
     if (!cartData || !cartData.items || cartData.items.length === 0) {
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, "🛒 *Your cart is empty*\n\nBrowse products and add items to your cart to see them here!\n\nReply *1* to browse products or *MENU* for main menu.");
       return;
     }
@@ -1565,14 +1607,18 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
     
     cartMessage += `\n\n💡 Or reply *CLEAR CART* to empty your cart.`;
     
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, cartMessage);
   } catch (err) {
     console.error('[Webhook] Error viewing cart:', err);
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "❌ Unable to retrieve your cart. Please try again later.");
   }
 }
 
 async function handleClearCart(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   try {
     const adminDb = getAdminDb();
     
@@ -1585,9 +1631,11 @@ async function handleClearCart(tenantId: string, phone: string): Promise<void> {
         cart: FieldValue.delete(),
       }, { merge: true });
     
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "🗑️ *Cart cleared!*\n\nYour cart is now empty. Browse products to add new items!\n\nReply *1* to browse products or *MENU* for main menu.");
   } catch (err) {
     console.error('[Webhook] Error clearing cart:', err);
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, "❌ Unable to clear cart. Please try again later.");
   }
 }
@@ -1631,9 +1679,7 @@ function checkIfSearchQuery(message: string): boolean {
     /can i get/i,
   ];
   
-  const hasSearchPattern = searchPatterns.some(pattern => pattern.test(lowerMsg));
-  
-  return hasSearchPattern;
+  return searchPatterns.some(pattern => pattern.test(lowerMsg));
 }
 
 async function handleProductSearch(
@@ -1641,6 +1687,8 @@ async function handleProductSearch(
   phone: string,
   query: string
 ): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
   try {
     debugLog(`[Webhook] Handling product search: "${query}"`);
     
@@ -1657,6 +1705,7 @@ async function handleProductSearch(
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
     if (!baseUrl) {
       console.error('[Webhook] NEXT_PUBLIC_APP_URL or VERCEL_URL not configured');
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(tenantId, phone, "❌ Search service unavailable. Please try again later.");
       return;
     }
@@ -1707,6 +1756,7 @@ async function handleProductSearch(
     
     if (!searchData.results || searchData.results.length === 0) {
       debugLog(`[Webhook] No results found for: "${searchTerm}"`);
+      await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(
         tenantId,
         phone,
@@ -1754,6 +1804,7 @@ async function handleProductSearch(
       message += `4️⃣ - Main Menu`;
     }
     
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, message);
     
     await setFlowState(tenantId, phone, {
@@ -1770,8 +1821,7 @@ async function handleProductSearch(
     debugLog(`[Webhook] Sent ${results.length} search results for "${searchTerm}" (total: ${totalResults})`);
   } catch (error) {
     console.error('[Webhook] Error handling product search:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    debugLog(`[Webhook] Search error details: ${errorMessage}`);
+    await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone, `❌ Search failed. Please try again or browse categories.\n\nReply *1* to browse products or *MENU* for main menu.`);
   }
 }
@@ -1892,7 +1942,6 @@ async function processWithAI(
 ): Promise<void> {
   const processStart = Date.now();
   
-  // Start showing typing indicator immediately
   await startTypingIndicator(tenantId, phone);
   
   try {
@@ -1910,6 +1959,7 @@ async function processWithAI(
       
       if (isStale) {
         console.log("[Webhook] Flow state expired, sending welcome menu");
+        await stopTypingIndicator(tenantId, phone);
         await sendWelcomeMenu(tenantId, phone);
         return;
       }
@@ -1925,6 +1975,7 @@ async function processWithAI(
             await handleProductSearch(tenantId, phone, message);
           } else {
             debugLog("[Webhook] Invalid main menu input:", message);
+            await stopTypingIndicator(tenantId, phone);
             await sendEvolutionMessage(tenantId, phone, 
               "Please reply with a number *1-5* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Check Order Status\n4 Payment Info\n5 Talk to Support"
             );
@@ -1941,6 +1992,7 @@ async function processWithAI(
     const isGreeting = checkIfGreeting(message);
     if (isGreeting) {
       console.log("[Webhook] Greeting detected, sending welcome menu");
+      await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
@@ -2011,9 +2063,7 @@ async function processWithAI(
     
     const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
     
-    // Stop typing indicator before sending response
     await stopTypingIndicator(tenantId, phone);
-    
     await sendEvolutionMessage(tenantId, phone, cleanText);
     
     console.log("[Webhook] All messages sent successfully");
@@ -2061,7 +2111,6 @@ async function processWithAI(
     const processingTime = Date.now() - processStart;
     console.error("[Webhook] ❌ ERROR in AI processing after", processingTime, "ms:", error);
     
-    // Stop typing indicator on error
     await stopTypingIndicator(tenantId, phone);
     
     await logWebhookError(
