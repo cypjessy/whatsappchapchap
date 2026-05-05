@@ -690,12 +690,7 @@ async function handleFlowInput(
     return;
   }
   
-  if (message.trim() === '0') {
-    // Main menu shortcut - ALWAYS go to main menu, never restart flows
-    // This prevents issues with stale flow state and race conditions
-    await sendWelcomeMenu(tenantId, phone);
-    return;
-  }
+  // Note: '0' is handled at the top level before handleFlowInput is called
   
   // Handle similar products selection
   if (flowName === 'similar_products_selection') {
@@ -951,14 +946,6 @@ async function handleProductBrowseInput(
   const { currentStep, selections } = flowState;
   
   await startTypingIndicator(tenantId, phone);
-  
-  // SAFEGUARD: If somehow we're in product_browse flow and message is '0', ALWAYS go to main menu
-  if (message.trim() === '0') {
-    console.log(`[Webhook] SAFEGUARD: '0' in product browse - going to main menu`);
-    await stopTypingIndicator(tenantId, phone);
-    await sendWelcomeMenu(tenantId, phone);
-    return;
-  }
   
   if (currentStep === 'category_selection') {
     const num = parseInt(message.trim());
@@ -2223,6 +2210,28 @@ async function processWithAI(
     debugLog("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
     
     const currentFlowState = await getFlowState(tenantId, phone);
+    
+    // CRITICAL: Check for '0' FIRST, before ANY flow routing
+    // This prevents stale flow state from triggering unwanted behavior
+    if (message.trim() === '0') {
+      console.log(`[Webhook] CRITICAL: '0' detected - clearing flow and showing main menu`);
+      
+      // Clear flow state immediately
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: FieldValue.delete()
+        }, { merge: true });
+      
+      // Show main menu
+      await stopTypingIndicator(tenantId, phone);
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
     
     if (currentFlowState && currentFlowState.isActive) {
       const { flowName, currentStep, lastActivity } = currentFlowState;
