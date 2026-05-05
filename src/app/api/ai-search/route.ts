@@ -1,23 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { initializeApp, getApps, getApp } from "firebase/app";
 import { enhanceSearchQuery } from "@/lib/ai-service";
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-};
-
-function getFirebaseApp() {
-  if (!getApps().length) {
-    return initializeApp(firebaseConfig);
-  }
-  return getApp();
-}
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,27 +13,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const app = getFirebaseApp();
-    const db = getFirestore(app);
+    // Use Firebase Admin SDK (server-side)
+    if (!adminDb) {
+      console.error('[AI Search] Firebase Admin SDK not initialized');
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
 
-    // Fetch all products for this tenant to provide context to AI
-    const productsQuery = query(
-      collection(db, "products"),
-      where("tenantId", "==", tenantId)
-    );
+    // Fetch only ACTIVE products for this tenant to provide context to AI
+    const productsSnap = await adminDb
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .get();
 
-    const productsSnap = await getDocs(productsQuery);
     const allProducts = productsSnap.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
+    console.log(`[AI Search] Found ${allProducts.length} active products for tenant ${tenantId}`);
+
     // Get business profile for business name
-    const profileQuery = query(
-      collection(db, "businessProfiles"),
-      where("tenantId", "==", tenantId)
-    );
-    const profileSnap = await getDocs(profileQuery);
+    const profileSnap = await adminDb
+      .collection("businessProfiles")
+      .where("tenantId", "==", tenantId)
+      .limit(1)
+      .get();
+
     const businessName = !profileSnap.empty 
       ? profileSnap.docs[0].data().businessName || "Our Store"
       : "Our Store";
@@ -68,25 +60,42 @@ export async function POST(req: NextRequest) {
 
     // Use AI to enhance the search query
     console.log(`[AI Search] Enhancing query: "${searchQuery}"`);
-    const enhancedQueries = await enhanceSearchQuery(searchQuery, aiContext);
-    console.log(`[AI Search] Enhanced queries:`, enhancedQueries);
+    let enhancedQueries: string[] = [];
+    
+    try {
+      enhancedQueries = await enhanceSearchQuery(searchQuery, aiContext);
+      console.log(`[AI Search] Enhanced queries:`, enhancedQueries);
+      
+      // Validate enhanced queries - ensure we have at least the original query
+      if (!enhancedQueries || !Array.isArray(enhancedQueries) || enhancedQueries.length === 0) {
+        console.warn('[AI Search] No valid enhanced queries, using original');
+        enhancedQueries = [searchQuery];
+      }
+    } catch (aiError) {
+      console.error('[AI Search] AI enhancement failed, falling back to original query:', aiError);
+      enhancedQueries = [searchQuery];
+    }
 
     // Search using all enhanced queries
     const searchResults = new Map<string, any>();
 
     for (const searchTerm of enhancedQueries) {
-      const filtered = allProducts.filter((p: any) =>
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.subcategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        Object.values(p.filters || {}).some((arr: any) =>
-          Array.isArray(arr) && arr.some((val: any) =>
-            val.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = allProducts.filter((p: any) => {
+        const term = searchTerm.toLowerCase();
+        
+        return (
+          p.name?.toLowerCase().includes(term) ||
+          p.description?.toLowerCase().includes(term) ||
+          p.category?.toLowerCase().includes(term) ||
+          p.subcategory?.toLowerCase().includes(term) ||
+          p.brand?.toLowerCase().includes(term) ||
+          Object.values(p.filters || {}).some((arr: any) =>
+            Array.isArray(arr) && arr.some((val: any) =>
+              String(val).toLowerCase().includes(term) // Safe string conversion
+            )
           )
-        )
-      );
+        );
+      });
 
       // Add results to map (avoid duplicates)
       filtered.forEach((product: any) => {
@@ -98,6 +107,8 @@ export async function POST(req: NextRequest) {
 
     // Convert map to array and limit results
     const results = Array.from(searchResults.values()).slice(0, 15);
+
+    console.log(`[AI Search] Returning ${results.length} results`);
 
     return NextResponse.json({
       success: true,
