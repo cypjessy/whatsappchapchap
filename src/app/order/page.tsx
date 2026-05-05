@@ -219,7 +219,9 @@ function OrderPageContent() {
   };
   
   const selectSearchResult = (product: Product) => {
-    router.push(`/order?tenant=${tenantId}&product=${product.id}&phone=${encodeURIComponent(customerPhone || '')}`);
+    // Only include phone if it's been entered
+    const phoneParam = customerPhone ? `&phone=${encodeURIComponent(customerPhone)}` : '';
+    router.push(`/order?tenant=${tenantId}&product=${product.id}${phoneParam}`);
   };
   
   const closeSearch = () => {
@@ -300,21 +302,25 @@ function OrderPageContent() {
           console.log('📊 Order Page - Payment Methods:', profileData.paymentMethods);
         }
         
-        // Fetch shipping methods
-        const shippingQuery = collection(db, "shippingMethods");
+        // Fetch shipping methods - tenant-filtered query
+        const shippingQuery = query(
+          collection(db, "shippingMethods"),
+          where("tenantId", "==", tenantId)
+        );
         const shippingSnap = await getDocs(shippingQuery);
         console.log('📊 Order Page - Shipping methods query results:', shippingSnap.size);
-        const shippingMethods = shippingSnap.docs
-          .filter(doc => doc.data().tenantId === tenantId)
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
+        const shippingMethods = shippingSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
         
         console.log('📊 Order Page - Shipping methods for tenant:', shippingMethods);
         
-        // Fetch pickup stations
-        const pickupQuery = collection(db, "pickupStations");
+        // Fetch pickup stations - tenant-filtered query
+        const pickupQuery = query(
+          collection(db, "pickupStations"),
+          where("tenantId", "==", tenantId)
+        );
         const pickupSnap = await getDocs(pickupQuery);
         console.log('📍 Order Page - Pickup stations query results:', pickupSnap.size);
         const pickupStationsData = pickupSnap.docs
@@ -723,14 +729,8 @@ function OrderPageContent() {
         
       const orderNum = `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
         
-      // Use cart items if in cart view, otherwise use current product
-      const orderProducts = showCart ? cart.map(item => ({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        specs: item.specs,
-      })) : [{
+      // Single product order (cart functionality moved to /order/checkout page)
+      const orderProducts = [{
         productId: product!.id,
         name: product!.name,
         price: getBasePrice(),
@@ -860,7 +860,14 @@ function OrderPageContent() {
     const cleanTenantId = tenantId.replace('tenant_', '');
     const phone = cleanTenantId.replace(/[^0-9]/g, '');
     const currentTotal = getBasePrice() * quantity + deliveryCost;
-    const message = `Hi, I just placed order ${orderNumber}. Here's my details:\n\nName: ${customerName}\nPhone: ${customerPhone}\nAddress: ${address}\n\nOrder Total: ${CURRENCY_SYMBOL}${currentTotal.toLocaleString()}\nPayment: ${paymentMethod}`;
+    
+    // Use pickup station address if selected, otherwise show "Not specified"
+    const station = pickupStations.find(s => s.id === selectedStation);
+    const addressText = station 
+      ? `${station.stationName}, ${station.town}, ${station.county}`
+      : (address || "Not specified");
+    
+    const message = `Hi, I just placed order ${orderNumber}. Here's my details:\n\nName: ${customerName}\nPhone: ${customerPhone}\nAddress: ${addressText}\n\nOrder Total: ${CURRENCY_SYMBOL}${currentTotal.toLocaleString()}\nPayment: ${paymentMethod}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -1031,17 +1038,23 @@ function OrderPageContent() {
                         onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
                       >
-                        {result.image ? (
-                          <img
-                            src={result.image}
-                            alt={result.name}
-                            style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8 }}
-                          />
-                        ) : (
-                          <div style={{ width: 48, height: 48, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
-                            📦
-                          </div>
-                        )}
+                        {(() => {
+                          const thumb = result.image || result.images?.[0];
+                          if (thumb) {
+                            return (
+                              <img
+                                src={thumb}
+                                alt={result.name}
+                                style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8 }}
+                              />
+                            );
+                          }
+                          return (
+                            <div style={{ width: 48, height: 48, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
+                              📦
+                            </div>
+                          );
+                        })()}
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{result.name}</div>
                           <div style={{ fontSize: 12, color: "#64748b" }}>
@@ -1122,7 +1135,7 @@ function OrderPageContent() {
         {cart.length > 0 && !showCart && (
           <button 
             className="floating-cart-btn"
-            onClick={() => router.push(`/order/checkout?tenant=${tenantId}&phone=${encodeURIComponent(customerPhone || '')}`)}
+            onClick={() => setShowCart(true)}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
             <i className="fas fa-shopping-cart"></i>
