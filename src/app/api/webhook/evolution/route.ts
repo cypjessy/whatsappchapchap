@@ -878,6 +878,13 @@ async function showProductsForSelection(
 ): Promise<void> {
   const adminDb = getAdminDb();
   
+  debugLog(`[Webhook] showProductsForSelection called with:`, JSON.stringify({
+    categoryId: selections.categoryId,
+    categorySlug: selections.categorySlug,
+    subcategory: selections.subcategory,
+    brand: selections.brand,
+  }));
+  
   let query = adminDb.collection('products')
     .where('tenantId', '==', tenantId)
     .where('status', '==', 'active');
@@ -887,17 +894,44 @@ async function showProductsForSelection(
   }
   
   const productsSnap = await query.get();
-  let products = productsSnap.docs.map((doc: any) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  debugLog(`[Webhook] Found ${productsSnap.size} products for category ${selections.categorySlug || selections.categoryId}`);
+  
+  let products = productsSnap.docs.map((doc: any) => {
+    const data = doc.data();
+    debugLog(`[Webhook] Product ${doc.id}:`, JSON.stringify({
+      name: data.name,
+      brand: data.brand,
+      filters_brand: data.filters?.brand,
+      subcategory: data.subcategory,
+    }));
+    return {
+      id: doc.id,
+      ...data,
+    };
+  });
   
   if (selections.subcategory) {
-    products = products.filter((p: any) => p.subcategory === selections.subcategory);
+    const beforeFilter = products.length;
+    products = products.filter((p: any) => {
+      // Check both subcategory field and categoryName (some products store subcategory in categoryName)
+      const matchesSubcategory = p.subcategory === selections.subcategory || 
+                                p.categoryName === selections.subcategory;
+      debugLog(`[Webhook] Product '${p.name}' subcategory check: p.subcategory='${p.subcategory}', p.categoryName='${p.categoryName}', matches=${matchesSubcategory}`);
+      return matchesSubcategory;
+    });
+    debugLog(`[Webhook] Filtered by subcategory '${selections.subcategory}': ${beforeFilter} -> ${products.length}`);
   }
   
   if (selections.brand) {
-    products = products.filter((p: any) => p.brand === selections.brand);
+    const beforeFilter = products.length;
+    products = products.filter((p: any) => {
+      // Check both top-level brand field and filters.brand
+      const matchesBrand = p.brand === selections.brand || 
+                          p.filters?.brand?.includes(selections.brand);
+      debugLog(`[Webhook] Product '${p.name}' brand check: p.brand='${p.brand}', filters.brand=${JSON.stringify(p.filters?.brand)}, matches=${matchesBrand}`);
+      return matchesBrand;
+    });
+    debugLog(`[Webhook] Filtered by brand '${selections.brand}': ${beforeFilter} -> ${products.length}`);
   }
   
   if (products.length === 0) {
