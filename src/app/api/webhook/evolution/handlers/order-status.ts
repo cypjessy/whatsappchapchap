@@ -609,7 +609,7 @@ async function processCancellation(
         orderId: orderId,
         customerPhone: phone,
         orderData: orderData,
-        status: 'pending', // pending, approved, rejected
+        status: 'pending',
         reason: 'Customer requested cancellation',
         requestedAt: FieldValue.serverTimestamp(),
         respondedAt: null,
@@ -634,6 +634,8 @@ async function processCancellation(
     }
     
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    
+    // Send confirmation message with 0 option
     await deps.sendMessage(
       tenantId,
       phone,
@@ -641,10 +643,11 @@ async function processCancellation(
       `Your cancellation request for order *${orderId}* has been submitted.\n\n` +
       `Our team will review your request and process the refund within 24-48 hours.\n\n` +
       `You will receive a confirmation once the refund is processed.\n\n` +
-      `Reply *0* for main menu`
+      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `0️⃣ - Back to Main Menu`
     );
     
-    // Clear flow state
+    // Clear flow state - now when user presses 0, webhook will handle it normally
     await db
       .collection("tenants")
       .doc(tenantId)
@@ -660,7 +663,18 @@ async function processCancellation(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Error processing cancellation request. Please try again or contact support.\n\nReply *0* for main menu`
+      `❌ Error processing cancellation request. Please try again or contact support.\n\n0️⃣ - Back to Main Menu`
     );
+    
+    // Clear flow state on error too
+    const db = getDb();
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
   }
 }
