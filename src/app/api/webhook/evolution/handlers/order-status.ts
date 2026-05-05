@@ -354,10 +354,15 @@ async function sendOrderDetails(
   const canCancel = cancellableStatuses.includes(orderData.status?.toLowerCase());
   
   if (canCancel) {
-    message += `Reply *CANCEL* to request cancellation & refund\n`;
+    message += `1️⃣ - Request Cancellation & Refund\n`;
   }
   
-  message += `or *0* for main menu`;
+  message += `0️ - Back to Main Menu`;
+  
+  // Add note about typing the number
+  if (canCancel) {
+    message += `\n\n_Reply with the number (1 or 0)_`;
+  }
   
   if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, message);
@@ -374,7 +379,7 @@ async function sendOrderDetails(
       .set({
         flowState: {
           flowName: 'order_cancellation',
-          currentStep: 'waiting_for_cancel_confirm',
+          currentStep: 'waiting_for_cancel_selection',
           currentOrderId: orderId,
           orderData: orderData,
           isActive: true,
@@ -455,7 +460,7 @@ function capitalizeFirst(str: string): string {
 }
 
 /**
- * Handle order cancellation request
+ * Handle order cancellation request (with number selection)
  */
 export async function handleOrderCancellation(
   tenantId: string,
@@ -466,42 +471,117 @@ export async function handleOrderCancellation(
 ): Promise<void> {
   if (deps.startTyping) await deps.startTyping(tenantId, phone);
   
-  const input = userInput.trim().toUpperCase();
+  const input = userInput.trim();
+  const num = parseInt(input);
   
-  // User confirmed cancellation
-  if (input === 'YES' || input === 'CONFIRM') {
-    await processCancellation(tenantId, phone, flowState, deps);
-    return;
-  }
+  console.log(`[OrderCancel] Input: "${input}", Num: ${num}, Current step: ${flowState.currentStep}`);
   
-  // User cancelled the cancellation
-  if (input === 'NO' || input === '0') {
+  // Check if user selected a number option
+  if (flowState.currentStep === 'waiting_for_cancel_selection') {
+    // User selected cancellation (option 1)
+    if (num === 1) {
+      // Move to confirmation step
+      if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+      
+      const confirmMessage = `⚠️ *Confirm Cancellation*\n\n` +
+        `Are you sure you want to cancel this order?\n\n` +
+        `1️⃣ - Yes, Cancel Order\n` +
+        `2️⃣ - No, Go Back\n\n` +
+        `_Reply with the number (1 or 2)_`;
+      
+      await deps.sendMessage(tenantId, phone, confirmMessage);
+      
+      // Update flow state to confirmation step
+      const db = getDb();
+      await db
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            ...flowState,
+            currentStep: 'waiting_for_confirm',
+            lastActivity: new Date().toISOString(),
+          }
+        }, { merge: true });
+      return;
+    }
+    
+    // User selected back to menu (option 0)
+    if (num === 0) {
+      if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(tenantId, phone, `✅ Returning to main menu.\n\nReply *MENU* to see options.`);
+      
+      // Clear flow state
+      const db = getDb();
+      await db
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: FieldValue.delete()
+        }, { merge: true });
+      return;
+    }
+    
+    // Invalid selection
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      `✅ Cancellation request cancelled.\n\nReply *0* for main menu`
+      `❌ Invalid selection. Please reply with *1* to cancel or *0* for main menu.`
     );
-    
-    // Clear flow state
-    const db = getDb();
-    await db
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        flowState: FieldValue.delete()
-      }, { merge: true });
     return;
   }
   
-  // Invalid response - ask again
+  // Handle confirmation step
+  if (flowState.currentStep === 'waiting_for_confirm') {
+    // User confirmed cancellation (option 1)
+    if (num === 1) {
+      await processCancellation(tenantId, phone, flowState, deps);
+      return;
+    }
+    
+    // User declined cancellation (option 2)
+    if (num === 2) {
+      if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        `✅ Cancellation cancelled.\n\nReply *0* for main menu`
+      );
+      
+      // Clear flow state
+      const db = getDb();
+      await db
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: FieldValue.delete()
+        }, { merge: true });
+      return;
+    }
+    
+    // Invalid selection
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Invalid selection. Please reply with *1* to confirm cancellation or *2* to go back.`
+    );
+    return;
+  }
+  
+  // Fallback for any other state
   if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(
     tenantId,
     phone,
-    `❌ Please reply *YES* to confirm cancellation or *NO* to keep your order.\n\nReply *0* for main menu`
+    `❌ Please reply with *1* to cancel or *0* for main menu.`
   );
 }
 

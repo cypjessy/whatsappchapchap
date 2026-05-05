@@ -712,7 +712,7 @@ async function handleFlowInput(
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
-    if (flowName === 'order_cancellation') {
+    if (flowName === 'order_cancellation' || flowName === 'order_cancellation_selection') {
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
