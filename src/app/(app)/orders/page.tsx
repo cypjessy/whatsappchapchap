@@ -834,59 +834,6 @@ try {
         </div>
       </div>
 
-      {/* Cancellation Requests Section */}
-      {cancellationRequests.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <i className="fas fa-exclamation-triangle text-red-500"></i>
-            <h2 className="text-lg font-bold text-[#1e293b]">Cancellation Requests ({cancellationRequests.length})</h2>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {cancellationRequests.map((request: any) => (
-              <div key={request.id} className="bg-white border-2 border-red-200 rounded-xl p-4 hover:border-red-400 transition-colors">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-bold text-[#25D366] text-lg">{request.orderId}</div>
-                    <div className="text-xs text-[#64748b] mt-1">
-                      {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
-                    </div>
-                  </div>
-                  <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">
-                    Pending
-                  </span>
-                </div>
-                
-                <div className="text-sm mb-3">
-                  <div className="text-[#64748b]">Customer: {request.customerPhone || 'N/A'}</div>
-                  <div className="font-bold text-[#1e293b] mt-1">
-                    Amount: {formatCurrency(request.orderData?.total || 0)}
-                  </div>
-                </div>
-                
-                <div className="text-xs text-[#64748b] mb-3">
-                  <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
-                </div>
-                
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
-                    className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600 transition-colors"
-                  >
-                    <i className="fas fa-check mr-2"></i>Approve
-                  </button>
-                  <button
-                    onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
-                    className="flex-1 px-3 py-2 bg-red-500 text-white rounded-lg font-semibold text-sm hover:bg-red-600 transition-colors"
-                  >
-                    <i className="fas fa-times mr-2"></i>Reject
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
         <div className="p-3 md:p-4 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div className="font-bold flex items-center gap-2">
@@ -970,6 +917,71 @@ try {
             </button>
           )}
         </div>
+
+        {/* Cancellation Requests Section - Moved after filters for better flow */}
+        {cancellationRequests.length > 0 && (
+          <div className="p-4 md:p-6 border-b-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
+                <i className="fas fa-exclamation-triangle text-lg"></i>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-[#1e293b]">Cancellation Requests</h2>
+                <p className="text-sm text-[#64748b]">{cancellationRequests.length} pending approval{cancellationRequests.length > 1 ? 's' : ''}</p>
+              </div>
+              <span className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold animate-pulse shadow-lg">
+                <i className="fas fa-bell mr-1"></i>Action Required
+              </span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {cancellationRequests.map((request: any) => (
+                <div key={request.id} className="bg-white border-2 border-red-300 rounded-xl p-4 hover:border-red-500 hover:shadow-lg transition-all">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="font-bold text-[#25D366] text-lg">{request.orderId}</div>
+                      <div className="text-xs text-[#64748b] mt-1">
+                        {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold animate-pulse">
+                      <i className="fas fa-clock mr-1"></i>Pending
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm mb-3 space-y-1">
+                    <div className="flex items-center gap-2 text-[#64748b]">
+                      <i className="fas fa-user text-xs"></i>
+                      <span>{request.customerPhone || 'N/A'}</span>
+                    </div>
+                    <div className="font-bold text-[#1e293b] text-lg">
+                      {formatCurrency(request.orderData?.total || 0)}
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-[#64748b] mb-4 bg-gray-50 p-2 rounded-lg">
+                    <i className="fas fa-info-circle mr-1 text-blue-500"></i>
+                    <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
+                      className="flex-1 px-3 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold text-sm hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                      <i className="fas fa-check mr-2"></i>Approve & Refund
+                    </button>
+                    <button
+                      onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
+                      className="flex-1 px-3 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold text-sm hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                      <i className="fas fa-times mr-2"></i>Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="p-8 text-center">
