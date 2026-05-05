@@ -672,6 +672,9 @@ async function handleFlowInput(
 ): Promise<void> {
   const { flowName, currentStep, selections } = flowState;
   
+  // Debug log
+  console.log(`[Webhook] handleFlowInput - flowName: ${flowName}, currentStep: ${currentStep}, message: ${message}`);
+  
   if (message.trim().toUpperCase() === 'VIEW CART' || message.trim().toUpperCase() === 'CART') {
     await handleViewCart(tenantId, phone);
     return;
@@ -817,6 +820,7 @@ async function handleFlowInput(
       startTyping: startTypingIndicator,
       stopTyping: stopTypingIndicator
     };
+    console.log(`[Webhook] Routing to order_status_selection with message: ${message}`);
     await handleOrderStatusSelection(tenantId, phone, message, flowState, deps);
     return;
   }
@@ -1628,7 +1632,7 @@ async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<
   await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
 }
 
-// FIXED: Updated sendOrderStatusInfo to match new flow
+// FIXED: sendOrderStatusInfo - no longer overwrites flow state
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   
@@ -1638,27 +1642,11 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
     stopTyping: stopTypingIndicator
   };
   
-  // This now shows recent orders directly
+  // This shows recent orders AND sets the correct flow state ('order_status_selection')
   await startOrderStatusFlow(tenantId, phone, deps);
   
-  // Update flow state for order status
-  const adminDb = getAdminDb();
-  await adminDb
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .set({
-      flowState: {
-        isActive: true,
-        flowName: 'order_status_lookup',
-        currentStep: 'waiting_for_selection',
-        selections: {},
-        startedAt: new Date().toISOString(),
-        lastActivity: new Date().toISOString(),
-      }
-    }, { merge: true });
-    
+  // REMOVED: The manual flow state setting that was overwriting
+  
   await stopTypingIndicator(tenantId, phone);
 }
 
