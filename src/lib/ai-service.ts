@@ -106,7 +106,13 @@ export interface AIContext {
   
   // Payment Methods
   paymentMethods?: {
-    mpesa?: { enabled: boolean; phoneNumber?: string; businessName?: string; paybillNumber?: string };
+    mpesa?: { 
+      enabled: boolean; 
+      buyGoods?: { tillNumber?: string };
+      paybill?: { paybillNumber?: string };
+      personal?: { phoneNumber?: string };
+      businessName?: string;
+    };
     bank?: { enabled: boolean; bankName?: string; accountNumber?: string };
     card?: { enabled: boolean; provider?: string; instructions?: string };
     cash?: { enabled: boolean; instructions?: string };
@@ -199,7 +205,7 @@ function buildSystemPrompt(context: AIContext): string {
           }).join(' | ')}`
         : '';
 
-      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${description}${variants}${payment}${shipping}${orderLink}${imageInfo}`;
+      return `- ${p.name}: ${priceInfo} ${stockStatus}${brand}${condition}${colors}${sizes}${description}${variants}${payment}${shipping}${orderLink}`;
     })
     .join("\n\n");
 
@@ -223,7 +229,22 @@ function buildSystemPrompt(context: AIContext): string {
   const paymentMethods = context.paymentMethods;
   const paymentSection = paymentMethods ? `\n\nPAYMENT METHODS:\n${
     [
-      paymentMethods.mpesa?.enabled ? `📱 M-Pesa: Pay to ${paymentMethods.mpesa.phoneNumber || 'N/A'}${paymentMethods.mpesa.businessName ? ` (${paymentMethods.mpesa.businessName})` : ''}` : null,
+      paymentMethods.mpesa?.enabled ? (() => {
+        // Extract M-Pesa numbers from nested structure
+        const tillNumber = paymentMethods.mpesa.buyGoods?.tillNumber;
+        const paybillNumber = paymentMethods.mpesa.paybill?.paybillNumber;
+        const phoneNumber = paymentMethods.mpesa.personal?.phoneNumber;
+        const businessName = paymentMethods.mpesa.businessName;
+        
+        let mpesaInfo = '📱 M-Pesa: ';
+        if (tillNumber) mpesaInfo += `Buy Goods Till: ${tillNumber}`;
+        else if (paybillNumber) mpesaInfo += `Paybill: ${paybillNumber}`;
+        else if (phoneNumber) mpesaInfo += `Send Money: ${phoneNumber}`;
+        else mpesaInfo += 'Configure in settings';
+        
+        if (businessName) mpesaInfo += ` (${businessName})`;
+        return mpesaInfo;
+      })() : null,
       paymentMethods.bank?.enabled ? `🏦 Bank Transfer: ${paymentMethods.bank.bankName || 'N/A'}, Account: ${paymentMethods.bank.accountNumber || 'N/A'}` : null,
       paymentMethods.card?.enabled ? `💳 Card Payment: ${paymentMethods.card.provider || 'Card'}${paymentMethods.card.instructions ? ` - ${paymentMethods.card.instructions}` : ''}` : null,
       paymentMethods.cash?.enabled ? `💵 Cash: ${paymentMethods.cash.instructions || 'Pay on delivery'}` : null,
@@ -556,10 +577,14 @@ export async function enhanceSearchQuery(
   }
 ): Promise<string[]> {
   try {
-    const productList = context.products
-      .map(p => `- ${p.name}${p.category ? ` (${p.category})` : ''}${p.brand ? ` - ${p.brand}` : ''}`)
-      .join('\n');
-
+    // Extract unique categories and brands for domain hints (not full product list)
+    const categories = [...new Set(context.products.map(p => p.category).filter(Boolean))];
+    const brands = [...new Set(context.products.map(p => p.brand).filter(Boolean))];
+    
+    // Limit to top 20 most common categories/brands to reduce token usage
+    const categoryHints = categories.slice(0, 10).join(', ');
+    const brandHints = brands.slice(0, 10).join(', ');
+    
     const businessContext = context.businessName ? ` for ${context.businessName}` : '';
     
     const prompt = `You are a search query enhancer${businessContext}. 
@@ -568,8 +593,8 @@ The customer typed: "${userQuery}"
 
 Your task is to translate this into multiple search variations that would match our product catalog.
 
-Available products in our catalog:
-${productList}
+Product categories in our catalog: ${categoryHints || 'Various'}
+Brands we carry: ${brandHints || 'Various'}
 
 RULES:
 1. If the query uses local/colloquial language, translate it to standard English
@@ -607,9 +632,11 @@ Now process this query: "${userQuery}"`
 
     const response = chatCompletion.choices[0]?.message?.content || "";
     
-    // Parse JSON array from response
+    // Parse JSON array from response with markdown fence stripping
     try {
-      const parsed = JSON.parse(response.trim());
+      // Remove markdown code fences if present
+      const cleaned = response.trim().replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
       if (Array.isArray(parsed)) {
         return parsed.filter((term: any) => typeof term === 'string' && term.trim().length > 0);
       }

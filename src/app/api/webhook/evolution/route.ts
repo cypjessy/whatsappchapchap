@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { generateAIResponse, detectIntent, AIContext } from "@/lib/ai-service";
+import { generateAIResponse, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { getProductCategories, formatProductList, getProductImage } from "@/lib/product-helper";
 
