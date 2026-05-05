@@ -139,54 +139,103 @@ export default function OrdersPage() {
 
   const handleCancellationAction = async (requestId: string, orderId: string, action: 'approve' | 'reject') => {
     if (!user) return;
+    
+    const isApproving = action === 'approve';
+    const actionText = isApproving ? 'Approving' : 'Rejecting';
+    
     try {
       const db: any = getFirestore(firebaseApp);
+      
+      console.log(`[Cancellation] ${actionText} request ${requestId} for order ${orderId}`);
       
       // Update cancellation request
       const cancelRef = doc(db, "cancellation_requests", requestId);
       await updateDoc(cancelRef, {
-        status: action === 'approve' ? 'approved' : 'rejected',
+        status: isApproving ? 'approved' : 'rejected',
         respondedAt: new Date(),
-        responseNote: action === 'approve' ? 'Refund processed' : 'Cancellation rejected by merchant',
+        responseNote: isApproving ? 'Refund approved by merchant' : 'Cancellation rejected by merchant',
       });
       
+      console.log(`[Cancellation] Updated cancellation request status to ${isApproving ? 'approved' : 'rejected'}`);
+      
       // Update order status
+      const tenantId = `tenant_${user.uid}`;
       const ordersRef = collection(db, "orders");
       const orderQuery = query(
         ordersRef,
         where("orderId", "==", orderId),
-        where("tenantId", "==", user.uid)
+        where("tenantId", "==", tenantId)
       );
       
       const orderSnap = await getDocs(orderQuery);
       
       if (!orderSnap.empty) {
         const orderDoc = orderSnap.docs[0];
+        const orderData = orderDoc.data();
+        
         await updateDoc(orderDoc.ref, {
-          status: action === 'approve' ? 'cancelled' : 'confirmed',
-          cancellationStatus: action === 'approve' ? 'approved' : 'rejected',
+          status: isApproving ? 'cancelled' : 'confirmed',
+          cancellationStatus: isApproving ? 'approved' : 'rejected',
+          updatedAt: new Date(),
         });
         
+        console.log(`[Cancellation] Updated order ${orderId} status to ${isApproving ? 'cancelled' : 'confirmed'}`);
+        
         // Send WhatsApp notification to customer
-        const orderData = orderDoc.data();
         const customerPhone = orderData.customerPhone;
         if (customerPhone) {
-          const message = action === 'approve'
-            ? `✅ *Cancellation Approved*\n\nYour cancellation request for order *${orderId}* has been approved.\n\nRefund of ${formatCurrency(orderData.total || 0)} will be processed within 24-48 hours.\n\nThank you for your patience!`
-            : `❌ *Cancellation Rejected*\n\nYour cancellation request for order *${orderId}* has been rejected.\n\nIf you have any questions, please contact our support team.\n\nOrder will continue processing as normal.`;
+          let message = '';
           
-          await sendEvolutionWhatsAppMessage(user.uid, customerPhone, message);
+          if (isApproving) {
+            message = `✅ *Cancellation Approved - Refund Processing*\n\n` +
+              `Dear ${orderData.customerName || 'Customer'},\n\n` +
+              `Your cancellation request for order *${orderId}* has been *approved*.\n\n` +
+              ` *Refund Amount:* ${formatCurrency(orderData.total || 0)}\n` +
+              `⏱️ *Processing Time:* 24-48 hours\n` +
+              `💳 *Refund Method:* ${orderData.paymentMethod || 'Original payment method'}\n\n` +
+              `The refund will be processed back to your original payment method. You will receive a confirmation once the refund is completed.\n\n` +
+              `If you have any questions, please don't hesitate to contact our support team.\n\n` +
+              `Thank you for shopping with us! 🙏`;
+          } else {
+            message = `ℹ️ *Cancellation Request Update*\n\n` +
+              `Dear ${orderData.customerName || 'Customer'},\n\n` +
+              `Your cancellation request for order *${orderId}* has been *reviewed*.\n\n` +
+              `❌ *Status:* Request Rejected\n\n` +
+              `Your order will continue processing as normal and will be delivered to your address.\n\n` +
+              `If you have any concerns or questions about this decision, please contact our support team and we'll be happy to assist you.\n\n` +
+              `Thank you for your understanding! 🙏`;
+          }
+          
+          console.log(`[Cancellation] Sending WhatsApp notification to ${customerPhone}`);
+          
+          try {
+            await sendEvolutionWhatsAppMessage(user.uid, customerPhone, message);
+            console.log(`[Cancellation] WhatsApp notification sent successfully`);
+          } catch (whatsappError) {
+            console.error(`[Cancellation] Failed to send WhatsApp notification:`, whatsappError);
+            // Don't fail the whole operation if WhatsApp fails
+          }
+        } else {
+          console.warn(`[Cancellation] No customer phone number found for order ${orderId}`);
         }
+      } else {
+        console.error(`[Cancellation] Order ${orderId} not found in database`);
       }
       
-      // Reload requests
+      // Reload requests and orders
       await loadCancellationRequests();
       await loadOrders();
       
-      alert(`Cancellation ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
+      // Show success message
+      if (isApproving) {
+        alert(`✅ Cancellation approved! Customer will receive refund confirmation via WhatsApp.`);
+      } else {
+        alert(`ℹ️ Cancellation rejected. Customer has been notified via WhatsApp.`);
+      }
+      
     } catch (error) {
-      console.error("Error handling cancellation:", error);
-      alert("Error processing cancellation request");
+      console.error(`[Cancellation] Error ${actionText} cancellation:`, error);
+      alert(`Error ${action === 'approve' ? 'approving' : 'rejecting'} cancellation request. Please try again.`);
     }
   };
 
