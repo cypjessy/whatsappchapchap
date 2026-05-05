@@ -780,6 +780,12 @@ async function handleProductBrowseInput(
         await sendWelcomeMenu(tenantId, phone);
         return;
       }
+      
+      // Natural language query → treat as search
+      if (checkIfSearchQuery(message) || message.trim().length > 3) {
+        await handleProductSearch(tenantId, phone, message);
+        return;
+      }
         
       await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
       return;
@@ -842,6 +848,12 @@ async function handleProductBrowseInput(
       } else if (trimmed === 'back' || num === 2) {
         // Back to categories
         await startProductBrowseFlow(tenantId, phone);
+        return;
+      }
+      
+      // Natural language query → treat as search
+      if (checkIfSearchQuery(message) || message.trim().length > 3) {
+        await handleProductSearch(tenantId, phone, message);
         return;
       }
         
@@ -918,6 +930,12 @@ async function handleProductBrowseInput(
         return;
       }
       
+      // Natural language query → treat as search
+      if (checkIfSearchQuery(message) || message.trim().length > 3) {
+        await handleProductSearch(tenantId, phone, message);
+        return;
+      }
+      
       await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
       return;
     }
@@ -966,9 +984,14 @@ async function handleProductBrowseInput(
     } else if (trimmed === 'menu' || num === '4') {
       await sendWelcomeMenu(tenantId, phone);
     } else {
-      await sendEvolutionMessage(tenantId, phone, 
-        "*Reply with a number:*\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
-      );
+      // Natural language query during product browsing → treat as search
+      if (checkIfSearchQuery(message) || message.trim().length > 3) {
+        await handleProductSearch(tenantId, phone, message);
+      } else {
+        await sendEvolutionMessage(tenantId, phone, 
+          "*Reply with a number:*\n1️⃣ - View More\n2️ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
+        );
+      }
     }
   }
 }
