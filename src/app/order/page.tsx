@@ -108,7 +108,7 @@ function OrderPageContent() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   
   // Debounce ref for search
-  const debounceRef = useRef<any>(null);
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
   
   // Search request ID to prevent race conditions
   const searchRequestIdRef = useRef<number>(0);
