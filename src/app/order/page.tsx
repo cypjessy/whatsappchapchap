@@ -128,7 +128,6 @@ function OrderPageContent() {
     images?: string[];
     tenantId: string;
   }>>([]);
-  const [showCart, setShowCart] = useState(false);
   const [showCartBadge, setShowCartBadge] = useState(false);
   const [showAddedNotification, setShowAddedNotification] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -1154,230 +1153,17 @@ function OrderPageContent() {
           </div>
         </div>
 
-        {/* Cart Modal */}
-        {showCart && (
-          <div style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 2000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-          }} onClick={() => setShowCart(false)}>
-            <div style={{
-              background: "white",
-              borderRadius: 16,
-              maxWidth: 600,
-              width: "100%",
-              maxHeight: "80vh",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-            }} onClick={(e) => e.stopPropagation()}>
-              {/* Cart Header */}
-              <div style={{
-                padding: "20px 24px",
-                borderBottom: "1px solid #e2e8f0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                color: "white",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <i className="fas fa-shopping-cart" style={{ fontSize: 24 }}></i>
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 700 }}>Shopping Cart</div>
-                    <div style={{ fontSize: 13, opacity: 0.9 }}>{cart.length} item{cart.length > 1 ? 's' : ''}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowCart(false)}
-                  style={{
-                    background: "rgba(255,255,255,0.2)",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: 36,
-                    height: 36,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    color: "white",
-                    fontSize: 18,
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Cart Items */}
-              <div style={{
-                flex: 1,
-                overflowY: "auto",
-                padding: 16,
-              }}>
-                {cart.length === 0 ? (
-                  <div style={{
-                    textAlign: "center",
-                    padding: 40,
-                    color: "#64748b",
-                  }}>
-                    <i className="fas fa-shopping-basket" style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}></i>
-                    <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Your cart is empty</div>
-                    <div style={{ fontSize: 14 }}>Add products to get started!</div>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {cart.map((item, index) => (
-                      <div key={index} style={{
-                        display: "flex",
-                        gap: 16,
-                        padding: 16,
-                        background: "#f8fafc",
-                        borderRadius: 12,
-                        border: "1px solid #e2e8f0",
-                      }}>
-                        {/* Product Image */}
-                        <div style={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 8,
-                          background: "linear-gradient(135deg, #DCF8C6 0%, #e0e7ff 100%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 32,
-                          flexShrink: 0,
-                          overflow: "hidden",
-                        }}>
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          ) : (
-                            "📦"
-                          )}
-                        </div>
-
-                        {/* Product Details */}
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 16, fontWeight: 600, color: "#1e293b", marginBottom: 4 }}>
-                            {item.name}
-                          </div>
-                          {Object.keys(item.specs).length > 0 && (
-                            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>
-                              {Object.entries(item.specs).map(([key, value]) => (
-                                <span key={key} style={{ marginRight: 8 }}>
-                                  {key}: {value}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#25D366" }}>
-                              {CURRENCY_SYMBOL}{(item.price * item.quantity).toLocaleString()}
-                            </div>
-                            <div style={{ fontSize: 14, color: "#64748b" }}>
-                              Qty: {item.quantity}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Remove Button */}
-                        <button
-                          onClick={() => removeFromCart(index)}
-                          style={{
-                            background: "#fee2e2",
-                            border: "none",
-                            borderRadius: 8,
-                            width: 36,
-                            height: 36,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            color: "#ef4444",
-                            fontSize: 16,
-                            transition: "all 0.2s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#fecaca";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "#fee2e2";
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Cart Footer */}
-              {cart.length > 0 && (
-                <div style={{
-                  padding: "16px 24px",
-                  borderTop: "1px solid #e2e8f0",
-                  background: "white",
-                }}>
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 16,
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: "#1e293b",
-                  }}>
-                    <span>Total:</span>
-                    <span style={{ color: "#25D366" }}>
-                      {CURRENCY_SYMBOL}{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowCart(false);
-                      // Scroll to order section
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: 16,
-                      background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 12,
-                      fontSize: 16,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      boxShadow: "0 4px 12px rgba(37,211,102,0.3)",
-                    }}
-                  >
-                    <i className="fas fa-credit-card"></i>
-                    Proceed to Checkout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Floating Cart Button */}
-        {cart.length > 0 && !showCart && (
+        {/* Floating Cart Button - Navigate to dedicated cart page */}
+        {cart.length > 0 && (
           <button 
             className="floating-cart-btn"
-            onClick={() => setShowCart(true)}
+            onClick={() => {
+              // Navigate to dedicated cart/checkout page
+              const params = new URLSearchParams();
+              if (tenantId) params.set('tenant', tenantId);
+              if (customerPhone) params.set('phone', customerPhone);
+              router.push(`/order/checkout?${params.toString()}`);
+            }}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
             <i className="fas fa-shopping-cart"></i>
