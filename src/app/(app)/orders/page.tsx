@@ -690,6 +690,9 @@ try {
       return false;
     }
     
+    // Status filter
+    if (activeStatus !== "all" && order.status !== activeStatus) return false;
+    
     // Date range filter
     if (dateRangeStart || dateRangeEnd) {
       try {
@@ -729,6 +732,10 @@ try {
 
   const tabs = [
     { id: "all", label: "All Orders", count: counts.all },
+    { id: "pending", label: "Pending", count: counts.pending },
+    { id: "processing", label: "Processing", count: counts.processing },
+    { id: "completed", label: "Completed", count: counts.completed },
+    { id: "cancelled", label: "Cancelled", count: counts.cancelled },
   ];
 
   return (
