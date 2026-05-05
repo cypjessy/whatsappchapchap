@@ -357,8 +357,8 @@ async function sendOrderDetails(
     message += `1️⃣ - Request Cancellation & Refund\n`;
   }
   
-  message += `0️ - Back to Main Menu`;
-  
+  message += `0️⃣ - Back to Main Menu`;
+
   // Add note about typing the number
   if (canCancel) {
     message += `\n\n_Reply with the number (1 or 0)_`;
