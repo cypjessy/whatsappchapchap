@@ -24,7 +24,7 @@ export interface OrderStatusDeps {
 }
 
 /**
- * Start order status check flow
+ * Start order status check flow - shows recent orders immediately
  */
 export async function startOrderStatusFlow(
   tenantId: string,
@@ -33,18 +33,12 @@ export async function startOrderStatusFlow(
 ): Promise<void> {
   if (deps.startTyping) await deps.startTyping(tenantId, phone);
   
-  const message = `📦 *Check Your Order Status*\n\n` +
-    `Please enter your **Order Number**\n` +
-    `(e.g., ORD-1234567890)\n\n` +
-    `💡 Or type *RECENT* to see your last 3 orders\n\n` +
-    `Reply *0* to go back to main menu`;
-  
-  if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
-  await deps.sendMessage(tenantId, phone, message);
+  // Directly show recent orders instead of asking for order number
+  await showRecentOrders(tenantId, phone, deps);
 }
 
 /**
- * Handle order status lookup
+ * Handle order status lookup - can look up by order number or refresh recent orders
  */
 export async function handleOrderStatusLookup(
   tenantId: string,
@@ -56,15 +50,15 @@ export async function handleOrderStatusLookup(
   
   const input = userInput.trim().toUpperCase();
   
-  // Handle "RECENT" request
-  if (input === 'RECENT') {
-    await showRecentOrders(tenantId, phone, deps);
+  // If user types an order number (starts with ORD- or looks like order ID)
+  if (input.startsWith('ORD-') || input.match(/^\d{10,}$/)) {
+    const orderId = input.startsWith('ORD-') ? input : `ORD-${input}`;
+    await lookupOrderById(tenantId, phone, orderId, deps);
     return;
   }
   
-  // Handle order number lookup
-  const orderId = input.startsWith('ORD-') ? input : `ORD-${input}`;
-  await lookupOrderById(tenantId, phone, orderId, deps);
+  // Otherwise, show recent orders again (refresh)
+  await showRecentOrders(tenantId, phone, deps);
 }
 
 /**
@@ -163,8 +157,9 @@ async function showRecentOrders(
       message += `   Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
     });
     
-    message += `Reply with a number (1-${ordersSnap.docs.length}) to see details,\n` +
-      `or *0* for main menu`;
+    message += `Reply with a number (1-${ordersSnap.docs.length}) to see details,\n`;
+    message += `or type an Order Number (e.g., ORD-1234567890) to search\n`;
+    message += `or *0* for main menu`;
     
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, message);
