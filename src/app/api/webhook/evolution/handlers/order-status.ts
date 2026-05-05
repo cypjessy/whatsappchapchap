@@ -102,7 +102,7 @@ async function lookupOrderById(
         phone,
         `❌ Order *${orderId}* not found.\n\n` +
         `Please check the order number and try again.\n\n` +
-        `💡 Type *RECENT* to see your recent orders, or *0* for main menu`
+        `💡 Type *RECENT* to see your recent orders, or *0️⃣* for main menu`
       );
       return;
     }
@@ -153,7 +153,7 @@ async function showRecentOrders(
         phone,
         `📦 *No Orders Found*\n\n` +
         `You haven't placed any orders yet.\n\n` +
-        `Reply *1* to browse products or *0* for main menu`
+        `Reply *1* to browse products or *0️* for main menu`
       );
       return;
     }
@@ -218,7 +218,7 @@ async function showRecentOrders(
       message += `or *NEXT* to view more orders\n`;
     }
     
-    message += `or *0* for main menu`;
+    message += `or *0️⃣* for main menu`;
     
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, message);
@@ -373,7 +373,7 @@ export async function handleOrderStatusSelection(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Invalid selection. Please reply with a number from 1-${recentOrders.length}, or *0* for main menu.`
+      `❌ Invalid selection. Please reply with a number from 1-${recentOrders.length}, or *0️⃣* for main menu.`
     );
     return;
   }
