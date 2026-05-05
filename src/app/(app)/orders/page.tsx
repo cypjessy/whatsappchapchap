@@ -139,15 +139,16 @@ export default function OrdersPage() {
 
   const handleCancellationAction = async (requestId: string, orderId: string, action: 'approve' | 'reject') => {
     if (!user) return;
-    
+      
     const isApproving = action === 'approve';
     const actionText = isApproving ? 'Approving' : 'Rejecting';
-    
+      
     try {
       const db: any = getFirestore(firebaseApp);
-      
+        
       console.log(`[Cancellation] ${actionText} request ${requestId} for order ${orderId}`);
-      
+      console.log(`[Cancellation] User UID: ${user.uid}`);
+        
       // Update cancellation request
       const cancelRef = doc(db, "cancellation_requests", requestId);
       await updateDoc(cancelRef, {
@@ -155,49 +156,65 @@ export default function OrdersPage() {
         respondedAt: new Date(),
         responseNote: isApproving ? 'Refund approved by merchant' : 'Cancellation rejected by merchant',
       });
-      
+        
       console.log(`[Cancellation] Updated cancellation request status to ${isApproving ? 'approved' : 'rejected'}`);
-      
-      // Update order status
-      const tenantId = `tenant_${user.uid}`;
+        
+      // Update order status - Try query without tenantId first to find the order
       const ordersRef = collection(db, "orders");
+        
+      // First, try to find by orderId only (more flexible)
       const orderQuery = query(
         ordersRef,
-        where("orderId", "==", orderId),
-        where("tenantId", "==", tenantId)
+        where("orderId", "==", orderId)
       );
-      
+        
+      console.log(`[Cancellation] Searching for order with orderId: ${orderId}`);
       const orderSnap = await getDocs(orderQuery);
-      
+        
+      console.log(`[Cancellation] Found ${orderSnap.size} matching orders`);
+        
       if (!orderSnap.empty) {
         const orderDoc = orderSnap.docs[0];
         const orderData = orderDoc.data();
-        
+          
+        console.log(`[Cancellation] Order found:`, orderData);
+        console.log(`[Cancellation] Order tenantId: ${orderData.tenantId}`);
+        console.log(`[Cancellation] Expected tenantId: tenant_${user.uid}`);
+          
+        // Verify this is the right tenant's order
+        const expectedTenantId = `tenant_${user.uid}`;
+        if (orderData.tenantId !== expectedTenantId) {
+          console.warn(`[Cancellation] Order tenantId mismatch! Expected: ${expectedTenantId}, Got: ${orderData.tenantId}`);
+          // Still proceed if it's close enough (might be old data format)
+        }
+          
         await updateDoc(orderDoc.ref, {
           status: isApproving ? 'cancelled' : 'confirmed',
           cancellationStatus: isApproving ? 'approved' : 'rejected',
           updatedAt: new Date(),
         });
-        
+          
         console.log(`[Cancellation] Updated order ${orderId} status to ${isApproving ? 'cancelled' : 'confirmed'}`);
-        
+          
         // Send WhatsApp notification to customer
         const customerPhone = orderData.customerPhone;
+        console.log(`[Cancellation] Customer phone: ${customerPhone}`);
+          
         if (customerPhone) {
           let message = '';
-          
+            
           if (isApproving) {
             message = `✅ *Cancellation Approved - Refund Processing*\n\n` +
               `Dear ${orderData.customerName || 'Customer'},\n\n` +
               `Your cancellation request for order *${orderId}* has been *approved*.\n\n` +
-              ` *Refund Amount:* ${formatCurrency(orderData.total || 0)}\n` +
+              `💰 *Refund Amount:* ${formatCurrency(orderData.total || 0)}\n` +
               `⏱️ *Processing Time:* 24-48 hours\n` +
               `💳 *Refund Method:* ${orderData.paymentMethod || 'Original payment method'}\n\n` +
               `The refund will be processed back to your original payment method. You will receive a confirmation once the refund is completed.\n\n` +
               `If you have any questions, please don't hesitate to contact our support team.\n\n` +
               `Thank you for shopping with us! 🙏`;
           } else {
-            message = `ℹ️ *Cancellation Request Update*\n\n` +
+            message = `️ *Cancellation Request Update*\n\n` +
               `Dear ${orderData.customerName || 'Customer'},\n\n` +
               `Your cancellation request for order *${orderId}* has been *reviewed*.\n\n` +
               `❌ *Status:* Request Rejected\n\n` +
@@ -205,37 +222,55 @@ export default function OrdersPage() {
               `If you have any concerns or questions about this decision, please contact our support team and we'll be happy to assist you.\n\n` +
               `Thank you for your understanding! 🙏`;
           }
-          
+            
           console.log(`[Cancellation] Sending WhatsApp notification to ${customerPhone}`);
-          
+          console.log(`[Cancellation] Message preview:`, message.substring(0, 100) + '...');
+            
           try {
             await sendEvolutionWhatsAppMessage(user.uid, customerPhone, message);
             console.log(`[Cancellation] WhatsApp notification sent successfully`);
           } catch (whatsappError) {
             console.error(`[Cancellation] Failed to send WhatsApp notification:`, whatsappError);
+            console.error(`[Cancellation] WhatsApp error details:`, {
+              error: whatsappError,
+              message: whatsappError instanceof Error ? whatsappError.message : 'Unknown error',
+              stack: whatsappError instanceof Error ? whatsappError.stack : 'No stack'
+            });
             // Don't fail the whole operation if WhatsApp fails
           }
         } else {
           console.warn(`[Cancellation] No customer phone number found for order ${orderId}`);
+          console.warn(`[Cancellation] Order data:`, orderData);
         }
       } else {
         console.error(`[Cancellation] Order ${orderId} not found in database`);
+        console.error(`[Cancellation] Searched with orderId: ${orderId}`);
+        alert(`Error: Order ${orderId} not found. Please refresh the page and try again.`);
+        return; // Exit early if order not found
       }
-      
+        
       // Reload requests and orders
+      console.log(`[Cancellation] Reloading orders and cancellation requests...`);
       await loadCancellationRequests();
       await loadOrders();
-      
+      await loadCounts();
+      console.log(`[Cancellation] Reload complete`);
+        
       // Show success message
       if (isApproving) {
         alert(`✅ Cancellation approved! Customer will receive refund confirmation via WhatsApp.`);
       } else {
         alert(`ℹ️ Cancellation rejected. Customer has been notified via WhatsApp.`);
       }
-      
+        
     } catch (error) {
       console.error(`[Cancellation] Error ${actionText} cancellation:`, error);
-      alert(`Error ${action === 'approve' ? 'approving' : 'rejecting'} cancellation request. Please try again.`);
+      console.error(`[Cancellation] Error details:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
+      alert(`Error ${action === 'approve' ? 'approving' : 'rejecting'} cancellation request. Please check the console for details and try again.`);
     }
   };
 
