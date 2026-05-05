@@ -333,6 +333,7 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   }
 }
 
+// FIXED: Updated menu with Search option (now 1-6)
 async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   
@@ -364,7 +365,15 @@ async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
     welcomeText = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?`;
   }
   
-  const menuMsg = `${welcomeText}\n\n1️⃣ Browse Products\n2️⃣ Browse Services\n3️⃣ Check Order Status\n4️⃣ Payment Info\n5️⃣ Talk to Support${cartNote}\n\n*Reply with a number (1-5)*`;
+  // FIXED: Added Search as option 3, shifted others to 4-6
+  const menuMsg = `${welcomeText}\n\n` +
+    `1️⃣ Browse Products\n` +
+    `2️⃣ Browse Services\n` +
+    `3️⃣ 🔍 Search Products\n` +
+    `4️⃣ Check Order Status\n` +
+    `5️⃣ Payment Info\n` +
+    `6️⃣ Talk to Support${cartNote}\n\n` +
+    `*Reply with a number (1-6)*`;
   
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, menuMsg);
@@ -405,12 +414,13 @@ async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
     }, { merge: true });
 }
 
+// FIXED: Updated to handle 1-6 menu options
 function parseMenuSelection(message: string): number | null {
   const trimmed = message.trim();
   const wordCount = trimmed.split(/\s+/).length;
   
   const num = parseInt(trimmed);
-  if (!isNaN(num) && num >= 1 && num <= 5) {
+  if (!isNaN(num) && num >= 1 && num <= 6) {
     return num;
   }
   
@@ -418,14 +428,48 @@ function parseMenuSelection(message: string): number | null {
     const lower = trimmed.toLowerCase();
     if (lower === 'products' || lower === 'browse' || lower === 'product') return 1;
     if (lower === 'services' || lower === 'service') return 2;
-    if (lower === 'order' || lower === 'orders' || lower === 'track') return 3;
-    if (lower === 'payment' || lower === 'payments' || lower === 'pay') return 4;
-    if (lower === 'support' || lower === 'help') return 5;
+    if (lower === 'search' || lower === 'find') return 3;
+    if (lower === 'order' || lower === 'orders' || lower === 'track') return 4;
+    if (lower === 'payment' || lower === 'payments' || lower === 'pay') return 5;
+    if (lower === 'support' || lower === 'help') return 6;
   }
   
   return null;
 }
 
+// NEW: Start search flow function
+async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
+  const response = `🔍 *Product Search*\n\n` +
+    `Please type the product you're looking for.\n\n` +
+    `📝 *Examples:*\n` +
+    `• "asus laptop"\n` +
+    `• "red dress"\n` +
+    `• "iPhone 14"\n\n` +
+    `0️⃣ - Back to main menu`;
+  
+  await stopTypingIndicator(tenantId, phone);
+  await sendEvolutionMessage(tenantId, phone, response);
+  
+  const adminDb = getAdminDb();
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'search_prompt',
+        currentStep: 'waiting_for_search_term',
+        startedAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
+}
+
+// FIXED: Updated handleMenuSelection with case 3 for search
 async function handleMenuSelection(tenantId: string, phone: string, selection: number): Promise<void> {
   switch (selection) {
     case 1:
@@ -437,14 +481,18 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       await startServiceBrowseFlow(tenantId, phone);
       break;
     case 3:
+      debugLog("[Webhook] Starting search flow");
+      await startSearchFlow(tenantId, phone);
+      break;
+    case 4:
       debugLog("[Webhook] Order status requested");
       await sendOrderStatusInfo(tenantId, phone);
       break;
-    case 4:
+    case 5:
       debugLog("[Webhook] Payment info requested");
       await sendPaymentInfo(tenantId, phone);
       break;
-    case 5:
+    case 6:
       debugLog("[Webhook] Support requested");
       await sendSupportInfo(tenantId, phone);
       break;
@@ -559,6 +607,7 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
     }, { merge: true });
 }
 
+// FIXED: Updated handleFlowInput to handle search_prompt flow
 async function handleFlowInput(
   tenantId: string,
   phone: string,
@@ -592,8 +641,38 @@ async function handleFlowInput(
         return;
       }
     }
+    // NEW: Handle back from search prompt
+    if (flowName === 'search_prompt') {
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
     await sendEvolutionMessage(tenantId, phone, "⬅️ Back option not available in this flow. Reply *MENU* to return to main menu.");
     return;
+  }
+  
+  // NEW: Handle search prompt flow
+  if (flowName === 'search_prompt') {
+    if (currentStep === 'waiting_for_search_term') {
+      const trimmed = message.trim();
+      
+      if (trimmed === '0') {
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      }
+      
+      if (trimmed.length < 2) {
+        await sendEvolutionMessage(tenantId, phone, 
+          "❌ Please enter a valid search term (at least 2 characters).\n\n" +
+          "Example: 'laptop', 'red shoes', 'iPhone'\n\n" +
+          "Or reply *0* to go back."
+        );
+        return;
+      }
+      
+      // Perform the search
+      await handleProductSearch(tenantId, phone, trimmed);
+      return;
+    }
   }
   
   if (flowName === 'product_browse') {
@@ -1663,21 +1742,24 @@ async function setFlowState(
     .set({ flowState }, { merge: true });
 }
 
+// FIXED: Made search detection less aggressive since we have dedicated search option
 function checkIfSearchQuery(message: string): boolean {
   const lowerMsg = message.toLowerCase().trim();
   
+  // Only trigger automatic search for explicit search patterns
   const searchPatterns = [
-    /looking for/i,
-    /searching for/i,
-    /want to buy/i,
-    /need to buy/i,
-    /do you have/i,
-    /show me/i,
-    /\bfind\b/i,
-    /i want/i,
-    /i need/i,
-    /can i get/i,
+    /^looking for\s+/i,
+    /^searching for\s+/i,
+    /^i want (a|an)?\s+/i,
+    /^i need (a|an)?\s+/i,
+    /^do you have\s+/i,
+    /\bsearch for\b/i,
   ];
+  
+  // Don't auto-search for short messages or menu commands
+  if (lowerMsg.length <= 3) return false;
+  if (lowerMsg === 'menu' || lowerMsg === 'back' || lowerMsg === 'help' || lowerMsg === '0') return false;
+  if (/^\d+$/.test(lowerMsg)) return false; // Don't treat numbers as search
   
   return searchPatterns.some(pattern => pattern.test(lowerMsg));
 }
@@ -1711,18 +1793,19 @@ async function handleProductSearch(
     }
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout for faster non-AI search
     
-    debugLog(`[Webhook] Calling /api/ai-search with tenantId: ${tenantId}, term: "${searchTerm}"`);
+    debugLog(`[Webhook] Calling /api/product-search with tenantId: ${tenantId}, term: "${searchTerm}"`);
     
     let searchResponse;
     try {
-      searchResponse = await fetch(`${baseUrl}/api/ai-search`, {
+      searchResponse = await fetch(`${baseUrl}/api/product-search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          searchQuery: searchTerm,
+          query: searchTerm, // Changed from searchQuery to query
           tenantId: tenantId,
+          limit: 20 // Get more results for pagination
         }),
         signal: controller.signal,
       });
@@ -1811,8 +1894,7 @@ async function handleProductSearch(
       flowName: 'product_search',
       currentStep: 'search_results',
       searchQuery: searchTerm,
-      enhancedQueries: searchData.enhancedQueries || [],
-      allResults: searchData.results || [],
+      allResults: searchData.results || [], // Removed enhancedQueries since non-AI search doesn't return it
       currentIndex: 0,
       isActive: true,
       lastActivity: new Date().toISOString(),
@@ -1977,7 +2059,7 @@ async function processWithAI(
             debugLog("[Webhook] Invalid main menu input:", message);
             await stopTypingIndicator(tenantId, phone);
             await sendEvolutionMessage(tenantId, phone, 
-              "Please reply with a number *1-5* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Check Order Status\n4 Payment Info\n5 Talk to Support"
+              "Please reply with a number *1-6* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Check Order Status\n5 Payment Info\n6 Talk to Support"
             );
           }
         }

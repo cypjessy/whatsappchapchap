@@ -618,7 +618,7 @@ export default function CheckoutPage() {
         <div style={{ width: 40 }}></div>
       </div>
 
-      <div className="checkout-main-container" style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
+      <div className="checkout-main-container" style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 0 24px" }}>
         <div className="checkout-grid" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 24 }}>
           {/* Left Column - Checkout Form */}
           <div>
@@ -1048,6 +1048,12 @@ export default function CheckoutPage() {
           .checkout-main-container {
             padding: 0 !important;
             max-width: 100% !important;
+          }
+          .checkout-search-container {
+            padding: 12px 16px !important;
+          }
+          .checkout-search-input {
+            font-size: 16px !important;
           }
           .checkout-grid {
             grid-template-columns: 1fr !important;
