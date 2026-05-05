@@ -148,6 +148,7 @@ async function showRecentOrders(
       console.log(`[OrderStatus] Order ${idx} fields:`, Object.keys(order));
       console.log(`[OrderStatus] Order ${idx} data:`, JSON.stringify(order, null, 2));
       
+      const orderId = order.orderId || order.orderNumber || doc.id;
       const statusEmoji = getStatusEmoji(order.status);
       const date = order.createdAt?.toDate 
         ? order.createdAt.toDate().toLocaleDateString('en-US', { 
@@ -157,10 +158,24 @@ async function showRecentOrders(
           })
         : 'N/A';
       
-      message += `${idx + 1}️⃣ *${order.orderId || order.orderNumber || doc.id}*\n`;
+      message += `${idx + 1}️ *${orderId}*\n`;
       message += `    ${date}\n`;
+      
+      // Show product details if available
+      if (order.items && order.items.length > 0) {
+        order.items.forEach((item: any) => {
+          const productName = item.name || item.productName || 'Product';
+          const variant = item.variant || item.selectedOptions || '';
+          const quantity = item.quantity || 1;
+          
+          message += `   📦 ${productName}`;
+          if (variant) message += ` (${variant})`;
+          message += ` x${quantity}\n`;
+        });
+      }
+      
       message += `   💰 KES ${order.total?.toLocaleString() || 0}\n`;
-      message += `   Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
+      message += `   📊 Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
     });
     
     message += `Reply with a number (1-${ordersSnap.docs.length}) to see details,\n`;
