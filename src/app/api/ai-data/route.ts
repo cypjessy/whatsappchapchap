@@ -33,29 +33,55 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "tenantId required" }, { status: 400 });
   }
 
+  // SECURITY: Verify API key or session token (implement based on your auth strategy)
+  const apiKey = req.headers.get("x-api-key");
+  if (!apiKey || apiKey !== process.env.AI_DATA_API_KEY) {
+    console.warn(`[AI Data] Unauthorized access attempt for tenant ${tenantId}`);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const db = getAdminDb();
   
-  // Build products query
-  let productsQuery = db.collection("products").where("tenantId", "==", tenantId);
+  // Build products query - ONLY active products
+  let productsQuery = db
+    .collection("products")
+    .where("tenantId", "==", tenantId)
+    .where("status", "==", "active"); // Filter out drafts/archived
+  
   if (category && category !== "all") {
     productsQuery = productsQuery.where("category", "==", category);
   }
   
-  const [settingsSnap, productsSnap, customersSnap, ordersSnap, reviewsSnap, campaignsSnap, inventorySnap] = await Promise.all([
+  const [settingsSnap, productsSnap, customersSnap, ordersSnap, reviewsSnap, campaignsSnap] = await Promise.all([
     db.collection("settings").doc(tenantId).get(),
     productsQuery.get(),
-    db.collection("customers").where("tenantId", "==", tenantId).get(),
-    db.collection("orders").where("tenantId", "==", tenantId).limit(50).get(),
+    db.collection("customers").where("tenantId", "==", tenantId).limit(100).get(), // Limit to prevent huge payloads
+    db.collection("orders").where("tenantId", "==", tenantId).orderBy("createdAt", "desc").limit(50).get(),
     db.collection("reviews").where("tenantId", "==", tenantId).limit(20).get(),
-    db.collection("campaigns").where("tenantId", "==", tenantId).get(),
-    db.collection("inventory").where("tenantId", "==", tenantId).get(),
+    db.collection("campaigns").where("tenantId", "==", tenantId).limit(20).get(), // Limit campaigns
   ]);
 
   let messages: any[] = [];
   if (phone) {
-    const phoneNum = phone.replace("@s.whatsapp.net", "");
-    const messagesSnap = await db.collection("tenants").doc(tenantId).collection("conversations").doc(phoneNum).collection("messages").limit(20).get();
-    messages = messagesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Handle various JID formats: user@s.whatsapp.net, user:39@s.whatsapp.net, etc.
+    const phoneNum = phone.replace(/:\d+@s\.whatsapp\.net$/, "").replace("@s.whatsapp.net", "");
+    
+    try {
+      const messagesSnap = await db
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phoneNum)
+        .collection("messages")
+        .orderBy("timestamp", "desc") // Get most recent first
+        .limit(20)
+        .get();
+      
+      messages = messagesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.warn(`[AI Data] Failed to fetch messages for ${phoneNum}:`, error);
+      // Don't fail entire request if messages unavailable
+    }
   }
 
   const settingsData = (settingsSnap as any).exists() ? (settingsSnap as any).data() : null;
@@ -90,11 +116,10 @@ export async function GET(req: NextRequest) {
     return {
       id: d.id,
       name: data.name,
-      description: data.description,
+      description: data.description, // Use raw description (aiDescription is for internal AI context only)
       category,
       subcategory: data.subcategory,
       images: data.images,
-      aiDescription,
       pricing,
       inventory,
       specifications,
@@ -116,11 +141,24 @@ export async function GET(req: NextRequest) {
     productsByCategory[cat].push(product);
   });
 
-  // Get available categories list
-  const availableCategories = Object.keys(productsByCategory).map(cat => ({
+  // Get ALL available categories from product data (not just filtered)
+  // This ensures dashboard sidebar shows all categories even when filtering
+  const allProductsForCategories = await db
+    .collection("products")
+    .where("tenantId", "==", tenantId)
+    .where("status", "==", "active")
+    .get();
+  
+  const allCategoriesCount: Record<string, number> = {};
+  allProductsForCategories.docs.forEach(doc => {
+    const cat = doc.data().category || "other";
+    allCategoriesCount[cat] = (allCategoriesCount[cat] || 0) + 1;
+  });
+  
+  const availableCategories = Object.keys(allCategoriesCount).map(cat => ({
     id: cat,
     name: cat.charAt(0).toUpperCase() + cat.slice(1),
-    productCount: productsByCategory[cat].length,
+    productCount: allCategoriesCount[cat],
   }));
 
   // Get product category hierarchy from productCategories collection (filtered by tenant)
@@ -144,7 +182,6 @@ export async function GET(req: NextRequest) {
   const ordersData = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const reviewsData = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const campaignsData = campaignsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const inventoryData = inventorySnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   return NextResponse.json({
     settings: settingsData,
@@ -156,7 +193,6 @@ export async function GET(req: NextRequest) {
     orders: ordersData,
     reviews: reviewsData,
     campaigns: campaignsData,
-    inventory: inventoryData,
     messages,
   });
 }
@@ -226,11 +262,6 @@ function buildProductDescription(product: any): string {
   // Weight
   if (product.weight) {
     parts.push(`Weight: ${product.weight} ${product.weightUnit || "kg"}`);
-  }
-  
-  // SKU
-  if (product.sku) {
-    parts.push(`SKU: ${product.sku}`);
   }
   
   return parts.join(". ") + ".";
