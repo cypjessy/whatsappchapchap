@@ -3,6 +3,7 @@ import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { generateAIResponse, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
+import { shortenUrl } from "@/lib/url-shortener";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -720,7 +721,8 @@ async function handleFlowInput(
       
       const selectedProduct = similarProducts[num - 1];
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
-      const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${selectedProduct.id}&phone=${phone}`;
+      const longOrderLink = `${baseUrl}/order?tenant=${tenantId}&product=${selectedProduct.id}&phone=${phone}`;
+      const orderLink = await shortenUrl(longOrderLink);
       
       let productDetails = `🔍 *You selected:*\n\n`;
       productDetails += `*${selectedProduct.name}*\n`;
@@ -856,8 +858,9 @@ async function handleProductSearchInput(
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
-        const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
-        productText += `   🛒 Order: ${orderLink}\n\n`;
+        const longOrderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+        const orderLink = await shortenUrl(longOrderLink);
+        productText += `    Order: ${orderLink}\n\n`;
 
         if (imageUrl) {
           await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
@@ -2120,8 +2123,9 @@ async function handleProductSearch(
         productText += `   📂 Category: ${product.category || product.categoryName}\n`;
       }
 
-      // Order link
-      const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+      // Order link (shortened)
+      const longOrderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+      const orderLink = await shortenUrl(longOrderLink);
       productText += `   🛒 Order: ${orderLink}\n`;
 
       // Send image with caption
