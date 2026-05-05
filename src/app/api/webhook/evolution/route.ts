@@ -8,6 +8,7 @@ import {
   startOrderStatusFlow, 
   handleOrderStatusLookup,
   handleOrderStatusSelection,
+  handleOrderCancellation,
   type OrderStatusDeps 
 } from "./handlers/order-status";
 
@@ -704,7 +705,7 @@ async function handleFlowInput(
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
-    if (flowName === 'order_status_lookup' || flowName === 'order_status_selection') {
+    if (flowName === 'order_status_lookup' || flowName === 'order_status_selection' || flowName === 'order_cancellation') {
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
@@ -813,6 +814,16 @@ async function handleFlowInput(
       stopTyping: stopTypingIndicator
     };
     await handleOrderStatusSelection(tenantId, phone, message, flowState, deps);
+    return;
+  }
+  
+  if (flowName === 'order_cancellation') {
+    const deps: OrderStatusDeps = { 
+      sendMessage: sendEvolutionMessage,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator
+    };
+    await handleOrderCancellation(tenantId, phone, message, flowState, deps);
     return;
   }
   

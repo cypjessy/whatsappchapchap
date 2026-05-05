@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMode } from "@/context/ModeContext";
 
 interface SidebarProps {
@@ -21,6 +21,7 @@ type NavItem = {
 
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   // Start collapsed on desktop, expanded only when isExpanded prop is true (mobile drawer)
   const [localCollapsed, setLocalCollapsed] = useState(true);
   const { mode, toggleMode } = useMode();
@@ -78,7 +79,11 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
         
         {/* Mode Toggle Switch */}
         <button
-          onClick={toggleMode}
+          onClick={() => {
+            toggleMode();
+            // Navigate to dashboard after mode switch
+            router.push('/dashboard');
+          }}
           className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition-all ${
             isCollapsed ? "flex-col" : ""
           } ${mode === "product" ? "bg-[#f0fdf4] hover:bg-[#dcfce7]" : "bg-[#fef3c7] hover:bg-[#fde68a]"}`}

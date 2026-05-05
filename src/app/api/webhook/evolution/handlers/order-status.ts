@@ -339,21 +339,50 @@ async function sendOrderDetails(
   }
   
   message += `\n━━━━━━━━━━━━━━━\n`;
-  message += `Reply *0* for main menu`;
+  
+  // Only show cancel option for orders that can be cancelled
+  const cancellableStatuses = ['pending', 'processing', 'confirmed'];
+  const canCancel = cancellableStatuses.includes(orderData.status?.toLowerCase());
+  
+  if (canCancel) {
+    message += `Reply *CANCEL* to request cancellation & refund\n`;
+  }
+  
+  message += `or *0* for main menu`;
   
   if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, message);
   
-  // Clear flow state
+  // Store flow state for cancellation option (only if order can be cancelled)
   const db = getDb();
-  await db
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .set({
-      flowState: FieldValue.delete()
-    }, { merge: true });
+  
+  if (canCancel) {
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          flowName: 'order_cancellation',
+          currentStep: 'waiting_for_cancel_confirm',
+          currentOrderId: orderId,
+          orderData: orderData,
+          isActive: true,
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  } else {
+    // Clear any existing flow state
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
+  }
 }
 
 /**
@@ -406,4 +435,133 @@ function getStatusEmoji(status: string): string {
 function capitalizeFirst(str: string): string {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
+}
+
+/**
+ * Handle order cancellation request
+ */
+export async function handleOrderCancellation(
+  tenantId: string,
+  phone: string,
+  userInput: string,
+  flowState: any,
+  deps: OrderStatusDeps
+): Promise<void> {
+  if (deps.startTyping) await deps.startTyping(tenantId, phone);
+  
+  const input = userInput.trim().toUpperCase();
+  
+  // User confirmed cancellation
+  if (input === 'YES' || input === 'CONFIRM') {
+    await processCancellation(tenantId, phone, flowState, deps);
+    return;
+  }
+  
+  // User cancelled the cancellation
+  if (input === 'NO' || input === '0') {
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `✅ Cancellation request cancelled.\n\nReply *0* for main menu`
+    );
+    
+    // Clear flow state
+    const db = getDb();
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
+    return;
+  }
+  
+  // Invalid response - ask again
+  if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+  await deps.sendMessage(
+    tenantId,
+    phone,
+    `❌ Please reply *YES* to confirm cancellation or *NO* to keep your order.\n\nReply *0* for main menu`
+  );
+}
+
+/**
+ * Process the actual cancellation and create request for tenant
+ */
+async function processCancellation(
+  tenantId: string,
+  phone: string,
+  flowState: any,
+  deps: OrderStatusDeps
+): Promise<void> {
+  try {
+    const db = getDb();
+    const orderId = flowState.currentOrderId;
+    const orderData = flowState.orderData;
+    
+    console.log(`[OrderCancel] Processing cancellation for order: ${orderId}`);
+    
+    // Create cancellation request in Firestore
+    await db
+      .collection("cancellation_requests")
+      .add({
+        tenantId,
+        orderId,
+        customerPhone: phone,
+        orderData,
+        status: 'pending', // pending, approved, rejected
+        reason: 'Customer requested cancellation',
+        requestedAt: FieldValue.serverTimestamp(),
+        respondedAt: null,
+        responseNote: null,
+      });
+    
+    // Update order status to cancellation_requested
+    const orderQuery = await db
+      .collection("orders")
+      .where("orderId", "==", orderId)
+      .where("tenantId", "==", tenantId)
+      .get();
+    
+    if (!orderQuery.empty) {
+      const orderDoc = orderQuery.docs[0];
+      await orderDoc.ref.update({
+        status: 'cancellation_requested',
+        cancellationRequestedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `✅ *Cancellation Request Submitted*\n\n` +
+      `Your cancellation request for order *${orderId}* has been submitted.\n\n` +
+      `Our team will review your request and process the refund within 24-48 hours.\n\n` +
+      `You will receive a confirmation once the refund is processed.\n\n` +
+      `Reply *0* for main menu`
+    );
+    
+    // Clear flow state
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
+    
+  } catch (error) {
+    console.error('[OrderCancel] Error processing cancellation:', error);
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Error processing cancellation request. Please try again or contact support.\n\nReply *0* for main menu`
+    );
+  }
 }

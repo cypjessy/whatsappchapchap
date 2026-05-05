@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { orderService, Order, OrderStatus, productService, Product, customerService, Customer, tenantService } from "@/lib/db";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { app as firebaseApp } from "@/lib/firebase";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, collection, query, where, orderBy, getDocs, updateDoc } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
 import { getWhatsAppPhone, normalizePhone, createWhatsAppJid, isValidWhatsAppPhone } from "@/utils/phoneUtils";
@@ -15,7 +15,8 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [counts, setCounts] = useState({ all: 0, pending: 0, processing: 0, completed: 0, cancelled: 0 });
+  const [cancellationRequests, setCancellationRequests] = useState<any[]>([]);
+  const [counts, setCounts] = useState({ all: 0, pending: 0, processing: 0, completed: 0, cancelled: 0, cancellations: 0 });
   const [loading, setLoading] = useState(true);
   const [activeStatus, setActiveStatus] = useState("all");
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
@@ -58,6 +59,7 @@ export default function OrdersPage() {
     loadCounts();
     loadProducts();
     loadCustomers();
+    loadCancellationRequests();
   }, [user, activeStatus]);
 
   const loadOrders = async () => {
@@ -77,8 +79,8 @@ export default function OrdersPage() {
   const loadCounts = async () => {
     if (!user) return;
     try {
-      const data = await orderService.getOrderCounts(user);
-      setCounts(data);
+      const data: any = await orderService.getOrderCounts(user);
+      setCounts({ ...data, cancellations: data.cancellations || 0 });
     } catch (error) {
       console.error("Error loading counts:", error);
     }
@@ -101,6 +103,79 @@ export default function OrdersPage() {
       setCustomers(data);
     } catch (error) {
       console.error("Error loading customers:", error);
+    }
+  };
+
+  const loadCancellationRequests = async () => {
+    if (!user) return;
+    try {
+      const db: any = getFirestore(firebaseApp);
+      const q = query(
+        collection(db, "cancellation_requests"),
+        where("tenantId", "==", user.uid),
+        where("status", "==", "pending"),
+        orderBy("requestedAt", "desc")
+      );
+      
+      const snap = await getDocs(q);
+      const requests = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+      setCancellationRequests(requests);
+      setCounts(prev => ({ ...prev, cancellations: requests.length }));
+    } catch (error) {
+      console.error("Error loading cancellation requests:", error);
+    }
+  };
+
+  const handleCancellationAction = async (requestId: string, orderId: string, action: 'approve' | 'reject') => {
+    if (!user) return;
+    try {
+      const db: any = getFirestore(firebaseApp);
+      
+      // Update cancellation request
+      const cancelRef = doc(db, "cancellation_requests", requestId);
+      await updateDoc(cancelRef, {
+        status: action === 'approve' ? 'approved' : 'rejected',
+        respondedAt: new Date(),
+        responseNote: action === 'approve' ? 'Refund processed' : 'Cancellation rejected by merchant',
+      });
+      
+      // Update order status
+      const ordersRef = collection(db, "orders");
+      const orderQuery = query(
+        ordersRef,
+        where("orderId", "==", orderId),
+        where("tenantId", "==", user.uid)
+      );
+      
+      const orderSnap = await getDocs(orderQuery);
+      
+      if (!orderSnap.empty) {
+        const orderDoc = orderSnap.docs[0];
+        await updateDoc(orderDoc.ref, {
+          status: action === 'approve' ? 'cancelled' : 'confirmed',
+          cancellationStatus: action === 'approve' ? 'approved' : 'rejected',
+        });
+        
+        // Send WhatsApp notification to customer
+        const orderData = orderDoc.data();
+        const customerPhone = orderData.customerPhone;
+        if (customerPhone) {
+          const message = action === 'approve'
+            ? `✅ *Cancellation Approved*\n\nYour cancellation request for order *${orderId}* has been approved.\n\nRefund of ${formatCurrency(orderData.total || 0)} will be processed within 24-48 hours.\n\nThank you for your patience!`
+            : `❌ *Cancellation Rejected*\n\nYour cancellation request for order *${orderId}* has been rejected.\n\nIf you have any questions, please contact our support team.\n\nOrder will continue processing as normal.`;
+          
+          await sendEvolutionWhatsAppMessage(user.uid, customerPhone, message);
+        }
+      }
+      
+      // Reload requests
+      await loadCancellationRequests();
+      await loadOrders();
+      
+      alert(`Cancellation ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
+    } catch (error) {
+      console.error("Error handling cancellation:", error);
+      alert("Error processing cancellation request");
     }
   };
 
@@ -739,6 +814,59 @@ try {
           </div>
         </div>
       </div>
+
+      {/* Cancellation Requests Section */}
+      {cancellationRequests.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <i className="fas fa-exclamation-triangle text-red-500"></i>
+            <h2 className="text-lg font-bold text-[#1e293b]">Cancellation Requests ({cancellationRequests.length})</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {cancellationRequests.map((request: any) => (
+              <div key={request.id} className="bg-white border-2 border-red-200 rounded-xl p-4 hover:border-red-400 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="font-bold text-[#25D366] text-lg">{request.orderId}</div>
+                    <div className="text-xs text-[#64748b] mt-1">
+                      {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
+                    </div>
+                  </div>
+                  <span className="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">
+                    Pending
+                  </span>
+                </div>
+                
+                <div className="text-sm mb-3">
+                  <div className="text-[#64748b]">Customer: {request.customerPhone || 'N/A'}</div>
+                  <div className="font-bold text-[#1e293b] mt-1">
+                    Amount: {formatCurrency(request.orderData?.total || 0)}
+                  </div>
+                </div>
+                
+                <div className="text-xs text-[#64748b] mb-3">
+                  <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
+                    className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600 transition-colors"
+                  >
+                    <i className="fas fa-check mr-2"></i>Approve
+                  </button>
+                  <button
+                    onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
+                    className="flex-1 px-3 py-2 bg-red-500 text-white rounded-lg font-semibold text-sm hover:bg-red-600 transition-colors"
+                  >
+                    <i className="fas fa-times mr-2"></i>Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
         <div className="p-3 md:p-4 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
