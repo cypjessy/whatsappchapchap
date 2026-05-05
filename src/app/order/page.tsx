@@ -110,6 +110,12 @@ function OrderPageContent() {
   // Debounce ref for search
   const debounceRef = useRef<NodeJS.Timeout>();
   
+  // Search request ID to prevent race conditions
+  const searchRequestIdRef = useRef<number>(0);
+  
+  // Search container ref for click-outside detection
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  
   // Cart state
 
   const [cart, setCart] = useState<Array<{
@@ -136,7 +142,9 @@ function OrderPageContent() {
     setSearchQuery(searchTerm);
     
     // Clear previous debounce timer
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
     
     if (searchTerm.trim().length < 2) {
       setSearchResults([]);
@@ -146,6 +154,9 @@ function OrderPageContent() {
     
     // Debounce search by 400ms
     debounceRef.current = setTimeout(async () => {
+      // Increment request ID to track this specific search
+      const currentRequestId = ++searchRequestIdRef.current;
+      
       setIsSearching(true);
       
       try {
@@ -166,9 +177,12 @@ function OrderPageContent() {
         const data = await response.json();
         
         if (data.success) {
-          console.log('[AI Search] Enhanced queries:', data.enhancedQueries);
-          setSearchResults(data.results.slice(0, 10));
-          setShowSearchResults(true);
+          // Race condition check: only update if this is still the latest request
+          if (currentRequestId === searchRequestIdRef.current) {
+            console.log('[AI Search] Enhanced queries:', data.enhancedQueries);
+            setSearchResults(data.results.slice(0, 10));
+            setShowSearchResults(true);
+          }
         } else {
           throw new Error(data.error || 'Search failed');
         }
@@ -207,13 +221,19 @@ function OrderPageContent() {
           )
         );
         
-        setSearchResults(filtered.slice(0, 10));
-        setShowSearchResults(true);
+        // Race condition check for fallback search
+        if (currentRequestId === searchRequestIdRef.current) {
+          setSearchResults(filtered.slice(0, 10));
+          setShowSearchResults(true);
+        }
       } catch (fallbackErr) {
         console.error('Fallback search also failed:', fallbackErr);
       }
     } finally {
-      setIsSearching(false);
+      // Only set isSearching to false if this is still the latest request
+      if (currentRequestId === searchRequestIdRef.current) {
+        setIsSearching(false);
+      }
     }
     }, 400); // 400ms debounce
   };
@@ -229,6 +249,18 @@ function OrderPageContent() {
     setSearchResults([]);
     setShowSearchResults(false);
   };
+
+  // Click-outside handler to close search dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -700,8 +732,14 @@ function OrderPageContent() {
     
     if (!customerName.trim()) newErrors.name = true;
     if (!customerPhone.trim()) newErrors.phone = true;
+    
+    // Check if selected delivery method is pickup (by name, not ID)
+    const selectedDeliveryMethod = businessSettings?.shippingMethods?.find(m => m.id === deliveryMethod);
+    const isPickupMethod = selectedDeliveryMethod?.name.toLowerCase().includes('pickup') || 
+                          deliveryMethod.toLowerCase().includes('pickup');
+    
     // Only require pickup station if delivery method is pickup and stations are configured
-    if (deliveryMethod === 'pickup' && pickupStations.length > 0 && !selectedStation) {
+    if (isPickupMethod && pickupStations.length > 0 && !selectedStation) {
       newErrors.address = true;
     }
     
@@ -953,7 +991,7 @@ function OrderPageContent() {
 
         {/* Search Bar */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", background: "white", position: "sticky", top: 0, zIndex: 100 }}>
-          <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
+          <div ref={searchContainerRef} style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
             <input
               type="text"
               placeholder="🔍 Search products by name, category, brand..."
