@@ -90,6 +90,63 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
   }
 }
 
+// ============================================
+// FUZZY MATCHING HELPER (Levenshtein distance)
+// ============================================
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2): boolean {
+  if (!str || !searchTerm) return false;
+  
+  const strLower = str.toLowerCase();
+  const termLower = searchTerm.toLowerCase();
+  
+  // Exact match or contains
+  if (strLower.includes(termLower)) return true;
+  
+  // Check each word in the string against search term
+  const words = strLower.split(/\s+/);
+  for (const word of words) {
+    const distance = levenshteinDistance(word, termLower);
+    if (distance <= maxDistance && word.length > 3) {
+      return true;
+    }
+    // Also check if term is close to any word (e.g., "sundres" vs "sundress")
+    if (termLower.length > 3 && word.length > 3) {
+      const termDistance = levenshteinDistance(termLower, word);
+      if (termDistance <= maxDistance) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
 /**
  * Send typing indicator to show "..." in WhatsApp
  */
@@ -1804,7 +1861,7 @@ async function handleProductSearch(
       return;
     }
     
-    // Score products (same logic as order page)
+    // Score products with fuzzy matching (same logic as /api/product-search)
     const searchLower = searchTerm.toLowerCase();
     const allProducts = productsSnap.docs.map((doc: any) => ({
       id: doc.id,
@@ -1819,27 +1876,58 @@ async function handleProductSearch(
       const category = (product.category || product.categoryName || "").toLowerCase();
       const description = (product.description || "").toLowerCase();
       
-      // Name match (highest priority)
-      if (name.includes(searchLower)) {
+      // FUZZY NAME MATCH (for typos)
+      if (isFuzzyMatch(name, searchLower, 2)) {
         score += 100;
-        if (name.startsWith(searchLower)) {
-          score += 50;
-        }
       }
       
-      // Brand match
-      if (brand.includes(searchLower)) {
+      // EXACT NAME MATCH (Highest priority - 200 points)
+      if (name === searchLower) {
+        score += 200;
+      }
+      
+      // NAME STARTS WITH SEARCH TERM (150 points)
+      if (name.startsWith(searchLower)) {
+        score += 150;
+      }
+      
+      // NAME CONTAINS
+      if (name.includes(searchLower)) {
+        score += 20;
+      }
+      
+      // FUZZY BRAND MATCH
+      if (isFuzzyMatch(brand, searchLower, 2)) {
+        score += 50;
+      }
+      
+      // Brand exact match
+      if (brand === searchLower) {
+        score += 60;
+      } else if (brand.includes(searchLower)) {
         score += 40;
       }
       
-      // Category match
-      if (category.includes(searchLower)) {
+      // FUZZY CATEGORY MATCH
+      if (isFuzzyMatch(category, searchLower, 2)) {
+        score += 40;
+      }
+      
+      // Category exact match
+      if (category === searchLower) {
+        score += 50;
+      } else if (category.includes(searchLower)) {
         score += 30;
       }
       
       // Description match
       if (description.includes(searchLower)) {
-        score += 10;
+        score += 5;
+      }
+      
+      // FUZZY DESCRIPTION MATCH
+      if (isFuzzyMatch(description, searchLower, 3)) {
+        score += 15;
       }
       
       return { ...product, score };
