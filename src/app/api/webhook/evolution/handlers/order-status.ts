@@ -224,6 +224,18 @@ async function showRecentOrders(
     await deps.sendMessage(tenantId, phone, message);
     
     // Store flow state for selection with pagination info
+    const recentOrdersList = ordersSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        orderId: data.orderId || data.orderNumber || doc.id,
+        orderNumber: data.orderNumber || data.orderId || doc.id,
+        ...data
+      };
+    });
+    
+    console.log(`[OrderStatus] Storing ${recentOrdersList.length} orders in flow state`);
+    
     await db
       .collection("tenants")
       .doc(tenantId)
@@ -234,10 +246,7 @@ async function showRecentOrders(
           flowName: 'order_status_selection',
           currentStep: 'waiting_for_selection',
           orderPage: page,
-          recentOrders: ordersSnap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })),
+          recentOrders: recentOrdersList,
           isActive: true,
           lastActivity: new Date().toISOString(),
         }
@@ -398,7 +407,11 @@ export async function handleOrderStatusSelection(
   const num = parseInt(selection);
   const recentOrders = flowState.recentOrders || [];
   
+  console.log(`[OrderStatus] Selection: "${selection}", Num: ${num}, Recent orders: ${recentOrders.length}`);
+  console.log(`[OrderStatus] Flow state:`, JSON.stringify(flowState, null, 2));
+  
   if (isNaN(num) || num < 1 || num > recentOrders.length) {
+    console.log(`[OrderStatus] Invalid selection - num: ${num}, range: 1-${recentOrders.length}`);
     await deps.sendMessage(
       tenantId,
       phone,
@@ -409,6 +422,10 @@ export async function handleOrderStatusSelection(
   
   const selectedOrder = recentOrders[num - 1];
   const orderId = selectedOrder.orderId || selectedOrder.orderNumber || selectedOrder.id;
+  
+  console.log(`[OrderStatus] Selected order: ${orderId}, Order data:`, JSON.stringify(selectedOrder, null, 2));
+  
+  // Call sendOrderDetails to show full order with CANCEL option
   await sendOrderDetails(tenantId, phone, orderId, selectedOrder, deps);
 }
 
