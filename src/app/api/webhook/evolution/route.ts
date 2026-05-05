@@ -966,7 +966,7 @@ async function handleProductBrowseInput(
       
       if (trimmed === 'back' || num === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await sendWelcomeMenu(tenantId, phone);
+        await sendWelcomeMenu(tenantId, phone); // Changed from startProductBrowseFlow to main menu
         return;
       }
       
@@ -1035,7 +1035,7 @@ async function handleProductBrowseInput(
         return;
       } else if (trimmed === 'back' || num === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await startProductBrowseFlow(tenantId, phone);
+        await sendWelcomeMenu(tenantId, phone); // Changed from startProductBrowseFlow to main menu
         return;
       }
           
