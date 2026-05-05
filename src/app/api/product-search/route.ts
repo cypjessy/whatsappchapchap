@@ -3,7 +3,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // ============================================
-// CACHE CONFIGURATION (5 minutes TTL)
+// CACHE CONFIGURATION
 // ============================================
 interface CacheEntry {
   products: any[];
@@ -35,7 +35,64 @@ function getAdminDb() {
 }
 
 // ============================================
-// OPTIMIZED SCORING FUNCTION
+// FUZZY MATCHING HELPER (Levenshtein distance)
+// ============================================
+function levenshteinDistance(a: string, b: string): number {
+  const matrix = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2): boolean {
+  if (!str || !searchTerm) return false;
+  
+  const strLower = str.toLowerCase();
+  const termLower = searchTerm.toLowerCase();
+  
+  // Exact match or contains
+  if (strLower.includes(termLower)) return true;
+  
+  // Check each word in the string against search term
+  const words = strLower.split(/\s+/);
+  for (const word of words) {
+    const distance = levenshteinDistance(word, termLower);
+    if (distance <= maxDistance && word.length > 3) {
+      return true;
+    }
+    // Also check if term is close to any word (e.g., "sundres" vs "sundress")
+    if (termLower.length > 3 && word.length > 3) {
+      const termDistance = levenshteinDistance(termLower, word);
+      if (termDistance <= maxDistance) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+// ============================================
+// ENHANCED SCORING WITH FUZZY MATCHING
 // ============================================
 function scoreProduct(product: any, searchTerm: string): number {
   let score = 0;
@@ -46,6 +103,11 @@ function scoreProduct(product: any, searchTerm: string): number {
   const brand = (product.brand || "").toLowerCase();
   const category = (product.category || product.categoryName || "").toLowerCase();
   const description = (product.description || "").toLowerCase();
+  
+  // ===== FUZZY NAME MATCH (for typos) =====
+  if (isFuzzyMatch(name, term, 2)) {
+    score += 100;
+  }
   
   // ===== EXACT NAME MATCH (Highest priority - 200 points) =====
   if (name === term) {
@@ -79,6 +141,11 @@ function scoreProduct(product: any, searchTerm: string): number {
     score += 50;
   }
   
+  // ===== FUZZY BRAND MATCH =====
+  if (isFuzzyMatch(brand, term, 2)) {
+    score += 50;
+  }
+  
   // ===== BRAND MATCH (40-60 points) =====
   if (brand === term) {
     score += 60;
@@ -91,6 +158,11 @@ function scoreProduct(product: any, searchTerm: string): number {
         break;
       }
     }
+  }
+  
+  // ===== FUZZY CATEGORY MATCH =====
+  if (isFuzzyMatch(category, term, 2)) {
+    score += 40;
   }
   
   // ===== CATEGORY MATCH (30-50 points) =====
@@ -107,19 +179,24 @@ function scoreProduct(product: any, searchTerm: string): number {
     }
   }
   
-  // ===== DESCRIPTION MATCH (5 points per word - lowest priority) =====
+  // ===== DESCRIPTION MATCH (5 points per word) =====
   for (const word of termWords) {
     if (description.includes(word)) {
       score += 5;
     }
   }
   
-  // ===== STOCK AVAILABILITY BOOST (bonus for in-stock) =====
+  // ===== FUZZY DESCRIPTION MATCH =====
+  if (isFuzzyMatch(description, term, 3)) {
+    score += 15;
+  }
+  
+  // ===== STOCK AVAILABILITY BOOST =====
   if (product.stock > 0) {
     score += 5;
   }
   
-  // ===== SALE PRICE BOOST (bonus for discounted items) =====
+  // ===== SALE PRICE BOOST =====
   if (product.salePrice && product.salePrice < product.price) {
     score += 3;
   }
@@ -134,13 +211,11 @@ async function getCachedProducts(tenantId: string): Promise<any[]> {
   const now = Date.now();
   const cached = productsCache.get(tenantId);
   
-  // Return cached if still valid
   if (cached && (now - cached.timestamp) < CACHE_TTL) {
     console.log(`[Product Search] Cache hit for tenant ${tenantId} (${cached.products.length} products)`);
     return cached.products;
   }
   
-  // Fetch from Firestore
   const db = getAdminDb();
   console.log(`[Product Search] Cache miss - fetching from Firestore for tenant ${tenantId}`);
   
@@ -167,12 +242,7 @@ async function getCachedProducts(tenantId: string): Promise<any[]> {
     };
   });
   
-  // Cache the results
-  productsCache.set(tenantId, {
-    products,
-    timestamp: now,
-  });
-  
+  productsCache.set(tenantId, { products, timestamp: now });
   console.log(`[Product Search] Cached ${products.length} products for tenant ${tenantId}`);
   return products;
 }
@@ -187,7 +257,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { query, tenantId, limit = 20 } = body;
 
-    // Validation
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
         { success: false, error: "Search query is required", results: [], totalResults: 0 },
@@ -199,12 +268,7 @@ export async function POST(request: NextRequest) {
     
     if (trimmedQuery.length < 2) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "Search query must be at least 2 characters", 
-          results: [], 
-          totalResults: 0 
-        },
+        { success: false, error: "Search query must be at least 2 characters", results: [], totalResults: 0 },
         { status: 400 }
       );
     }
@@ -216,7 +280,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get products (with caching)
     const allProducts = await getCachedProducts(tenantId);
     
     if (allProducts.length === 0) {
@@ -228,7 +291,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Score all products
+    // Score all products with fuzzy matching
     const searchTerm = trimmedQuery.toLowerCase();
     const scoredResults = allProducts
       .map(product => ({
@@ -243,7 +306,6 @@ export async function POST(request: NextRequest) {
       return a.name.localeCompare(b.name);
     });
 
-    // Apply limit and remove score from response
     const limitedResults = scoredResults.slice(0, limit);
     const finalResults = limitedResults.map(({ score, ...rest }) => rest);
 
@@ -262,20 +324,14 @@ export async function POST(request: NextRequest) {
     console.error(`[Product Search] Error after ${duration}ms:`, error);
     
     return NextResponse.json(
-      { 
-        success: false, 
-        error: "Search failed. Please try again.",
-        results: [],
-        totalResults: 0,
-      },
+      { success: false, error: "Search failed. Please try again.", results: [], totalResults: 0 },
       { status: 500 }
     );
   }
 }
 
 // ============================================
-// CLEAR CACHE ENDPOINT (Optional)
-// Usage: DELETE /api/product-search?tenantId=xxx
+// CLEAR CACHE ENDPOINT
 // ============================================
 export async function DELETE(request: NextRequest) {
   const url = new URL(request.url);
@@ -283,17 +339,9 @@ export async function DELETE(request: NextRequest) {
   
   if (tenantId) {
     productsCache.delete(tenantId);
-    console.log(`[Product Search] Cache cleared for tenant ${tenantId}`);
-    return NextResponse.json({ 
-      success: true, 
-      message: `Cache cleared for tenant ${tenantId}` 
-    });
+    return NextResponse.json({ success: true, message: `Cache cleared for tenant ${tenantId}` });
   }
   
   productsCache.clear();
-  console.log(`[Product Search] All cache cleared`);
-  return NextResponse.json({ 
-    success: true, 
-    message: "All cache cleared" 
-  });
+  return NextResponse.json({ success: true, message: "All cache cleared" });
 }
