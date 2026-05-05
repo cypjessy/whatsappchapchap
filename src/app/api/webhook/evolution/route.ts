@@ -691,33 +691,8 @@ async function handleFlowInput(
   }
   
   if (message.trim() === '0') {
-    // Main menu shortcut for all flows
-    if (flowName === 'product_browse') {
-      if (currentStep === 'category_selection') {
-        await sendWelcomeMenu(tenantId, phone);
-        return;
-      } else {
-        await startProductBrowseFlow(tenantId, phone);
-        return;
-      }
-    }
-    if (flowName === 'search_prompt') {
-      await sendWelcomeMenu(tenantId, phone);
-      return;
-    }
-    if (flowName === 'similar_products_selection') {
-      await sendWelcomeMenu(tenantId, phone);
-      return;
-    }
-    if (flowName === 'order_status_lookup' || flowName === 'order_status_selection') {
-      await sendWelcomeMenu(tenantId, phone);
-      return;
-    }
-    if (flowName === 'order_cancellation' || flowName === 'order_cancellation_selection') {
-      await sendWelcomeMenu(tenantId, phone);
-      return;
-    }
-    // Default: Clear flow and show main menu
+    // Main menu shortcut - ALWAYS go to main menu, never restart flows
+    // This prevents issues with stale flow state and race conditions
     await sendWelcomeMenu(tenantId, phone);
     return;
   }
