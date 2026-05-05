@@ -178,7 +178,7 @@ async function showRecentOrders(
       message += `   📊 Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
     });
     
-    message += `Reply with a number (1-${ordersSnap.docs.length}) to see details,\n`;
+    message += `*Reply with a number (1-${ordersSnap.docs.length}) to see details,*\n`;
     message += `or type an Order Number (e.g., ORD-1234567890) to search\n`;
     message += `or *0* for main menu`;
     
