@@ -400,11 +400,12 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       categorySlug: data.mainCategory,
       name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
-      brands: [],
+      brands: data.brands || [], // Fixed: Use brands from categoryNames if available
       productCount: 0,
     };
   });
   
+  // Fixed: Fetch products to extract actual brands for each category
   for (const category of categories) {
     const productCountSnap = await adminDb
       .collection("products")
@@ -414,6 +415,34 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       .count()
       .get();
     category.productCount = productCountSnap.data().count || 0;
+    
+    // Extract unique brands from products in this category
+    const productsSnap = await adminDb
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("categoryId", "==", category.categorySlug)
+      .where("status", "==", "active")
+      .get();
+    
+    const uniqueBrands = new Set<string>();
+    productsSnap.docs.forEach((doc: any) => {
+      const productData = doc.data();
+      if (productData.brand && productData.brand.trim() !== '' && 
+          productData.brand.toLowerCase() !== 'null' && 
+          productData.brand.toLowerCase() !== 'unknown') {
+        uniqueBrands.add(productData.brand);
+      }
+    });
+    
+    // Merge with existing brands from categoryNames
+    const existingBrands = category.brands || [];
+    existingBrands.forEach((b: string) => {
+      if (b && b.trim() !== '' && b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown') {
+        uniqueBrands.add(b);
+      }
+    });
+    
+    category.brands = Array.from(uniqueBrands).sort();
   }
   
   const categoryList = categories
