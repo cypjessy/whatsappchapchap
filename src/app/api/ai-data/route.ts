@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
+import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
-function getAdminDb() {
-  if (getApps().length === 0) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      }),
-    });
+// Singleton pattern - store db instance like webhook does
+let adminDb: Firestore | null = null;
+let adminApp: App | null = null;
+
+function getAdminDb(): Firestore {
+  if (!adminDb) {
+    if (getApps().length === 0) {
+      adminApp = initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        }),
+      });
+    } else {
+      adminApp = getApps()[0];
+    }
+    adminDb = getFirestore(adminApp);
   }
-  return getFirestore();
+  return adminDb;
 }
 
 export async function GET(req: NextRequest) {
@@ -55,21 +64,18 @@ export async function GET(req: NextRequest) {
     const category = data.category || "other";
     // Build a comprehensive product description for AI
     const aiDescription = buildProductDescription(data);
-    // Include all pricing info
+    // Include ONLY public pricing info (NO costPrice or taxRate)
     const pricing = {
       regular: data.price,
-      sale: data.salePrice,
-      cost: data.costPrice,
-      taxRate: data.taxRate,
+      sale: data.salePrice || null,
     };
-    // Include all inventory info
+    // Include inventory info (NO lowStockAlert - internal flag)
     const inventory = {
       stock: data.stock,
       sku: data.sku,
-      lowStockAlert: data.lowStockAlert,
       status: data.status,
     };
-    // Include all specifications
+    // Include specifications (NO barcode - internal identifier)
     const specifications = {
       brand: data.brand,
       condition: data.condition,
@@ -79,17 +85,24 @@ export async function GET(req: NextRequest) {
       weightUnit: data.weightUnit,
       colors: data.colors || [],
       sizes: data.sizes || [],
-      barcode: data.barcode,
       categorySpecific: data.categorySpecific || {},
     };
     return {
       id: d.id,
-      ...data,
+      name: data.name,
+      description: data.description,
       category,
+      subcategory: data.subcategory,
+      images: data.images,
       aiDescription,
       pricing,
       inventory,
       specifications,
+      variants: data.variants?.map((v: any) => ({
+        specs: v.specs,
+        price: v.price,
+        stock: v.stock,
+      })), // Strip variant id/sku
     };
   });
 
@@ -110,8 +123,11 @@ export async function GET(req: NextRequest) {
     productCount: productsByCategory[cat].length,
   }));
 
-  // Get product category hierarchy from productCategories collection
-  const productCategoriesSnap = await db.collection("productCategories").get();
+  // Get product category hierarchy from productCategories collection (filtered by tenant)
+  const productCategoriesSnap = await db
+    .collection("productCategories")
+    .where("tenantId", "==", tenantId)
+    .get();
   const productCategoryHierarchy = productCategoriesSnap.docs.map(doc => {
     const data = doc.data();
     return {
@@ -154,10 +170,10 @@ function buildProductDescription(product: any): string {
     parts.push(`Description: ${product.description}`);
   }
   
-  // Price
-  const price = `Price: $${product.price}`;
+  // Price - use KES for Kenyan market
+  const price = `Price: KES ${(product.price || 0).toLocaleString()}`;
   if (product.salePrice && product.salePrice > 0) {
-    parts.push(`${price} (On sale: $${product.salePrice})`);
+    parts.push(`${price} (On sale: KES ${(product.salePrice || 0).toLocaleString()})`);
   } else {
     parts.push(price);
   }
