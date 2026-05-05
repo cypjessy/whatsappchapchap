@@ -11,6 +11,9 @@ let adminApp: App | null = null;
 const DEBUG = process.env.DEBUG_MODE === 'true';
 const FLOW_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+// Track active typing indicator intervals to prevent memory leaks
+const activeTypingIntervals = new Map<string, NodeJS.Timeout>();
+
 function debugLog(...args: any[]) {
   if (DEBUG) {
     console.log(...args);
@@ -85,6 +88,83 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
       welcomeMessageEnabled: true
     };
   }
+}
+
+/**
+ * Send typing indicator to show "..." in WhatsApp
+ * @param tenantId - The tenant ID
+ * @param phoneNumber - Customer's phone number
+ * @param action - "composing" to start typing, "paused" to stop
+ */
+async function sendTypingIndicator(
+  tenantId: string,
+  phoneNumber: string,
+  action: "composing" | "paused" | "recording" = "composing"
+): Promise<void> {
+  try {
+    const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
+    const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+
+    if (!evolutionApiUrl || !evolutionApiKey) {
+      debugLog(`[Webhook] Evolution API credentials not configured, skipping typing indicator`);
+      return;
+    }
+
+    // Map action to Evolution API format
+    const typingAction = action === "composing" ? "composing" : "paused";
+
+    await fetch(`${evolutionApiUrl}/chat/updatePresence/${tenantId}`, {
+      method: "POST",
+      headers: {
+        apikey: evolutionApiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        number: phoneNumber,
+        presence: typingAction,
+      }),
+    });
+    
+    debugLog(`[Webhook] Typing indicator sent: ${typingAction}`);
+  } catch (error) {
+    // Don't fail the main flow if typing indicator fails
+    debugLog(`[Webhook] Typing indicator error:`, error);
+  }
+}
+
+/**
+ * Start continuous typing indicator that refreshes every 4 seconds
+ */
+async function startTypingIndicator(tenantId: string, phone: string): Promise<void> {
+  // Clear any existing interval for this user
+  const existingInterval = activeTypingIntervals.get(phone);
+  if (existingInterval) {
+    clearInterval(existingInterval);
+  }
+  
+  // Send initial typing indicator
+  await sendTypingIndicator(tenantId, phone, "composing");
+  
+  // Set up interval to keep typing indicator alive (refresh every 4 seconds)
+  const interval = setInterval(async () => {
+    await sendTypingIndicator(tenantId, phone, "composing");
+  }, 4000);
+  
+  activeTypingIntervals.set(phone, interval);
+  debugLog(`[Webhook] Started typing indicator for ${phone}`);
+}
+
+/**
+ * Stop typing indicator and clean up interval
+ */
+async function stopTypingIndicator(tenantId: string, phone: string): Promise<void> {
+  const interval = activeTypingIntervals.get(phone);
+  if (interval) {
+    clearInterval(interval);
+    activeTypingIntervals.delete(phone);
+  }
+  await sendTypingIndicator(tenantId, phone, "paused");
+  debugLog(`[Webhook] Stopped typing indicator for ${phone}`);
 }
 
 async function getBusinessContext(tenantId: string): Promise<AIContext> {
@@ -1811,6 +1891,10 @@ async function processWithAI(
   message: string
 ): Promise<void> {
   const processStart = Date.now();
+  
+  // Start showing typing indicator immediately
+  await startTypingIndicator(tenantId, phone);
+  
   try {
     console.log("[Webhook] Processing message with AI...");
     debugLog("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
@@ -1926,6 +2010,10 @@ async function processWithAI(
     }
     
     const cleanText = aiResponse.replace(/\[IMAGE:[^\]]+\]/g, '').trim();
+    
+    // Stop typing indicator before sending response
+    await stopTypingIndicator(tenantId, phone);
+    
     await sendEvolutionMessage(tenantId, phone, cleanText);
     
     console.log("[Webhook] All messages sent successfully");
@@ -1972,6 +2060,9 @@ async function processWithAI(
   } catch (error) {
     const processingTime = Date.now() - processStart;
     console.error("[Webhook] ❌ ERROR in AI processing after", processingTime, "ms:", error);
+    
+    // Stop typing indicator on error
+    await stopTypingIndicator(tenantId, phone);
     
     await logWebhookError(
       tenantId,
