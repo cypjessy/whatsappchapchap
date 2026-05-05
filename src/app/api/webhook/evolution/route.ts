@@ -87,7 +87,6 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
   }
 }
 
-// FIXED: Parallelized Firestore reads with timeout
 async function getBusinessContext(tenantId: string): Promise<AIContext> {
   try {
     debugLog("[Webhook] Starting to fetch business context...");
@@ -100,7 +99,6 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       return { businessName: "Our Shop", products: [], services: [] };
     }
     
-    // Parallelize tenant, products, and services fetch with timeout
     const fetchWithTimeout = <T>(promise: Promise<T>, timeoutMs: number = 5000): Promise<T> => {
       return Promise.race([
         promise,
@@ -168,7 +166,6 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       };
     });
     
-    // Parallelize remaining reads
     const [profileSnap, shippingSnap, productSettingsSnap, serviceSettingsSnap, hierarchySnap] = await Promise.all([
       db.collection("businessProfiles").doc(tenantId).get(),
       db.collection("shippingMethods").where("tenantId", "==", tenantId).get(),
@@ -400,12 +397,11 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       categorySlug: data.mainCategory,
       name: data.mainCategoryName || data.mainCategory,
       subcategories: data.subcategories || [],
-      brands: data.brands || [], // Fixed: Use brands from categoryNames if available
+      brands: [] as string[], // Fixed: Explicitly type as string array
       productCount: 0,
     };
   });
   
-  // Fixed: Fetch products to extract actual brands for each category
   for (const category of categories) {
     const productCountSnap = await adminDb
       .collection("products")
@@ -416,7 +412,6 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       .get();
     category.productCount = productCountSnap.data().count || 0;
     
-    // Extract unique brands from products in this category
     const productsSnap = await adminDb
       .collection("products")
       .where("tenantId", "==", tenantId)
@@ -434,15 +429,29 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
       }
     });
     
-    // Merge with existing brands from categoryNames
-    const existingBrands = category.brands || [];
-    existingBrands.forEach((b: string) => {
-      if (b && b.trim() !== '' && b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown') {
-        uniqueBrands.add(b);
+    if (category.subcategories && category.subcategories.length > 0) {
+      for (const subcat of category.subcategories) {
+        const subcatProductsSnap = await adminDb
+          .collection("products")
+          .where("tenantId", "==", tenantId)
+          .where("categoryId", "==", category.categorySlug)
+          .where("subcategory", "==", subcat)
+          .where("status", "==", "active")
+          .get();
+        
+        subcatProductsSnap.docs.forEach((doc: any) => {
+          const productData = doc.data();
+          if (productData.brand && productData.brand.trim() !== '' && 
+              productData.brand.toLowerCase() !== 'null' && 
+              productData.brand.toLowerCase() !== 'unknown') {
+            uniqueBrands.add(productData.brand);
+          }
+        });
       }
-    });
+    }
     
     category.brands = Array.from(uniqueBrands).sort();
+    console.log(`[Webhook] Category "${category.name}" has brands: ${category.brands.join(', ') || 'none'}`);
   }
   
   const categoryList = categories
@@ -628,6 +637,7 @@ async function handleProductSearchInput(
   }
 }
 
+// FIXED: handleProductBrowseInput with proper navigation
 async function handleProductBrowseInput(
   tenantId: string,
   phone: string,
@@ -643,7 +653,12 @@ async function handleProductBrowseInput(
     const trimmed = message.trim().toLowerCase();
       
     if (isNaN(num) || num < 1 || num > categories.length) {
-      if (trimmed === 'menu') {
+      if (trimmed === 'menu' || num === 3) {
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      }
+      
+      if (trimmed === 'back' || num === 0) {
         await sendWelcomeMenu(tenantId, phone);
         return;
       }
@@ -653,7 +668,7 @@ async function handleProductBrowseInput(
         return;
       }
         
-      await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list (1-2 for categories, 3 for menu).");
       return;
     }
       
@@ -664,7 +679,7 @@ async function handleProductBrowseInput(
         .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
         .join('\n');
         
-      const response = ` *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ Main menu`;
+      const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
       
       await adminDb
@@ -693,45 +708,52 @@ async function handleProductBrowseInput(
     }
   }
   
+  // FIXED: subcategory_selection with proper navigation
   else if (currentStep === 'subcategory_selection') {
     const num = parseInt(message.trim());
-    const { categoryId, categoryName, categorySubcategories } = selections;
+    const { categoryId, categoryName, categorySubcategories, categoryBrands } = selections;
     const trimmed = message.trim().toLowerCase();
-        
+    
+    // Check if input is a valid subcategory number
     if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
-      if (trimmed === 'categories') {
+      // Check navigation commands FIRST
+      if (trimmed === 'categories' || num === 2) {
         await startProductBrowseFlow(tenantId, phone);
         return;
-      } else if (trimmed === 'menu') {
+      } else if (trimmed === 'menu' || trimmed === 'main' || num === 3) {
         await sendWelcomeMenu(tenantId, phone);
         return;
-      } else if (trimmed === 'back') {
+      } else if (trimmed === 'back' || num === 0) {
         await startProductBrowseFlow(tenantId, phone);
         return;
       }
       
+      // Check if it's a search query
       if (checkIfSearchQuery(message)) {
         await handleProductSearch(tenantId, phone, message);
         return;
       }
         
-      await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose 1 for subcategory, 2 for categories, 3 for main menu.");
       return;
     }
-      
+    
+    // Valid subcategory selected
     const selectedSubcategory = categorySubcategories[num - 1];
     debugLog("[Webhook] Selected subcategory:", selectedSubcategory);
-      
-    const brands = (selections.categoryBrands || []).filter((b: string) => 
-      b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown'
+    
+    const brands = (categoryBrands || []).filter((b: string) => 
+      b && b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown'
     );
+    
+    console.log(`[Webhook] Brands for subcategory "${selectedSubcategory}":`, brands);
       
     if (brands.length > 0) {
       const brandList = brands
         .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
         .join('\n');
         
-      const response = ` *${selectedSubcategory}* - Brands\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
+      const response = `🏷️ *${selectedSubcategory}* - Choose a brand\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
       await sendEvolutionMessage(tenantId, phone, response);
         
       await adminDb
@@ -753,27 +775,34 @@ async function handleProductBrowseInput(
           }
         }, { merge: true });
     } else {
-      await showProductsForSelection(tenantId, phone, selections);
+      // No brands, show products directly
+      await showProductsForSelection(tenantId, phone, {
+        ...selections,
+        subcategory: selectedSubcategory,
+      });
     }
   }
     
+  // FIXED: brand_selection with proper navigation
   else if (currentStep === 'brand_selection') {
     const num = parseInt(message.trim());
     const availableBrands = selections.availableBrands || [];
     const trimmed = message.trim().toLowerCase();
       
     if (isNaN(num) || num < 1 || num > availableBrands.length) {
-      if (trimmed === 'categories') {
+      // Check navigation commands
+      if (trimmed === 'categories' || num === 3) {
         await startProductBrowseFlow(tenantId, phone);
         return;
-      } else if (trimmed === 'menu') {
+      } else if (trimmed === 'menu' || trimmed === 'main' || num === 4) {
         await sendWelcomeMenu(tenantId, phone);
         return;
-      } else if (trimmed === 'back') {
+      } else if (trimmed === 'back' || num === 2) {
+        // Go back to subcategories
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
-        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
+        const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
@@ -786,7 +815,7 @@ async function handleProductBrowseInput(
         return;
       }
       
-      await sendEvolutionMessage(tenantId, phone, " Invalid selection. Please choose a number from the list.");
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list (1-2 for brands, 2 for back, 3 for categories, 4 for menu).");
       return;
     }
       
@@ -818,7 +847,7 @@ async function handleProductBrowseInput(
         const subcategoryList = (selections.categorySubcategories || [])
           .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
           .join('\n');
-        const response = ` *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
+        const response = `📂 *${selections.categoryName}* - Subcategories\n\n${subcategoryList}\n\n2️⃣ Back to categories\n3️⃣ View Categories\n4️⃣ - Main menu`;
         await sendEvolutionMessage(tenantId, phone, response);
         await adminDb.collection("tenants").doc(tenantId)
           .collection("conversations").doc(phone)
@@ -1493,7 +1522,6 @@ function checkIfSearchQuery(message: string): boolean {
   return hasSearchPattern;
 }
 
-// FIXED: Improved handleProductSearch with better search term extraction and timeout
 async function handleProductSearch(
   tenantId: string,
   phone: string,
@@ -1502,7 +1530,6 @@ async function handleProductSearch(
   try {
     debugLog(`[Webhook] Handling product search: "${query}"`);
     
-    // FIXED: Better search term extraction - remove conversational prefixes
     let searchTerm = query
       .replace(/^(am looking for|i am looking for|looking for|searching for|want to buy|need to buy|do you have|show me|find|i want|i need|can i get)\s+/i, '')
       .trim();
@@ -1520,7 +1547,6 @@ async function handleProductSearch(
       return;
     }
     
-    // FIXED: Add timeout to fetch with AbortController
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
     
