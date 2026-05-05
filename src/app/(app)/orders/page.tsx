@@ -286,7 +286,7 @@ export default function OrdersPage() {
           console.log(`[Cancellation] Message preview:`, message.substring(0, 100) + '...');
               
           try {
-            await sendEvolutionWhatsAppMessage(user.uid, customerPhone, message);
+            await sendEvolutionWhatsAppMessage(customerPhone, message, user.uid);
             console.log(`[Cancellation] WhatsApp notification sent successfully`);
           } catch (whatsappError) {
             console.error(`[Cancellation] Failed to send WhatsApp notification:`, whatsappError);
