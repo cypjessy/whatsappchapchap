@@ -141,41 +141,67 @@ function OrderPageContent() {
     setIsSearching(true);
     
     try {
-      const app = getFirebaseApp();
-      if (!app) return;
+      // Use AI-enhanced search API
+      const response = await fetch('/api/ai-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: searchTerm,
+          tenantId: tenantId,
+        }),
+      });
       
-      const db = getFirestore(app);
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
       
-      // Search by name (case-insensitive)
-      const productsQuery = query(
-        collection(db, "products"),
-        where("tenantId", "==", tenantId)
-      );
+      const data = await response.json();
       
-      const productsSnap = await getDocs(productsQuery);
-      const allProducts = productsSnap.docs.map((doc: any) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Product[];
-      
-      // Filter products by search query
-      const filtered = allProducts.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.subcategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        Object.values(p.filters || {}).some(arr => 
-          Array.isArray(arr) && arr.some(val => 
-            val.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        )
-      );
-      
-      setSearchResults(filtered.slice(0, 10)); // Limit to 10 results
-      setShowSearchResults(true);
+      if (data.success) {
+        console.log('[AI Search] Enhanced queries:', data.enhancedQueries);
+        setSearchResults(data.results.slice(0, 10));
+        setShowSearchResults(true);
+      } else {
+        throw new Error(data.error || 'Search failed');
+      }
     } catch (err) {
       console.error('Search error:', err);
+      // Fallback to basic search if AI fails
+      try {
+        const app = getFirebaseApp();
+        if (!app) return;
+        
+        const db = getFirestore(app);
+        
+        const productsQuery = query(
+          collection(db, "products"),
+          where("tenantId", "==", tenantId)
+        );
+        
+        const productsSnap = await getDocs(productsQuery);
+        const allProducts = productsSnap.docs.map((doc: any) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Product[];
+        
+        const filtered = allProducts.filter(p => 
+          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.subcategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          Object.values(p.filters || {}).some(arr => 
+            Array.isArray(arr) && arr.some(val => 
+              val.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          )
+        );
+        
+        setSearchResults(filtered.slice(0, 10));
+        setShowSearchResults(true);
+      } catch (fallbackErr) {
+        console.error('Fallback search also failed:', fallbackErr);
+      }
     } finally {
       setIsSearching(false);
     }

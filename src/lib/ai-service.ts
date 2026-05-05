@@ -541,3 +541,85 @@ Intent:`;
     return "general_question";
   }
 }
+
+/**
+ * AI-Powered Search Enhancement
+ * Translates colloquial/local product names into standardized searchable terms
+ * Example: "mitumba shoes" -> "secondhand shoes footwear"
+ * Example: "mkate" -> "bread bakery"
+ */
+export async function enhanceSearchQuery(
+  userQuery: string,
+  context: {
+    businessName: string;
+    products: Array<{ name: string; category?: string; brand?: string; description?: string }>;
+  }
+): Promise<string[]> {
+  try {
+    const productList = context.products
+      .map(p => `- ${p.name}${p.category ? ` (${p.category})` : ''}${p.brand ? ` - ${p.brand}` : ''}`)
+      .join('\n');
+
+    const prompt = `You are a search query enhancer for ${context.businessName}. 
+
+The customer typed: "${userQuery}"
+
+Your task is to translate this into multiple search variations that would match our product catalog.
+
+Available products in our catalog:
+${productList}
+
+RULES:
+1. If the query uses local/colloquial language, translate it to standard English
+2. Generate 3-5 search variations including:
+   - Direct translation (if applicable)
+   - Synonyms and related terms
+   - Category-level terms
+   - Brand names if relevant
+3. Keep each variation short (1-3 words max)
+4. Return ONLY a JSON array of strings, nothing else
+
+Examples:
+Input: "mitumba shoes"
+Output: ["secondhand shoes", "used shoes", "thrift shoes", "footwear"]
+
+Input: "mkate"
+Output: ["bread", "bakery", "loaf"]
+
+Input: "iPhone"
+Output: ["iPhone", "apple phone", "smartphone"]
+
+Input: "nguo za mitumba"
+Output: ["secondhand clothes", "used clothing", "thrift wear", "vintage clothes"]
+
+Now process this query: "${userQuery}"`
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.5,
+      max_tokens: 100,
+    });
+
+    const response = chatCompletion.choices[0]?.message?.content || "";
+    
+    // Parse JSON array from response
+    try {
+      const parsed = JSON.parse(response.trim());
+      if (Array.isArray(parsed)) {
+        return parsed.filter((term: any) => typeof term === 'string' && term.trim().length > 0);
+      }
+    } catch (parseError) {
+      console.warn('[AI] Failed to parse search enhancements, using original query');
+    }
+    
+    // Fallback: return original query
+    return [userQuery];
+  } catch (error) {
+    console.error('[AI] Error enhancing search query:', error);
+    // Fallback to original query on error
+    return [userQuery];
+  }
+}
