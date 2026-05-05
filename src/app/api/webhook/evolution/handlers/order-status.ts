@@ -50,6 +50,21 @@ export async function handleOrderStatusLookup(
   
   const input = userInput.trim().toUpperCase();
   
+  // Handle "NEXT" for pagination
+  if (input === 'NEXT') {
+    const db = getDb();
+    const convDoc = await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    const currentPage = convDoc.data()?.flowState?.orderPage || 1;
+    await showRecentOrders(tenantId, phone, deps, currentPage + 1);
+    return;
+  }
+  
   // If user types an order number (starts with ORD- or looks like order ID)
   if (input.startsWith('ORD-') || input.match(/^\d{10,}$/)) {
     const orderId = input.startsWith('ORD-') ? input : `ORD-${input}`;
@@ -108,45 +123,57 @@ async function lookupOrderById(
 }
 
 /**
- * Show recent orders for the user
+ * Show recent orders for the user with pagination
  */
 async function showRecentOrders(
   tenantId: string,
   phone: string,
-  deps: OrderStatusDeps
+  deps: OrderStatusDeps,
+  page: number = 1
 ): Promise<void> {
   try {
-    console.log(`[OrderStatus] Fetching recent orders for phone: ${phone}`);
+    console.log(`[OrderStatus] Fetching orders for phone: ${phone}, page: ${page}`);
     
     const db = getDb();
-    const ordersSnap = await db
+    const ORDERS_PER_PAGE = 5;
+    
+    // Get total count first
+    const countSnap = await db
       .collection("orders")
       .where("customerPhone", "==", phone)
       .where("tenantId", "==", tenantId)
-      .orderBy("createdAt", "desc")
-      .limit(3)
       .get();
     
-    if (ordersSnap.empty) {
+    const totalOrders = countSnap.size;
+    
+    if (totalOrders === 0) {
       if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
         `📦 *No Orders Found*\n\n` +
         `You haven't placed any orders yet.\n\n` +
-        `Reply *1* to browse products or *MENU* for main menu`
+        `Reply *1* to browse products or *0* for main menu`
       );
       return;
     }
     
-    let message = `📦 *Your Recent Orders*\n\n`;
+    // Calculate offset
+    const offset = (page - 1) * ORDERS_PER_PAGE;
+    
+    // Get paginated orders
+    const ordersSnap = await db
+      .collection("orders")
+      .where("customerPhone", "==", phone)
+      .where("tenantId", "==", tenantId)
+      .orderBy("createdAt", "desc")
+      .limit(ORDERS_PER_PAGE)
+      .get();
+    
+    let message = `📦 *Your Orders (Page ${page})*\n\n`;
     
     ordersSnap.docs.forEach((doc, idx) => {
       const order = doc.data();
-      
-      // Debug: log all available fields
-      console.log(`[OrderStatus] Order ${idx} fields:`, Object.keys(order));
-      console.log(`[OrderStatus] Order ${idx} data:`, JSON.stringify(order, null, 2));
       
       const orderId = order.orderId || order.orderNumber || doc.id;
       const statusEmoji = getStatusEmoji(order.status);
@@ -168,7 +195,7 @@ async function showRecentOrders(
           const variant = item.variant || item.selectedOptions || '';
           const quantity = item.quantity || 1;
           
-          message += `   📦 ${productName}`;
+          message += `    ${productName}`;
           if (variant) message += ` (${variant})`;
           message += ` x${quantity}\n`;
         });
@@ -178,14 +205,25 @@ async function showRecentOrders(
       message += `   📊 Status: ${statusEmoji} ${capitalizeFirst(order.status)}\n\n`;
     });
     
+    // Pagination info
+    const startNum = offset + 1;
+    const endNum = Math.min(offset + ORDERS_PER_PAGE, totalOrders);
+    message += `*Showing orders ${startNum}-${endNum} of ${totalOrders}*\n\n`;
+    
     message += `*Reply with a number (1-${ordersSnap.docs.length}) to see details,*\n`;
     message += `or type an Order Number (e.g., ORD-1234567890) to search\n`;
+    
+    // Show "Load More" if there are more orders
+    if (endNum < totalOrders) {
+      message += `or *NEXT* to view more orders\n`;
+    }
+    
     message += `or *0* for main menu`;
     
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, message);
     
-    // Store flow state for selection
+    // Store flow state for selection with pagination info
     await db
       .collection("tenants")
       .doc(tenantId)
@@ -195,6 +233,7 @@ async function showRecentOrders(
         flowState: {
           flowName: 'order_status_selection',
           currentStep: 'waiting_for_selection',
+          orderPage: page,
           recentOrders: ordersSnap.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -240,18 +279,25 @@ async function sendOrderDetails(
   message += `💰 Total: KES ${orderData.total?.toLocaleString() || 0}\n`;
   message += `📊 Status: ${statusEmoji} *${capitalizeFirst(orderData.status)}*\n\n`;
   
-  // Items
+  // Items with full details
   if (orderData.items && orderData.items.length > 0) {
-    message += `📋 *Items:*\n`;
+    message += `📋 *Order Items:*\n`;
     orderData.items.forEach((item: any, idx: number) => {
       const itemName = item.name || item.productName || 'Product';
       const quantity = item.quantity || 1;
       const itemPrice = item.price || 0;
       const itemTotal = itemPrice * quantity;
-      message += `${idx + 1}. ${itemName} x ${quantity}\n`;
-      message += `   💰 KES ${itemTotal.toLocaleString()}\n`;
+      const variant = item.variant || item.selectedOptions || '';
+      const productCode = item.productCode || item.sku || '';
+      
+      message += `*${idx + 1}. ${itemName}*\n`;
+      if (productCode) message += `   SKU: ${productCode}\n`;
+      if (variant) message += `   Options: ${variant}\n`;
+      message += `   Quantity: ${quantity}\n`;
+      message += `   Price: KES ${itemPrice.toLocaleString()} each\n`;
+      message += `   Subtotal: KES ${itemTotal.toLocaleString()}\n\n`;
     });
-    message += `\n`;
+    message += `━━━━━━━━━━━━━━━\n\n`;
   }
   
   // Shipping address
@@ -263,6 +309,7 @@ async function sendOrderDetails(
     if (addr.city || addr.town) message += `${addr.city || addr.town}`;
     if (addr.area) message += `, ${addr.area}`;
     if (addr.city || addr.town || addr.area) message += `\n`;
+    if (addr.postalCode) message += `Postal Code: ${addr.postalCode}\n`;
     message += `\n`;
   }
   
@@ -280,6 +327,15 @@ async function sendOrderDetails(
         })
       : 'N/A';
     message += `📅 *Expected Delivery:* ${deliveryDate}\n`;
+  }
+  
+  // Payment info
+  if (orderData.paymentMethod) {
+    message += ` *Payment Method:* ${capitalizeFirst(orderData.paymentMethod)}\n`;
+  }
+  
+  if (orderData.paymentStatus) {
+    message += `💰 *Payment Status:* ${capitalizeFirst(orderData.paymentStatus)}\n`;
   }
   
   message += `\n━━━━━━━━━━━━━━━\n`;
@@ -323,7 +379,8 @@ export async function handleOrderStatusSelection(
   }
   
   const selectedOrder = recentOrders[num - 1];
-  await sendOrderDetails(tenantId, phone, selectedOrder.orderId, selectedOrder, deps);
+  const orderId = selectedOrder.orderId || selectedOrder.orderNumber || selectedOrder.id;
+  await sendOrderDetails(tenantId, phone, orderId, selectedOrder, deps);
 }
 
 /**
