@@ -110,14 +110,17 @@ export default function OrdersPage() {
     if (!user) return;
     try {
       const db: any = getFirestore(firebaseApp);
+      const tenantId = `tenant_${user.uid}`; // Match the format used in db.ts
+      
+      console.log('[Orders] Loading cancellation requests for tenant:', tenantId);
+      
       const q = query(
         collection(db, "cancellation_requests"),
-        where("tenantId", "==", user.uid),
+        where("tenantId", "==", tenantId),
         where("status", "==", "pending"),
         orderBy("requestedAt", "desc")
       );
       
-      console.log('[Orders] Loading cancellation requests for tenant:', user.uid);
       const snap = await getDocs(q);
       console.log('[Orders] Found', snap.size, 'cancellation requests');
       
