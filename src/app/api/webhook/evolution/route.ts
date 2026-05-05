@@ -705,7 +705,11 @@ async function handleFlowInput(
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
-    if (flowName === 'order_status_lookup' || flowName === 'order_status_selection' || flowName === 'order_cancellation') {
+    if (flowName === 'order_status_lookup' || flowName === 'order_status_selection') {
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
+    if (flowName === 'order_cancellation') {
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
@@ -817,6 +821,7 @@ async function handleFlowInput(
     return;
   }
   
+  // Handle order cancellation flow
   if (flowName === 'order_cancellation') {
     const deps: OrderStatusDeps = { 
       sendMessage: sendEvolutionMessage,
@@ -1623,7 +1628,7 @@ async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<
   await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
 }
 
-// FIXED: Corrected sendOrderStatusInfo - no duplicate message
+// FIXED: Updated sendOrderStatusInfo to match new flow
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   
@@ -1633,9 +1638,10 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
     stopTyping: stopTypingIndicator
   };
   
-  // This sends the message - don't send another one!
+  // This now shows recent orders directly
   await startOrderStatusFlow(tenantId, phone, deps);
   
+  // Update flow state for order status
   const adminDb = getAdminDb();
   await adminDb
     .collection("tenants")
@@ -1646,7 +1652,7 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
       flowState: {
         isActive: true,
         flowName: 'order_status_lookup',
-        currentStep: 'waiting_for_order_number',
+        currentStep: 'waiting_for_selection',
         selections: {},
         startedAt: new Date().toISOString(),
         lastActivity: new Date().toISOString(),
