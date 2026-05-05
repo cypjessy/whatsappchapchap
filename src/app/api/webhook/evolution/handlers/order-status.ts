@@ -415,12 +415,45 @@ export async function handleOrderStatusSelection(
   console.log(`[OrderStatus] Selection: "${selection}", Num: ${num}, Recent orders: ${recentOrders.length}`);
   console.log(`[OrderStatus] Flow state:`, JSON.stringify(flowState, null, 2));
   
+  // Handle "0" - ALWAYS go to main menu
+  if (num === 0) {
+    console.log(`[OrderStatus] User pressed 0 - going to main menu`);
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    
+    // Clear flow state immediately
+    const db = getDb();
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
+    
+    // Send welcome menu message directly
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `Hello! 👋 Welcome to our store!\n\n` +
+      `How can we help you today?\n\n` +
+      `1️⃣ Browse Products\n` +
+      `2️⃣ Browse Services\n` +
+      `3️⃣  Search Products\n` +
+      `4️⃣ Check Order Status\n` +
+      `5️⃣ Payment Info\n` +
+      `6️⃣ Talk to Support\n\n` +
+      `*Reply with a number (1-6)*`
+    );
+    return;
+  }
+  
   if (isNaN(num) || num < 1 || num > recentOrders.length) {
     console.log(`[OrderStatus] Invalid selection - num: ${num}, range: 1-${recentOrders.length}`);
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Invalid selection. Please reply with a number from 1-${recentOrders.length}, or *0️⃣* for main menu.`
+      `❌ Invalid selection. Please reply with a number from 1-${recentOrders.length}, or *0️* for main menu.`
     );
     return;
   }
