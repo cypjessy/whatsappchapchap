@@ -53,6 +53,7 @@ export default function OrdersPage() {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<'orders' | 'cancellations'>('orders'); // Track if viewing orders or cancellation requests
+  const [cancellationFilter, setCancellationFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all'); // Filter within cancellation requests
 
   useEffect(() => {
     if (!user) return;
@@ -113,21 +114,24 @@ export default function OrdersPage() {
       const db: any = getFirestore(firebaseApp);
       const tenantId = `tenant_${user.uid}`; // Match the format used in db.ts
       
-      console.log('[Orders] Loading cancellation requests for tenant:', tenantId);
+      console.log('[Orders] Loading ALL cancellation requests for tenant:', tenantId);
       
+      // Load ALL cancellation requests (pending, approved, rejected)
       const q = query(
         collection(db, "cancellation_requests"),
         where("tenantId", "==", tenantId),
-        where("status", "==", "pending"),
         orderBy("requestedAt", "desc")
       );
       
       const snap = await getDocs(q);
-      console.log('[Orders] Found', snap.size, 'cancellation requests');
+      console.log('[Orders] Found', snap.size, 'cancellation requests (all statuses)');
       
       const requests = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
       setCancellationRequests(requests);
-      setCounts(prev => ({ ...prev, cancellations: requests.length }));
+      
+      // Count only pending for the tab badge
+      const pendingCount = requests.filter((r: any) => r.status === 'pending').length;
+      setCounts(prev => ({ ...prev, cancellations: pendingCount }));
     } catch (error) {
       console.error("Error loading cancellation requests:", error);
       // Log more details about the error
@@ -1034,76 +1038,172 @@ try {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-[#1e293b]">Cancellation Requests</h2>
-                  <p className="text-sm text-[#64748b]">Manage pending customer cancellation requests</p>
+                  <p className="text-sm text-[#64748b]">View and manage all cancellation requests</p>
                 </div>
+              </div>
+              
+              {/* Filter Tabs */}
+              <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                <button
+                  onClick={() => setCancellationFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
+                    cancellationFilter === 'all'
+                      ? 'bg-[#25D366] text-white shadow-lg'
+                      : 'bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]'
+                  }`}
+                >
+                  All ({cancellationRequests.length})
+                </button>
+                <button
+                  onClick={() => setCancellationFilter('pending')}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
+                    cancellationFilter === 'pending'
+                      ? 'bg-red-500 text-white shadow-lg'
+                      : 'bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-red-500'
+                  }`}
+                >
+                  <i className="fas fa-clock text-xs"></i>
+                  Pending ({cancellationRequests.filter(r => r.status === 'pending').length})
+                </button>
+                <button
+                  onClick={() => setCancellationFilter('approved')}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
+                    cancellationFilter === 'approved'
+                      ? 'bg-green-500 text-white shadow-lg'
+                      : 'bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-green-500'
+                  }`}
+                >
+                  <i className="fas fa-check text-xs"></i>
+                  Approved ({cancellationRequests.filter(r => r.status === 'approved').length})
+                </button>
+                <button
+                  onClick={() => setCancellationFilter('rejected')}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
+                    cancellationFilter === 'rejected'
+                      ? 'bg-gray-500 text-white shadow-lg'
+                      : 'bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-gray-500'
+                  }`}
+                >
+                  <i className="fas fa-times text-xs"></i>
+                  Rejected ({cancellationRequests.filter(r => r.status === 'rejected').length})
+                </button>
               </div>
             </div>
 
-            {cancellationRequests.length === 0 ? (
-              <div className="p-12 text-center bg-white border-2 border-dashed border-gray-300 rounded-xl">
-                <div className="text-6xl mb-4">📭</div>
-                <h3 className="text-xl font-bold text-[#1e293b] mb-2">No Pending Cancellations</h3>
-                <p className="text-[#64748b]">All orders are processing normally. No cancellation requests at this time.</p>
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {cancellationRequests.map((request: any) => (
-                  <div key={request.id} className="bg-white border-2 border-red-300 rounded-xl p-5 hover:border-red-500 hover:shadow-xl transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="font-bold text-[#25D366] text-xl">{request.orderId}</div>
-                        <div className="text-xs text-[#64748b] mt-1">
-                          <i className="fas fa-calendar mr-1"></i>
-                          {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
-                          {' '}
-                          {request.requestedAt?.toDate ? `at ${request.requestedAt.toDate().toLocaleTimeString()}` : ''}
+            {(() => {
+              // Filter requests based on selected filter
+              const filteredRequests = cancellationFilter === 'all' 
+                ? cancellationRequests
+                : cancellationRequests.filter(r => r.status === cancellationFilter);
+              
+              return filteredRequests.length === 0 ? (
+                <div className="p-12 text-center bg-white border-2 border-dashed border-gray-300 rounded-xl">
+                  <div className="text-6xl mb-4">📭</div>
+                  <h3 className="text-xl font-bold text-[#1e293b] mb-2">
+                    {cancellationFilter === 'all' ? 'No Cancellation Requests' : 
+                     cancellationFilter === 'pending' ? 'No Pending Requests' :
+                     cancellationFilter === 'approved' ? 'No Approved Requests' : 'No Rejected Requests'}
+                  </h3>
+                  <p className="text-[#64748b]">
+                    {cancellationFilter === 'all' ? 'No cancellation requests have been submitted yet.' :
+                     cancellationFilter === 'pending' ? 'All pending requests have been processed.' :
+                     'No requests with this status yet.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredRequests.map((request: any) => {
+                    const statusColors = {
+                      pending: { bg: 'bg-red-500', text: 'text-white', icon: 'fa-clock', label: 'Pending' },
+                      approved: { bg: 'bg-green-500', text: 'text-white', icon: 'fa-check-circle', label: 'Approved' },
+                      rejected: { bg: 'bg-gray-500', text: 'text-white', icon: 'fa-times-circle', label: 'Rejected' }
+                    };
+                    const statusStyle = statusColors[request.status as keyof typeof statusColors] || statusColors.pending;
+                    
+                    return (
+                      <div key={request.id} className={`bg-white border-2 rounded-xl p-5 transition-all ${
+                        request.status === 'pending' ? 'border-red-300 hover:border-red-500 hover:shadow-xl' :
+                        request.status === 'approved' ? 'border-green-300 hover:border-green-500' :
+                        'border-gray-300 hover:border-gray-500'
+                      }`}>
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <div className="font-bold text-[#25D366] text-xl">{request.orderId}</div>
+                            <div className="text-xs text-[#64748b] mt-1">
+                              <i className="fas fa-calendar mr-1"></i>
+                              {request.requestedAt?.toDate ? request.requestedAt.toDate().toLocaleDateString() : 'N/A'}
+                              {' '}
+                              {request.requestedAt?.toDate ? `at ${request.requestedAt.toDate().toLocaleTimeString()}` : ''}
+                            </div>
+                          </div>
+                          <span className={`px-3 py-1.5 ${statusStyle.bg} ${statusStyle.text} rounded-full text-xs font-bold shadow-lg`}>
+                            <i className={`fas ${statusStyle.icon} mr-1`}></i>{statusStyle.label}
+                          </span>
                         </div>
+                        
+                        <div className="space-y-3 mb-4">
+                          <div className="flex items-center gap-2 text-[#64748b] bg-gray-50 p-2 rounded-lg">
+                            <i className="fas fa-user text-sm"></i>
+                            <span className="font-medium">{request.customerPhone || 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[#64748b] bg-gray-50 p-2 rounded-lg">
+                            <i className="fas fa-user-tag text-sm"></i>
+                            <span className="font-medium">{request.orderData?.customerName || 'N/A'}</span>
+                          </div>
+                          <div className="font-bold text-[#1e293b] text-2xl bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
+                            <i className="fas fa-coins mr-2 text-green-600"></i>
+                            {formatCurrency(request.orderData?.total || 0)}
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-[#64748b] mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <i className="fas fa-info-circle mr-2 text-blue-500"></i>
+                          <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
+                        </div>
+                        
+                        {/* Show response note if approved or rejected */}
+                        {request.responseNote && (
+                          <div className={`text-sm mb-4 p-3 rounded-lg border ${
+                            request.status === 'approved' 
+                              ? 'bg-green-50 border-green-200 text-green-700'
+                              : 'bg-gray-50 border-gray-200 text-gray-700'
+                          }`}>
+                            <i className={`fas ${request.status === 'approved' ? 'fa-comment-dots text-green-600' : 'fa-comment-slash text-gray-600'} mr-2`}></i>
+                            <strong>Note:</strong> {request.responseNote}
+                            {request.respondedAt?.toDate && (
+                              <div className="text-xs mt-1 opacity-75">
+                                <i className="fas fa-clock mr-1"></i>
+                                {request.respondedAt.toDate().toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Show action buttons only for pending requests */}
+                        {request.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
+                              className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                            >
+                              <i className="fas fa-check-circle text-lg"></i>
+                              <span>Approve & Refund</span>
+                            </button>
+                            <button
+                              onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
+                              className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-bold text-sm hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                            >
+                              <i className="fas fa-times-circle text-lg"></i>
+                              <span>Reject</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <span className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold animate-pulse shadow-lg">
-                        <i className="fas fa-clock mr-1"></i>Pending
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center gap-2 text-[#64748b] bg-gray-50 p-2 rounded-lg">
-                        <i className="fas fa-user text-sm"></i>
-                        <span className="font-medium">{request.customerPhone || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[#64748b] bg-gray-50 p-2 rounded-lg">
-                        <i className="fas fa-user-tag text-sm"></i>
-                        <span className="font-medium">{request.orderData?.customerName || 'N/A'}</span>
-                      </div>
-                      <div className="font-bold text-[#1e293b] text-2xl bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
-                        <i className="fas fa-coins mr-2 text-green-600"></i>
-                        {formatCurrency(request.orderData?.total || 0)}
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm text-[#64748b] mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <i className="fas fa-info-circle mr-2 text-blue-500"></i>
-                      <strong>Reason:</strong> {request.reason || 'Customer requested cancellation'}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleCancellationAction(request.id, request.orderId, 'approve')}
-                        className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                      >
-                        <i className="fas fa-check-circle text-lg"></i>
-                        <span>Approve & Refund</span>
-                      </button>
-                      <button
-                        onClick={() => handleCancellationAction(request.id, request.orderId, 'reject')}
-                        className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-bold text-sm hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                      >
-                        <i className="fas fa-times-circle text-lg"></i>
-                        <span>Reject</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         ) : (
           /* Orders View - Show orders list */
