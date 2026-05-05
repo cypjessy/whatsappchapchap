@@ -1342,20 +1342,22 @@ export const orderService = {
     await deleteDoc(doc(db, "orders", orderId));
   },
 
-  async getOrderCounts(user: User): Promise<{ all: number; pending: number; processing: number; completed: number; cancelled: number }> {
+  async getOrderCounts(user: User): Promise<{ all: number; pending: number; processing: number; completed: number; refunded: number; cancelled: number }> {
     const tenantId = getTenantId(user);
     
     const allQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId));
     const pendingQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId), where("status", "==", "pending"));
     const processingQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId), where("status", "==", "processing"));
     const deliveredQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId), where("status", "==", "delivered"));
+    const refundedQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId), where("status", "==", "refunded"));
     const cancelledQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId), where("status", "==", "cancelled"));
     
-    const [allSnap, pendingSnap, processingSnap, deliveredSnap, cancelledSnap] = await Promise.all([
+    const [allSnap, pendingSnap, processingSnap, deliveredSnap, refundedSnap, cancelledSnap] = await Promise.all([
       getDocs(allQuery),
       getDocs(pendingQuery),
       getDocs(processingQuery),
       getDocs(deliveredQuery),
+      getDocs(refundedQuery),
       getDocs(cancelledQuery),
     ]);
     
@@ -1364,6 +1366,7 @@ export const orderService = {
       pending: pendingSnap.size,
       processing: processingSnap.size,
       completed: deliveredSnap.size,
+      refunded: refundedSnap.size,
       cancelled: cancelledSnap.size,
     };
   },

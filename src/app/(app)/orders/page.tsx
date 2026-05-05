@@ -16,7 +16,7 @@ export default function OrdersPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cancellationRequests, setCancellationRequests] = useState<any[]>([]);
-  const [counts, setCounts] = useState({ all: 0, pending: 0, processing: 0, completed: 0, cancelled: 0, cancellations: 0 });
+  const [counts, setCounts] = useState({ all: 0, pending: 0, processing: 0, completed: 0, refunded: 0, cancelled: 0, cancellations: 0 });
   const [loading, setLoading] = useState(true);
   const [activeStatus, setActiveStatus] = useState("all");
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
@@ -230,7 +230,7 @@ export default function OrdersPage() {
         console.log(`[Cancellation] Order tenantId: ${orderData.tenantId}`);
             
         await updateDoc(orderDoc.ref, {
-          status: isApproving ? 'cancelled' : 'confirmed',
+          status: isApproving ? 'refunded' : 'confirmed', // Mark as refunded when approved
           cancellationStatus: isApproving ? 'approved' : 'rejected',
           refunded: isApproving ? true : false, // Mark as refunded when approved
           refundReference: isApproving ? (refundNote || null) : null,
@@ -239,7 +239,7 @@ export default function OrdersPage() {
           updatedAt: new Date(),
         });
             
-        console.log(`[Cancellation] Updated order ${orderId} status to ${isApproving ? 'cancelled' : 'confirmed'}`);
+        console.log(`[Cancellation] Updated order ${orderId} status to ${isApproving ? 'refunded' : 'confirmed'}`);
         if (isApproving) {
           console.log(`[Cancellation] Order marked as refunded:`, {
             refundAmount: orderData.total || 0,
@@ -259,9 +259,9 @@ export default function OrdersPage() {
           let message = '';
               
           if (isApproving) {
-            message = `✅ *CANCELLATION APPROVED - REFUND INITIATED* ✅\n\n` +
+            message = `✅ *REFUND PROCESSED SUCCESSFULLY* ✅\n\n` +
               `Dear ${customerName},\n\n` +
-              `Your cancellation request for order *${orderId}* has been *APPROVED*.\n\n` +
+              `Your refund for order *${orderId}* has been *PROCESSED* successfully.\n\n` +
               `━━━━━━━━━━━━━━━━━━━━\n` +
               `💰 *Refund Amount:* ${formatCurrency(orderTotal)}\n` +
               `⏱️ *Processing Time:* 24-48 hours\n` +
@@ -814,6 +814,7 @@ try {
       processing: { bg: "bg-[rgba(59,130,246,0.1)]", color: "text-[#3b82f6]", label: "Processing" },
       shipped: { bg: "bg-[rgba(139,92,246,0.1)]", color: "text-[#8b5cf6]", label: "Shipped" },
       delivered: { bg: "bg-[rgba(37,211,102,0.1)]", color: "text-[#25D366]", label: "Completed" },
+      refunded: { bg: "bg-[rgba(16,185,129,0.1)]", color: "text-[#10b981]", label: "Refunded" },
       cancelled: { bg: "bg-[rgba(239,68,68,0.1)]", color: "text-[#ef4444]", label: "Cancelled" },
       cancellation_requested: { bg: "bg-[rgba(239,68,68,0.1)]", color: "text-[#ef4444]", label: "Cancellation Requested" },
     };
@@ -894,6 +895,7 @@ try {
     { id: "pending", label: "Pending", count: counts.pending },
     { id: "processing", label: "Processing", count: counts.processing },
     { id: "completed", label: "Completed", count: counts.completed },
+    { id: "refunded", label: "Refunded", count: counts.refunded || 0 },
     { id: "cancelled", label: "Cancelled", count: counts.cancelled },
     { id: "cancellation_requests", label: "Cancellation Requests", count: counts.cancellations, icon: "fa-exclamation-triangle" },
   ];
