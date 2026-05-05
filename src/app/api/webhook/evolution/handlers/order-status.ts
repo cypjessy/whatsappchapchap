@@ -605,16 +605,18 @@ async function processCancellation(
     await db
       .collection("cancellation_requests")
       .add({
-        tenantId,
-        orderId,
+        tenantId: tenantId,
+        orderId: orderId,
         customerPhone: phone,
-        orderData,
+        orderData: orderData,
         status: 'pending', // pending, approved, rejected
         reason: 'Customer requested cancellation',
         requestedAt: FieldValue.serverTimestamp(),
         respondedAt: null,
         responseNote: null,
       });
+    
+    console.log(`[OrderCancel] Created cancellation request with tenantId: ${tenantId}`);
     
     // Update order status to cancellation_requested
     const orderQuery = await db
