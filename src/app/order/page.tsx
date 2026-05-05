@@ -39,6 +39,7 @@ interface Product {
   category?: string;
   categoryName?: string;
   subcategory?: string;
+  brand?: string;
   filters?: Record<string, string[]>;
   shippingMethods?: Array<{ id: string; name: string; price: number }>;
   paymentMethods?: Array<{ id: string; name: string; details: string }>;
@@ -100,6 +101,12 @@ function OrderPageContent() {
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  
   // Cart state
 
   const [cart, setCart] = useState<Array<{
@@ -121,6 +128,68 @@ function OrderPageContent() {
   const allImages = product?.images && product.images.length > 0 
     ? product.images 
     : product?.image ? [product.image] : [];
+
+  const handleSearch = async (searchTerm: string) => {
+    setSearchQuery(searchTerm);
+    
+    if (searchTerm.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+    
+    setIsSearching(true);
+    
+    try {
+      const app = getFirebaseApp();
+      if (!app) return;
+      
+      const db = getFirestore(app);
+      
+      // Search by name (case-insensitive)
+      const productsQuery = query(
+        collection(db, "products"),
+        where("tenantId", "==", tenantId)
+      );
+      
+      const productsSnap = await getDocs(productsQuery);
+      const allProducts = productsSnap.docs.map((doc: any) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Product[];
+      
+      // Filter products by search query
+      const filtered = allProducts.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.subcategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        Object.values(p.filters || {}).some(arr => 
+          Array.isArray(arr) && arr.some(val => 
+            val.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        )
+      );
+      
+      setSearchResults(filtered.slice(0, 10)); // Limit to 10 results
+      setShowSearchResults(true);
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  const selectSearchResult = (product: Product) => {
+    router.push(`/order?tenant=${tenantId}&product=${product.id}&phone=${encodeURIComponent(customerPhone || '')}`);
+  };
+  
+  const closeSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -837,6 +906,122 @@ function OrderPageContent() {
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <div style={{ width: "100%", maxWidth: 960, margin: "0 auto", background: "white", minHeight: "100vh", boxShadow: "0 0 40px rgba(0,0,0,0.06)" }}>
+
+        {/* Search Bar */}
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", background: "white", position: "sticky", top: 0, zIndex: 100 }}>
+          <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
+            <input
+              type="text"
+              placeholder="🔍 Search products by name, category, brand..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 45px 12px 16px",
+                border: "2px solid #e2e8f0",
+                borderRadius: 12,
+                fontSize: 15,
+                outline: "none",
+                transition: "border-color 0.2s",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
+              onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+            />
+            {searchQuery && (
+              <button
+                onClick={closeSearch}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  fontSize: 18,
+                  color: "#64748b",
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                }}
+              >
+                ×
+              </button>
+            )}
+            
+            {/* Search Results Dropdown */}
+            {showSearchResults && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                marginTop: 8,
+                background: "white",
+                borderRadius: 12,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                border: "2px solid #e2e8f0",
+                maxHeight: 400,
+                overflowY: "auto",
+                zIndex: 101,
+              }}>
+                {isSearching ? (
+                  <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>
+                    <i className="fas fa-spinner fa-spin" style={{ fontSize: 20 }}></i>
+                    <div style={{ marginTop: 8 }}>Searching...</div>
+                  </div>
+                ) : searchResults.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>
+                    <i className="fas fa-search" style={{ fontSize: 24, marginBottom: 8 }}></i>
+                    <div>No products found for "{searchQuery}"</div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0", fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+                      Found {searchResults.length} product{searchResults.length > 1 ? 's' : ''}
+                    </div>
+                    {searchResults.map((result) => (
+                      <div
+                        key={result.id}
+                        onClick={() => selectSearchResult(result)}
+                        style={{
+                          padding: "12px 16px",
+                          borderBottom: "1px solid #f1f5f9",
+                          cursor: "pointer",
+                          transition: "background 0.2s",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                      >
+                        {result.image ? (
+                          <img
+                            src={result.image}
+                            alt={result.name}
+                            style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8 }}
+                          />
+                        ) : (
+                          <div style={{ width: 48, height: 48, background: "#f1f5f9", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
+                            📦
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{result.name}</div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>
+                            {result.category && <span>{result.category}</span>}
+                            {result.brand && <span> • {result.brand}</span>}
+                            {result.price && <span> • KES {result.price.toLocaleString()}</span>}
+                          </div>
+                        </div>
+                        <i className="fas fa-chevron-right" style={{ color: "#94a3b8" }}></i>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Floating Cart Button */}
         {cart.length > 0 && !showCart && (
