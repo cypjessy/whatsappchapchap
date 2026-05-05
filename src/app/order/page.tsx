@@ -108,7 +108,7 @@ function OrderPageContent() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   
   // Debounce ref for search
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<any>(null);
   
   // Search request ID to prevent race conditions
   const searchRequestIdRef = useRef<number>(0);
@@ -262,6 +262,15 @@ function OrderPageContent() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!productId || !tenantId) {
@@ -324,15 +333,8 @@ function OrderPageContent() {
         const profileQuery = query(collection(db, "businessProfiles"), where("tenantId", "==", tenantId));
         const profileSnap = await getDocs(profileQuery);
         
-        console.log('📊 Order Page - Tenant ID:', tenantId);
-        console.log('📊 Order Page - Business Profile query results:', profileSnap.size);
         
         const profileData = !profileSnap.empty ? profileSnap.docs[0].data() : null;
-        
-        if (profileData) {
-          console.log('📊 Order Page - Profile Data:', profileData);
-          console.log('📊 Order Page - Payment Methods:', profileData.paymentMethods);
-        }
         
         // Fetch shipping methods - tenant-filtered query
         const shippingQuery = query(
@@ -340,24 +342,19 @@ function OrderPageContent() {
           where("tenantId", "==", tenantId)
         );
         const shippingSnap = await getDocs(shippingQuery);
-        console.log('📊 Order Page - Shipping methods query results:', shippingSnap.size);
         const shippingMethods = shippingSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
         
-        console.log('📊 Order Page - Shipping methods for tenant:', shippingMethods);
-        
         // Fetch pickup stations - tenant-filtered query
         const pickupQuery = query(
           collection(db, "pickupStations"),
-          where("tenantId", "==", tenantId)
+          where("tenantId", "==", tenantId),
+          where("isActive", "==", true)
         );
         const pickupSnap = await getDocs(pickupQuery);
-        console.log('📍 Order Page - Pickup stations query results:', pickupSnap.size);
-        const pickupStationsData = pickupSnap.docs
-          .filter(doc => doc.data().tenantId === tenantId && doc.data().isActive !== false)
-          .map(doc => ({
+        const pickupStationsData = pickupSnap.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           })) as Array<{ 
@@ -371,7 +368,6 @@ function OrderPageContent() {
             description?: string;
           }>;
         
-        console.log('📍 Order Page - Pickup stations for tenant:', pickupStationsData);
         setPickupStations(pickupStationsData);
         
         // Set business settings
@@ -381,21 +377,11 @@ function OrderPageContent() {
         const paymentMethodsArray: Array<{ id: string; name: string; details: string; icon: string; color: string }> = [];
         const pm = profileData?.paymentMethods;
         
-        console.log('📊 Order Page - Payment Methods Object (pm):', pm);
-        console.log('📊 Order Page - M-Pesa full structure:', JSON.stringify(pm?.mpesa, null, 2));
-        console.log(' Order Page - M-Pesa enabled:', pm?.mpesa?.enabled);
-        console.log(' Order Page - Buy Goods:', pm?.mpesa?.buyGoods);
-        console.log('📊 Order Page - Buy Goods enabled:', pm?.mpesa?.buyGoods?.enabled);
-        console.log('📊 Order Page - Buy Goods tillNumber:', pm?.mpesa?.buyGoods?.tillNumber);
-        console.log('📊 Order Page - Paybill:', pm?.mpesa?.paybill);
-        console.log('📊 Order Page - Personal:', pm?.mpesa?.personal);
         
         if (pm?.mpesa?.enabled) {
-          console.log('📊 Order Page - M-Pesa enabled');
           
           // Each M-Pesa subtype becomes its own payment card
           if (pm.mpesa.buyGoods?.tillNumber) {
-            console.log('📊 Order Page - Buy Goods has tillNumber:', pm.mpesa.buyGoods.tillNumber);
             paymentMethodsArray.push({
               id: "mpesa-buygoods",
               name: "M-Pesa Buy Goods",
@@ -406,7 +392,6 @@ function OrderPageContent() {
           }
           
           if (pm.mpesa.paybill?.paybillNumber) {
-            console.log('📊 Order Page - Paybill has paybillNumber:', pm.mpesa.paybill.paybillNumber);
             paymentMethodsArray.push({
               id: "mpesa-paybill",
               name: "M-Pesa Paybill",
@@ -417,7 +402,6 @@ function OrderPageContent() {
           }
           
           if (pm.mpesa.personal?.phoneNumber) {
-            console.log(' Order Page - Personal has phoneNumber:', pm.mpesa.personal.phoneNumber);
             paymentMethodsArray.push({
               id: "mpesa-personal",
               name: "M-Pesa Send Money",
@@ -429,7 +413,6 @@ function OrderPageContent() {
         }
         
         if (pm?.bank?.enabled) {
-          console.log(' Order Page - Bank enabled:', pm.bank);
           paymentMethodsArray.push({
             id: "bank",
             name: "Bank Transfer",
@@ -440,7 +423,6 @@ function OrderPageContent() {
         }
         
         if (pm?.card?.enabled) {
-          console.log('📊 Order Page - Card enabled:', pm.card);
           paymentMethodsArray.push({
             id: "card",
             name: "Card Payment",
@@ -451,7 +433,6 @@ function OrderPageContent() {
         }
         
         if (pm?.cash?.enabled) {
-          console.log('📊 Order Page - Cash/COD enabled:', pm.cash);
           paymentMethodsArray.push({
             id: "cod",
             name: "Cash on Delivery",
@@ -461,8 +442,6 @@ function OrderPageContent() {
           });
         }
         
-        console.log('📊 Order Page - Final Payment Methods Array:', paymentMethodsArray);
-        console.log(' Order Page - Setting businessSettings with paymentMethods:', paymentMethodsArray);
         
         setBusinessSettings({
           shippingMethods: shippingMethods.length > 0 ? shippingMethods : undefined,
@@ -680,8 +659,9 @@ function OrderPageContent() {
       }
     };
     
+    // Only load cart once on mount, not on every phone keystroke
     loadCart();
-  }, [customerPhone, tenantId]);
+  }, [tenantId]); // Remove customerPhone dependency
 
   const getBasePrice = () => {
     if (!product) return 0;
@@ -792,16 +772,16 @@ function OrderPageContent() {
       const docRef = await addDoc(collection(db, "orders"), {
         orderNumber: orderNum,
         tenantId,
-        productId: showCart ? null : product!.id,
+        productId: product!.id,
         productName: productNames,
-        productImage: showCart ? null : product?.image,
+        productImage: product?.image,
         products: orderProducts,
-        basePrice: showCart ? null : getBasePrice(),
-        selectedSpecs: showCart ? null : selectedSpecs,
-        selectedVariant: showCart ? null : (product?.variants?.find(v => 
+        basePrice: getBasePrice(),
+        selectedSpecs: selectedSpecs,
+        selectedVariant: product?.variants?.find(v => 
           Object.entries(selectedSpecs).every(([key, value]) => v.specs[key] === value)
-        ) || null),
-        quantity: showCart ? null : quantity,
+        ) || null,
+        quantity: quantity,
         customerPhone: normalizedPhone,
         whatsappJid,
         customerName: customerName.trim(),
@@ -830,7 +810,7 @@ function OrderPageContent() {
         deliveryCost,
         paymentMethod,
         paymentDetails: paymentDetails.trim() || null,
-        orderNotes: showCart ? "Order from cart" : (orderNotes.trim() || ""),
+        orderNotes: orderNotes.trim() || "",
         subtotal,
         total,
         status: "pending",
@@ -853,12 +833,18 @@ function OrderPageContent() {
       if (!isValidWhatsAppPhone(customerPhoneClean)) {
         console.error('❌ Invalid phone number, skipping WhatsApp notification:', customerPhoneClean);
       } else {
+        // Use pickup station address if selected, otherwise show "Not specified"
+        const station = pickupStations.find(s => s.id === selectedStation);
+        const addressForMessage = station 
+          ? `${station.stationName}, ${station.town}, ${station.county}`
+          : "Not specified";
+        
         const orderConfirmationMessage = getOrderStatusMessage(
           'pending',
           customerName.trim(),
           orderNum,
           productNames,
-          address.trim()
+          addressForMessage
         );
           
         console.log('📲 Sending order received WhatsApp to:', customerPhoneClean);
@@ -1598,12 +1584,18 @@ function OrderPageContent() {
                 {deliveryMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
               </div>
               <div style={{ width: 48, height: 48, background: "#f8fafc", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "#25D366" }}>
-                <i className={`fas ${option.id === "pickup" ? "fa-store" : option.id === "express" ? "fa-shipping-fast" : "fa-truck"}`}></i>
+                <i className={`fas ${
+                  option.name.toLowerCase().includes('pickup') ? "fa-store" :
+                  option.name.toLowerCase().includes('express') ? "fa-shipping-fast" : "fa-truck"
+                }`}></i>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
                 <div style={{ fontSize: 14, color: "#64748b" }}>
-                  {option.estimatedDays || (option.id === "pickup" ? "Available today after 2PM" : option.id === "express" ? "1-2 business days" : "3-5 business days")}
+                  {option.estimatedDays || (
+                    option.name.toLowerCase().includes('pickup') ? "Available today after 2PM" :
+                    option.name.toLowerCase().includes('express') ? "1-2 business days" : "3-5 business days"
+                  )}
                 </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: 18, color: option.price === 0 ? "#10b981" : "#25D366" }}>
@@ -1665,7 +1657,11 @@ function OrderPageContent() {
           {paymentMethod !== "cod" && businessSettings?.paymentMethods && (
             <div style={{ marginTop: 16, padding: 16, background: "#f8fafc", borderRadius: 12, border: "2px solid #e2e8f0" }}>
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12, color: "#1e293b" }}>
-                {paymentMethod === "mpesa" ? "M-Pesa Payment Instructions" : paymentMethod === "bank" ? "Bank Transfer Details" : "Payment Instructions"}
+                {(() => {
+                  const isMpesa = paymentMethod.startsWith("mpesa");
+                  const isBank = paymentMethod === "bank";
+                  return isMpesa ? "M-Pesa Payment Instructions" : isBank ? "Bank Transfer Details" : "Payment Instructions";
+                })()}
               </div>
               <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap", marginBottom: 16 }}>
                 {businessSettings.paymentMethods.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || "Payment instructions not available"}
