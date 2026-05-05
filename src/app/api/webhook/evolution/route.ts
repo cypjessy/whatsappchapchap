@@ -728,7 +728,7 @@ async function handleProductSearchInput(
         const emoji = ['1️', '2️', '3️⃣', '4️⃣', '5️'][index] || `${index + 1}️`;
         const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
         const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
-        const category = product.category ? ` • ${product.category}` : '';
+        const category = product.category || product.categoryName ? ` • ${product.category || product.categoryName}` : '';
         const brand = product.brand ? ` • ${product.brand}` : '';
         
         responseText += `${emoji} *${product.name}*\n`;
@@ -1784,72 +1784,86 @@ async function handleProductSearch(
     
     debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
     
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-    if (!baseUrl) {
-      console.error('[Webhook] NEXT_PUBLIC_APP_URL or VERCEL_URL not configured');
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(tenantId, phone, "❌ Search service unavailable. Please try again later.");
-      return;
-    }
+    // Direct Firestore query (same logic as order page)
+    const adminDb = getAdminDb();
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout for faster non-AI search
+    const productsSnap = await adminDb
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .get();
     
-    debugLog(`[Webhook] Calling /api/product-search with tenantId: ${tenantId}, term: "${searchTerm}"`);
-    
-    let searchResponse;
-    try {
-      searchResponse = await fetch(`${baseUrl}/api/product-search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: searchTerm, // Changed from searchQuery to query
-          tenantId: tenantId,
-          limit: 20 // Get more results for pagination
-        }),
-        signal: controller.signal,
-      });
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      console.error('[Webhook] Fetch error:', fetchError);
-      throw new Error(`Network error: ${fetchError.message}`);
-    }
-    
-    clearTimeout(timeoutId);
-    
-    debugLog(`[Webhook] Search API response status: ${searchResponse.status}`);
-    
-    if (!searchResponse.ok) {
-      let errorText = '';
-      try {
-        errorText = await searchResponse.text();
-      } catch (e) {
-        errorText = 'Could not read error response';
-      }
-      console.error('[Webhook] Search API failed:', searchResponse.status, errorText);
-      throw new Error(`Search API failed with status ${searchResponse.status}`);
-    }
-    
-    const searchData = await searchResponse.json();
-    debugLog(`[Webhook] Search API returned: success=${searchData.success}, results=${searchData.results?.length || 0}`);
-    
-    if (!searchData.success) {
-      throw new Error(searchData.error || 'Search API returned failure');
-    }
-    
-    if (!searchData.results || searchData.results.length === 0) {
-      debugLog(`[Webhook] No results found for: "${searchTerm}"`);
+    if (productsSnap.empty) {
+      debugLog(`[Webhook] No products found for tenant ${tenantId}`);
       await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(
         tenantId,
         phone,
-        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu`
       );
       return;
     }
     
-    const results = searchData.results.slice(0, 5);
-    const totalResults = searchData.totalResults;
+    // Score products (same logic as order page)
+    const searchLower = searchTerm.toLowerCase();
+    const allProducts = productsSnap.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    const scoredProducts = allProducts.map((product: any) => {
+      let score = 0;
+      
+      const name = (product.name || "").toLowerCase();
+      const brand = (product.brand || "").toLowerCase();
+      const category = (product.category || product.categoryName || "").toLowerCase();
+      const description = (product.description || "").toLowerCase();
+      
+      // Name match (highest priority)
+      if (name.includes(searchLower)) {
+        score += 100;
+        if (name.startsWith(searchLower)) {
+          score += 50;
+        }
+      }
+      
+      // Brand match
+      if (brand.includes(searchLower)) {
+        score += 40;
+      }
+      
+      // Category match
+      if (category.includes(searchLower)) {
+        score += 30;
+      }
+      
+      // Description match
+      if (description.includes(searchLower)) {
+        score += 10;
+      }
+      
+      return { ...product, score };
+    }).filter((p: any) => p.score > 0);
+    
+    // Sort by score
+    scoredProducts.sort((a: any, b: any) => b.score - a.score);
+    
+    if (scoredProducts.length === 0) {
+      debugLog(`[Webhook] No matching products for: "${searchTerm}"`);
+      await stopTypingIndicator(tenantId, phone);
+      await sendEvolutionMessage(
+        tenantId,
+        phone,
+        ` No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu`
+      );
+      return;
+    }
+    
+    // Get top 5 results
+    const results = scoredProducts.slice(0, 5);
+    const totalResults = scoredProducts.length;
+    
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_URL}`;
     
     let message = `🔍 *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
           
@@ -1857,7 +1871,7 @@ async function handleProductSearch(
       const emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'][index];
       const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
       const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
-      const category = product.category ? ` • ${product.category}` : '';
+      const category = product.category || product.categoryName ? ` • ${product.category || product.categoryName}` : '';
       const brand = product.brand ? ` • ${product.brand}` : '';
       
       message += `${emoji} *${product.name}*\n`;
@@ -1894,7 +1908,7 @@ async function handleProductSearch(
       flowName: 'product_search',
       currentStep: 'search_results',
       searchQuery: searchTerm,
-      allResults: searchData.results || [], // Removed enhancedQueries since non-AI search doesn't return it
+      allResults: scoredProducts,
       currentIndex: 0,
       isActive: true,
       lastActivity: new Date().toISOString(),
