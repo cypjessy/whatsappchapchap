@@ -952,6 +952,14 @@ async function handleProductBrowseInput(
   
   await startTypingIndicator(tenantId, phone);
   
+  // SAFEGUARD: If somehow we're in product_browse flow and message is '0', ALWAYS go to main menu
+  if (message.trim() === '0') {
+    console.log(`[Webhook] SAFEGUARD: '0' in product browse - going to main menu`);
+    await stopTypingIndicator(tenantId, phone);
+    await sendWelcomeMenu(tenantId, phone);
+    return;
+  }
+  
   if (currentStep === 'category_selection') {
     const num = parseInt(message.trim());
     const categories = selections.categories;
