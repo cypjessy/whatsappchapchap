@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { enhanceSearchQuery } from "@/lib/ai-service";
 import { adminDb } from "@/lib/firebase-admin";
 
+// Module-level cache with TTL (5 minutes)
+interface CacheEntry {
+  products: any[];
+  timestamp: number;
+}
+
+const productsCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Relevance scoring function
 function scoreProduct(product: any, term: string): number {
   let score = 0;
@@ -34,6 +43,51 @@ function scoreProduct(product: any, term: string): number {
   return score;
 }
 
+// Get cached products or fetch fresh
+async function getProductsForTenant(tenantId: string): Promise<any[]> {
+  const now = Date.now();
+  const cached = productsCache.get(tenantId);
+  
+  // Return cached if still valid
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    console.log(`[AI Search] Using cached products for tenant ${tenantId} (${cached.products.length} products)`);
+    return cached.products;
+  }
+  
+  // Fetch fresh from Firestore
+  console.log(`[AI Search] Fetching products from Firestore for tenant ${tenantId}`);
+  const productsSnap = await adminDb!
+    .collection("products")
+    .where("tenantId", "==", tenantId)
+    .where("status", "==", "active")
+    .get();
+
+  // Strip down to essential fields for memory efficiency
+  const products = productsSnap.docs.map((doc: any) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name,
+      category: data.category,
+      subcategory: data.subcategory,
+      brand: data.brand,
+      description: data.description,
+      price: data.price,
+      stock: data.stock,
+      images: data.images,
+      filters: data.filters,
+      tenantId: data.tenantId,
+      status: data.status,
+    };
+  });
+  
+  // Cache the results
+  productsCache.set(tenantId, { products, timestamp: now });
+  console.log(`[AI Search] Cached ${products.length} products for tenant ${tenantId}`);
+  
+  return products;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { searchQuery, tenantId } = await req.json();
@@ -54,33 +108,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch only ACTIVE products for this tenant to provide context to AI
-    const productsSnap = await adminDb
-      .collection("products")
-      .where("tenantId", "==", tenantId)
-      .where("status", "==", "active")
-      .get();
-
-    // Strip down to essential fields for memory efficiency
-    const allProducts = productsSnap.docs.map((doc: any) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        name: data.name,
-        category: data.category,
-        subcategory: data.subcategory,
-        brand: data.brand,
-        description: data.description,
-        price: data.price,
-        stock: data.stock,
-        images: data.images,
-        filters: data.filters,
-        tenantId: data.tenantId,
-        status: data.status,
-      };
-    });
-
-    console.log(`[AI Search] Found ${allProducts.length} active products for tenant ${tenantId}`);
+    // Get products (with caching)
+    const allProducts = await getProductsForTenant(tenantId);
 
     // Prepare minimal context for AI enhancement (no businessName needed for query expansion)
     const aiContext = {
@@ -92,12 +121,19 @@ export async function POST(req: NextRequest) {
       })),
     };
 
-    // Use AI to enhance the search query
+    // Use AI to enhance the search query with timeout
     console.log(`[AI Search] Enhancing query: "${searchQuery}"`);
     let enhancedQueries: string[] = [];
     
     try {
-      enhancedQueries = await enhanceSearchQuery(searchQuery, aiContext);
+      // Add 5-second timeout to AI call
+      enhancedQueries = await Promise.race([
+        enhanceSearchQuery(searchQuery, aiContext),
+        new Promise<string[]>((_, reject) => 
+          setTimeout(() => reject(new Error("AI timeout after 5s")), 5000)
+        )
+      ]);
+      
       console.log(`[AI Search] Enhanced queries:`, enhancedQueries);
       
       // Validate enhanced queries - ensure we have at least the original query
@@ -106,7 +142,7 @@ export async function POST(req: NextRequest) {
         enhancedQueries = [searchQuery];
       }
     } catch (aiError) {
-      console.error('[AI Search] AI enhancement failed, falling back to original query:', aiError);
+      console.error('[AI Search] AI enhancement failed or timed out, falling back to original query:', aiError);
       enhancedQueries = [searchQuery];
     }
 
@@ -131,10 +167,23 @@ export async function POST(req: NextRequest) {
     }
 
     // Sort by total score (highest first) and limit to top 15
-    const results = Array.from(scoredResults.values())
+    const sortedResults = Array.from(scoredResults.values())
       .sort((a, b) => b.score - a.score)
-      .slice(0, 15)
-      .map(item => item.product);
+      .slice(0, 15);
+
+    // Shape response to expose only public fields (no internal data)
+    const results = sortedResults.map(item => ({
+      id: item.product.id,
+      name: item.product.name,
+      price: item.product.price,
+      image: item.product.images?.[0] || null,
+      category: item.product.category,
+      subcategory: item.product.subcategory,
+      brand: item.product.brand,
+      stock: item.product.stock,
+      description: item.product.description,
+      filters: item.product.filters,
+    }));
 
     console.log(`[AI Search] Returning ${results.length} results (sorted by relevance)`);
 
