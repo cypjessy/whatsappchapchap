@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enhanceSearchQuery } from "@/lib/ai-service";
-import { adminDb } from "@/lib/firebase-admin";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+
+// Initialize Firebase Admin SDK directly (don't rely on external import)
+let adminDb: any = null;
+
+function getAdminDb() {
+  if (!adminDb) {
+    if (getApps().length === 0) {
+      initializeApp({
+        credential: cert({
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        }),
+      });
+    }
+    adminDb = getFirestore();
+  }
+  return adminDb;
+}
 
 // Module-level cache with TTL (5 minutes)
 interface CacheEntry {
@@ -11,25 +31,49 @@ interface CacheEntry {
 const productsCache = new Map<string, CacheEntry>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-// Relevance scoring function
+// Relevance scoring function - FIXED with better word matching
 function scoreProduct(product: any, term: string): number {
   let score = 0;
   const termLower = term.toLowerCase();
+  const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
   
   // Name match - highest priority
-  if (product.name?.toLowerCase().includes(termLower)) score += 10;
+  const nameLower = (product.name || "").toLowerCase();
+  for (const word of termWords) {
+    if (nameLower.includes(word)) {
+      score += 10;
+      // Exact word boundary match bonus
+      if (new RegExp(`\\b${word}\\b`).test(nameLower)) {
+        score += 5;
+      }
+    }
+  }
+  // Exact name match bonus
+  if (nameLower === termLower) score += 20;
   
   // Category match - high priority
-  if (product.category?.toLowerCase().includes(termLower)) score += 5;
+  const categoryLower = (product.category || "").toLowerCase();
+  for (const word of termWords) {
+    if (categoryLower.includes(word)) score += 5;
+  }
   
   // Brand match - medium-high priority
-  if (product.brand?.toLowerCase().includes(termLower)) score += 4;
+  const brandLower = (product.brand || "").toLowerCase();
+  for (const word of termWords) {
+    if (brandLower.includes(word)) score += 4;
+  }
   
   // Subcategory match - medium priority
-  if (product.subcategory?.toLowerCase().includes(termLower)) score += 3;
+  const subcategoryLower = (product.subcategory || "").toLowerCase();
+  for (const word of termWords) {
+    if (subcategoryLower.includes(word)) score += 3;
+  }
   
   // Description match - lower priority
-  if (product.description?.toLowerCase().includes(termLower)) score += 2;
+  const descLower = (product.description || "").toLowerCase();
+  for (const word of termWords) {
+    if (descLower.includes(word)) score += 2;
+  }
   
   // Filter values match - lowest priority
   if (Object.values(product.filters || {}).some((arr: any) =>
@@ -54,70 +98,96 @@ async function getProductsForTenant(tenantId: string): Promise<any[]> {
     return cached.products;
   }
   
+  const db = getAdminDb();
+  
   // Fetch fresh from Firestore
   console.log(`[AI Search] Fetching products from Firestore for tenant ${tenantId}`);
-  const productsSnap = await adminDb!
-    .collection("products")
-    .where("tenantId", "==", tenantId)
-    .where("status", "==", "active")
-    .get();
+  
+  try {
+    const productsSnap = await db
+      .collection("products")
+      .where("tenantId", "==", tenantId)
+      .where("status", "==", "active")
+      .get();
 
-  // Strip down to essential fields for memory efficiency
-  const products = productsSnap.docs.map((doc: any) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      name: data.name,
-      category: data.category,
-      subcategory: data.subcategory,
-      brand: data.brand,
-      description: data.description,
-      price: data.price,
-      stock: data.stock,
-      images: data.images,
-      filters: data.filters,
-      tenantId: data.tenantId,
-      status: data.status,
-    };
-  });
-  
-  // Cache the results
-  productsCache.set(tenantId, { products, timestamp: now });
-  console.log(`[AI Search] Cached ${products.length} products for tenant ${tenantId}`);
-  
-  return products;
+    // Strip down to essential fields for memory efficiency
+    const products = productsSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        category: data.category,
+        subcategory: data.subcategory,
+        brand: data.brand,
+        description: data.description,
+        price: data.price,
+        stock: data.stock,
+        images: data.images || [],
+        filters: data.filters,
+        tenantId: data.tenantId,
+        status: data.status,
+      };
+    });
+    
+    // Cache the results
+    productsCache.set(tenantId, { products, timestamp: now });
+    console.log(`[AI Search] Cached ${products.length} products for tenant ${tenantId}`);
+    
+    return products;
+  } catch (error) {
+    console.error(`[AI Search] Error fetching products for tenant ${tenantId}:`, error);
+    // Return empty array on error
+    return [];
+  }
 }
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     const { searchQuery, tenantId } = await req.json();
 
     if (!searchQuery || !tenantId) {
       return NextResponse.json(
-        { error: "Missing searchQuery or tenantId" },
+        { success: false, error: "Missing searchQuery or tenantId" },
         { status: 400 }
       );
     }
 
-    // Use Firebase Admin SDK (server-side)
-    if (!adminDb) {
+    console.log(`[AI Search] Searching for: "${searchQuery}" in tenant: ${tenantId}`);
+
+    // Initialize Firebase Admin SDK
+    const db = getAdminDb();
+    
+    if (!db) {
       console.error('[AI Search] Firebase Admin SDK not initialized');
       return NextResponse.json(
-        { error: "Server configuration error" },
+        { success: false, error: "Server configuration error" },
         { status: 500 }
       );
     }
 
     // Get products (with caching)
     const allProducts = await getProductsForTenant(tenantId);
+    
+    if (allProducts.length === 0) {
+      console.log(`[AI Search] No products found for tenant ${tenantId}`);
+      return NextResponse.json({
+        success: true,
+        originalQuery: searchQuery,
+        enhancedQueries: [searchQuery],
+        results: [],
+        totalResults: 0,
+      });
+    }
 
-    // Prepare minimal context for AI enhancement (no businessName needed for query expansion)
+    // Prepare minimal context for AI enhancement
     const aiContext = {
-      products: allProducts.map((p: any) => ({
+      products: allProducts.slice(0, 30).map((p: any) => ({
         name: p.name,
         category: p.category,
         brand: p.brand,
-        description: p.description,
+        description: p.description?.substring(0, 200),
       })),
     };
 
@@ -132,12 +202,12 @@ export async function POST(req: NextRequest) {
         enhancedQueries = [searchQuery];
       } else {
         // Add 5-second timeout to AI call
-        enhancedQueries = await Promise.race([
-          enhanceSearchQuery(searchQuery, aiContext),
-          new Promise<string[]>((_, reject) => 
-            setTimeout(() => reject(new Error("AI timeout after 5s")), 5000)
-          )
-        ]);
+        const aiPromise = enhanceSearchQuery(searchQuery, aiContext);
+        const timeoutPromise = new Promise<string[]>((_, reject) => 
+          setTimeout(() => reject(new Error("AI timeout after 5s")), 5000)
+        );
+        
+        enhancedQueries = await Promise.race([aiPromise, timeoutPromise]);
         
         console.log(`[AI Search] Enhanced queries:`, enhancedQueries);
         
@@ -153,7 +223,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Search using all enhanced queries with scoring
-    // Map stores: productId -> { product, totalScore }
     const scoredResults = new Map<string, { product: any; score: number }>();
 
     for (const searchTerm of enhancedQueries) {
@@ -163,7 +232,6 @@ export async function POST(req: NextRequest) {
         if (score > 0) {
           const existing = scoredResults.get(product.id);
           if (existing) {
-            // Accumulate scores across multiple enhanced queries
             existing.score += score;
           } else {
             scoredResults.set(product.id, { product, score });
@@ -177,7 +245,7 @@ export async function POST(req: NextRequest) {
       .sort((a, b) => b.score - a.score)
       .slice(0, 15);
 
-    // Shape response to expose only public fields (no internal data)
+    // Shape response to expose only public fields
     const results = sortedResults.map(item => ({
       id: item.product.id,
       name: item.product.name,
@@ -187,11 +255,11 @@ export async function POST(req: NextRequest) {
       subcategory: item.product.subcategory,
       brand: item.product.brand,
       stock: item.product.stock,
-      description: item.product.description,
-      filters: item.product.filters,
+      description: item.product.description?.substring(0, 300),
     }));
 
-    console.log(`[AI Search] Returning ${results.length} results (sorted by relevance)`);
+    const duration = Date.now() - startTime;
+    console.log(`[AI Search] Returning ${results.length} results for "${searchQuery}" (took ${duration}ms)`);
 
     return NextResponse.json({
       success: true,
@@ -202,9 +270,17 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[AI Search] Error:", error);
+    const duration = Date.now() - startTime;
+    console.error(`[AI Search] Error after ${duration}ms:`, error);
+    
     return NextResponse.json(
-      { error: "Search failed", details: String(error) },
+      { 
+        success: false, 
+        error: "Search failed", 
+        details: error instanceof Error ? error.message : String(error),
+        results: [],
+        totalResults: 0,
+      },
       { status: 500 }
     );
   }

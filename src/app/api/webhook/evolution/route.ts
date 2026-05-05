@@ -509,7 +509,6 @@ async function handleProductSearchInput(
 ): Promise<void> {
   const adminDb = getAdminDb();
   const { currentStep, searchQuery } = flowState;
-  // FIXED: Guard against undefined allResults
   const allResults = flowState.allResults || [];
   const trimmed = message.trim();
   const num = parseInt(trimmed);
@@ -1007,7 +1006,6 @@ async function showNextProductPage(
       .where('__name__', 'in', batch)
       .get();
     
-    // Note: Products are already filtered by status when added to allProducts
     batchSnap.docs.forEach((doc: any) => {
       productsToShow.push({
         id: doc.id,
@@ -1304,7 +1302,6 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
     }, { merge: true });
 }
 
-// FIXED: Fetch payment methods from business profile
 async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
   try {
     const adminDb = getAdminDb();
@@ -1327,7 +1324,6 @@ async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
   await sendEvolutionMessage(tenantId, phone, " Our support team is here to help! Please describe your issue and we'll assist you.");
 }
 
-// FIXED: Store actual URL, not formatted message
 async function handleViewCart(tenantId: string, phone: string): Promise<void> {
   try {
     const adminDb = getAdminDb();
@@ -1373,7 +1369,6 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
     const firstItem = cartData.items[0];
     
-    // FIXED: Extract just the URL for storage
     const orderLinkUrl = cartData.items.length === 1 && firstItem
       ? `${baseUrl}/order?tenant=${tenantId}&product=${firstItem.productId}&phone=${phone}`
       : `${baseUrl}?tenant=${tenantId}`;
@@ -1387,7 +1382,6 @@ async function handleViewCart(tenantId: string, phone: string): Promise<void> {
     
     cartMessage += checkoutMessage;
     
-    // Store just the URL
     await adminDb
       .collection("tenants")
       .doc(tenantId)
@@ -1470,6 +1464,7 @@ function checkIfSearchQuery(message: string): boolean {
   return hasSearchPattern;
 }
 
+// FIXED: Improved handleProductSearch with better search term extraction and timeout
 async function handleProductSearch(
   tenantId: string,
   phone: string,
@@ -1478,9 +1473,16 @@ async function handleProductSearch(
   try {
     debugLog(`[Webhook] Handling product search: "${query}"`);
     
-    const searchTerm = query.trim();
+    // FIXED: Better search term extraction - remove conversational prefixes
+    let searchTerm = query
+      .replace(/^(am looking for|i am looking for|looking for|searching for|want to buy|need to buy|do you have|show me|find|i want|i need|can i get)\s+/i, '')
+      .trim();
     
-    debugLog(`[Webhook] Search term: "${searchTerm}"`);
+    if (!searchTerm) {
+      searchTerm = query.trim();
+    }
+    
+    debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
     
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
     if (!baseUrl) {
@@ -1489,28 +1491,52 @@ async function handleProductSearch(
       return;
     }
     
-    debugLog(`[Webhook] Calling /api/ai-search with tenantId: ${tenantId}`);
-    const searchResponse = await fetch(`${baseUrl}/api/ai-search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        searchQuery: searchTerm,
-        tenantId: tenantId,
-      }),
-    });
+    // FIXED: Add timeout to fetch with AbortController
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    debugLog(`[Webhook] Calling /api/ai-search with tenantId: ${tenantId}, term: "${searchTerm}"`);
+    
+    let searchResponse;
+    try {
+      searchResponse = await fetch(`${baseUrl}/api/ai-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchQuery: searchTerm,
+          tenantId: tenantId,
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      console.error('[Webhook] Fetch error:', fetchError);
+      throw new Error(`Network error: ${fetchError.message}`);
+    }
+    
+    clearTimeout(timeoutId);
     
     debugLog(`[Webhook] Search API response status: ${searchResponse.status}`);
     
     if (!searchResponse.ok) {
-      const errorText = await searchResponse.text().catch(() => 'Unknown error');
+      let errorText = '';
+      try {
+        errorText = await searchResponse.text();
+      } catch (e) {
+        errorText = 'Could not read error response';
+      }
       console.error('[Webhook] Search API failed:', searchResponse.status, errorText);
-      throw new Error(`Search API failed with status ${searchResponse.status}: ${errorText}`);
+      throw new Error(`Search API failed with status ${searchResponse.status}`);
     }
     
     const searchData = await searchResponse.json();
     debugLog(`[Webhook] Search API returned: success=${searchData.success}, results=${searchData.results?.length || 0}`);
     
-    if (!searchData.success || !searchData.results || searchData.results.length === 0) {
+    if (!searchData.success) {
+      throw new Error(searchData.error || 'Search API returned failure');
+    }
+    
+    if (!searchData.results || searchData.results.length === 0) {
       debugLog(`[Webhook] No results found for: "${searchTerm}"`);
       await sendEvolutionMessage(
         tenantId,
@@ -1523,26 +1549,25 @@ async function handleProductSearch(
     const results = searchData.results.slice(0, 5);
     const totalResults = searchData.totalResults;
     
-    let message = ` *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
+    let message = `🔍 *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
           
     results.forEach((product: any, index: number) => {
-      const emoji = ['1️', '2️⃣', '3️⃣', '4️', '5️⃣'][index];
+      const emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'][index];
       const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
       const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
       const category = product.category ? ` • ${product.category}` : '';
       const brand = product.brand ? ` • ${product.brand}` : '';
       
       message += `${emoji} *${product.name}*\n`;
-      message += `${price} ${stock}\n`;
+      message += `💰 ${price} ${stock}\n`;
       if (category || brand) {
-        message += `${category}${brand}\n`;
+        message += `📌${category}${brand}\n`;
       }
       if (product.description) {
         const shortDesc = product.description.substring(0, 80);
-        message += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
+        message += `📝 ${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
       }
       
-      // FIXED: Reuse baseUrl with fallback
       const orderLink = `${baseUrl || 'https://yourdomain.com'}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
       message += `🛒 Order: ${orderLink}\n\n`;
     });
@@ -1578,7 +1603,7 @@ async function handleProductSearch(
     console.error('[Webhook] Error handling product search:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     debugLog(`[Webhook] Search error details: ${errorMessage}`);
-    await sendEvolutionMessage(tenantId, phone, `❌ Search failed: ${errorMessage}. Please try again or browse categories.`);
+    await sendEvolutionMessage(tenantId, phone, `❌ Search failed. Please try again or browse categories.\n\nReply *1* to browse products or *MENU* for main menu.`);
   }
 }
 
@@ -1617,7 +1642,7 @@ async function sendEvolutionMessage(
       return;
     }
 
-    debugLog(`[Webhook] Sending AI response to ${phoneNumber}`);
+    debugLog(`[Webhook] Sending response to ${phoneNumber}`);
 
     const response = await fetch(
       `${evolutionApiUrl}/message/sendText/${tenantId}`,
@@ -1635,13 +1660,13 @@ async function sendEvolutionMessage(
     );
 
     const data = await response.json();
-    debugLog("[Webhook] AI response sent:", data);
+    debugLog("[Webhook] Response sent:", data);
 
     if (!response.ok) {
-      console.error("[Webhook] Failed to send AI response:", data);
+      console.error("[Webhook] Failed to send response:", data);
     }
   } catch (error) {
-    console.error("[Webhook] Error sending AI response:", error);
+    console.error("[Webhook] Error sending response:", error);
   }
 }
 
@@ -1936,7 +1961,6 @@ export async function POST(req: NextRequest) {
     
     console.log(`[Webhook] Extracted phone: ${from} from remoteJid: ${remoteJid}`);
     
-    // FIXED: Removed duplicate message?.message?.conversation
     const text =
       message?.message?.conversation ||
       message?.message?.extendedTextMessage?.text ||
