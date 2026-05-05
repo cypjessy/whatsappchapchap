@@ -53,9 +53,9 @@ function levenshteinDistance(a: string, b: string): number {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
         matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
         );
       }
     }
@@ -63,11 +63,30 @@ function levenshteinDistance(a: string, b: string): number {
   return matrix[b.length][a.length];
 }
 
+// ============================================
+// NORMALIZE TEXT (remove spaces, special chars)
+// ============================================
+function normalizeText(text: string): string {
+  return text.toLowerCase()
+    .replace(/\s+/g, '')  // Remove all spaces
+    .replace(/[^\w]/g, ''); // Remove special characters
+}
+
+// ============================================
+// ENHANCED FUZZY MATCH with space insensitivity
+// ============================================
 function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2): boolean {
   if (!str || !searchTerm) return false;
   
   const strLower = str.toLowerCase();
   const termLower = searchTerm.toLowerCase();
+  const normalizedStr = normalizeText(str);
+  const normalizedTerm = normalizeText(searchTerm);
+  
+  // Normalized match (ignores spaces) - "sundress" matches "sun dress"
+  if (normalizedStr.includes(normalizedTerm) || normalizedTerm.includes(normalizedStr)) {
+    return true;
+  }
   
   // Exact match or contains
   if (strLower.includes(termLower)) return true;
@@ -76,13 +95,22 @@ function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2):
   const words = strLower.split(/\s+/);
   for (const word of words) {
     const distance = levenshteinDistance(word, termLower);
-    if (distance <= maxDistance && word.length > 3) {
+    if (distance <= maxDistance && word.length > 2) {
       return true;
     }
-    // Also check if term is close to any word (e.g., "sundres" vs "sundress")
-    if (termLower.length > 3 && word.length > 3) {
-      const termDistance = levenshteinDistance(termLower, word);
-      if (termDistance <= maxDistance) {
+    // Also check normalized version
+    const normalizedWord = normalizeText(word);
+    if (normalizedWord.includes(normalizedTerm) && word.length > 2) {
+      return true;
+    }
+  }
+  
+  // Check if search term words match product words
+  const termWords = termLower.split(/\s+/);
+  for (const termWord of termWords) {
+    for (const word of words) {
+      const distance = levenshteinDistance(word, termWord);
+      if (distance <= maxDistance && word.length > 2) {
         return true;
       }
     }
@@ -92,34 +120,89 @@ function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2):
 }
 
 // ============================================
-// ENHANCED SCORING WITH FUZZY MATCHING
+// GET SIMILAR PRODUCTS SUGGESTIONS
+// ============================================
+function getSimilarProducts(allProducts: any[], searchTerm: string, limit: number = 3): any[] {
+  const termLower = searchTerm.toLowerCase();
+  const normalizedTerm = normalizeText(searchTerm);
+  
+  const scored = allProducts.map(product => {
+    let score = 0;
+    const name = (product.name || "").toLowerCase();
+    const normalizedName = normalizeText(name);
+    const category = (product.category || product.categoryName || "").toLowerCase();
+    
+    // Check for common word matches
+    const termWords = termLower.split(/\s+/);
+    const nameWords = name.split(/\s+/);
+    
+    for (const termWord of termWords) {
+      for (const nameWord of nameWords) {
+        if (nameWord.includes(termWord) || termWord.includes(nameWord)) {
+          score += 30;
+        }
+        const distance = levenshteinDistance(nameWord, termWord);
+        if (distance <= 2 && nameWord.length > 2) {
+          score += 20;
+        }
+      }
+    }
+    
+    // Category match gives bonus
+    if (category.includes(termLower) || termLower.includes(category)) {
+      score += 15;
+    }
+    
+    // Normalized match
+    if (normalizedName.includes(normalizedTerm)) {
+      score += 25;
+    }
+    
+    return { ...product, score };
+  }).filter(p => p.score > 0);
+  
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit);
+}
+
+// ============================================
+// ENHANCED SCORING WITH SPACE-INSENSITIVE MATCHING
 // ============================================
 function scoreProduct(product: any, searchTerm: string): number {
   let score = 0;
   const term = searchTerm.toLowerCase();
+  const normalizedTerm = normalizeText(term);
   const termWords = term.split(/\s+/).filter(w => w.length > 1);
   
   const name = (product.name || "").toLowerCase();
+  const normalizedName = normalizeText(name);
   const brand = (product.brand || "").toLowerCase();
   const category = (product.category || product.categoryName || "").toLowerCase();
   const description = (product.description || "").toLowerCase();
   
-  // ===== FUZZY NAME MATCH (for typos) =====
-  if (isFuzzyMatch(name, term, 2)) {
-    score += 100;
+  // ===== NORMALIZED MATCH (ignores spaces) - "sundress" matches "sun dress" =====
+  if (normalizedName === normalizedTerm) {
+    score += 250;
+  } else if (normalizedName.includes(normalizedTerm)) {
+    score += 180;
   }
   
-  // ===== EXACT NAME MATCH (Highest priority - 200 points) =====
+  // ===== FUZZY NAME MATCH (for typos) =====
+  if (isFuzzyMatch(name, term, 2)) {
+    score += 120;
+  }
+  
+  // ===== EXACT NAME MATCH =====
   if (name === term) {
     score += 200;
   }
   
-  // ===== NAME STARTS WITH SEARCH TERM (150 points) =====
+  // ===== NAME STARTS WITH SEARCH TERM =====
   if (name.startsWith(term)) {
     score += 150;
   }
   
-  // ===== WORD BOUNDARY MATCHES (80 points per exact word) =====
+  // ===== WORD BOUNDARY MATCHES =====
   const nameWords = name.split(/\s+/);
   for (const word of termWords) {
     if (nameWords.includes(word)) {
@@ -136,17 +219,28 @@ function scoreProduct(product: any, searchTerm: string): number {
     }
   }
   
-  // Bonus if ALL search words appear in name (50 points)
+  // Bonus if ALL search words appear in name
   if (matchCount === termWords.length && termWords.length > 1) {
     score += 50;
   }
   
-  // ===== FUZZY BRAND MATCH =====
+  // ===== PARTIAL WORD MATCH (e.g., "dress" matches "sundress") =====
+  for (const word of termWords) {
+    for (const nameWord of nameWords) {
+      if (nameWord.includes(word) && word.length > 2) {
+        score += 40;
+      }
+      if (word.includes(nameWord) && nameWord.length > 2) {
+        score += 30;
+      }
+    }
+  }
+  
+  // ===== BRAND MATCH =====
   if (isFuzzyMatch(brand, term, 2)) {
     score += 50;
   }
   
-  // ===== BRAND MATCH (40-60 points) =====
   if (brand === term) {
     score += 60;
   } else if (brand.includes(term)) {
@@ -160,12 +254,11 @@ function scoreProduct(product: any, searchTerm: string): number {
     }
   }
   
-  // ===== FUZZY CATEGORY MATCH =====
+  // ===== CATEGORY MATCH =====
   if (isFuzzyMatch(category, term, 2)) {
     score += 40;
   }
   
-  // ===== CATEGORY MATCH (30-50 points) =====
   if (category === term) {
     score += 50;
   } else if (category.includes(term)) {
@@ -179,14 +272,13 @@ function scoreProduct(product: any, searchTerm: string): number {
     }
   }
   
-  // ===== DESCRIPTION MATCH (5 points per word) =====
+  // ===== DESCRIPTION MATCH =====
   for (const word of termWords) {
     if (description.includes(word)) {
       score += 5;
     }
   }
   
-  // ===== FUZZY DESCRIPTION MATCH =====
   if (isFuzzyMatch(description, term, 3)) {
     score += 15;
   }
@@ -248,7 +340,7 @@ async function getCachedProducts(tenantId: string): Promise<any[]> {
 }
 
 // ============================================
-// MAIN SEARCH HANDLER
+// MAIN SEARCH HANDLER with similar products
 // ============================================
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -259,7 +351,7 @@ export async function POST(request: NextRequest) {
 
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
-        { success: false, error: "Search query is required", results: [], totalResults: 0 },
+        { success: false, error: "Search query is required", results: [], totalResults: 0, similarProducts: [] },
         { status: 400 }
       );
     }
@@ -268,14 +360,14 @@ export async function POST(request: NextRequest) {
     
     if (trimmedQuery.length < 2) {
       return NextResponse.json(
-        { success: false, error: "Search query must be at least 2 characters", results: [], totalResults: 0 },
+        { success: false, error: "Search query must be at least 2 characters", results: [], totalResults: 0, similarProducts: [] },
         { status: 400 }
       );
     }
 
     if (!tenantId) {
       return NextResponse.json(
-        { success: false, error: "Tenant ID is required", results: [], totalResults: 0 },
+        { success: false, error: "Tenant ID is required", results: [], totalResults: 0, similarProducts: [] },
         { status: 400 }
       );
     }
@@ -288,10 +380,11 @@ export async function POST(request: NextRequest) {
         results: [],
         totalResults: 0,
         query: trimmedQuery,
+        similarProducts: [],
       });
     }
 
-    // Score all products with fuzzy matching
+    // Score all products with enhanced fuzzy matching
     const searchTerm = trimmedQuery.toLowerCase();
     const scoredResults = allProducts
       .map(product => ({
@@ -306,17 +399,30 @@ export async function POST(request: NextRequest) {
       return a.name.localeCompare(b.name);
     });
 
+    const exactMatches = scoredResults.filter(r => r.score >= 180);
+    const fuzzyMatches = scoredResults.filter(r => r.score >= 50 && r.score < 180);
+    const weakMatches = scoredResults.filter(r => r.score < 50);
+    
+    // Get similar products suggestions (when no exact matches)
+    let similarProducts: any[] = [];
+    if (exactMatches.length === 0 && fuzzyMatches.length === 0) {
+      similarProducts = getSimilarProducts(allProducts, searchTerm, 3);
+    }
+
     const limitedResults = scoredResults.slice(0, limit);
     const finalResults = limitedResults.map(({ score, ...rest }) => rest);
 
     const duration = Date.now() - startTime;
     console.log(`[Product Search] Found ${scoredResults.length} results for "${query}" in ${duration}ms`);
+    console.log(`[Product Search] Exact: ${exactMatches.length}, Fuzzy: ${fuzzyMatches.length}, Similar: ${similarProducts.length}`);
 
     return NextResponse.json({
       success: true,
       results: finalResults,
       totalResults: scoredResults.length,
       query: trimmedQuery,
+      similarProducts: similarProducts.map(({ score, ...rest }) => rest),
+      hasExactMatch: exactMatches.length > 0,
     });
     
   } catch (error) {
@@ -324,7 +430,7 @@ export async function POST(request: NextRequest) {
     console.error(`[Product Search] Error after ${duration}ms:`, error);
     
     return NextResponse.json(
-      { success: false, error: "Search failed. Please try again.", results: [], totalResults: 0 },
+      { success: false, error: "Search failed. Please try again.", results: [], totalResults: 0, similarProducts: [] },
       { status: 500 }
     );
   }
@@ -339,9 +445,11 @@ export async function DELETE(request: NextRequest) {
   
   if (tenantId) {
     productsCache.delete(tenantId);
+    console.log(`[Product Search] Cache cleared for tenant ${tenantId}`);
     return NextResponse.json({ success: true, message: `Cache cleared for tenant ${tenantId}` });
   }
   
   productsCache.clear();
+  console.log(`[Product Search] All cache cleared`);
   return NextResponse.json({ success: true, message: "All cache cleared" });
 }

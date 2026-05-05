@@ -109,9 +109,9 @@ function levenshteinDistance(a: string, b: string): number {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
         matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
         );
       }
     }
@@ -125,17 +125,14 @@ function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2):
   const strLower = str.toLowerCase();
   const termLower = searchTerm.toLowerCase();
   
-  // Exact match or contains
   if (strLower.includes(termLower)) return true;
   
-  // Check each word in the string against search term
   const words = strLower.split(/\s+/);
   for (const word of words) {
     const distance = levenshteinDistance(word, termLower);
     if (distance <= maxDistance && word.length > 3) {
       return true;
     }
-    // Also check if term is close to any word (e.g., "sundres" vs "sundress")
     if (termLower.length > 3 && word.length > 3) {
       const termDistance = levenshteinDistance(termLower, word);
       if (termDistance <= maxDistance) {
@@ -390,7 +387,6 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   }
 }
 
-// FIXED: Updated menu with Search option (now 1-6)
 async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   
@@ -422,7 +418,6 @@ async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
     welcomeText = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?`;
   }
   
-  // FIXED: Added Search as option 3, shifted others to 4-6
   const menuMsg = `${welcomeText}\n\n` +
     `1️⃣ Browse Products\n` +
     `2️⃣ Browse Services\n` +
@@ -471,7 +466,6 @@ async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
     }, { merge: true });
 }
 
-// FIXED: Updated to handle 1-6 menu options
 function parseMenuSelection(message: string): number | null {
   const trimmed = message.trim();
   const wordCount = trimmed.split(/\s+/).length;
@@ -494,7 +488,6 @@ function parseMenuSelection(message: string): number | null {
   return null;
 }
 
-// NEW: Start search flow function
 async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   
@@ -526,7 +519,6 @@ async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
     }, { merge: true });
 }
 
-// FIXED: Updated handleMenuSelection with case 3 for search
 async function handleMenuSelection(tenantId: string, phone: string, selection: number): Promise<void> {
   switch (selection) {
     case 1:
@@ -664,7 +656,6 @@ async function startProductBrowseFlow(tenantId: string, phone: string): Promise<
     }, { merge: true });
 }
 
-// FIXED: Updated handleFlowInput to handle search_prompt flow
 async function handleFlowInput(
   tenantId: string,
   phone: string,
@@ -698,8 +689,11 @@ async function handleFlowInput(
         return;
       }
     }
-    // NEW: Handle back from search prompt
     if (flowName === 'search_prompt') {
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
+    if (flowName === 'similar_products_selection') {
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
@@ -707,7 +701,55 @@ async function handleFlowInput(
     return;
   }
   
-  // NEW: Handle search prompt flow
+  // NEW: Handle similar products selection
+  if (flowName === 'similar_products_selection') {
+    if (currentStep === 'waiting_for_selection') {
+      const num = parseInt(message.trim());
+      const similarProducts = selections.similarProducts || [];
+      
+      if (isNaN(num) || num < 1 || num > similarProducts.length) {
+        if (message.trim().toLowerCase() === 'menu') {
+          await sendWelcomeMenu(tenantId, phone);
+          return;
+        }
+        await sendEvolutionMessage(tenantId, phone, 
+          `❌ Invalid selection. Please reply with a number from 1-${similarProducts.length} to see product details, or *0* to go back.`
+        );
+        return;
+      }
+      
+      const selectedProduct = similarProducts[num - 1];
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
+      const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${selectedProduct.id}&phone=${phone}`;
+      
+      let productDetails = `🔍 *You selected:*\n\n`;
+      productDetails += `*${selectedProduct.name}*\n`;
+      productDetails += `💰 KES ${selectedProduct.price?.toLocaleString() || 'N/A'}\n`;
+      if (selectedProduct.brand) productDetails += `🏷️ Brand: ${selectedProduct.brand}\n`;
+      if (selectedProduct.category || selectedProduct.categoryName) {
+        productDetails += `📂 Category: ${selectedProduct.category || selectedProduct.categoryName}\n`;
+      }
+      if (selectedProduct.description) {
+        productDetails += `\n📝 ${selectedProduct.description.substring(0, 200)}${selectedProduct.description.length > 200 ? '...' : ''}\n`;
+      }
+      productDetails += `\n🛒 Order: ${orderLink}\n\n`;
+      productDetails += `Reply *0* to go back or *MENU* for main menu.`;
+      
+      const imageUrl = selectedProduct.image || selectedProduct.images?.[0];
+      if (imageUrl) {
+        await sendEvolutionMedia(tenantId, phone, imageUrl, productDetails);
+      } else {
+        await sendEvolutionMessage(tenantId, phone, productDetails);
+      }
+      
+      // Clear the flow state
+      await setFlowState(tenantId, phone, {
+        flowState: FieldValue.delete()
+      });
+      return;
+    }
+  }
+  
   if (flowName === 'search_prompt') {
     if (currentStep === 'waiting_for_search_term') {
       const trimmed = message.trim();
@@ -726,7 +768,6 @@ async function handleFlowInput(
         return;
       }
       
-      // Perform the search
       await handleProductSearch(tenantId, phone, trimmed);
       return;
     }
@@ -781,40 +822,59 @@ async function handleProductSearchInput(
       
       let responseText = `🔍 *More Results for "${searchQuery}"*\n\n`;
       
-      nextBatch.forEach((product: any, index: number) => {
-        const emoji = ['1️', '2️', '3️⃣', '4️⃣', '5️'][index] || `${index + 1}️`;
-        const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
-        const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
-        const category = product.category || product.categoryName ? ` • ${product.category || product.categoryName}` : '';
-        const brand = product.brand ? ` • ${product.brand}` : '';
+      for (let idx = 0; idx < nextBatch.length; idx++) {
+        const product = nextBatch[idx];
+        const imageUrl = product.image || product.images?.[0];
         
-        responseText += `${emoji} *${product.name}*\n`;
-        responseText += `${price} ${stock}\n`;
-        if (category || brand) {
-          responseText += `${category}${brand}\n`;
+        let productText = `*${idx + 1}. ${product.name}*\n`;
+
+        if (product.salePrice && product.salePrice < product.price) {
+          productText += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
+        } else {
+          productText += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
         }
+
+        if (product.stock !== undefined) {
+          const stockLabel = product.stock === 0
+            ? '❌ Out of stock'
+            : product.stock <= 5
+              ? `⚠️ Only ${product.stock} left`
+              : `✅ In stock (${product.stock})`;
+          productText += `   📦 ${stockLabel}\n`;
+        }
+
         if (product.description) {
-          const shortDesc = product.description.substring(0, 80);
-          responseText += `${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
+          productText += `   📝 ${product.description.substring(0, 120)}${product.description.length > 120 ? '...' : ''}\n`;
+        }
+
+        if (product.brand) {
+          productText += `   🏷️ Brand: ${product.brand}\n`;
         }
         
+        if (product.category || product.categoryName) {
+          productText += `   📂 Category: ${product.category || product.categoryName}\n`;
+        }
+
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://yourdomain.com';
         const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
-        responseText += `🛒 Order: ${orderLink}\n\n`;
-      });
+        productText += `   🛒 Order: ${orderLink}\n\n`;
+
+        if (imageUrl) {
+          await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
+        } else {
+          await sendEvolutionMessage(tenantId, phone, productText);
+        }
+        
+        if (idx < nextBatch.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 600));
+        }
+      }
       
       const remaining = allResults.length - (nextIndex + 5);
       if (remaining > 0) {
-        responseText += `*Reply with a number:*\n`;
-        responseText += `1️⃣ - View More (${remaining} more)\n`;
-        responseText += `2️⃣ - Go back\n`;
-        responseText += `3️⃣ - View Categories\n`;
-        responseText += `4️⃣ - Main Menu`;
+        responseText = `\n*Reply with a number:*\n1️⃣ - View More (${remaining} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
       } else {
-        responseText += `*Reply with a number:*\n`;
-        responseText += `2️⃣ - Go back\n`;
-        responseText += `3️⃣ - View Categories\n`;
-        responseText += `4️⃣ - Main Menu`;
+        responseText = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
       }
       
       await stopTypingIndicator(tenantId, phone);
@@ -834,11 +894,7 @@ async function handleProductSearchInput(
         }, { merge: true });
       
       return;
-    } else if (num === 2) {
-      await stopTypingIndicator(tenantId, phone);
-      await startProductBrowseFlow(tenantId, phone);
-      return;
-    } else if (num === 3) {
+    } else if (num === 2 || num === 3) {
       await stopTypingIndicator(tenantId, phone);
       await startProductBrowseFlow(tenantId, phone);
       return;
@@ -1799,11 +1855,9 @@ async function setFlowState(
     .set({ flowState }, { merge: true });
 }
 
-// FIXED: Made search detection less aggressive since we have dedicated search option
 function checkIfSearchQuery(message: string): boolean {
   const lowerMsg = message.toLowerCase().trim();
   
-  // Only trigger automatic search for explicit search patterns
   const searchPatterns = [
     /^looking for\s+/i,
     /^searching for\s+/i,
@@ -1813,14 +1867,16 @@ function checkIfSearchQuery(message: string): boolean {
     /\bsearch for\b/i,
   ];
   
-  // Don't auto-search for short messages or menu commands
   if (lowerMsg.length <= 3) return false;
   if (lowerMsg === 'menu' || lowerMsg === 'back' || lowerMsg === 'help' || lowerMsg === '0') return false;
-  if (/^\d+$/.test(lowerMsg)) return false; // Don't treat numbers as search
+  if (/^\d+$/.test(lowerMsg)) return false;
   
   return searchPatterns.some(pattern => pattern.test(lowerMsg));
 }
 
+// ============================================
+// UPDATED: ENHANCED PRODUCT SEARCH with Similar Products Support
+// ============================================
 async function handleProductSearch(
   tenantId: string,
   phone: string,
@@ -1841,162 +1897,167 @@ async function handleProductSearch(
     
     debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
     
-    // Direct Firestore query (same logic as order page)
-    const adminDb = getAdminDb();
-    
-    const productsSnap = await adminDb
-      .collection("products")
-      .where("tenantId", "==", tenantId)
-      .where("status", "==", "active")
-      .get();
-    
-    if (productsSnap.empty) {
-      debugLog(`[Webhook] No products found for tenant ${tenantId}`);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
+    if (!baseUrl) {
+      console.error('[Webhook] NEXT_PUBLIC_APP_URL or VERCEL_URL not configured');
       await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(
-        tenantId,
-        phone,
-        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu`
-      );
+      await sendEvolutionMessage(tenantId, phone, "❌ Search service unavailable. Please try again later.");
       return;
     }
     
-    // Score products with fuzzy matching (same logic as /api/product-search)
-    const searchLower = searchTerm.toLowerCase();
-    const allProducts = productsSnap.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    // Call the enhanced product search API
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     
-    const scoredProducts = allProducts.map((product: any) => {
-      let score = 0;
-      
-      const name = (product.name || "").toLowerCase();
-      const brand = (product.brand || "").toLowerCase();
-      const category = (product.category || product.categoryName || "").toLowerCase();
-      const description = (product.description || "").toLowerCase();
-      
-      // FUZZY NAME MATCH (for typos)
-      if (isFuzzyMatch(name, searchLower, 2)) {
-        score += 100;
-      }
-      
-      // EXACT NAME MATCH (Highest priority - 200 points)
-      if (name === searchLower) {
-        score += 200;
-      }
-      
-      // NAME STARTS WITH SEARCH TERM (150 points)
-      if (name.startsWith(searchLower)) {
-        score += 150;
-      }
-      
-      // NAME CONTAINS
-      if (name.includes(searchLower)) {
-        score += 20;
-      }
-      
-      // FUZZY BRAND MATCH
-      if (isFuzzyMatch(brand, searchLower, 2)) {
-        score += 50;
-      }
-      
-      // Brand exact match
-      if (brand === searchLower) {
-        score += 60;
-      } else if (brand.includes(searchLower)) {
-        score += 40;
-      }
-      
-      // FUZZY CATEGORY MATCH
-      if (isFuzzyMatch(category, searchLower, 2)) {
-        score += 40;
-      }
-      
-      // Category exact match
-      if (category === searchLower) {
-        score += 50;
-      } else if (category.includes(searchLower)) {
-        score += 30;
-      }
-      
-      // Description match
-      if (description.includes(searchLower)) {
-        score += 5;
-      }
-      
-      // FUZZY DESCRIPTION MATCH
-      if (isFuzzyMatch(description, searchLower, 3)) {
-        score += 15;
-      }
-      
-      return { ...product, score };
-    }).filter((p: any) => p.score > 0);
-    
-    // Sort by score
-    scoredProducts.sort((a: any, b: any) => b.score - a.score);
-    
-    if (scoredProducts.length === 0) {
-      debugLog(`[Webhook] No matching products for: "${searchTerm}"`);
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(
-        tenantId,
-        phone,
-        ` No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu`
-      );
-      return;
-    }
-    
-    // Get top 5 results
-    const results = scoredProducts.slice(0, 5);
-    const totalResults = scoredProducts.length;
-    
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_URL}`;
-    
-    let message = `🔍 *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
-          
-    results.forEach((product: any, index: number) => {
-      const emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'][index];
-      const price = product.price ? `KES ${product.price.toLocaleString()}` : 'Price N/A';
-      const stock = product.stock && product.stock > 0 ? `(${product.stock} in stock)` : '(Out of stock)';
-      const category = product.category || product.categoryName ? ` • ${product.category || product.categoryName}` : '';
-      const brand = product.brand ? ` • ${product.brand}` : '';
-      
-      message += `${emoji} *${product.name}*\n`;
-      message += `💰 ${price} ${stock}\n`;
-      if (category || brand) {
-        message += `📌${category}${brand}\n`;
-      }
-      if (product.description) {
-        const shortDesc = product.description.substring(0, 80);
-        message += `📝 ${shortDesc}${product.description.length > 80 ? '...' : ''}\n`;
-      }
-      
-      const orderLink = `${baseUrl || 'https://yourdomain.com'}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
-      message += `🛒 Order: ${orderLink}\n\n`;
+    const searchResponse = await fetch(`${baseUrl}/api/product-search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: searchTerm,
+        tenantId: tenantId,
+        limit: 20
+      }),
+      signal: controller.signal,
     });
     
-    if (totalResults > 5) {
-      message += `*Reply with a number:*\n`;
-      message += `1️⃣ - View More (${totalResults - 5} more)\n`;
-      message += `2️⃣ - Go back\n`;
-      message += `3️⃣ - View Categories\n`;
-      message += `4️⃣ - Main Menu`;
-    } else {
-      message += `*Reply with a number:*\n`;
-      message += `2️⃣ - Go back\n`;
-      message += `3️⃣ - View Categories\n`;
-      message += `4️⃣ - Main Menu`;
+    clearTimeout(timeoutId);
+    
+    if (!searchResponse.ok) {
+      throw new Error(`Search API failed with status ${searchResponse.status}`);
     }
     
-    await stopTypingIndicator(tenantId, phone);
-    await sendEvolutionMessage(tenantId, phone, message);
+    const searchData = await searchResponse.json();
+    debugLog(`[Webhook] Search API returned: success=${searchData.success}, results=${searchData.results?.length || 0}, similar=${searchData.similarProducts?.length || 0}`);
     
+    if (!searchData.success) {
+      throw new Error(searchData.error || 'Search API returned failure');
+    }
+    
+    // CASE 1: No results but have similar products suggestions
+    if (searchData.results.length === 0 && searchData.similarProducts?.length > 0) {
+      await stopTypingIndicator(tenantId, phone);
+      
+      let suggestionMessage = `🔍 *No exact match for "${searchTerm}"*\n\n` +
+        `💡 *Did you mean?*\n\n`;
+      
+      searchData.similarProducts.forEach((product: any, idx: number) => {
+        suggestionMessage += `${idx + 1}. *${product.name}* - KES ${product.price?.toLocaleString()}\n`;
+        if (product.brand) suggestionMessage += `   🏷️ ${product.brand}\n`;
+        if (product.category || product.categoryName) {
+          suggestionMessage += `   📂 ${product.category || product.categoryName}\n`;
+        }
+        suggestionMessage += `\n`;
+      });
+      
+      suggestionMessage += `Reply with a number to see product details, or *0* to go back.\n\n` +
+        `Or try searching with different keywords!`;
+      
+      await sendEvolutionMessage(tenantId, phone, suggestionMessage);
+      
+      // Store similar products for selection
+      await setFlowState(tenantId, phone, {
+        flowName: 'similar_products_selection',
+        currentStep: 'waiting_for_selection',
+        similarProducts: searchData.similarProducts,
+        originalQuery: searchTerm,
+        isActive: true,
+        lastActivity: new Date().toISOString(),
+      });
+      return;
+    }
+    
+    // CASE 2: No results at all
+    if (searchData.results.length === 0) {
+      await stopTypingIndicator(tenantId, phone);
+      await sendEvolutionMessage(
+        tenantId,
+        phone,
+        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+      );
+      return;
+    }
+    
+    // CASE 3: Has results - display them
+    const results = searchData.results.slice(0, 5);
+    const totalResults = searchData.totalResults;
+    
+    // Send search header
+    let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\n`;
+    headerMessage += `Found ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
+    await sendEvolutionMessage(tenantId, phone, headerMessage);
+    
+    // Send each product with full details
+    for (let idx = 0; idx < results.length; idx++) {
+      const product = results[idx];
+      const imageUrl = product.image || product.images?.[0];
+      
+      let productText = `*${idx + 1}. ${product.name}*\n`;
+
+      // Price (with sale price support)
+      if (product.salePrice && product.salePrice < product.price) {
+        productText += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
+      } else {
+        productText += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
+      }
+
+      // Stock status
+      if (product.stock !== undefined) {
+        const stockLabel = product.stock === 0
+          ? '❌ Out of stock'
+          : product.stock <= 5
+            ? `⚠️ Only ${product.stock} left`
+            : `✅ In stock (${product.stock})`;
+        productText += `   📦 ${stockLabel}\n`;
+      }
+
+      // Description preview
+      if (product.description) {
+        productText += `   📝 ${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}\n`;
+      }
+
+      // Brand
+      if (product.brand) {
+        productText += `   🏷️ Brand: ${product.brand}\n`;
+      }
+      
+      // Category
+      if (product.category || product.categoryName) {
+        productText += `   📂 Category: ${product.category || product.categoryName}\n`;
+      }
+
+      // Order link
+      const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
+      productText += `   🛒 Order: ${orderLink}\n`;
+
+      // Send image with caption
+      if (imageUrl) {
+        await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
+      } else {
+        await sendEvolutionMessage(tenantId, phone, productText);
+      }
+      
+      // Small delay between products
+      if (idx < results.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      }
+    }
+    
+    // Send navigation options
+    let replyMessage = '';
+    if (totalResults > 5) {
+      replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
+    } else {
+      replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
+    }
+    
+    await sendEvolutionMessage(tenantId, phone, replyMessage);
+    
+    // Store search results for pagination
     await setFlowState(tenantId, phone, {
       flowName: 'product_search',
       currentStep: 'search_results',
       searchQuery: searchTerm,
-      allResults: scoredProducts,
+      allResults: searchData.results,
       currentIndex: 0,
       isActive: true,
       lastActivity: new Date().toISOString(),
