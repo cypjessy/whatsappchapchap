@@ -96,9 +96,12 @@ export async function startServiceBrowseFlow(
       count: typeServices.length
     }));
     
-    // Build categories menu
+    // Build categories menu with emoji numbers
     const categoryList = categories
-      .map((cat, idx) => `${idx + 1}️⃣ ${cat.icon} *${cat.name}* (${cat.count} services)`)
+      .map((cat, idx) => {
+        const emojiNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+        return `${emojiNumbers[idx]} ${cat.icon} *${cat.name}* (${cat.count} services)`;
+      })
       .join('\n');
     
     const response = `🛠️ *Browse Our Services*\n\n` +
@@ -272,16 +275,19 @@ async function showServiceBatch(
     }
   }
   
-  // Show navigation options
+  // Show navigation options with emoji numbers
   const remaining = services.length - (startIndex + batchSize);
   let responseText = `\n*Reply with a number:*\n`;
   
   if (remaining > 0) {
     responseText += `1️⃣ - View More (${remaining} more)\n`;
   }
-  responseText += `2️ - Back to categories\n`;
-  responseText += `3️⃣ - Main menu\n`;
-  responseText += `4️ - Browse Service Categories`;
+  responseText += `2️⃣ - Back to categories\n`;
+  responseText += `3️⃣ - Main menu`;
+  
+  if (remaining > 0) {
+    responseText += `\n4️⃣ - Browse Service Categories`;
+  }
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, responseText);
@@ -359,21 +365,21 @@ async function handleServiceListing(
     await startServiceBrowseFlow(tenantId, phone, deps);
     
   } else if (num === 3) {
-    // Main menu
+    // Main menu - with proper emoji numbers
     const adminDb = getDb();
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      `Hello!  Welcome to our store!\n\n` +
+      `Hello! 👋 Welcome to our store!\n\n` +
       `How can we help you today?\n\n` +
-      `1️ Browse Products\n` +
+      `1️⃣ Browse Products\n` +
       `2️⃣ Browse Services\n` +
-      `3️ Search Products\n` +
-      `4️ Check Order Status\n` +
-      `5️ Payment Info\n` +
-      `6️ Talk to Support\n\n` +
-      `*Reply with a number (1-6)*`
+      `3️⃣ 🔍 Search Products\n` +
+      `4️⃣ Check Order Status\n` +
+      `5️⃣ Payment Info\n` +
+      `6️⃣ Talk to Support\n\n` +
+      `*Reply with a number (1️⃣-6️⃣)*`
     );
     // Clear flow state
     await adminDb
@@ -392,7 +398,7 @@ async function handleServiceListing(
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid selection. Please reply with 1️, 2️, 3️⃣, or 4️⃣.\n\n" +
+      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, 3️⃣, or 4️⃣.\n\n" +
       "Or reply *0️⃣* for main menu."
     );
   }
@@ -568,12 +574,11 @@ async function showServiceDetail(
     await deps.sendMessage(tenantId, phone, message);
   }
   
-  // Navigation options
+  // Navigation options with emoji numbers
   const responseText = `\n*Reply with a number:*\n` +
     `1️⃣ - Book this service\n` +
     `2️⃣ - Back to services\n` +
-    `3️⃣ - Main menu\n` +
-    `4️⃣ - Browse Service Categories`;
+    `3️⃣ - Main menu`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, responseText);
@@ -662,7 +667,7 @@ async function handleServiceDetailInput(
     // Back to service listing
     await handleServiceListing(tenantId, phone, '2', flowState, deps);
   } else if (num === 3) {
-    // Main menu
+    // Main menu - with proper emoji numbers
     const adminDb = getDb();
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
@@ -676,7 +681,7 @@ async function handleServiceDetailInput(
       `4️⃣ Check Order Status\n` +
       `5️⃣ Payment Info\n` +
       `6️⃣ Talk to Support\n\n` +
-      `*Reply with a number (1-6)*`
+      `*Reply with a number (1️⃣-6️⃣)*`
     );
     // Clear flow state
     await adminDb
@@ -702,6 +707,10 @@ async function handleServiceDetailInput(
  * Format a service for WhatsApp display (list view)
  */
 function formatServiceMessage(service: Service, index: number): string {
+  // Emoji numbers for list display
+  const emojiNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
+  const numberEmoji = emojiNumbers[index - 1] || `${index}️⃣`;
+  
   // Build pricing based on your DB schema
   let priceText = '';
   if (service.packagePrices) {
@@ -709,7 +718,7 @@ function formatServiceMessage(service: Service, index: number): string {
     const validPrices = [prices.basic, prices.standard, prices.premium]
       .filter((p): p is number => p !== undefined && p > 0);
     if (validPrices.length === 1) {
-      priceText = ` KES ${validPrices[0]!.toLocaleString()}`;
+      priceText = `💰 KES ${validPrices[0]!.toLocaleString()}`;
     } else if (validPrices.length > 1) {
       priceText = `💰 KES ${Math.min(...validPrices).toLocaleString()} - ${Math.max(...validPrices).toLocaleString()}`;
     } else {
@@ -745,6 +754,6 @@ function formatServiceMessage(service: Service, index: number): string {
     ? `\n   📝 ${service.description.substring(0, 80)}${service.description.length > 80 ? '...' : ''}`
     : '';
   
-  return `${index}. ${service.emoji || '🛠️'} *${service.name}*\n` +
+  return `${numberEmoji} ${service.emoji || '🛠️'} *${service.name}*\n` +
     `   ${priceText}${infoText}${description}\n`;
 }
