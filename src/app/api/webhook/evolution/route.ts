@@ -11,6 +11,11 @@ import {
   handleOrderCancellation,
   type OrderStatusDeps 
 } from "./handlers/order-status";
+import { 
+  startServiceBrowseFlow, 
+  handleServiceBrowseInput,
+  type ServiceBrowseDeps 
+} from "./handlers/service-browse";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -535,7 +540,13 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       break;
     case 2:
       debugLog("[Webhook] Starting service browse flow");
-      await startServiceBrowseFlow(tenantId, phone);
+      const serviceDeps: ServiceBrowseDeps = { 
+        sendMessage: sendEvolutionMessage,
+        sendMedia: sendEvolutionMedia,
+        startTyping: startTypingIndicator,
+        stopTyping: stopTypingIndicator
+      };
+      await startServiceBrowseFlow(tenantId, phone, serviceDeps);
       break;
     case 3:
       debugLog("[Webhook] Starting search flow");
@@ -771,7 +782,13 @@ async function handleFlowInput(
   }
   
   if (flowName === 'service_browse') {
-    await sendEvolutionMessage(tenantId, phone, "Service browsing coming soon!");
+    const deps: ServiceBrowseDeps = { 
+      sendMessage: sendEvolutionMessage,
+      sendMedia: sendEvolutionMedia,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator
+    };
+    await handleServiceBrowseInput(tenantId, phone, message, flowState, deps);
     return;
   }
   
@@ -1596,12 +1613,6 @@ async function handleBrandOrProductSelection(
       categoryBrands: category.brands || [],
     });
   }
-}
-
-async function startServiceBrowseFlow(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  await stopTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, "🛠️ Service browsing coming soon! We're adding services now.");
 }
 
 // FIXED: sendOrderStatusInfo - no longer overwrites flow state
