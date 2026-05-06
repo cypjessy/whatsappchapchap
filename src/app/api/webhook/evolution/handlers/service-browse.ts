@@ -559,49 +559,35 @@ async function showServiceDetail(
     }
   }
   
-  // Build the complete message (used only when no image available)
-  let message = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
+  // FIXED: Build the full message that will be sent as text
+  // Start with the basic info (always included)
+  let fullMessage = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
   
-  // Description
-  if (service.description) {
-    message += `\n\n📝 *Description:*\n${service.description}`;
+  // Add description
+  if (service.description && service.description.trim() !== '') {
+    fullMessage += `\n\n📝 *Description:*\n${service.description}`;
   }
   
-  // Add remaining sections
-  message += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
+  // Add all other sections
+  fullMessage += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
   
-  // Send service details - ALWAYS send image with caption FIRST, then description and details AFTER
+  console.log(`[ServiceBrowse] Full message length: ${fullMessage.length} chars`);
+  console.log(`[ServiceBrowse] Message preview: ${fullMessage.substring(0, 200)}...`);
+  
+  // STEP 1: Send image with brief caption (if image exists)
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
     const imageUrl = service.imageUrl || service.portfolioImages![0];
     if (deps.sendMedia) {
-      // STEP 1: Send image with a short caption (under 1024 chars) - NO description here
-      const shortCaption = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
-      await deps.sendMedia(tenantId, phone, imageUrl, shortCaption.substring(0, 1000));
-      
-      // STEP 2: Send full details as separate text message - description comes FIRST in this message
-      let fullMessage = '';
-      if (service.description) {
-        fullMessage += `📝 *Description:*\n${service.description}`;
-      }
-      fullMessage += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
-      
-      console.log(`[ServiceBrowse] Full message length: ${fullMessage.length} chars`);
-      console.log(`[ServiceBrowse] Has specs: ${!!specsText}, features: ${!!featuresText}, availability: ${!!availabilityText}`);
-      
-      if (fullMessage) {
-        console.log(`[ServiceBrowse] Sending full details message`);
-        await deps.sendMessage(tenantId, phone, fullMessage);
-      } else {
-        console.log(`[ServiceBrowse] No full message to send`);
-      }
-    } else {
-      // Fallback: send everything as one message (no image)
-      await deps.sendMessage(tenantId, phone, message);
+      // Brief caption for the image - just name and emoji
+      const shortCaption = `${service.emoji || '🛠️'} *${service.name}*`;
+      await deps.sendMedia(tenantId, phone, imageUrl, shortCaption);
+      console.log(`[ServiceBrowse] Image sent with caption: "${shortCaption}"`);
     }
-  } else {
-    // No image: send complete message
-    await deps.sendMessage(tenantId, phone, message);
   }
+  
+  // STEP 2: Send the full details message (ALWAYS send this)
+  await deps.sendMessage(tenantId, phone, fullMessage);
+  console.log(`[ServiceBrowse] Full details message sent`);
   
   // Navigation options with emoji numbers
   const responseText = `\n*Reply with a number:*\n` +
