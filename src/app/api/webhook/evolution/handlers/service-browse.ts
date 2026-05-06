@@ -96,7 +96,7 @@ export async function startServiceBrowseFlow(
         tenantId,
         phone,
         "🛠️ We don't have any services available right now.\n\n" +
-        "Please check back later or reply *0* for main menu."
+        "Please check back later or reply *0️* for main menu."
       );
       return;
     }
@@ -126,8 +126,8 @@ export async function startServiceBrowseFlow(
     
     const response = `️ *Browse Our Services*\n\n` +
       `Choose a category:\n\n${categoryList}\n\n` +
-      `*Reply with a number (1-${categories.length})*\n` +
-      `Or reply *0* for main menu`;
+      `*Reply with a number (1️⃣-${categories.length}️)*\n` +
+      `Or reply *0️⃣* for main menu`;
     
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
@@ -157,7 +157,7 @@ export async function startServiceBrowseFlow(
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Sorry, something went wrong. Please try again or reply *0* for main menu."
+      "❌ Sorry, something went wrong. Please try again or reply *0️⃣* for main menu."
     );
   }
 }
@@ -188,7 +188,7 @@ export async function handleServiceBrowseInput(
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid state. Reply *0* for main menu."
+      "❌ Invalid state. Reply *0️* for main menu."
     );
   }
 }
@@ -213,8 +213,8 @@ async function handleCategorySelection(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Invalid selection. Please choose a number from 1 to ${categories.length}.\n\n` +
-      `Or reply *0* for main menu.`
+      `❌ Invalid selection. Please choose a number from 1️⃣ to ${categories.length}️⃣.\n\n` +
+      `Or reply *0️⃣* for main menu.`
     );
     return;
   }
@@ -228,7 +228,7 @@ async function handleCategorySelection(
       tenantId,
       phone,
       `❌ No services found in this category.\n\n` +
-      `Reply *0* for main menu.`
+      `Reply *0️* for main menu.`
     );
     return;
   }
@@ -325,7 +325,7 @@ async function handleServiceListing(
       tenantId,
       phone,
       "❌ Please reply with a number.\n\n" +
-      "Or reply *0* for main menu."
+      "Or reply *0️* for main menu."
     );
     return;
   }
@@ -342,7 +342,7 @@ async function handleServiceListing(
         phone,
         "✅ You've seen all services in this category.\n\n" +
         "*Reply with a number:*\n" +
-        "2️ - Back to categories\n" +
+        "2️⃣ - Back to categories\n" +
         "3️⃣ - Main menu"
       );
       return;
@@ -415,7 +415,7 @@ async function handleServiceListing(
         tenantId,
         phone,
         "❌ Invalid selection. Please reply with a number from the list.\n\n" +
-        "Or reply *0* for main menu."
+        "Or reply *0️* for main menu."
       );
     }
   }
@@ -528,7 +528,7 @@ async function handleServiceDetailInput(
       tenantId,
       phone,
       "❌ Please reply with a number.\n\n" +
-      "Or reply *0* for main menu."
+      "Or reply *0️* for main menu."
     );
     return;
   }
@@ -579,8 +579,8 @@ async function handleServiceDetailInput(
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid selection. Please reply with 1, 2, or 3.\n\n" +
-      "Or reply *0* for main menu."
+      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, or 3️.\n\n" +
+      "Or reply *0️⃣* for main menu."
     );
   }
 }
