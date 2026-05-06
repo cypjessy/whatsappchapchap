@@ -570,11 +570,24 @@ async function showServiceDetail(
   // Add remaining sections
   message += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
   
-  // Send service details with image if available
+  // Send service details - split into image + full text message to avoid WhatsApp caption limits
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
     const imageUrl = service.imageUrl || service.portfolioImages![0];
     if (deps.sendMedia) {
-      await deps.sendMedia(tenantId, phone, imageUrl, message);
+      // Send image with a short caption (under 1024 chars)
+      const shortCaption = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
+      await deps.sendMedia(tenantId, phone, imageUrl, shortCaption.substring(0, 1000));
+      
+      // Send full details as separate text message
+      let fullMessage = '';
+      if (service.description) {
+        fullMessage += `📝 *Description:*\n${service.description}`;
+      }
+      fullMessage += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
+      
+      if (fullMessage) {
+        await deps.sendMessage(tenantId, phone, fullMessage);
+      }
     } else {
       await deps.sendMessage(tenantId, phone, message);
     }
