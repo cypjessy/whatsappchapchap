@@ -559,7 +559,7 @@ async function showServiceDetail(
     }
   }
   
-  // Build the complete message
+  // Build the complete message (used only when no image available)
   let message = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
   
   // Description
@@ -570,15 +570,15 @@ async function showServiceDetail(
   // Add remaining sections
   message += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
   
-  // Send service details - split into image + full text message to avoid WhatsApp caption limits
+  // Send service details - ALWAYS send image with caption FIRST, then description and details AFTER
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
     const imageUrl = service.imageUrl || service.portfolioImages![0];
     if (deps.sendMedia) {
-      // Send image with a short caption (under 1024 chars)
+      // STEP 1: Send image with a short caption (under 1024 chars) - NO description here
       const shortCaption = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
       await deps.sendMedia(tenantId, phone, imageUrl, shortCaption.substring(0, 1000));
       
-      // Send full details as separate text message
+      // STEP 2: Send full details as separate text message - description comes FIRST in this message
       let fullMessage = '';
       if (service.description) {
         fullMessage += `📝 *Description:*\n${service.description}`;
@@ -589,9 +589,11 @@ async function showServiceDetail(
         await deps.sendMessage(tenantId, phone, fullMessage);
       }
     } else {
+      // Fallback: send everything as one message (no image)
       await deps.sendMessage(tenantId, phone, message);
     }
   } else {
+    // No image: send complete message
     await deps.sendMessage(tenantId, phone, message);
   }
   
