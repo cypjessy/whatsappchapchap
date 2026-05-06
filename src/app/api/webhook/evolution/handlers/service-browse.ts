@@ -276,7 +276,8 @@ async function showServiceBatch(
     responseText += `1️⃣ - View More (${remaining} more)\n`;
   }
   responseText += `2️ - Back to categories\n`;
-  responseText += `3️⃣ - Main menu`;
+  responseText += `3️⃣ - Main menu\n`;
+  responseText += `4️ - Browse Service Categories`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, responseText);
@@ -295,13 +296,13 @@ async function handleServiceListing(
   const adminDb = getDb();
   const num = parseInt(message.trim());
   const { categoryServices, currentIndex, categoryId, categoryName } = flowState.selections;
-  
+    
   if (isNaN(num)) {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Please reply with a number.\n\n" +
+      " Please reply with a number.\n\n" +
       "Or reply *0️* for main menu."
     );
     return;
@@ -320,7 +321,8 @@ async function handleServiceListing(
         "✅ You've seen all services in this category.\n\n" +
         "*Reply with a number:*\n" +
         "2️⃣ - Back to categories\n" +
-        "3️⃣ - Main menu"
+        "3️⃣ - Main menu\n" +
+        "4️ - Browse Service Categories"
       );
       return;
     }
@@ -354,32 +356,24 @@ async function handleServiceListing(
     await startServiceBrowseFlow(tenantId, phone, deps);
     
   } else if (num === 3) {
-    // Main menu (will be handled by top-level '0' check in route.ts)
+    // Main menu
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
       `Hello! 👋 Welcome to our store!\n\n` +
       `How can we help you today?\n\n` +
-      `1️⃣ Browse Products\n` +
+      `1️ Browse Products\n` +
       `2️⃣ Browse Services\n` +
-      `3️⃣ 🔍 Search Products\n` +
+      `3️ 🔍 Search Products\n` +
       `4️⃣ Check Order Status\n` +
       `5️⃣ Payment Info\n` +
-      `6️⃣ Talk to Support\n\n` +
+      `6️ Talk to Support\n\n` +
       `*Reply with a number (1-6)*`
     );
-    
-    // Clear flow state
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        flowState: FieldValue.delete()
-      }, { merge: true });
-      
+  } else if (num === 4) {
+    // Browse service categories - restart service browse flow
+    await startServiceBrowseFlow(tenantId, phone, deps);
   } else {
     // Check if it's a service selection (within current batch)
     const serviceIndex = currentIndex + (num - 1);
@@ -391,8 +385,9 @@ async function handleServiceListing(
       await deps.sendMessage(
         tenantId,
         phone,
-        "❌ Invalid selection. Please reply with a number from the list.\n\n" +
-        "Or reply *0️* for main menu."
+        " Invalid selection. Please reply with a number from the list.\n\n" +
+        "Or reply *0️⃣* for main menu.\n" +
+        "Or reply *4️* to browse service categories."
       );
     }
   }
@@ -556,7 +551,8 @@ async function showServiceDetail(
   const responseText = `*Reply with a number:*\n` +
     `1️⃣ - Book this service\n` +
     `2️⃣ - Back to services\n` +
-    `3️⃣ - Main menu`;
+    `3️⃣ - Main menu\n` +
+    `4️⃣ - Browse Service Categories`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, responseText);
@@ -598,12 +594,12 @@ async function handleServiceDetailInput(
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Please reply with a number.\n\n" +
+      " Please reply with a number.\n\n" +
       "Or reply *0️* for main menu."
     );
     return;
   }
-  
+    
   if (num === 1) {
     // Book this service - show booking URL
     const service = flowState.selections.selectedService;
@@ -625,10 +621,11 @@ async function handleServiceDetailInput(
         await deps.sendMessage(
           tenantId,
           phone,
-          ` Great choice!\n\n` +
+          `🎉 Great choice!\n\n` +
           `Click the link below to book *${service.name}*:\n\n` +
           `${service.bookingUrl}\n\n` +
-          `Or reply *2* to browse more services.`
+          `Or reply *2️* to browse more services.\n` +
+          `Or reply *4️* to browse service categories.`,
         );
       }
     } else {
@@ -652,7 +649,7 @@ async function handleServiceDetailInput(
       `Hello! 👋 Welcome to our store!\n\n` +
       `How can we help you today?\n\n` +
       `1️⃣ Browse Products\n` +
-      `2️ Browse Services\n` +
+      `2️⃣ Browse Services\n` +
       `3️ 🔍 Search Products\n` +
       `4️⃣ Check Order Status\n` +
       `5️⃣ Payment Info\n` +
@@ -664,7 +661,7 @@ async function handleServiceDetailInput(
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, or 3️.\n\n" +
+      "❌ Invalid selection. Please reply with 1️⃣, 2️, or 3️⃣.\n\n" +
       "Or reply *0️⃣* for main menu."
     );
   }
