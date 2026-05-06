@@ -80,9 +80,8 @@ export async function startServiceBrowseFlow(
   try {
     // Get all services for this tenant
     const servicesSnap = await adminDb
-      .collection("tenants")
-      .doc(tenantId)
       .collection("services")
+      .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
       .get();
     
