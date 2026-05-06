@@ -458,10 +458,11 @@ export default function AddServiceButton() {
         premium: Number(tierInputs[2]?.value) || 0
       };
       
-      // Calculate min and max prices
+      // Calculate min and max prices based on filled tiers
+      // If only one tier is filled, use that price for both min and max
       const validPrices = [prices.basic, prices.standard, prices.premium].filter(p => p > 0);
       const priceMin = validPrices.length > 0 ? Math.min(...validPrices) : 0;
-      const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : 0;
+      const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : priceMin; // If only one price, min = max
 
       // Get the human-readable business category name
       const businessCategory = businessSpecs[selectedBusiness]?.name || selectedBusiness;
@@ -788,7 +789,7 @@ export default function AddServiceButton() {
                        >
                          <span className={`tier-badge ${tier.badgeClass}`}>{tier.badge}</span>
                          <div className="tier-name">{tier.label}</div>
-                         <input type="number" className="tier-price-input" placeholder="KSh 0.00" />
+                         <input type="number" className="tier-price-input" placeholder="KES 0.00" />
                          <div className="tier-features">
                            {tier.features}
                          </div>
