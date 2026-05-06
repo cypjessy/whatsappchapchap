@@ -177,6 +177,7 @@ export interface Service {
   businessType: string;
   businessCategory?: string; // Human-readable business category name (e.g., "Beauty & Hair", "Home Services")
   serviceName?: string; // Human-readable service name (e.g., "Hair Braiding", "Massage")
+  categoryName?: string; // For AI context - same as businessCategory
   specifications: any;
   tier: string;
   mode: string;

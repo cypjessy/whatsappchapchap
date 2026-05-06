@@ -483,10 +483,15 @@ export default function AddServiceButton() {
         tags: [selectedBusiness, ...specs.service_type || []].slice(0, 5),
         priceMin,
         priceMax,
-        packagePrices: prices, // Save individual tier prices
+        packagePrices: { 
+          basic: prices.basic || null,
+          standard: prices.standard || null,
+          premium: prices.premium || null
+        }, // Save individual tier prices with null for empty tiers
         businessType: selectedBusiness,
         businessCategory: businessCategory,
         serviceName: serviceName,
+        categoryName: businessCategory, // For AI context - same as businessCategory
         specifications: specs,
         tier: selectedTier,
         mode: selectedMode,
@@ -496,8 +501,8 @@ export default function AddServiceButton() {
         imageUrl: portfolioImageUrls.length > 0 ? portfolioImageUrls[0] : undefined,
         packageFeatures,
         availability: {
-          days: Array.from(selectedDays),
-          timeSlots: Array.from(selectedTimes)
+          days: Array.from(selectedDays).sort(), // Sort for consistency
+          timeSlots: Array.from(selectedTimes).sort() // Sort for consistency
         },
         customTimeSlots: generateTimeSlots(Number(selectedDuration)),
       };
