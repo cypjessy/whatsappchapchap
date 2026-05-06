@@ -139,6 +139,7 @@ export default function AddServiceButton() {
   const [selectedMode, setSelectedMode] = useState<"in-person" | "remote" | "both">("in-person");
   const [selectedLocation, setSelectedLocation] = useState<"client-place" | "my-place" | "both-places" | "remote">("client-place");
   const [selectedDuration, setSelectedDuration] = useState<string>("60");
+  const [customDuration, setCustomDuration] = useState<string>("");
   const [activeCustomSpec, setActiveCustomSpec] = useState<string | null>(null);
   const [tempCustomValue, setTempCustomValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -315,6 +316,7 @@ export default function AddServiceButton() {
       setSelectedMode("in-person");
       setSelectedLocation("client-place");
       setSelectedDuration("60");
+      setCustomDuration("");
       setSelectedSpecs({});
       setSelectedTier("standard");
       setActiveCustomSpec(null);
@@ -385,6 +387,26 @@ export default function AddServiceButton() {
     if (!name) { alert("Please enter a service name"); return; }
     if (!selectedBusiness) { alert("Please select a business type"); return; }
 
+    // Validate description
+    const descInput = document.getElementById("serviceDesc") as HTMLTextAreaElement;
+    const description = descInput?.value || '';
+    if (!description || description.trim() === '') {
+      alert("Please add a description for your service");
+      return;
+    }
+
+    // Validate custom duration
+    if (selectedDuration === 'custom' && (!customDuration || customDuration.trim() === '')) {
+      alert("Please enter a custom duration");
+      return;
+    }
+
+    // Handle duration value
+    let durationValue = `${selectedDuration} min`;
+    if (selectedDuration === 'custom') {
+      durationValue = customDuration || 'Custom duration';
+    }
+
     setSaving(true);
     try {
       // Collect specs
@@ -393,9 +415,7 @@ export default function AddServiceButton() {
         specs[key] = Array.from(set);
       });
 
-      // Get description
-      const descInput = document.getElementById("serviceDesc") as HTMLTextAreaElement;
-      const description = descInput?.value || '';
+      // Get description (already validated above - line 391-395)
 
       // Get provider name
       const providerNameInput = document.getElementById("providerName") as HTMLInputElement;
@@ -449,25 +469,27 @@ export default function AddServiceButton() {
         }
       }
 
-      // Get pricing from tier inputs
-      const tierInputs = document.querySelectorAll('.tier-price-input') as NodeListOf<HTMLInputElement>;
-      const prices = {
-        basic: Number(tierInputs[0]?.value) || 0,
-        standard: Number(tierInputs[1]?.value) || 0,
-        premium: Number(tierInputs[2]?.value) || 0
-      };
+      // Get pricing from tier inputs with IDs
+      const basicPrice = (document.getElementById('price-basic') as HTMLInputElement)?.value;
+      const standardPrice = (document.getElementById('price-standard') as HTMLInputElement)?.value;
+      const premiumPrice = (document.getElementById('price-premium') as HTMLInputElement)?.value;
+      
+      const packagePrices: { basic?: number; standard?: number; premium?: number } = {};
+      if (basicPrice && Number(basicPrice) > 0) packagePrices.basic = Number(basicPrice);
+      if (standardPrice && Number(standardPrice) > 0) packagePrices.standard = Number(standardPrice);
+      if (premiumPrice && Number(premiumPrice) > 0) packagePrices.premium = Number(premiumPrice);
+      
+      // Validate at least one price
+      if (Object.keys(packagePrices).length === 0) {
+        alert("Please enter at least one price for your service");
+        setSaving(false);
+        return;
+      }
       
       // Calculate min and max prices based on filled tiers
-      // If only one tier is filled, use that price for both min and max
-      const validPrices = [prices.basic, prices.standard, prices.premium].filter(p => p > 0);
+      const validPrices = Object.values(packagePrices).filter(p => p !== undefined) as number[];
       const priceMin = validPrices.length > 0 ? Math.min(...validPrices) : 0;
-      const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : priceMin; // If only one price, min = max
-      
-      // Build packagePrices object, only including tiers that have prices > 0
-      const packagePrices: { basic?: number; standard?: number; premium?: number } = {};
-      if (prices.basic > 0) packagePrices.basic = prices.basic;
-      if (prices.standard > 0) packagePrices.standard = prices.standard;
-      if (prices.premium > 0) packagePrices.premium = prices.premium;
+      const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : priceMin;
 
       // Get the human-readable business category name
       const businessCategory = businessSpecs[selectedBusiness]?.name || selectedBusiness;
@@ -484,7 +506,7 @@ export default function AddServiceButton() {
         providerName,
         emoji: businessIcons[selectedBusiness] || '✨',
         bgGradient: gradients[selectedBusiness] || 'from-gray-100 to-gray-200',
-        duration: `${selectedDuration} min`,
+        duration: durationValue,
         location: selectedLocation,
         tags: [selectedBusiness, ...specs.service_type || []].slice(0, 5),
         priceMin,
@@ -678,8 +700,8 @@ export default function AddServiceButton() {
                     <input type="text" className="form-input" id="serviceName" placeholder="e.g., Professional Box Braids" />
                   </div>
                   <div className="form-group full-width">
-                    <label className="form-label">Description</label>
-                    <textarea className="form-textarea" id="serviceDesc" placeholder="Describe what clients can expect..."></textarea>
+                    <label className="form-label">Description *</label>
+                    <textarea className="form-textarea" id="serviceDesc" placeholder="Describe what clients can expect from this service. Include what makes it special, what's included, and any preparation needed." required></textarea>
                   </div>
                 </div>
               </div>
@@ -755,36 +777,21 @@ export default function AddServiceButton() {
                      {[
                        { 
                          key: 'basic', 
-                         label: 'Starter', 
+                         label: 'Basic Package', 
                          badge: 'Basic', 
                          badgeClass: 'basic',
-                         features: [
-                           <div className="tier-feature" key="1"><i className="fas fa-check"></i> Core service</div>,
-                           <div className="tier-feature" key="2"><i className="fas fa-check"></i> Standard quality</div>,
-                           <div className="tier-feature" key="3"><i className="fas fa-check"></i> 1 revision</div>,
-                         ]
                        },
                        { 
                          key: 'standard', 
-                         label: 'Standard', 
+                         label: 'Standard Package', 
                          badge: 'Popular', 
                          badgeClass: 'standard',
-                         features: [
-                           <div className="tier-feature" key="1"><i className="fas fa-check"></i> Everything in Basic</div>,
-                           <div className="tier-feature" key="2"><i className="fas fa-check"></i> Premium materials</div>,
-                           <div className="tier-feature" key="3"><i className="fas fa-check"></i> 2 revisions</div>,
-                         ]
                        },
                        { 
                          key: 'premium', 
-                         label: 'Premium', 
+                         label: 'Premium Package', 
                          badge: 'Best', 
                          badgeClass: 'premium',
-                         features: [
-                           <div className="tier-feature" key="1"><i className="fas fa-check"></i> Everything in Standard</div>,
-                           <div className="tier-feature" key="2"><i className="fas fa-check"></i> VIP treatment</div>,
-                           <div className="tier-feature" key="3"><i className="fas fa-check"></i> Unlimited revisions</div>,
-                         ]
                        },
                      ].map((tier) => (
                        <div
@@ -794,10 +801,12 @@ export default function AddServiceButton() {
                        >
                          <span className={`tier-badge ${tier.badgeClass}`}>{tier.badge}</span>
                          <div className="tier-name">{tier.label}</div>
-                         <input type="number" className="tier-price-input" placeholder="KES 0.00" />
-                         <div className="tier-features">
-                           {tier.features}
-                         </div>
+                         <input 
+                           type="number" 
+                           className="tier-price-input" 
+                           id={`price-${tier.key}`}
+                           placeholder="KES 0.00" 
+                         />
                        </div>
                      ))}
                    </div>
@@ -897,6 +906,17 @@ export default function AddServiceButton() {
                       );
                     })}
                   </div>
+                  {selectedDuration === 'custom' && (
+                    <div className="custom-duration-input" style={{ marginTop: '12px' }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g., 2-3 hours, Half day, Full day"
+                        value={customDuration}
+                        onChange={(e) => setCustomDuration(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
