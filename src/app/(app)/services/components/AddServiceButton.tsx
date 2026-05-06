@@ -484,10 +484,10 @@ export default function AddServiceButton() {
         priceMin,
         priceMax,
         packagePrices: { 
-          basic: prices.basic || null,
-          standard: prices.standard || null,
-          premium: prices.premium || null
-        }, // Save individual tier prices with null for empty tiers
+          basic: prices.basic || undefined,
+          standard: prices.standard || undefined,
+          premium: prices.premium || undefined
+        }, // Save individual tier prices with undefined for empty tiers
         businessType: selectedBusiness,
         businessCategory: businessCategory,
         serviceName: serviceName,
