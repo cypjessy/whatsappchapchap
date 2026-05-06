@@ -585,8 +585,14 @@ async function showServiceDetail(
       }
       fullMessage += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
       
+      console.log(`[ServiceBrowse] Full message length: ${fullMessage.length} chars`);
+      console.log(`[ServiceBrowse] Has specs: ${!!specsText}, features: ${!!featuresText}, availability: ${!!availabilityText}`);
+      
       if (fullMessage) {
+        console.log(`[ServiceBrowse] Sending full details message`);
         await deps.sendMessage(tenantId, phone, fullMessage);
+      } else {
+        console.log(`[ServiceBrowse] No full message to send`);
       }
     } else {
       // Fallback: send everything as one message (no image)
