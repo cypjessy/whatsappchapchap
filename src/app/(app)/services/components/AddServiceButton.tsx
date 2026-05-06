@@ -462,6 +462,12 @@ export default function AddServiceButton() {
       const validPrices = [prices.basic, prices.standard, prices.premium].filter(p => p > 0);
       const priceMin = validPrices.length > 0 ? Math.min(...validPrices) : 0;
       const priceMax = validPrices.length > 0 ? Math.max(...validPrices) : priceMin; // If only one price, min = max
+      
+      // Build packagePrices object, only including tiers that have prices > 0
+      const packagePrices: { basic?: number; standard?: number; premium?: number } = {};
+      if (prices.basic > 0) packagePrices.basic = prices.basic;
+      if (prices.standard > 0) packagePrices.standard = prices.standard;
+      if (prices.premium > 0) packagePrices.premium = prices.premium;
 
       // Get the human-readable business category name
       const businessCategory = businessSpecs[selectedBusiness]?.name || selectedBusiness;
@@ -483,11 +489,7 @@ export default function AddServiceButton() {
         tags: [selectedBusiness, ...specs.service_type || []].slice(0, 5),
         priceMin,
         priceMax,
-        packagePrices: { 
-          basic: prices.basic || undefined,
-          standard: prices.standard || undefined,
-          premium: prices.premium || undefined
-        }, // Save individual tier prices with undefined for empty tiers
+        packagePrices, // Only includes tiers with prices > 0 (no undefined values)
         businessType: selectedBusiness,
         businessCategory: businessCategory,
         serviceName: serviceName,
