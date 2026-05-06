@@ -5,6 +5,7 @@
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { shortenUrl } from "@/lib/url-shortener";
 
 /**
  * Lazy initialization - get Firestore instance only when needed
@@ -466,12 +467,23 @@ async function showServiceDetail(
   if (service.businessCategory || service.categoryName) {
     details.push(` Category: ${service.businessCategory || service.categoryName}`);
   }
-  
   const detailsText = details.length > 0 ? `\n${details.join('\n')}` : '';
   
-  const message = `${service.emoji || '️'} *${service.name}*${pricingText}${detailsText}\n\n` +
+  // Shorten booking URL if available
+  let bookingUrlText = '';
+  if (service.bookingUrl) {
+    try {
+      const shortUrl = await shortenUrl(service.bookingUrl);
+      bookingUrlText = `\n🛒 Book Now: ${shortUrl}\n`;
+    } catch (error) {
+      console.error("[ServiceBrowse] Error shortening URL:", error);
+      bookingUrlText = `\n🛒 Book Now: ${service.bookingUrl}\n`;
+    }
+  }
+  
+  const message = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}\n\n` +
     (service.description ? `📝 ${service.description.substring(0, 200)}${service.description.length > 200 ? '...' : ''}\n\n` : '') +
-    (service.bookingUrl ? `🛒 Book Now: ${service.bookingUrl}\n\n` : '');
+    bookingUrlText;
   
   // Send service details
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
@@ -537,22 +549,36 @@ async function handleServiceDetailInput(
     // Book this service - show booking URL
     const service = flowState.selections.selectedService;
     if (service && service.bookingUrl) {
-      await deps.stopTyping(tenantId, phone);
-      await deps.sendMessage(
-        tenantId,
-        phone,
-        ` Great choice!\n\n` +
-        `Click the link below to book *${service.name}*:\n\n` +
-        `${service.bookingUrl}\n\n` +
-        `Or reply *2* to browse more services.`
-      );
+      try {
+        const shortUrl = await shortenUrl(service.bookingUrl);
+        await deps.stopTyping(tenantId, phone);
+        await deps.sendMessage(
+          tenantId,
+          phone,
+          `🎉 Great choice!\n\n` +
+          `Click the link below to book *${service.name}*:\n\n` +
+          `${shortUrl}\n\n` +
+          `Or reply *2️⃣* to browse more services.`
+        );
+      } catch (error) {
+        console.error("[ServiceBrowse] Error shortening URL:", error);
+        await deps.stopTyping(tenantId, phone);
+        await deps.sendMessage(
+          tenantId,
+          phone,
+          ` Great choice!\n\n` +
+          `Click the link below to book *${service.name}*:\n\n` +
+          `${service.bookingUrl}\n\n` +
+          `Or reply *2* to browse more services.`
+        );
+      }
     } else {
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
-        " Please contact us directly to book this service.\n\n" +
-        "Or reply *2* to browse more services."
+        "📞 Please contact us directly to book this service.\n\n" +
+        "Or reply *2️⃣* to browse more services."
       );
     }
   } else if (num === 2) {
