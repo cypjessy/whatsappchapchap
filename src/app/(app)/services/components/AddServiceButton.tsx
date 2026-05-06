@@ -144,7 +144,6 @@ export default function AddServiceButton() {
   const [saving, setSaving] = useState(false);
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']));
   const [selectedTimes, setSelectedTimes] = useState<Set<string>>(new Set());
-  const [bookedTimes] = useState<Set<string>>(new Set(['10:00 AM', '2:00 PM', '4:00 PM'])); // Simulated booked slots
   const [portfolioImages, setPortfolioImages] = useState<File[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   
@@ -539,7 +538,6 @@ export default function AddServiceButton() {
 
   // Toggle time slot selection
   const toggleTime = (time: string) => {
-    if (bookedTimes.has(time)) return; // Can't select booked slots
     const newTimes = new Set(selectedTimes);
     if (newTimes.has(time)) {
       newTimes.delete(time);
@@ -830,9 +828,8 @@ export default function AddServiceButton() {
                     {times.map(time => (
                       <button
                         key={time}
-                        className={`time-slot ${bookedTimes.has(time) ? 'booked' : ''} ${selectedTimes.has(time) ? 'active' : ''}`}
+                        className={`time-slot ${selectedTimes.has(time) ? 'active' : ''}`}
                         onClick={() => toggleTime(time)}
-                        disabled={bookedTimes.has(time)}
                       >
                         {time}
                       </button>
