@@ -6,37 +6,13 @@
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { shortenUrl } from "@/lib/url-shortener";
+import type { Service } from "@/lib/db";
 
 /**
  * Lazy initialization - get Firestore instance only when needed
  */
 function getDb() {
   return getFirestore();
-}
-
-interface Service {
-  id: string;
-  name: string;
-  description?: string;
-  priceMin: number;
-  priceMax: number;
-  businessType?: string;
-  businessCategory?: string;
-  serviceName?: string;
-  categoryName?: string;
-  duration?: string;
-  location?: string;
-  emoji?: string;
-  imageUrl?: string;
-  portfolioImages?: string[];
-  bookingUrl?: string;
-  packagePrices?: {
-    basic?: number;
-    standard?: number;
-    premium?: number;
-  };
-  tags?: string[];
-  status?: string;
 }
 
 /**
@@ -454,7 +430,8 @@ async function showServiceDetail(
   
   // Build service details
   const details = [];
-  if (service.duration) details.push(`️ Duration: ${service.duration}`);
+  if (service.providerName) details.push(`👤 Provider: ${service.providerName}`);
+  if (service.duration) details.push(`⏱️ Duration: ${service.duration}`);
   if (service.location) {
     const locationMap: Record<string, string> = {
       'client-place': "Client's place",
@@ -464,10 +441,86 @@ async function showServiceDetail(
     };
     details.push(`📍 Location: ${locationMap[service.location] || service.location}`);
   }
+  if (service.mode) {
+    const modeMap: Record<string, string> = {
+      'in-person': 'In-Person',
+      'online': 'Online',
+      'hybrid': 'Hybrid'
+    };
+    details.push(`🔄 Mode: ${modeMap[service.mode] || service.mode}`);
+  }
   if (service.businessCategory || service.categoryName) {
-    details.push(` Category: ${service.businessCategory || service.categoryName}`);
+    details.push(`📂 Category: ${service.businessCategory || service.categoryName}`);
   }
   const detailsText = details.length > 0 ? `\n${details.join('\n')}` : '';
+  
+  // Build specifications section
+  let specsText = '';
+  if (service.specifications && typeof service.specifications === 'object') {
+    const specEntries = Object.entries(service.specifications);
+    if (specEntries.length > 0) {
+      const specLines = [];
+      for (const [key, value] of specEntries) {
+        // Skip service_type as it's already shown in tags
+        if (key === 'service_type') continue;
+        
+        // Format the key (convert snake_case to Title Case)
+        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        // Handle array values
+        if (Array.isArray(value) && value.length > 0) {
+          specLines.push(`   • ${formattedKey}: ${value.join(', ')}`);
+        } else if (typeof value === 'string' && value) {
+          specLines.push(`   • ${formattedKey}: ${value}`);
+        }
+      }
+      
+      if (specLines.length > 0) {
+        specsText = `\n *Details:*\n${specLines.join('\n')}`;
+      }
+    }
+  }
+  
+  // Build package features section
+  let featuresText = '';
+  if (service.packageFeatures) {
+    const featureSections = [];
+    
+    if (service.packagePrices?.basic && service.packageFeatures.basic?.length > 0) {
+      featureSections.push(`   *Basic (KES ${service.packagePrices.basic.toLocaleString()}):*\n${service.packageFeatures.basic.map(f => `     ✓ ${f}`).join('\n')}`);
+    }
+    if (service.packagePrices?.standard && service.packageFeatures.standard?.length > 0) {
+      featureSections.push(`   *Standard (KES ${service.packagePrices.standard.toLocaleString()}):*\n${service.packageFeatures.standard.map(f => `     ✓ ${f}`).join('\n')}`);
+    }
+    if (service.packagePrices?.premium && service.packageFeatures.premium?.length > 0) {
+      featureSections.push(`   *Premium (KES ${service.packagePrices.premium.toLocaleString()}):*\n${service.packageFeatures.premium.map(f => `     ✓ ${f}`).join('\n')}`);
+    }
+    
+    if (featureSections.length > 0) {
+      featuresText = `\n *What's Included:*\n${featureSections.join('\n\n')}`;
+    }
+  }
+  
+  // Build tags section
+  let tagsText = '';
+  if (service.tags && service.tags.length > 0) {
+    tagsText = `\n *Tags:* ${service.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ')}`;
+  }
+  
+  // Build availability section
+  let availabilityText = '';
+  if (service.availability) {
+    const availParts = [];
+    if (service.availability.days && service.availability.days.length > 0) {
+      availParts.push(`Days: ${service.availability.days.join(', ')}`);
+    }
+    if (service.availability.timeSlots && service.availability.timeSlots.length > 0) {
+      availParts.push(`Times: ${service.availability.timeSlots.join(', ')}`);
+    }
+    if (availParts.length > 0) {
+      availabilityText = `\n *Available:* ${availParts.join(' | ')}`;
+    }
+  }
   
   // Shorten booking URL if available
   let bookingUrlText = '';
@@ -481,8 +534,14 @@ async function showServiceDetail(
     }
   }
   
-  const message = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}\n\n` +
+  const message = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}
+
+` +
     (service.description ? `📝 ${service.description.substring(0, 200)}${service.description.length > 200 ? '...' : ''}\n\n` : '') +
+    specsText +
+    featuresText +
+    tagsText +
+    availabilityText +
     bookingUrlText;
   
   // Send service details
