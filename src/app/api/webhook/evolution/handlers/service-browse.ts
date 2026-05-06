@@ -484,17 +484,25 @@ async function showServiceDetail(
   
   const detailsText = details.length > 0 ? `\n\n${details.join('\n')}` : '';
   
-  // Build specifications section - matches your DB's specifications field
+  // Build specifications section - FIXED to properly display arrays
   let specsText = '';
   if (service.specifications && typeof service.specifications === 'object') {
     const specEntries = Object.entries(service.specifications);
     if (specEntries.length > 0) {
       const specLines = specEntries.map(([key, value]) => {
-        // Format the key
         const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        return `   • ${formattedKey}: ${value}`;
-      });
-      specsText = `\n\n📋 *Specifications:*\n${specLines.join('\n')}`;
+        // Handle array values properly
+        if (Array.isArray(value) && value.length > 0) {
+          return `   • ${formattedKey}: ${value.join(', ')}`;
+        } else if (typeof value === 'string' && value) {
+          return `   • ${formattedKey}: ${value}`;
+        }
+        return null;
+      }).filter(line => line !== null);
+      
+      if (specLines.length > 0) {
+        specsText = `\n\n📋 *Specifications:*\n${specLines.join('\n')}`;
+      }
     }
   }
   
