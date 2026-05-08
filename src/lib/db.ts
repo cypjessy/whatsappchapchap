@@ -192,16 +192,8 @@ export interface Service {
   
   // NEW FIELDS
   providerName?: string; // Business/Provider name
-  packagePrices?: { // Individual prices for each package tier
-    basic?: number;
-    standard?: number;
-    premium?: number;
-  };
-  packageFeatures?: { // Custom features for each package
-    basic: string[];
-    standard: string[];
-    premium: string[];
-  };
+  packagePrices?: Record<string, number>; // Dynamic prices for each package tier
+  packageFeatures?: Record<string, string[]>; // Dynamic features for each package
   availability?: { // Available days and times
     days: string[]; // ['Mon', 'Tue', etc.]
     timeSlots: string[]; // ['9:00 AM', '10:00 AM', etc.]

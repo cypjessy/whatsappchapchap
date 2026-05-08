@@ -14,7 +14,7 @@ export default function BookingPage() {
 
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPackage, setSelectedPackage] = useState<"basic" | "standard" | "premium">("standard");
+  const [selectedPackage, setSelectedPackage] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedLocation, setSelectedLocation] = useState<string>("");
@@ -39,9 +39,15 @@ export default function BookingPage() {
         const serviceData = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
         setService(serviceData);
         console.log("Service loaded:", serviceData.name);
-        
+              
         // Try to get provider name from business profile or user data
         setProviderName(serviceData.providerName || "Service Provider");
+              
+        // Auto-select first available package
+        if (serviceData.packagePrices && Object.keys(serviceData.packagePrices).length > 0) {
+          const firstPackage = Object.keys(serviceData.packagePrices)[0];
+          setSelectedPackage(firstPackage);
+        }
       } else {
         console.error("Service not found:", serviceId);
         alert("Service not found");
@@ -98,13 +104,10 @@ export default function BookingPage() {
 
     setSubmitting(true);
     try {
-      // Calculate package price
-      const packagePrices = {
-        basic: service.priceMin || 0,
-        standard: Math.round((service.priceMin || 0) * 1.5),
-        premium: Math.round((service.priceMin || 0) * 2)
-      };
-      const finalPrice = packagePrices[selectedPackage];
+      // Calculate package price from service data
+      const packagePrices = service.packagePrices || {};
+      const finalPrice = packagePrices[selectedPackage] || service.priceMin || 0;
+      const packageName = selectedPackage.charAt(0).toUpperCase() + selectedPackage.slice(1);
 
       // Save booking to database
       const response = await fetch('/api/create-booking', {
@@ -136,7 +139,7 @@ export default function BookingPage() {
       // Create WhatsApp message with booking details
       const bookingMessage = `📅 *New Booking Request*\n\n` +
         `*Service:* ${service?.name}\n` +
-        `*Package:* ${selectedPackage.charAt(0).toUpperCase() + selectedPackage.slice(1)}\n` +
+        `*Package:* ${packageName}\n` +
         `*Price:* ${formatCurrency(finalPrice)}\n` +
         `*Date:* ${selectedDate.toLocaleDateString()}\n` +
         `*Time:* ${selectedTime}\n` +
@@ -200,19 +203,9 @@ export default function BookingPage() {
     );
   }
 
-  const packageLabels = {
-    basic: "Starter",
-    standard: "Standard",
-    premium: "Premium"
-  };
-
-  // Calculate dynamic prices based on service data
-  const basePrice = service.priceMin || 0;
-  const packagePrices = {
-    basic: basePrice,
-    standard: Math.round(basePrice * 1.5),
-    premium: Math.round(basePrice * 2)
-  };
+  // Get dynamic packages from Firestore
+  const packagePrices = service.packagePrices || {};
+  const packageNames = Object.keys(packagePrices);
 
   // Get location options based on service mode
   const getLocationOptions = () => {
@@ -289,40 +282,46 @@ export default function BookingPage() {
             <p className="text-sm text-[#64748b] mb-4">{service.description}</p>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {(["basic", "standard", "premium"] as const).map((pkg) => (
-              <div
-                key={pkg}
-                className={`p-3 md:p-4 border-2 rounded-xl cursor-pointer transition-all relative overflow-hidden ${
-                  selectedPackage === pkg
-                    ? "border-[#8b5cf6] bg-[#ede9fe]"
-                    : "border-[#e2e8f0] hover:border-[#8b5cf6]"
-                }`}
-                onClick={() => setSelectedPackage(pkg)}
-              >
-                {selectedPackage === pkg && (
-                  <div className="absolute top-2 right-2 bg-[#8b5cf6] text-white px-2 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase">
-                    Selected
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {packageNames.map((pkg) => {
+              const price = packagePrices[pkg] || 0;
+              const features = service.packageFeatures?.[pkg] || [
+                `${pkg} package selected`,
+                "Quality service guaranteed"
+              ];
+              const displayName = pkg.charAt(0).toUpperCase() + pkg.slice(1);
+              
+              return (
+                <div
+                  key={pkg}
+                  className={`p-3 md:p-4 border-2 rounded-xl cursor-pointer transition-all relative overflow-hidden ${
+                    selectedPackage === pkg
+                      ? "border-[#8b5cf6] bg-[#ede9fe]"
+                      : "border-[#e2e8f0] hover:border-[#8b5cf6]"
+                  }`}
+                  onClick={() => setSelectedPackage(pkg)}
+                >
+                  {selectedPackage === pkg && (
+                    <div className="absolute top-2 right-2 bg-[#8b5cf6] text-white px-2 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase">
+                      Selected
+                    </div>
+                  )}
+                  
+                  <div className="font-bold text-base md:text-lg mb-2">{displayName}</div>
+                  <ul className="text-xs md:text-sm text-[#64748b] mb-3 space-y-1">
+                    {features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <i className="fas fa-check text-green-500 text-[10px] md:text-xs mt-0.5 flex-shrink-0"></i>
+                        <span className="text-xs md:text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="text-xl md:text-2xl font-extrabold text-[#8b5cf6]">
+                    {formatCurrency(price)}
                   </div>
-                )}
-                
-                <div className="font-bold text-base md:text-lg mb-2">{packageLabels[pkg]}</div>
-                <ul className="text-xs md:text-sm text-[#64748b] mb-3 space-y-1">
-                  {(service.packageFeatures?.[pkg] || [
-                    pkg === 'basic' ? 'Core service included' : pkg === 'standard' ? 'Everything in Basic' : 'Everything in Standard',
-                    pkg === 'basic' ? 'Professional quality' : pkg === 'standard' ? 'Priority scheduling' : 'VIP treatment'
-                  ]).map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <i className="fas fa-check text-green-500 text-[10px] md:text-xs mt-0.5 flex-shrink-0"></i>
-                      <span className="text-xs md:text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="text-xl md:text-2xl font-extrabold text-[#8b5cf6]">
-                  {formatCurrency(packagePrices[pkg])}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
