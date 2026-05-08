@@ -5,7 +5,6 @@
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { shortenUrl } from "@/lib/url-shortener";
 import type { Service } from "@/lib/db";
 
 /**
@@ -599,16 +598,10 @@ async function showServiceDetail(
     }
   }
   
-  // Booking URL (shortened) - like products do
+  // Booking URL - use direct link from database
   let bookingUrlText = '';
   if (service.bookingUrl) {
-    try {
-      const shortUrl = await shortenUrl(service.bookingUrl);
-      bookingUrlText = `\n\n🛒 *Book Now:* ${shortUrl}`;
-    } catch (error) {
-      console.error("[ServiceBrowse] Error shortening URL:", error);
-      bookingUrlText = `\n\n🛒 *Book Now:* ${service.bookingUrl}`;
-    }
+    bookingUrlText = `\n\n🛒 *Book Now:* ${service.bookingUrl}`;
   }
   
   // Proper emoji fallback
@@ -761,29 +754,15 @@ async function handleServiceDetailInput(
     const service = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
     
     if (service && service.bookingUrl) {
-      try {
-        const shortUrl = await shortenUrl(service.bookingUrl);
-        await deps.stopTyping(tenantId, phone);
-        await deps.sendMessage(
-          tenantId,
-          phone,
-          `🎉 *Great choice!*\n\n` +
-          `Click the link below to book *${service.name}*:\n\n` +
-          `${shortUrl}\n\n` +
-          `Or reply *2️⃣* to browse more services.`
-        );
-      } catch (error) {
-        console.error("[ServiceBrowse] Error shortening URL:", error);
-        await deps.stopTyping(tenantId, phone);
-        await deps.sendMessage(
-          tenantId,
-          phone,
-          `🎉 *Great choice!*\n\n` +
-          `Click the link below to book *${service.name}*:\n\n` +
-          `${service.bookingUrl}\n\n` +
-          `Or reply *2️⃣* to browse more services.`
-        );
-      }
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        `🎉 *Great choice!*\n\n` +
+        `Click the link below to book *${service.name}*:\n\n` +
+        `${service.bookingUrl}\n\n` +
+        `Or reply *2* to browse more services.`
+      );
     } else {
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
