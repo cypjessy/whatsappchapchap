@@ -564,7 +564,11 @@ async function showServiceDetail(
   // where productText includes ALL details + order link in ONE caption
   // We'll do the same for services
   
-  let completeMessage = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
+  let completeMessage = `${service.emoji || '️'} *${service.name}*${pricingText}${detailsText}`;
+  
+  // CRITICAL: Add booking URL immediately after basic info (MUST appear before WhatsApp truncation)
+  // Products put order link early for this exact reason - it's the most important field!
+  completeMessage += bookingUrlText;
   
   // Add description (truncated like products - max 300 chars)
   if (service.description && service.description.trim() !== '') {
@@ -574,17 +578,14 @@ async function showServiceDetail(
     completeMessage += `\n\n📝 *Description:*\n${desc}`;
   }
   
-  // Add specifications (important for services)
+  // Add specifications (optional - may get truncated if over 1024 chars)
   completeMessage += specsText;
   
-  // Add package features (only for priced tiers)
+  // Add package features (optional - may get truncated)
   completeMessage += featuresText;
   
-  // Add availability (important for services)
+  // Add availability (optional - may get truncated)
   completeMessage += availabilityText;
-  
-  // Add booking URL (CRITICAL - like products add order link)
-  completeMessage += bookingUrlText;
   
   // Add navigation options
   completeMessage += `\n\n*Reply with a number:*\n` +
