@@ -41,10 +41,6 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
     // Operations
     { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers", badge: null },
     { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping", badge: null },
-    { id: "availability", label: "Availability", icon: "fa-clock", href: "/availability", badge: null },
-    { id: "portfolio", label: "Portfolio", icon: "fa-images", href: "/portfolio", badge: null },
-    // Growth
-    { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
     // System
     { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
     { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
