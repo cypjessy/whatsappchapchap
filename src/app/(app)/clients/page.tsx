@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMode } from "@/context/ModeContext";
 import { useAuth } from "@/context/AuthContext";
 import { clientService, Client } from "@/lib/db";
 import AddClientModal from "./components/AddClientModal";
@@ -9,7 +8,6 @@ import EditClientModal from "./components/EditClientModal";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 
 export default function ClientsPage() {
-  const { mode } = useMode();
   const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -28,10 +26,10 @@ export default function ClientsPage() {
   const [toastType, setToastType] = useState<"success" | "info">("info");
 
   useEffect(() => {
-    if (mode === "service" && user) {
+    if (user) {
       loadClients();
     }
-  }, [mode, user, statusFilter]);
+  }, [user, statusFilter]);
 
   const loadClients = async () => {
     if (!user) return;
@@ -198,14 +196,6 @@ export default function ClientsPage() {
     window.URL.revokeObjectURL(url);
     displayToast("success", "Clients exported to CSV!");
   };
-
-  if (mode !== "service") {
-    return (
-      <div className="p-4 md:p-6 text-center">
-        <p className="text-[#64748b]">Switch to Service Mode to view clients</p>
-      </div>
-    );
-  }
 
   return (
     <div className="p-3 md:p-6 animate-fadeIn">

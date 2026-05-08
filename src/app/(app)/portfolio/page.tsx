@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMode } from "@/context/ModeContext";
 import { useAuth } from "@/context/AuthContext";
 import { portfolioService, certificationService, reviewService, PortfolioItem, Certification, Review } from "@/lib/db";
 
 export default function PortfolioPage() {
-  const { mode } = useMode();
   const { user } = useAuth();
   
   // State
@@ -35,10 +33,10 @@ export default function PortfolioPage() {
   });
 
   useEffect(() => {
-    if (mode === "service" && user) {
+    if (user) {
       loadPortfolioData();
     }
-  }, [mode, user]);
+  }, [user]);
 
   const loadPortfolioData = async () => {
     if (!user) return;
@@ -204,14 +202,6 @@ export default function PortfolioPage() {
     { id: "certifications", label: "Certs", icon: "fa-certificate" },
     { id: "testimonials", label: "Reviews", icon: "fa-quote-left" },
   ];
-
-  if (mode !== "service") {
-    return (
-      <div className="p-4 md:p-6 text-center">
-        <p className="text-[#64748b]">Switch to Service Mode to view portfolio</p>
-      </div>
-    );
-  }
 
   return (
     <div className="p-3 md:p-6 animate-fadeIn">

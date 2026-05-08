@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMode } from "@/context/ModeContext";
 import { useAuth } from "@/context/AuthContext";
 import AddServiceButton from "@/app/(app)/services/components/AddServiceButton";
 import ViewServiceModal from "@/app/(app)/services/components/ViewServiceModal";
@@ -11,7 +10,6 @@ import { formatCurrency } from "@/lib/currency";
 type ViewLayout = "grid" | "list";
 
 export default function ServicesPage() {
-  const { mode } = useMode();
   const { user } = useAuth();
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -29,10 +27,10 @@ export default function ServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null);
 
   useEffect(() => {
-    if (mode === "service" && user) {
+    if (user) {
       loadServices();
     }
-  }, [mode, user]);
+  }, [user]);
 
   const loadServices = async () => {
     if (!user) return;
@@ -264,13 +262,7 @@ export default function ServicesPage() {
     }
   });
 
-  if (mode !== "service") {
-    return (
-      <div className="p-4 md:p-6 text-center">
-        <p className="text-[#64748b]">Switch to Service Mode to view services</p>
-      </div>
-    );
-  }
+
 
   const stats = [
     { label: "Services", value: services.length, icon: "fa-concierge-bell", color: "bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]" },

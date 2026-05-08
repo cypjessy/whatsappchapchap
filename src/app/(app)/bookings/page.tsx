@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMode } from "@/context/ModeContext";
 import { useAuth } from "@/context/AuthContext";
 import { serviceService, bookingService, Booking, Service } from "@/lib/db";
 import ManualBookingModal from "@/app/(app)/bookings/components/ManualBookingModal";
@@ -12,7 +11,6 @@ import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 type ViewMode = "calendar" | "timeline" | "list" | "grid";
 
 export default function BookingsPage() {
-  const { mode } = useMode();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -35,11 +33,11 @@ export default function BookingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mode === "service" && user) {
+    if (user) {
       loadServices();
       loadBookings();
     }
-  }, [mode, user, filterStatus]);
+  }, [user, filterStatus]);
 
   const loadServices = async () => {
     if (!user) return;
@@ -264,13 +262,7 @@ export default function BookingsPage() {
     return true;
   });
 
-  if (mode !== "service") {
-    return (
-      <div className="p-4 md:p-6 text-center">
-        <p className="text-[#64748b]">Switch to Service Mode to view bookings</p>
-      </div>
-    );
-  }
+
 
   const getStatusClass = (status: string) => {
     switch (status) {

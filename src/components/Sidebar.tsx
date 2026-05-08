@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useMode } from "@/context/ModeContext";
+import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -21,38 +20,29 @@ type NavItem = {
 
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   // Start collapsed on desktop, expanded only when isExpanded prop is true (mobile drawer)
   const [localCollapsed, setLocalCollapsed] = useState(true);
-  const { mode, toggleMode } = useMode();
   
   // When isExpanded prop is true (mobile/tablet drawer), always show full sidebar
   // On desktop, use local state for hover collapse (starts collapsed)
   const isCollapsed = isExpanded ? false : localCollapsed;
 
-  const productNavItems: NavItem[] = [
+  const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
     { id: "orders", label: "Orders", icon: "fa-shopping-bag", href: "/orders", badge: "12" },
     { id: "products", label: "Products", icon: "fa-box", href: "/products", badge: null },
-    { id: "customers", label: "Customers", icon: "fa-users", href: "/customers", badge: null },
+    { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services", badge: null },
+    { id: "bookings", label: "Bookings", icon: "fa-calendar-alt", href: "/bookings", badge: "8" },
+    { id: "clients", label: "Clients", icon: "fa-users", href: "/clients", badge: null },
+    { id: "customers", label: "Customers", icon: "fa-user-friends", href: "/customers", badge: null },
+    { id: "availability", label: "Availability", icon: "fa-clock", href: "/availability", badge: null },
+    { id: "portfolio", label: "Portfolio", icon: "fa-images", href: "/portfolio", badge: null },
     { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers", badge: null },
     { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping", badge: null },
     { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
     { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
     { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
   ];
-
-  const serviceNavItems: NavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
-    { id: "bookings", label: "Bookings", icon: "fa-calendar-alt", href: "/bookings", badge: "8" },
-    { id: "services", label: "My Services", icon: "fa-list", href: "/services", badge: null },
-    { id: "clients", label: "Clients", icon: "fa-users", href: "/clients", badge: null },
-    { id: "availability", label: "Availability", icon: "fa-clock", href: "/availability", badge: null },
-    { id: "portfolio", label: "Portfolio", icon: "fa-images", href: "/portfolio", badge: null },
-    { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
-  ];
-
-  const navItems = mode === "product" ? productNavItems : serviceNavItems;
 
   const isActive = (href: string) => pathname === href;
 
@@ -76,31 +66,6 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
           </div>
           {!isCollapsed && <div className="text-xl font-extrabold text-[#1e293b]">Chap<span className="text-[#25D366]">Chap</span></div>}
         </Link>
-        
-        {/* Mode Toggle Switch */}
-        <button
-          onClick={() => {
-            toggleMode();
-            // Navigate to dashboard after mode switch
-            router.push('/dashboard');
-          }}
-          className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition-all ${
-            isCollapsed ? "flex-col" : ""
-          } ${mode === "product" ? "bg-[#f0fdf4] hover:bg-[#dcfce7]" : "bg-[#fef3c7] hover:bg-[#fde68a]"}`}
-        >
-          {mode === "product" ? (
-            <>
-              <i className="fas fa-box text-[#25D366]"></i>
-              {!isCollapsed && <span className="text-xs font-bold text-[#25D366]">Product Mode</span>}
-            </>
-          ) : (
-            <>
-              <i className="fas fa-concierge-bell text-[#f59e0b]"></i>
-              {!isCollapsed && <span className="text-xs font-bold text-[#f59e0b]">Service Mode</span>}
-            </>
-          )}
-          <i className={`fas fa-exchange-alt text-xs ${mode === "product" ? "text-[#25D366]" : "text-[#f59e0b]"}`}></i>
-        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">

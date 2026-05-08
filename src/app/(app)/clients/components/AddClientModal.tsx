@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useMode } from "@/context/ModeContext";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientService, Client } from "@/lib/db";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";

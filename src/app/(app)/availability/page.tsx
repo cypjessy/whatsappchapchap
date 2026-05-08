@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMode } from "@/context/ModeContext";
 import { useAuth } from "@/context/AuthContext";
 import { availabilityService, bookingService, AvailabilitySettings, DaySchedule, TimeOff, SpecialHours, Booking } from "@/lib/db";
 import AddTimeSlotModal from "./components/AddTimeSlotModal";
@@ -32,7 +31,6 @@ const locations = [
 ];
 
 export default function AvailabilityPage() {
-  const { mode } = useMode();
   const { user } = useAuth();
   
   // State
@@ -65,12 +63,12 @@ export default function AvailabilityPage() {
   const [toastType, setToastType] = useState<"success" | "info" | "warning">("info");
 
   useEffect(() => {
-    if (mode === "service" && user) {
+    if (user) {
       loadAvailabilitySettings();
       loadTimeOff();
       loadBookings();
     }
-  }, [mode, user]);
+  }, [user]);
 
   const loadAvailabilitySettings = async () => {
     if (!user) return;
@@ -289,13 +287,7 @@ export default function AvailabilityPage() {
     return new Date(year, month, 1).getDay();
   };
 
-  if (mode !== "service") {
-    return (
-      <div className="p-4 md:p-6 text-center">
-        <p className="text-[#64748b]">Switch to Service Mode to manage availability</p>
-      </div>
-    );
-  }
+
 
   return (
     <div className="p-3 md:p-6 animate-fadeIn">
