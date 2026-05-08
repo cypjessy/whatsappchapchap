@@ -28,18 +28,24 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const isCollapsed = isExpanded ? false : localCollapsed;
 
   const navItems: NavItem[] = [
+    // Overview
     { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard", badge: null },
+    // Transactions
     { id: "orders", label: "Orders", icon: "fa-shopping-bag", href: "/orders", badge: "12" },
+    { id: "bookings", label: "Bookings", icon: "fa-calendar-alt", href: "/bookings", badge: "8" },
+    // Catalog
     { id: "products", label: "Products", icon: "fa-box", href: "/products", badge: null },
     { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services", badge: null },
-    { id: "bookings", label: "Bookings", icon: "fa-calendar-alt", href: "/bookings", badge: "8" },
-    { id: "clients", label: "Clients", icon: "fa-users", href: "/clients", badge: null },
-    { id: "customers", label: "Customers", icon: "fa-user-friends", href: "/customers", badge: null },
-    { id: "availability", label: "Availability", icon: "fa-clock", href: "/availability", badge: null },
-    { id: "portfolio", label: "Portfolio", icon: "fa-images", href: "/portfolio", badge: null },
+    // People
+    { id: "customers", label: "Customers", icon: "fa-users", href: "/customers", badge: null },
+    // Operations
     { id: "suppliers", label: "Suppliers", icon: "fa-truck", href: "/suppliers", badge: null },
     { id: "shipping", label: "Shipping", icon: "fa-shipping-fast", href: "/shipping", badge: null },
+    { id: "availability", label: "Availability", icon: "fa-clock", href: "/availability", badge: null },
+    { id: "portfolio", label: "Portfolio", icon: "fa-images", href: "/portfolio", badge: null },
+    // Growth
     { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns", badge: null },
+    // System
     { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings", badge: null },
     { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help", badge: null },
   ];
