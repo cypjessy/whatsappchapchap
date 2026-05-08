@@ -547,56 +547,74 @@ async function showServiceDetail(
     }
   }
   
-  // Booking URL (shortened)
+  // Booking URL (shortened) - like products do
   let bookingUrlText = '';
   if (service.bookingUrl) {
     try {
       const shortUrl = await shortenUrl(service.bookingUrl);
-      bookingUrlText = `\n\n🛒 *Book Now:* ${shortUrl}`;
+      bookingUrlText = `\n\n *Book Now:* ${shortUrl}`;
     } catch (error) {
       console.error("[ServiceBrowse] Error shortening URL:", error);
       bookingUrlText = `\n\n🛒 *Book Now:* ${service.bookingUrl}`;
     }
   }
   
-  // FIXED: Build the full message that will be sent as text
-  // Start with the basic info (always included)
-  let fullMessage = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
+  // FIXED: Follow EXACT product pattern - ONE message with image + complete caption
+  // Products (route.ts line 741-746) send: sendMedia(tenantId, phone, imageUrl, productText)
+  // where productText includes ALL details + order link in ONE caption
+  // We'll do the same for services
   
-  // Add description
+  let completeMessage = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
+  
+  // Add description (truncated like products - max 300 chars)
   if (service.description && service.description.trim() !== '') {
-    fullMessage += `\n\n📝 *Description:*\n${service.description}`;
+    const desc = service.description.length > 300 
+      ? service.description.substring(0, 300) + '...' 
+      : service.description;
+    completeMessage += `\n\n📝 *Description:*\n${desc}`;
   }
   
-  // Add all other sections
-  fullMessage += specsText + featuresText + tagsText + availabilityText + bookingUrlText;
+  // Add specifications (important for services)
+  completeMessage += specsText;
   
-  console.log(`[ServiceBrowse] Full message length: ${fullMessage.length} chars`);
-  console.log(`[ServiceBrowse] Message preview: ${fullMessage.substring(0, 200)}...`);
+  // Add package features (only for priced tiers)
+  completeMessage += featuresText;
   
-  // STEP 1: Send image with brief caption (if image exists)
+  // Add availability (important for services)
+  completeMessage += availabilityText;
+  
+  // Add booking URL (CRITICAL - like products add order link)
+  completeMessage += bookingUrlText;
+  
+  // Add navigation options
+  completeMessage += `\n\n*Reply with a number:*\n` +
+    `1️⃣ - Book this service\n` +
+    `2️⃣ - Back to services\n` +
+    `3️⃣ - Main menu\n` +
+    `4️ - Browse Service Categories`;
+  
+  console.log(`[ServiceBrowse] Complete message length: ${completeMessage.length} chars`);
+  console.log(`[ServiceBrowse] Has booking URL: ${!!service.bookingUrl}`);
+  console.log(`[ServiceBrowse] Using product pattern: ONE message with image + caption`);
+  
+  // Send using EXACT same pattern as products: ONE sendMedia call with complete caption
+  // This is proven to work - see route.ts line 743: sendMedia(tenantId, phone, imageUrl, productText)
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
     const imageUrl = service.imageUrl || service.portfolioImages![0];
     if (deps.sendMedia) {
-      // Brief caption for the image - just name and emoji
-      const shortCaption = `${service.emoji || '🛠️'} *${service.name}*`;
-      await deps.sendMedia(tenantId, phone, imageUrl, shortCaption);
-      console.log(`[ServiceBrowse] Image sent with caption: "${shortCaption}"`);
+      console.log(`[ServiceBrowse] Sending with image (product pattern)`);
+      await deps.sendMedia(tenantId, phone, imageUrl, completeMessage);
+    } else {
+      console.log(`[ServiceBrowse] sendMedia not available, sending as text`);
+      await deps.sendMessage(tenantId, phone, completeMessage);
     }
+  } else {
+    // No image available - send as text message
+    console.log(`[ServiceBrowse] No image, sending complete message as text`);
+    await deps.sendMessage(tenantId, phone, completeMessage);
   }
   
-  // STEP 2: Send the full details message (ALWAYS send this)
-  await deps.sendMessage(tenantId, phone, fullMessage);
-  console.log(`[ServiceBrowse] Full details message sent`);
-  
-  // Navigation options with emoji numbers
-  const responseText = `\n*Reply with a number:*\n` +
-    `1️⃣ - Book this service\n` +
-    `2️⃣ - Back to services\n` +
-    `3️⃣ - Main menu`;
-  
-  await deps.stopTyping(tenantId, phone);
-  await deps.sendMessage(tenantId, phone, responseText);
+  console.log(`[ServiceBrowse] Service details sent successfully`);
   
   // Update flow state
   await adminDb
