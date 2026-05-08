@@ -23,6 +23,7 @@ export interface ServiceBrowseDeps {
   sendMedia?: (tenantId: string, phone: string, mediaUrl: string, caption: string) => Promise<void>;
   startTyping: (tenantId: string, phone: string) => Promise<void>;
   stopTyping: (tenantId: string, phone: string) => Promise<void>;
+  sendWelcomeMenu: (tenantId: string, phone: string) => Promise<void>;  // ADDED
 }
 
 // Business type icons
@@ -112,7 +113,7 @@ export async function startServiceBrowseFlow(
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
     
-    // Update flow state
+    // Store only IDs, not full service objects
     await adminDb
       .collection("tenants")
       .doc(tenantId)
@@ -125,7 +126,13 @@ export async function startServiceBrowseFlow(
           currentStep: 'category_selection',
           selections: {
             categories,
-            servicesByType
+            // Store only IDs grouped by type, not full objects
+            serviceIdsByType: Object.fromEntries(
+              Object.entries(servicesByType).map(([type, svcs]) => [
+                type,
+                svcs.map(s => s.id)
+              ])
+            ),
           },
           lastActivity: new Date().toISOString()
         }
@@ -186,7 +193,7 @@ async function handleCategorySelection(
   const adminDb = getDb();
   const num = parseInt(message.trim());
   const categories = selections.categories;
-  const servicesByType = selections.servicesByType;
+  const serviceIdsByType = selections.serviceIdsByType;
   
   if (isNaN(num) || num < 1 || num > categories.length) {
     await deps.stopTyping(tenantId, phone);
@@ -200,9 +207,41 @@ async function handleCategorySelection(
   }
   
   const selectedCategory = categories[num - 1];
-  const categoryServices = servicesByType[selectedCategory.type] || [];
+  const serviceIds = serviceIdsByType[selectedCategory.type] || [];
   
-  if (categoryServices.length === 0) {
+  if (serviceIds.length === 0) {
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ No services found in this category.\n\n` +
+      `Reply *0️⃣* for main menu.`
+    );
+    return;
+  }
+  
+  // Re-fetch full service objects by ID
+  const services: Service[] = [];
+  const batchSize = 10;
+  for (let i = 0; i < serviceIds.length; i += batchSize) {
+    const batch = serviceIds.slice(i, i + batchSize);
+    const servicesSnap = await adminDb
+      .collection("services")
+      .where('__name__', 'in', batch)
+      .get();
+    
+    servicesSnap.docs.forEach((doc: any) => {
+      services.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+  }
+  
+  // Preserve original order
+  services.sort((a, b) => serviceIds.indexOf(a.id) - serviceIds.indexOf(b.id));
+  
+  if (services.length === 0) {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
@@ -214,9 +253,9 @@ async function handleCategorySelection(
   }
   
   // Show first 5 services
-  await showServiceBatch(tenantId, phone, categoryServices, 0, selectedCategory, deps);
+  await showServiceBatch(tenantId, phone, services, 0, selectedCategory, deps);
   
-  // Update flow state
+  // Update flow state - store service IDs only
   await adminDb
     .collection("tenants")
     .doc(tenantId)
@@ -231,7 +270,7 @@ async function handleCategorySelection(
           ...selections,
           categoryId: selectedCategory.type,
           categoryName: selectedCategory.name,
-          categoryServices,
+          categoryServiceIds: serviceIds,
           currentIndex: 0
         },
         lastActivity: new Date().toISOString()
@@ -275,19 +314,21 @@ async function showServiceBatch(
     }
   }
   
-  // Show navigation options with emoji numbers
+  // Show navigation with clear service selection numbers
   const remaining = services.length - (startIndex + batchSize);
-  let responseText = `\n*Reply with a number:*\n`;
+  let responseText = `\n*Reply with a number to view a service:*\n`;
+  
+  for (let i = 0; i < batch.length; i++) {
+    responseText += `${i + 1}️⃣ - View *${batch[i].name}* details\n`;
+  }
+  
+  responseText += `\n`;
   
   if (remaining > 0) {
-    responseText += `1️⃣ - View More (${remaining} more)\n`;
+    responseText += `6️⃣ - View More (${remaining} more)\n`;
   }
-  responseText += `2️⃣ - Back to categories\n`;
-  responseText += `3️⃣ - Main menu`;
-  
-  if (remaining > 0) {
-    responseText += `\n4️⃣ - Browse Service Categories`;
-  }
+  responseText += `7️⃣ - Back to categories\n`;
+  responseText += `8️⃣ - Main menu`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, responseText);
@@ -305,8 +346,8 @@ async function handleServiceListing(
 ): Promise<void> {
   const adminDb = getDb();
   const num = parseInt(message.trim());
-  const { categoryServices, currentIndex, categoryName } = flowState.selections;
-    
+  const { categoryServiceIds, currentIndex, categoryName } = flowState.selections;
+  
   if (isNaN(num)) {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
@@ -320,28 +361,64 @@ async function handleServiceListing(
   
   const batchSize = 5;
   
-  if (num === 1) {
+  // Re-fetch current batch for service selection
+  const serviceIds = categoryServiceIds;
+  const startIdx = currentIndex;
+  const currentBatchIds = serviceIds.slice(startIdx, startIdx + batchSize);
+  
+  // Numbers 1-5 = select a service from current batch
+  if (num >= 1 && num <= currentBatchIds.length) {
+    const selectedServiceId = currentBatchIds[num - 1];
+    const serviceDoc = await adminDb.collection("services").doc(selectedServiceId).get();
+    const selectedService = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
+    
+    await showServiceDetail(tenantId, phone, selectedService, flowState, deps);
+    return;
+  }
+  
+  // Shifted navigation numbers
+  if (num === 6) {
     // View more services
     const nextIndex = currentIndex + batchSize;
-    if (nextIndex >= categoryServices.length) {
+    if (nextIndex >= serviceIds.length) {
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
         "✅ You've seen all services in this category.\n\n" +
         "*Reply with a number:*\n" +
-        "2️⃣ - Back to categories\n" +
-        "3️⃣ - Main menu"
+        "7️⃣ - Back to categories\n" +
+        "8️⃣ - Main menu"
       );
       return;
     }
     
-    // Show next batch
+    // Re-fetch services for next batch
+    const nextBatchIds = serviceIds.slice(nextIndex, nextIndex + batchSize);
+    const nextServices: Service[] = [];
+    
+    for (let i = 0; i < nextBatchIds.length; i += 10) {
+      const batch = nextBatchIds.slice(i, i + 10);
+      const servicesSnap = await adminDb
+        .collection("services")
+        .where('__name__', 'in', batch)
+        .get();
+      
+      servicesSnap.docs.forEach((doc: any) => {
+        nextServices.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+    }
+    
+    nextServices.sort((a, b) => nextBatchIds.indexOf(a.id) - nextBatchIds.indexOf(b.id));
+    
     await showServiceBatch(
       tenantId,
       phone,
-      categoryServices,
-      nextIndex,
+      nextServices,
+      0,
       { name: categoryName },
       deps
     );
@@ -360,45 +437,20 @@ async function handleServiceListing(
         }
       }, { merge: true });
       
-  } else if (num === 2) {
+  } else if (num === 7) {
     // Back to categories
     await startServiceBrowseFlow(tenantId, phone, deps);
     
-  } else if (num === 3) {
-    // Main menu - with proper emoji numbers
-    const adminDb = getDb();
+  } else if (num === 8) {
+    // Main menu - use the passed dependency
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      `Hello! 👋 Welcome to our store!\n\n` +
-      `How can we help you today?\n\n` +
-      `1️⃣ Browse Products\n` +
-      `2️⃣ Browse Services\n` +
-      `3️⃣ 🔍 Search Products\n` +
-      `4️⃣ Check Order Status\n` +
-      `5️⃣ Payment Info\n` +
-      `6️⃣ Talk to Support\n\n` +
-      `*Reply with a number (1️⃣-6️⃣)*`
-    );
-    // Clear flow state
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        flowState: FieldValue.delete()
-      }, { merge: true });
-  } else if (num === 4) {
-    // Browse service categories - restart service browse flow
-    await startServiceBrowseFlow(tenantId, phone, deps);
+    await deps.sendWelcomeMenu(tenantId, phone);
   } else {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, 3️⃣, or 4️⃣.\n\n" +
+      "❌ Invalid selection. Please reply with 1️⃣-8️⃣ as shown above.\n\n" +
       "Or reply *0️⃣* for main menu."
     );
   }
@@ -484,7 +536,7 @@ async function showServiceDetail(
   
   const detailsText = details.length > 0 ? `\n\n${details.join('\n')}` : '';
   
-  // Build specifications section - FIXED to properly display arrays
+  // Build specifications section - properly display arrays
   let specsText = '';
   if (service.specifications && typeof service.specifications === 'object') {
     const specEntries = Object.entries(service.specifications);
@@ -552,22 +604,17 @@ async function showServiceDetail(
   if (service.bookingUrl) {
     try {
       const shortUrl = await shortenUrl(service.bookingUrl);
-      bookingUrlText = `\n\n *Book Now:* ${shortUrl}`;
+      bookingUrlText = `\n\n🛒 *Book Now:* ${shortUrl}`;
     } catch (error) {
       console.error("[ServiceBrowse] Error shortening URL:", error);
       bookingUrlText = `\n\n🛒 *Book Now:* ${service.bookingUrl}`;
     }
   }
   
-  // FIXED: Follow EXACT product pattern - ONE message with image + complete caption
-  // Products (route.ts line 741-746) send: sendMedia(tenantId, phone, imageUrl, productText)
-  // where productText includes ALL details + order link in ONE caption
-  // We'll do the same for services
+  // Proper emoji fallback
+  let completeMessage = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
   
-  let completeMessage = `${service.emoji || '️'} *${service.name}*${pricingText}${detailsText}`;
-  
-  // CRITICAL: Add booking URL immediately after basic info (MUST appear before WhatsApp truncation)
-  // Products put order link early for this exact reason - it's the most important field!
+  // CRITICAL: Add booking URL immediately after basic info
   completeMessage += bookingUrlText;
   
   // Add description (truncated like products - max 300 chars)
@@ -578,28 +625,52 @@ async function showServiceDetail(
     completeMessage += `\n\n📝 *Description:*\n${desc}`;
   }
   
-  // Add specifications (optional - may get truncated if over 1024 chars)
+  // Add specifications
   completeMessage += specsText;
   
-  // Add package features (optional - may get truncated)
+  // Add package features
   completeMessage += featuresText;
   
-  // Add availability (optional - may get truncated)
+  // Add availability
   completeMessage += availabilityText;
   
-  // Add navigation options
-  completeMessage += `\n\n*Reply with a number:*\n` +
+  // Fixed navigation options
+  const navOptions = `\n\n*Reply with a number:*\n` +
     `1️⃣ - Book this service\n` +
     `2️⃣ - Back to services\n` +
     `3️⃣ - Main menu\n` +
-    `4️ - Browse Service Categories`;
+    `4️⃣ - Browse Service Categories`;
+  
+  // Hard cap the message at 980 characters to prevent WhatsApp truncation
+  const MAX_CAPTION = 980;
+  
+  // Find where booking URL ends
+  const safeBase = completeMessage.substring(0, completeMessage.indexOf(bookingUrlText) + bookingUrlText.length);
+  
+  if (completeMessage.length + navOptions.length > MAX_CAPTION) {
+    // Calculate how much we can keep after the safe base
+    const remainingSpace = MAX_CAPTION - safeBase.length - navOptions.length - 10;
+    let truncatedContent = completeMessage.substring(safeBase.length, safeBase.length + remainingSpace);
+    
+    // Find last complete word or sentence
+    const lastPeriod = truncatedContent.lastIndexOf('.');
+    const lastNewline = truncatedContent.lastIndexOf('\n');
+    const cutPoint = Math.max(lastPeriod, lastNewline, 50);
+    
+    truncatedContent = truncatedContent.substring(0, cutPoint);
+    if (truncatedContent.length < completeMessage.substring(safeBase.length).length) {
+      truncatedContent += '...';
+    }
+    
+    completeMessage = safeBase + truncatedContent + navOptions;
+  } else {
+    completeMessage += navOptions;
+  }
   
   console.log(`[ServiceBrowse] Complete message length: ${completeMessage.length} chars`);
   console.log(`[ServiceBrowse] Has booking URL: ${!!service.bookingUrl}`);
-  console.log(`[ServiceBrowse] Using product pattern: ONE message with image + caption`);
   
-  // Send using EXACT same pattern as products: ONE sendMedia call with complete caption
-  // This is proven to work - see route.ts line 743: sendMedia(tenantId, phone, imageUrl, productText)
+  // Send using same pattern as products
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
     const imageUrl = service.imageUrl || service.portfolioImages![0];
     if (deps.sendMedia) {
@@ -610,14 +681,13 @@ async function showServiceDetail(
       await deps.sendMessage(tenantId, phone, completeMessage);
     }
   } else {
-    // No image available - send as text message
     console.log(`[ServiceBrowse] No image, sending complete message as text`);
     await deps.sendMessage(tenantId, phone, completeMessage);
   }
   
   console.log(`[ServiceBrowse] Service details sent successfully`);
   
-  // Update flow state
+  // Store only service ID, not full object
   await adminDb
     .collection("tenants")
     .doc(tenantId)
@@ -630,7 +700,7 @@ async function showServiceDetail(
         currentStep: 'service_detail',
         selections: {
           ...flowState.selections,
-          selectedService: service
+          selectedServiceId: service.id,
         },
         lastActivity: new Date().toISOString()
       }
@@ -647,6 +717,7 @@ async function handleServiceDetailInput(
   flowState: any,
   deps: ServiceBrowseDeps
 ): Promise<void> {
+  const adminDb = getDb();
   const num = parseInt(message.trim());
   
   if (isNaN(num)) {
@@ -661,8 +732,34 @@ async function handleServiceDetailInput(
   }
     
   if (num === 1) {
-    // Book this service
-    const service = flowState.selections.selectedService;
+    // Re-fetch service by ID instead of reading from flow state
+    const serviceId = flowState.selections.selectedServiceId;
+    if (!serviceId) {
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        "❌ Service not found. Please try browsing again.\n\n" +
+        "Reply *0️⃣* for main menu."
+      );
+      return;
+    }
+    
+    const serviceDoc = await adminDb.collection("services").doc(serviceId).get();
+    
+    if (!serviceDoc.exists) {
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        "❌ Service not found. Please try browsing again.\n\n" +
+        "Reply *0️⃣* for main menu."
+      );
+      return;
+    }
+    
+    const service = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
+    
     if (service && service.bookingUrl) {
       try {
         const shortUrl = await shortenUrl(service.bookingUrl);
@@ -699,39 +796,21 @@ async function handleServiceDetailInput(
     }
   } else if (num === 2) {
     // Back to service listing
-    await handleServiceListing(tenantId, phone, '2', flowState, deps);
+    await handleServiceListing(tenantId, phone, '7', flowState, deps);
   } else if (num === 3) {
-    // Main menu - with proper emoji numbers
-    const adminDb = getDb();
+    // Main menu - use passed dependency
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      `Hello! 👋 Welcome to our store!\n\n` +
-      `How can we help you today?\n\n` +
-      `1️⃣ Browse Products\n` +
-      `2️⃣ Browse Services\n` +
-      `3️⃣ 🔍 Search Products\n` +
-      `4️⃣ Check Order Status\n` +
-      `5️⃣ Payment Info\n` +
-      `6️⃣ Talk to Support\n\n` +
-      `*Reply with a number (1️⃣-6️⃣)*`
-    );
-    // Clear flow state
-    await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .set({
-        flowState: FieldValue.delete()
-      }, { merge: true });
+    await deps.sendWelcomeMenu(tenantId, phone);
+  } else if (num === 4) {
+    // Browse Service Categories
+    await startServiceBrowseFlow(tenantId, phone, deps);
   } else {
+    // Updated error message to include 4️⃣
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, or 3️⃣.\n\n" +
+      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, 3️⃣, or 4️⃣.\n\n" +
       "Or reply *0️⃣* for main menu."
     );
   }
@@ -756,10 +835,10 @@ function formatServiceMessage(service: Service, index: number): string {
     } else if (validPrices.length > 1) {
       priceText = `💰 KES ${Math.min(...validPrices).toLocaleString()} - ${Math.max(...validPrices).toLocaleString()}`;
     } else {
-      priceText = `💰 KES ${service.priceMin.toLocaleString()} - ${service.priceMax.toLocaleString()}`;
+      priceText = `💰 KES ${service.priceMin?.toLocaleString() || '0'} - ${service.priceMax?.toLocaleString() || '0'}`;
     }
   } else if (service.priceMin === service.priceMax) {
-    priceText = `💰 KES ${service.priceMin.toLocaleString()}`;
+    priceText = `💰 KES ${service.priceMin?.toLocaleString() || '0'}`;
   } else if (service.priceMin && service.priceMax) {
     priceText = `💰 KES ${service.priceMin.toLocaleString()} - ${service.priceMax.toLocaleString()}`;
   } else {

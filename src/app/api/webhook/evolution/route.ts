@@ -289,6 +289,7 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       };
     });
     
+    // FIXED BUG 2: Added bookingUrl to services mapping
     const services = servicesSnap.docs.map((doc: any) => {
       const data = doc.data();
       return {
@@ -301,6 +302,7 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
         serviceName: data.serviceName,
         duration: data.duration,
         description: data.description,
+        bookingUrl: data.bookingUrl || null,
       };
     });
     
@@ -400,7 +402,7 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   }
 }
 
-async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
+export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   
   const settings = await getTenantSettings(tenantId);
@@ -540,11 +542,13 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       break;
     case 2:
       debugLog("[Webhook] Starting service browse flow");
+      // FIXED: Added sendWelcomeMenu to service deps
       const serviceDeps: ServiceBrowseDeps = { 
         sendMessage: sendEvolutionMessage,
         sendMedia: sendEvolutionMedia,
         startTyping: startTypingIndicator,
-        stopTyping: stopTypingIndicator
+        stopTyping: stopTypingIndicator,
+        sendWelcomeMenu: sendWelcomeMenu,
       };
       await startServiceBrowseFlow(tenantId, phone, serviceDeps);
       break;
@@ -782,11 +786,13 @@ async function handleFlowInput(
   }
   
   if (flowName === 'service_browse') {
+    // FIXED: Added sendWelcomeMenu to service deps
     const deps: ServiceBrowseDeps = { 
       sendMessage: sendEvolutionMessage,
       sendMedia: sendEvolutionMedia,
       startTyping: startTypingIndicator,
-      stopTyping: stopTypingIndicator
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,
     };
     await handleServiceBrowseInput(tenantId, phone, message, flowState, deps);
     return;
@@ -978,7 +984,7 @@ async function handleProductBrowseInput(
       
       if (trimmed === 'back' || num === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await sendWelcomeMenu(tenantId, phone); // Changed from startProductBrowseFlow to main menu
+        await sendWelcomeMenu(tenantId, phone);
         return;
       }
       
@@ -1047,7 +1053,7 @@ async function handleProductBrowseInput(
         return;
       } else if (trimmed === 'back' || num === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await sendWelcomeMenu(tenantId, phone); // Changed from startProductBrowseFlow to main menu
+        await sendWelcomeMenu(tenantId, phone);
         return;
       }
           
@@ -1627,8 +1633,6 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
   
   // This shows recent orders AND sets the correct flow state ('order_status_selection')
   await startOrderStatusFlow(tenantId, phone, deps);
-  
-  // REMOVED: The manual flow state setting that was overwriting
   
   await stopTypingIndicator(tenantId, phone);
 }
