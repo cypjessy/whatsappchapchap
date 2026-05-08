@@ -924,10 +924,21 @@ export default function OrdersPage() {
             font-size: 16px !important; /* Prevent iOS zoom */
             min-height: 48px;
           }
+          button, [role="button"], a, input, select, textarea { 
+            -webkit-tap-highlight-color: transparent;
+          }
+          button:active, [role="button"]:active { transform: scale(0.98); }
         }
         /* Hide scrollbar but keep functionality */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         /* Safe area for notched phones */
         @supports (padding: max(0px)) {
           .safe-top { padding-top: max(1rem, env(safe-area-inset-top)); }
@@ -2620,30 +2631,6 @@ export default function OrdersPage() {
             </div>
           </div>
         )}
-
-        {/* Global Styles for Animations & Utilities */}
-        <style jsx global>{`
-          @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes modalSlideIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-          .animate-fadeIn { animation: fadeIn 0.25s ease-out forwards; }
-          .animate-modal { animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-          
-          /* Touch optimizations for mobile */
-          @media (hover: none) and (pointer: coarse) {
-            button, [role="button"], a, input, select, textarea { 
-              -webkit-tap-highlight-color: transparent;
-            }
-            button:active, [role="button"]:active { transform: scale(0.98); }
-          }
-          
-          /* Smooth scrollbar */
-          ::-webkit-scrollbar { width: 6px; height: 6px; }
-          ::-webkit-scrollbar-track { background: transparent; }
-          ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-          .dark ::-webkit-scrollbar-thumb { background: #475569; }
-          ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-          .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        `}</style>
       </div>
     </>
   );
