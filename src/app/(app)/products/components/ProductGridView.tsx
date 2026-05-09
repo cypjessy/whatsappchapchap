@@ -633,34 +633,38 @@ export default function ProductGridView({
   if (products.length === 0) return null;
 
   return (
-    <div className="animate-fadeIn">
+    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm animate-fadeIn">
       {/* Bulk selection header */}
       {bulkMode && (
-        <BulkHeader
-          bulkSelected={bulkSelected}
-          totalProducts={products.length}
-          onSelectAll={selectAllProducts}
-        />
+        <div className="p-3 md:p-4 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <BulkHeader
+            bulkSelected={bulkSelected}
+            totalProducts={products.length}
+            onSelectAll={selectAllProducts}
+          />
+        </div>
       )}
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5">
-        {products.map((product, index) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            index={index}
-            bulkMode={bulkMode}
-            isSelected={bulkSelected.includes(product.id)}
-            onToggleSelect={toggleBulkSelect}
-            onOpenModal={openProductModal}
-            onAction={handleAction}
-            getCategoryEmoji={getCategoryEmoji}
-            getCategoryColor={getCategoryColor}
-            getStockStyle={getStockStyle}
-            getBadgeStyle={getBadgeStyle}
-          />
-        ))}
+      <div className="p-3 md:p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5">
+          {products.map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              index={index}
+              bulkMode={bulkMode}
+              isSelected={bulkSelected.includes(product.id)}
+              onToggleSelect={toggleBulkSelect}
+              onOpenModal={openProductModal}
+              onAction={handleAction}
+              getCategoryEmoji={getCategoryEmoji}
+              getCategoryColor={getCategoryColor}
+              getStockStyle={getStockStyle}
+              getBadgeStyle={getBadgeStyle}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
