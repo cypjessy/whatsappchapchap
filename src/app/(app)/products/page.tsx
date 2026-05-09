@@ -7,6 +7,15 @@ import { formatCurrency } from "@/lib/currency";
 import CategoriesModal from "@/components/categories/CategoriesModal";
 import ViewProductModal from "@/components/products/ViewProductModal";
 import AddProductModal from "@/components/products/AddProductModal";
+import {
+  ProductStats,
+  ProductFilters,
+  ProductCategoryTabs,
+  ProductGridView,
+  ProductListView,
+  ProductBulkActionsToolbar,
+  DeleteConfirmModal,
+} from "./components";
 
 export default function ProductsPage() {
   const { user } = useAuth();
@@ -427,7 +436,8 @@ export default function ProductsPage() {
 
   return (
     <div className="animate-fadeIn">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3">
+      {/* Header */}
+      <div className="px-3 pt-3 flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3 animate-fadeIn">
         <div>
           <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
             <i className="fas fa-box-open text-[#25D366]"></i>Products
@@ -435,16 +445,6 @@ export default function ProductsPage() {
           <p className="text-[#64748b] text-sm hidden md:block">Manage your inventory and listings</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          {bulkMode && bulkSelected.length > 0 && (
-            <button onClick={() => handleBulkStatusUpdate('active')} className="px-3 py-2 bg-green-500 text-white rounded-xl font-semibold text-sm hover:bg-green-600">
-              <i className="fas fa-check mr-2"></i><span className="hidden md:inline">Activate</span>
-            </button>
-          )}
-          {bulkMode && bulkSelected.length > 0 && (
-            <button onClick={() => handleBulkDelete()} className="px-3 py-2 bg-red-500 text-white rounded-xl font-semibold text-sm hover:bg-red-600">
-              <i className="fas fa-trash mr-2"></i><span className="hidden md:inline">Delete</span>
-            </button>
-          )}
           <button className="px-3 py-2 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366]" onClick={() => setCategoriesModalOpen(true)}>
             <i className="fas fa-layer-group mr-2"></i><span className="hidden md:inline">Categories</span>
           </button>
@@ -460,521 +460,119 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
-        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
-          <div className="w-8 h-8 rounded-full bg-[rgba(37,211,102,0.1)] text-[#25D366] flex items-center justify-center">
-            <i className="fas fa-box text-sm"></i>
-          </div>
-          <div>
-            <div className="font-extrabold text-lg">{products.length}</div>
-            <div className="text-xs text-[#64748b]">Total Products</div>
-          </div>
-        </div>
-        
-        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
-          <div className="w-8 h-8 rounded-full bg-[rgba(59,130,246,0.1)] text-[#3b82f6] flex items-center justify-center">
-            <i className="fas fa-dollar-sign text-sm"></i>
-          </div>
-          <div>
-            <div className="font-extrabold text-lg">{formatCurrency(totalInventoryValue)}</div>
-            <div className="text-xs text-[#64748b]">Inventory Value</div>
-          </div>
-        </div>
-        
-        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
-          <div className="w-8 h-8 rounded-full bg-[rgba(245,158,11,0.1)] text-[#f59e0b] flex items-center justify-center">
-            <i className="fas fa-exclamation-triangle text-sm"></i>
-          </div>
-          <div>
-            <div className="font-extrabold text-lg">{lowStockProducts}</div>
-            <div className="text-xs text-[#64748b]">Low Stock</div>
-          </div>
-        </div>
-        
-        <div className="flex-shrink-0 bg-white px-4 py-3 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[140px]">
-          <div className="w-8 h-8 rounded-full bg-[rgba(239,68,68,0.1)] text-[#ef4444] flex items-center justify-center">
-            <i className="fas fa-times-circle text-sm"></i>
-          </div>
-          <div>
-            <div className="font-extrabold text-lg">{outOfStockProducts}</div>
-            <div className="text-xs text-[#64748b]">Out of Stock</div>
-          </div>
-        </div>
+      {/* Stats */}
+      <div className="px-3">
+      <ProductStats
+        totalProducts={products.length}
+        inventoryValue={totalInventoryValue}
+        lowStockCount={lowStockProducts}
+        outOfStockCount={outOfStockProducts}
+      />
       </div>
 
-      <div className="bg-white rounded-2xl p-3 md:p-4 mb-4 md:mb-6 flex flex-col md:flex-row gap-3 items-start md:items-center justify-between border border-[#e2e8f0]">
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-none">
-            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
-            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-3 py-2 bg-[#f8fafc] border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-[#25D366] w-full md:w-48" />
-          </div>
-          <select className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
-            <option value="all">Stock</option>
-            <option value="in">In Stock</option>
-            <option value="low">Low Stock</option>
-            <option value="out">Out</option>
-          </select>
-          <div className="flex gap-2">
-            <input 
-              type="number" 
-              placeholder="Min Price" 
-              value={priceRangeMin} 
-              onChange={(e) => setPriceRangeMin(e.target.value ? Number(e.target.value) : "")}
-              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm w-24"
-            />
-            <input 
-              type="number" 
-              placeholder="Max Price" 
-              value={priceRangeMax} 
-              onChange={(e) => setPriceRangeMax(e.target.value ? Number(e.target.value) : "")}
-              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm w-24"
-            />
-          </div>
-          <div className="flex gap-2">
-            <input 
-              type="date" 
-              value={dateRangeStart} 
-              onChange={(e) => setDateRangeStart(e.target.value)}
-              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm"
-            />
-            <input 
-              type="date" 
-              value={dateRangeEnd} 
-              onChange={(e) => setDateRangeEnd(e.target.value)}
-              className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm"
-            />
-          </div>
-          <select className="px-3 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="price-low">Price ↑</option>
-            <option value="price-high">Price ↓</option>
-            <option value="stock-low">Stock ↑</option>
-            <option value="stock-high">Stock ↓</option>
-            <option value="name-az">Name A-Z</option>
-            <option value="name-za">Name Z-A</option>
-          </select>
-        </div>
-        <div className="flex bg-[#f8fafc] rounded-xl p-1 border-2 border-[#e2e8f0] self-end md:self-auto">
-          <button onClick={() => setView("grid")} className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg ${view === "grid" ? "bg-white shadow text-[#25D366]" : "text-[#64748b]"}`}>
-            <i className="fas fa-th-large"></i>
-          </button>
-          <button onClick={() => setView("list")} className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg ${view === "list" ? "bg-white shadow text-[#25D366]" : "text-[#64748b]"}`}>
-            <i className="fas fa-list"></i>
-          </button>
-        </div>
+      {/* Filters */}
+      <div className="px-3">
+        <ProductFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          stockFilter={stockFilter}
+          setStockFilter={setStockFilter}
+          priceRangeMin={priceRangeMin}
+          setPriceRangeMin={setPriceRangeMin}
+          priceRangeMax={priceRangeMax}
+          setPriceRangeMax={setPriceRangeMax}
+          dateRangeStart={dateRangeStart}
+          setDateRangeStart={setDateRangeStart}
+          dateRangeEnd={dateRangeEnd}
+          setDateRangeEnd={setDateRangeEnd}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          view={view}
+          setView={setView}
+        />
       </div>
 
-      <div className="flex gap-2 md:gap-3 mb-4 md:mb-6 overflow-x-auto pb-2 hide-scrollbar">
-        {categories.map(cat => (
-          <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`px-3 md:px-5 py-2 rounded-full font-semibold text-sm whitespace-nowrap flex items-center gap-1 md:gap-2 transition-all ${activeCategory === cat.id ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg" : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]"}`}>
-            {cat.icon && <span>{cat.icon}</span>}
-            {cat.label}
-            <span className="px-1.5 md:px-2 py-0.5 rounded-full text-xs bg-white/20">{cat.count}</span>
-          </button>
-        ))}
+      {/* Category Tabs */}
+      <div className="px-3">
+        <ProductCategoryTabs
+          categories={categories}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+        />
       </div>
 
-      {loading ? (
-        <div className="p-8 text-center">
-          <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-[#64748b]">Loading products...</p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-[#e2e8f0]">
-          <div className="w-16 h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-box-open text-2xl text-[#64748b]"></i>
+      {/* Content Area */}
+      <div className="px-3">
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4 text-[#64748b]">Loading products...</p>
           </div>
-          <h4 className="font-bold text-[#1e293b] mb-2">No products yet</h4>
-          <p className="text-sm text-[#64748b]">Add your first product to start selling on WhatsApp.</p>
-        </div>
-      ) : view === "grid" ? (
-        <>
-          {bulkMode && filteredProducts.length > 0 && (
-            <div className="mb-4 flex items-center justify-between bg-[#f8fafc] p-3 rounded-xl">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={bulkSelected.length === filteredProducts.length && filteredProducts.length > 0}
-                  onChange={selectAllProducts}
-                  className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
-                />
-                <span className="text-sm font-semibold text-[#64748b]">
-                  Select All ({bulkSelected.length}/{filteredProducts.length})
-                </span>
-              </label>
+        ) : filteredProducts.length === 0 ? (
+          <div className="p-12 text-center bg-white rounded-2xl border border-[#e2e8f0]">
+            <div className="w-16 h-16 bg-[#f1f5f9] rounded-full flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-box-open text-2xl text-[#64748b]"></i>
             </div>
-          )}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-            {filteredProducts.map(product => {
-              const stockStyle = getStockStyle(product.stock || 0);
-              const badgeInfo = getBadgeStyle(product.stock || 0);
-              return (
-                <div key={product.id} className={`bg-white rounded-xl md:rounded-2xl border ${bulkSelected.includes(product.id) ? 'border-[#25D366] ring-2 ring-[#25D366]/20' : 'border-[#e2e8f0]'} overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer relative`} onClick={() => !bulkMode && openProductModal(product)}>
-                  {bulkMode && (
-                    <div className="absolute top-3 left-3 z-10" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={bulkSelected.includes(product.id)}
-                        onChange={() => toggleBulkSelect(product.id)}
-                        className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
-                      />
-                    </div>
-                  )}
-                  {!bulkMode && badgeInfo.badge !== "new" && (
-                    <span className={`absolute top-3 left-3 px-2 md:px-3 py-0.5 rounded-full text-xs font-bold z-10 ${badgeInfo.badge === "out" ? "bg-[#64748b] text-white" : "bg-[#f59e0b] text-white"}`}>
-                      {badgeInfo.label}
-                    </span>
-                  )}
-                  {!bulkMode && product.status && product.status !== 'active' && (
-                    <span className={`absolute top-3 right-3 px-2 md:px-3 py-0.5 rounded-full text-xs font-bold z-10 ${product.status === 'paused' ? 'bg-[#f59e0b] text-white' : 'bg-[#64748b] text-white'}`}>
-                      {product.status}
-                    </span>
-                  )}
-                  <div className={`h-32 md:h-48 bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-4xl md:text-6xl relative overflow-hidden`}>
-                    {product.image || product.imageUrl ? (
-                      <img src={product.image || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                    ) : (
-                      getCategoryEmoji(product.category || "")
-                    )}
-                  </div>
-                  <div className="p-3 md:p-5">
-                    <div className="text-xs font-bold text-[#25D366] uppercase mb-1 truncate">{product.category || "Uncategorized"}</div>
-                    <h3 className="font-bold text-sm mb-2 line-clamp-2">{product.name}</h3>
-                    <div className="flex items-center justify-between mb-2 md:mb-3">
-                      <div className="text-lg md:text-xl font-extrabold">{formatCurrency(product.price)}</div>
-                    </div>
-                    <div className="pt-2 md:pt-3 border-t border-[#e2e8f0]">
-                      <div className="flex justify-between items-center mb-2">
-                        <div>
-                          <div className="text-xs text-[#64748b]">{product.stock || 0} in stock</div>
-                          <div className="w-16 md:w-20 h-1.5 bg-[#f8fafc] rounded-full mt-1 overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: stockStyle.width, backgroundColor: stockStyle.color }}></div>
-                          </div>
-                        </div>
-                        {!bulkMode && (
-                          <div className="flex gap-2">
-                            {(product.views || 0) > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-[#64748b]">
-                                <i className="fas fa-eye"></i>
-                                <span>{product.views}</span>
-                              </div>
-                            )}
-                            {(product.orders || 0) > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-[#64748b]">
-                                <i className="fas fa-shopping-cart"></i>
-                                <span>{product.orders}</span>
-                              </div>
-                            )}
-                            {product.rating && product.rating > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-[#f59e0b]">
-                                <i className="fas fa-star"></i>
-                                <span>{product.rating.toFixed(1)}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {!bulkMode && (
-                        <div className="flex gap-2 pt-2 border-t border-[#e2e8f0]">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleStatus(product);
-                            }}
-                            className="flex-1 py-1.5 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg text-xs font-semibold"
-                            title={product.status === 'active' ? 'Pause' : 'Activate'}
-                          >
-                            <i className={`fas ${product.status === 'active' ? 'fa-pause' : 'fa-play'} mr-1`}></i>
-                            {product.status === 'active' ? 'Pause' : 'Activate'}
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDuplicateProduct(product);
-                            }}
-                            className="flex-1 py-1.5 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg text-xs font-semibold"
-                            title="Duplicate"
-                          >
-                            <i className="fas fa-copy mr-1"></i>
-                            Duplicate
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShareProduct(product);
-                            }}
-                            className="flex-1 py-1.5 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg text-xs font-semibold"
-                            title="Share"
-                          >
-                            <i className="fas fa-share-alt mr-1"></i>
-                            Share
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              shareProductWhatsApp(product);
-                            }}
-                            className="flex-1 py-1.5 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg text-xs font-semibold"
-                            title="Send via WhatsApp"
-                          >
-                            <i className="fab fa-whatsapp mr-1"></i>
-                            WhatsApp
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              printProductCatalog(product);
-                            }}
-                            className="flex-1 py-1.5 flex items-center justify-center text-[#64748b] hover:text-[#3b82f6] hover:bg-[#f1f5f9] rounded-lg text-xs font-semibold"
-                            title="Print Product"
-                          >
-                            <i className="fas fa-print mr-1"></i>
-                            Print
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <h4 className="font-bold text-[#1e293b] mb-2">No products yet</h4>
+            <p className="text-sm text-[#64748b]">Add your first product to start selling on WhatsApp.</p>
           </div>
-        </>
-) : (
-        <>
-          {/* Mobile List View */}
-          <div className="md:hidden bg-white rounded-xl border border-[#e2e8f0] overflow-hidden divide-y divide-[#e2e8f0]">
-            {filteredProducts.map(product => {
-              const stockStyle = getStockStyle(product.stock || 0);
-              return (
-                <div key={product.id} className={`p-3 hover:bg-[#f8fafc] cursor-pointer flex items-center gap-3 ${bulkSelected.includes(product.id) ? 'bg-[rgba(37,211,102,0.05)]' : ''}`} onClick={() => !bulkMode && openProductModal(product)}>
-                  {bulkMode && (
-                    <input
-                      type="checkbox"
-                      checked={bulkSelected.includes(product.id)}
-                      onChange={() => toggleBulkSelect(product.id)}
-                      className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-xl overflow-hidden flex-shrink-0`}>
-                    {product.image || product.imageUrl ? (
-                      <img src={product.image || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                    ) : (
-                      getCategoryEmoji(product.category || "")
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-sm truncate">{product.name}</h3>
-                      <span className="font-bold text-[#25D366] text-sm ml-2">{formatCurrency(product.price)}</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs text-[#64748b] capitalize">{product.category || "Uncategorized"}</span>
-                      <span className="text-xs" style={{ color: stockStyle.color }}>{product.stock || 0} in stock</span>
-                    </div>
-                    {!bulkMode && ((product.views || 0) > 0 || (product.orders || 0) > 0 || product.rating) && (
-                      <div className="flex gap-2 mt-1">
-                        {(product.views || 0) > 0 && (
-                          <span className="text-xs text-[#64748b]">
-                            <i className="fas fa-eye mr-1"></i>{product.views}
-                          </span>
-                        )}
-                        {(product.orders || 0) > 0 && (
-                          <span className="text-xs text-[#64748b]">
-                            <i className="fas fa-shopping-cart mr-1"></i>{product.orders}
-                          </span>
-                        )}
-                        {product.rating && product.rating > 0 && (
-                          <span className="text-xs text-[#f59e0b]">
-                            <i className="fas fa-star mr-1"></i>{product.rating.toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {!bulkMode && (
-                    <div className="flex gap-1 flex-shrink-0">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleStatus(product);
-                        }}
-                        className="w-7 h-7 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
-                        title={product.status === 'active' ? 'Pause' : 'Activate'}
-                      >
-                        <i className={`fas ${product.status === 'active' ? 'fa-pause' : 'fa-play'} text-xs`}></i>
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShareProduct(product);
-                        }}
-                        className="w-7 h-7 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[#f1f5f9] rounded-lg"
-                        title="Share"
-                      >
-                        <i className="fas fa-share-alt text-xs"></i>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Desktop List View */}
-          <div className="hidden md:block bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+        ) : (
+          <>
+            {/* Bulk Actions Toolbar */}
             {bulkMode && filteredProducts.length > 0 && (
-              <div className="p-4 bg-[#f8fafc] border-b-2 border-[#e2e8f0] flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={bulkSelected.length === filteredProducts.length && filteredProducts.length > 0}
-                    onChange={selectAllProducts}
-                    className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
-                  />
-                  <span className="text-sm font-semibold text-[#64748b]">
-                    Select All ({bulkSelected.length}/{filteredProducts.length})
-                  </span>
-                </label>
-              </div>
+              <ProductBulkActionsToolbar
+                bulkSelected={bulkSelected}
+                filteredProductsCount={filteredProducts.length}
+                onBulkStatusUpdate={(status) => handleBulkStatusUpdate(status)}
+                onBulkDelete={handleBulkDelete}
+                onSelectAll={selectAllProducts}
+                onCancel={() => setBulkMode(false)}
+              />
             )}
-            <div className="grid grid-cols-7 gap-4 p-4 bg-[#f8fafc] border-b-2 border-[#e2e8f0] text-xs font-bold text-[#64748b] uppercase">
-              {bulkMode && <div className="w-8"></div>}
-              <div>Image</div>
-              <div className="col-span-2">Product</div>
-              <div>Category</div>
-              <div>Price</div>
-              <div>Stock</div>
-              <div>Actions</div>
-            </div>
-            {filteredProducts.map(product => {
-              const stockStyle = getStockStyle(product.stock || 0);
-              return (
-                <div key={product.id} className={`grid grid-cols-7 gap-4 p-4 border-b border-[#e2e8f0] items-center hover:bg-[rgba(37,211,102,0.02)] ${bulkSelected.includes(product.id) ? 'bg-[rgba(37,211,102,0.05)]' : ''}`}>
-                  {bulkMode && (
-                    <div className="flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={bulkSelected.includes(product.id)}
-                        onChange={() => toggleBulkSelect(product.id)}
-                        className="w-5 h-5 rounded border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366]"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  )}
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryColor(product.category || "")} flex items-center justify-center text-2xl overflow-hidden`}>
-                    {product.image || product.imageUrl ? (
-                      <img src={product.image || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                    ) : (
-                      getCategoryEmoji(product.category || "")
-                    )}
-                  </div>
-                  <div className="col-span-2">
-                    <div className="font-bold text-sm">{product.name}</div>
-                    <div className="text-xs text-[#64748b]">SKU: {product.id.substring(0, 8)}</div>
-                    {!bulkMode && ((product.views || 0) > 0 || (product.orders || 0) > 0 || product.rating) && (
-                      <div className="flex gap-2 mt-1">
-                        {(product.views || 0) > 0 && (
-                          <span className="text-xs text-[#64748b]">
-                            <i className="fas fa-eye mr-1"></i>{product.views}
-                          </span>
-                        )}
-                        {(product.orders || 0) > 0 && (
-                          <span className="text-xs text-[#64748b]">
-                            <i className="fas fa-shopping-cart mr-1"></i>{product.orders}
-                          </span>
-                        )}
-                        {product.rating && product.rating > 0 && (
-                          <span className="text-xs text-[#f59e0b]">
-                            <i className="fas fa-star mr-1"></i>{product.rating.toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-sm capitalize">{product.category || "Uncategorized"}</div>
-                  <div className="font-bold">{formatCurrency(product.price)}</div>
-                  <div>
-                    <span style={{ color: stockStyle.color }} className="font-semibold">{product.stock || 0} in stock</span>
-                    <div className="w-24 h-1.5 bg-[#f8fafc] rounded-full mt-1 overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: stockStyle.width, backgroundColor: stockStyle.color }}></div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {!bulkMode && (
-                      <>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleStatus(product);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-[#10b981] hover:text-white hover:bg-[#10b981] bg-[rgba(16,185,129,0.1)] rounded-lg transition-all shadow-sm"
-                          title={product.status === 'active' ? 'Pause' : 'Activate'}
-                        >
-                          <i className={`fas ${product.status === 'active' ? 'fa-pause' : 'fa-play'} text-base`}></i>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDuplicateProduct(product);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-[#8b5cf6] hover:text-white hover:bg-[#8b5cf6] bg-[#f5f3ff] rounded-lg transition-all shadow-sm"
-                          title="Duplicate"
-                        >
-                          <i className="fas fa-copy text-base"></i>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleShareProduct(product);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-[#3b82f6] hover:text-white hover:bg-[#3b82f6] bg-[#eff6ff] rounded-lg transition-all shadow-sm"
-                          title="Share"
-                        >
-                          <i className="fas fa-share-alt text-base"></i>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            shareProductWhatsApp(product);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-[#25D366] hover:text-white hover:bg-[#25D366] bg-[rgba(37,211,102,0.1)] rounded-lg transition-all shadow-sm"
-                          title="Send via WhatsApp"
-                        >
-                          <i className="fab fa-whatsapp text-base"></i>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            printProductCatalog(product);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-[#06b6d4] hover:text-white hover:bg-[#06b6d4] bg-[rgba(6,182,212,0.1)] rounded-lg transition-all shadow-sm"
-                          title="Print Product"
-                        >
-                          <i className="fas fa-print text-base"></i>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDeleteConfirm(product.id);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-[#ef4444] hover:text-white hover:bg-[#ef4444] bg-[rgba(239,68,68,0.1)] rounded-lg transition-all shadow-sm"
-                          title="Delete"
-                        >
-                          <i className="fas fa-trash text-base"></i>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+
+            {/* Grid View */}
+            {view === "grid" && (
+              <ProductGridView
+                products={filteredProducts}
+                bulkMode={bulkMode}
+                bulkSelected={bulkSelected}
+                toggleBulkSelect={toggleBulkSelect}
+                selectAllProducts={selectAllProducts}
+                openProductModal={openProductModal}
+                handleToggleStatus={handleToggleStatus}
+                handleDuplicateProduct={handleDuplicateProduct}
+                handleShareProduct={handleShareProduct}
+                shareProductWhatsApp={shareProductWhatsApp}
+                printProductCatalog={printProductCatalog}
+                getCategoryEmoji={getCategoryEmoji}
+                getCategoryColor={getCategoryColor}
+                getStockStyle={getStockStyle}
+                getBadgeStyle={getBadgeStyle}
+              />
+            )}
+
+            {/* List View */}
+            {view === "list" && (
+              <ProductListView
+                products={filteredProducts}
+                bulkMode={bulkMode}
+                bulkSelected={bulkSelected}
+                toggleBulkSelect={toggleBulkSelect}
+                selectAllProducts={selectAllProducts}
+                openProductModal={openProductModal}
+                handleToggleStatus={handleToggleStatus}
+                handleDuplicateProduct={handleDuplicateProduct}
+                handleShareProduct={handleShareProduct}
+                shareProductWhatsApp={shareProductWhatsApp}
+                printProductCatalog={printProductCatalog}
+                getCategoryEmoji={getCategoryEmoji}
+                getCategoryColor={getCategoryColor}
+                getStockStyle={getStockStyle}
+              />
+            )}
+          </>
+        )}
+      </div>
       <CategoriesModal
         isOpen={categoriesModalOpen} 
         onClose={() => setCategoriesModalOpen(false)} 
@@ -996,35 +594,12 @@ export default function ProductsPage() {
       />
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-exclamation-triangle text-3xl text-red-500"></i>
-              </div>
-              <h3 className="text-xl font-bold text-[#1e293b] mb-2">Delete Product?</h3>
-              <p className="text-[#64748b]">
-                This action cannot be undone. The product and all associated data will be permanently deleted.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteProduct(showDeleteConfirm)}
-                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all"
-              >
-                <i className="fas fa-trash mr-2"></i>Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirm !== null}
+        onClose={() => setShowDeleteConfirm(null)}
+        onConfirm={() => showDeleteConfirm && handleDeleteProduct(showDeleteConfirm)}
+        productName={products.find(p => p.id === showDeleteConfirm)?.name}
+      />
     </div>
   );
 }
