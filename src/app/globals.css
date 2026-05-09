@@ -119,6 +119,15 @@ body::after {
   animation: shimmer 1.5s infinite;
 }
 
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Scrollbar Hide Utilities */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
