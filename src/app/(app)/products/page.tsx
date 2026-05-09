@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   productService,
@@ -9,16 +9,13 @@ import {
 } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 import {
-  Box,
-  Download,
-  Upload,
-  CheckSquare,
-  Plus,
   Loader2,
-  PackageOpen,
   SearchX,
+  Plus,
   SlidersHorizontal,
   X,
+  PackageOpen,
+  ArrowUp,
 } from "lucide-react";
 import ViewProductModal from "@/components/products/ViewProductModal";
 import AddProductModal from "@/components/products/AddProductModal";
@@ -33,14 +30,141 @@ import {
   ProductsHeader,
 } from "./components";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
+}
+
+// ─── Constants ─────────────────────────────────────────────────────────────
+
+const CATEGORY_COLORS = [
+  "from-[#fce7f3] to-[#fbcfe8]",
+  "from-[#e0e7ff] to-[#c7d2fe]",
+  "from-[#dcfce7] to-[#bbf7d0]",
+  "from-[#fef3c7] to-[#fde68a]",
+  "from-[#e0f2fe] to-[#bae6fd]",
+  "from-[#f3e8ff] to-[#e9d5ff]",
+  "from-[#ffedd5] to-[#fed7aa]",
+  "from-[#f1f5f9] to-[#e2e8f0]",
+];
+
+// ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className={`
+            flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold
+            animate-slideUp transition-all duration-300
+            ${toast.type === "success" ? "bg-[#10b981] text-white" : ""}
+            ${toast.type === "error" ? "bg-[#ef4444] text-white" : ""}
+            ${toast.type === "info" ? "bg-[#3b82f6] text-white" : ""}
+          `}
+        >
+          <span>{toast.message}</span>
+          <button onClick={() => onRemove(toast.id)} className="ml-2 opacity-70 hover:opacity-100">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScrollToTop() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggle = () => setIsVisible(window.scrollY > 400);
+    window.addEventListener("scroll", toggle);
+    return () => window.removeEventListener("scroll", toggle);
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      className="fixed bottom-4 left-4 z-40 w-10 h-10 rounded-full bg-white shadow-lg border border-[#e2e8f0] flex items-center justify-center text-[#25D366] hover:bg-[#f0fdf4] hover:border-[#25D366] transition-all active:scale-90"
+      aria-label="Scroll to top"
+    >
+      <ArrowUp className="w-5 h-5" />
+    </button>
+  );
+}
+
+function EmptyState({
+  hasProducts,
+  onAddProduct,
+  onClearFilters,
+}: {
+  hasProducts: boolean;
+  onAddProduct: () => void;
+  onClearFilters: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] shadow-sm animate-fadeIn">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-5 shadow-inner">
+        <SearchX className="w-8 h-8 md:w-10 md:h-10 text-[#cbd5e1]" />
+      </div>
+      <h3 className="text-lg md:text-xl font-bold text-[#1e293b] mb-2 text-center">
+        {hasProducts ? "No matching products" : "No products yet"}
+      </h3>
+      <p className="text-sm text-[#64748b] text-center max-w-sm mb-6 px-4">
+        {hasProducts
+          ? "Try adjusting your filters or search terms to find what you're looking for."
+          : "Add your first product to start selling on WhatsApp."}
+      </p>
+      {hasProducts ? (
+        <button
+          onClick={onClearFilters}
+          className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#25D366] hover:text-[#128C7E] transition-all active:scale-95"
+        >
+          <X className="w-4 h-4" />
+          Clear Filters
+        </button>
+      ) : (
+        <button
+          onClick={onAddProduct}
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 transition-all active:scale-95"
+        >
+          <Plus className="w-4 h-4" />
+          Add First Product
+        </button>
+      )}
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 md:py-28 animate-fadeIn">
+      <div className="relative">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#f0fdf4] to-[#dcfce7] flex items-center justify-center shadow-lg">
+          <Loader2 className="w-7 h-7 text-[#25D366] animate-spin" />
+        </div>
+        <div className="absolute inset-0 rounded-2xl bg-[#25D366]/20 animate-ping" />
+      </div>
+      <p className="mt-5 text-sm font-medium text-[#64748b]">Loading products...</p>
+      <p className="mt-1 text-xs text-[#94a3b8]">This may take a moment</p>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function ProductsPage() {
   const { user } = useAuth();
 
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
-  const [productCategories, setProductCategories] = useState<
-    { id: string; name: string; icon: string }[]
-  >([]);
+  const [productCategories, setProductCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
@@ -69,6 +193,25 @@ export default function ProductsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Toast state
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const toastIdRef = useRef(0);
+
+  // Scroll position restore
+  const scrollPosRef = useRef(0);
+
+  const addToast = useCallback((message: string, type: Toast["type"] = "info") => {
+    const id = `toast-${++toastIdRef.current}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   // Load data
   useEffect(() => {
     if (!user) return;
@@ -84,11 +227,12 @@ export default function ProductsPage() {
       setProducts(data);
     } catch (error) {
       console.error("Error loading products:", error);
+      addToast("Failed to load products", "error");
       setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, addToast]);
 
   const loadCategories = useCallback(async () => {
     if (!user) return;
@@ -127,29 +271,21 @@ export default function ProductsPage() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
-        const matchesCategory =
-          activeCategory === "all" || p.category === activeCategory;
-        const matchesSearch =
-          !searchTerm ||
-          p.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = activeCategory === "all" || p.category === activeCategory;
+        const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase());
         const stock = p.stock || 0;
         const matchesStock =
           stockFilter === "all" ||
           (stockFilter === "in" && stock > 5) ||
           (stockFilter === "low" && stock > 0 && stock <= 5) ||
           (stockFilter === "out" && stock === 0);
-        const matchesPriceMin =
-          priceRangeMin === "" || p.price >= Number(priceRangeMin);
-        const matchesPriceMax =
-          priceRangeMax === "" || p.price <= Number(priceRangeMax);
+        const matchesPriceMin = priceRangeMin === "" || p.price >= Number(priceRangeMin);
+        const matchesPriceMax = priceRangeMax === "" || p.price <= Number(priceRangeMax);
 
         let matchesDate = true;
         if (dateRangeStart || dateRangeEnd) {
-          const productDate = p.createdAt?.toDate
-            ? p.createdAt.toDate()
-            : new Date(p.createdAt);
-          if (dateRangeStart && productDate < new Date(dateRangeStart))
-            matchesDate = false;
+          const productDate = p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+          if (dateRangeStart && productDate < new Date(dateRangeStart)) matchesDate = false;
           if (dateRangeEnd) {
             const endDate = new Date(dateRangeEnd);
             endDate.setHours(23, 59, 59, 999);
@@ -157,67 +293,29 @@ export default function ProductsPage() {
           }
         }
 
-        return (
-          matchesCategory &&
-          matchesSearch &&
-          matchesStock &&
-          matchesPriceMin &&
-          matchesPriceMax &&
-          matchesDate
-        );
+        return matchesCategory && matchesSearch && matchesStock && matchesPriceMin && matchesPriceMax && matchesDate;
       })
       .sort((a, b) => {
+        const getDate = (p: Product) => (p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt)).getTime();
         switch (sortBy) {
-          case "newest":
-            return (
-              (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt)).getTime() -
-              (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt)).getTime()
-            );
-          case "oldest":
-            return (
-              (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt)).getTime() -
-              (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt)).getTime()
-            );
-          case "price-low":
-            return a.price - b.price;
-          case "price-high":
-            return b.price - a.price;
-          case "stock-low":
-            return (a.stock || 0) - (b.stock || 0);
-          case "stock-high":
-            return (b.stock || 0) - (a.stock || 0);
-          case "name-az":
-            return a.name.localeCompare(b.name);
-          case "name-za":
-            return b.name.localeCompare(a.name);
-          default:
-            return 0;
+          case "newest": return getDate(b) - getDate(a);
+          case "oldest": return getDate(a) - getDate(b);
+          case "price-low": return a.price - b.price;
+          case "price-high": return b.price - a.price;
+          case "stock-low": return (a.stock || 0) - (b.stock || 0);
+          case "stock-high": return (b.stock || 0) - (a.stock || 0);
+          case "name-az": return a.name.localeCompare(b.name);
+          case "name-za": return b.name.localeCompare(a.name);
+          default: return 0;
         }
       });
-  }, [
-    products,
-    activeCategory,
-    searchTerm,
-    stockFilter,
-    sortBy,
-    priceRangeMin,
-    priceRangeMax,
-    dateRangeStart,
-    dateRangeEnd,
-  ]);
+  }, [products, activeCategory, searchTerm, stockFilter, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
   // Analytics
   const stats = useMemo(() => {
-    const totalInventoryValue = products.reduce(
-      (sum, p) => sum + (p.price || 0) * (p.stock || 0),
-      0
-    );
-    const lowStockProducts = products.filter(
-      (p) => (p.stock || 0) > 0 && (p.stock || 0) <= 5
-    ).length;
-    const outOfStockProducts = products.filter(
-      (p) => (p.stock || 0) === 0
-    ).length;
+    const totalInventoryValue = products.reduce((sum, p) => sum + (p.price || 0) * (p.stock || 0), 0);
+    const lowStockProducts = products.filter((p) => (p.stock || 0) > 0 && (p.stock || 0) <= 5).length;
+    const outOfStockProducts = products.filter((p) => (p.stock || 0) === 0).length;
     return { totalInventoryValue, lowStockProducts, outOfStockProducts };
   }, [products]);
 
@@ -227,15 +325,15 @@ export default function ProductsPage() {
       if (!user) return;
       const newStatus = product.status === "active" ? "paused" : "active";
       try {
-        await productService.updateProduct(user, product.id, {
-          status: newStatus,
-        });
+        await productService.updateProduct(user, product.id, { status: newStatus });
         loadProducts();
+        addToast(`Product ${newStatus === "active" ? "activated" : "paused"}`, "success");
       } catch (error) {
         console.error("Error updating product:", error);
+        addToast("Failed to update product", "error");
       }
     },
-    [user, loadProducts]
+    [user, loadProducts, addToast]
   );
 
   const handleShareProduct = useCallback(async (product: Product) => {
@@ -245,13 +343,15 @@ export default function ProductsPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title: product.name, text: shareText, url: shareUrl });
+        addToast("Shared successfully", "success");
       } catch {
         // User cancelled
       }
     } else {
       await navigator.clipboard.writeText(shareUrl);
+      addToast("Link copied to clipboard", "info");
     }
-  }, []);
+  }, [addToast]);
 
   const handleDuplicateProduct = useCallback(
     async (product: Product) => {
@@ -266,11 +366,13 @@ export default function ProductsPage() {
           orders: 0,
         });
         loadProducts();
+        addToast("Product duplicated", "success");
       } catch (error) {
         console.error("Error duplicating product:", error);
+        addToast("Failed to duplicate product", "error");
       }
     },
-    [user, loadProducts]
+    [user, loadProducts, addToast]
   );
 
   const handleDeleteProduct = useCallback(
@@ -282,13 +384,15 @@ export default function ProductsPage() {
         loadProducts();
         setShowDeleteConfirm(null);
         setBulkSelected((prev) => prev.filter((id) => id !== productId));
+        addToast("Product deleted", "success");
       } catch (error) {
         console.error("Error deleting product:", error);
+        addToast("Failed to delete product", "error");
       } finally {
         setDeleteLoading(false);
       }
     },
-    [user, loadProducts]
+    [user, loadProducts, addToast]
   );
 
   // Bulk handlers
@@ -299,9 +403,7 @@ export default function ProductsPage() {
   }, []);
 
   const selectAllProducts = useCallback(() => {
-    setBulkSelected((prev) =>
-      prev.length === filteredProducts.length ? [] : filteredProducts.map((p) => p.id)
-    );
+    setBulkSelected((prev) => (prev.length === filteredProducts.length ? [] : filteredProducts.map((p) => p.id)));
   }, [filteredProducts]);
 
   const handleBulkStatusUpdate = useCallback(
@@ -309,79 +411,76 @@ export default function ProductsPage() {
       if (!user || bulkSelected.length === 0) return;
       setBulkLoading(true);
       try {
-        await Promise.all(
-          bulkSelected.map((id) =>
-            productService.updateProduct(user, id, { status: newStatus })
-          )
-        );
+        await Promise.all(bulkSelected.map((id) => productService.updateProduct(user, id, { status: newStatus })));
         loadProducts();
         setBulkSelected([]);
         setBulkMode(false);
+        addToast(`${bulkSelected.length} products updated`, "success");
       } catch (error) {
         console.error("Error bulk updating:", error);
+        addToast("Failed to update products", "error");
       } finally {
         setBulkLoading(false);
       }
     },
-    [user, bulkSelected, loadProducts]
+    [user, bulkSelected, loadProducts, addToast]
   );
 
   const handleBulkDelete = useCallback(async () => {
     if (!user || bulkSelected.length === 0) return;
     setBulkLoading(true);
     try {
-      await Promise.all(
-        bulkSelected.map((id) => productService.deleteProduct(user, id))
-      );
+      await Promise.all(bulkSelected.map((id) => productService.deleteProduct(user, id)));
       loadProducts();
       setBulkSelected([]);
       setBulkMode(false);
+      addToast(`${bulkSelected.length} products deleted`, "success");
     } catch (error) {
       console.error("Error bulk deleting:", error);
+      addToast("Failed to delete products", "error");
     } finally {
       setBulkLoading(false);
     }
-  }, [user, bulkSelected, loadProducts]);
+  }, [user, bulkSelected, loadProducts, addToast]);
 
   // Export/Import
   const exportProducts = useCallback(() => {
     const headers = ["Name", "Category", "Price", "Stock", "Description"];
-    const rows = products.map((p) => [
-      p.name,
-      p.category || "",
-      p.price,
-      p.stock || 0,
-      p.description || "",
-    ]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const rows = products.map((p) => [p.name, p.category || "", p.price, p.stock || 0, p.description || ""]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `products_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
-  }, [products]);
+    addToast("Products exported", "success");
+  }, [products, addToast]);
 
   const importProducts = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file || !user) return;
 
-      const text = await file.text();
-      const lines = text.split("\n");
-      const headers = lines[0].split(",");
+      try {
+        const text = await file.text();
+        const lines = text.split("\n").filter((l) => l.trim());
+        if (lines.length < 2) {
+          addToast("CSV file is empty", "error");
+          return;
+        }
 
-      for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const values = lines[i].split(",");
-        const data: Record<string, unknown> = {};
-        headers.forEach((h, idx) => {
-          const key = h.trim().toLowerCase();
-          const val = values[idx]?.trim() || "";
-          data[key] = key === "price" || key === "stock" ? Number(val) || 0 : val;
-        });
+        const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+        let imported = 0;
 
-        if (data.name && data.price) {
-          try {
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+          const data: Record<string, unknown> = {};
+          headers.forEach((h, idx) => {
+            const val = values[idx] || "";
+            data[h] = h === "price" || h === "stock" ? Number(val) || 0 : val;
+          });
+
+          if (data.name && data.price) {
             await productService.createProduct(user, {
               name: String(data.name),
               category: String(data.category || "other"),
@@ -389,23 +488,26 @@ export default function ProductsPage() {
               stock: Number(data.stock || 0),
               description: String(data.description || ""),
             });
-          } catch (err) {
-            console.error("Import error:", err);
+            imported++;
           }
         }
-      }
 
-      loadProducts();
-      event.target.value = "";
+        loadProducts();
+        addToast(`${imported} products imported`, "success");
+      } catch (err) {
+        console.error("Import error:", err);
+        addToast("Failed to import products", "error");
+      } finally {
+        event.target.value = "";
+      }
     },
-    [user, loadProducts]
+    [user, loadProducts, addToast]
   );
 
   // Print & WhatsApp
   const printProductCatalog = useCallback((product: Product) => {
     const stock = product.stock || 0;
-    const stockStatus =
-      stock === 0 ? "Out of Stock" : stock <= 5 ? "Low Stock" : "In Stock";
+    const stockStatus = stock === 0 ? "Out of Stock" : stock <= 5 ? "Low Stock" : "In Stock";
     const stockColor = stock > 5 ? "#10b981" : stock > 0 ? "#f59e0b" : "#ef4444";
 
     const html = `
@@ -471,26 +573,14 @@ export default function ProductsPage() {
 
   // Helpers
   const getCategoryEmoji = useCallback(
-    (category: string) => {
-      return productCategories.find((c) => c.id === category)?.icon || "📦";
-    },
+    (category: string) => productCategories.find((c) => c.id === category)?.icon || "📦",
     [productCategories]
   );
 
   const getCategoryColor = useCallback(
     (category: string) => {
       const idx = productCategories.findIndex((c) => c.id === category);
-      const colors = [
-        "from-[#fce7f3] to-[#fbcfe8]",
-        "from-[#e0e7ff] to-[#c7d2fe]",
-        "from-[#dcfce7] to-[#bbf7d0]",
-        "from-[#fef3c7] to-[#fde68a]",
-        "from-[#e0f2fe] to-[#bae6fd]",
-        "from-[#f3e8ff] to-[#e9d5ff]",
-        "from-[#ffedd5] to-[#fed7aa]",
-        "from-[#f1f5f9] to-[#e2e8f0]",
-      ];
-      return colors[idx >= 0 ? idx % colors.length : 0];
+      return CATEGORY_COLORS[idx >= 0 ? idx % CATEGORY_COLORS.length : 0];
     },
     [productCategories]
   );
@@ -509,6 +599,7 @@ export default function ProductsPage() {
   }, []);
 
   const openProductModal = useCallback((product: Product) => {
+    scrollPosRef.current = window.scrollY;
     setSelectedProduct(product);
     setProductModalOpen(true);
   }, []);
@@ -540,12 +631,42 @@ export default function ProductsPage() {
     if (bulkMode) setBulkSelected([]);
   }, [searchTerm, stockFilter, activeCategory, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (productModalOpen) setProductModalOpen(false);
+        if (addProductModalOpen) setAddProductModalOpen(false);
+        if (showDeleteConfirm) setShowDeleteConfirm(null);
+        if (bulkMode) {
+          setBulkMode(false);
+          setBulkSelected([]);
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "a" && bulkMode) {
+        e.preventDefault();
+        selectAllProducts();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [productModalOpen, addProductModalOpen, showDeleteConfirm, bulkMode, selectAllProducts]);
+
+  // Restore scroll after modal close
+  useEffect(() => {
+    if (!productModalOpen && scrollPosRef.current > 0) {
+      window.scrollTo({ top: scrollPosRef.current, behavior: "instant" });
+      scrollPosRef.current = 0;
+    }
+  }, [productModalOpen]);
+
   return (
     <div className="min-h-screen animate-fadeIn">
-      {/* Header */}
       <ProductsHeader
         productsCount={products.length}
         totalInventoryValue={stats.totalInventoryValue}
+        lowStockCount={stats.lowStockProducts}
+        outOfStockCount={stats.outOfStockProducts}
         bulkMode={bulkMode}
         setBulkMode={(mode) => {
           setBulkMode(mode);
@@ -556,17 +677,20 @@ export default function ProductsPage() {
         importProducts={importProducts}
       />
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto py-4 md:py-6 space-y-4 md:space-y-6">
-        {/* Stats */}
+      <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
         <ProductStats
           totalProducts={products.length}
           inventoryValue={stats.totalInventoryValue}
           lowStockCount={stats.lowStockProducts}
           outOfStockCount={stats.outOfStockProducts}
+          isLoading={loading}
+          onCardClick={(type) => {
+            if (type === "low") setStockFilter("low");
+            if (type === "out") setStockFilter("out");
+            if (type === "all") setStockFilter("all");
+          }}
         />
 
-        {/* Filters */}
         <ProductFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -585,27 +709,25 @@ export default function ProductsPage() {
           view={view}
           setView={setView}
           isLoading={loading}
-          activeFiltersCount={activeFiltersCount}
+          totalResults={filteredProducts.length}
           onClearAll={clearAllFilters}
         />
 
-        {/* Category Tabs */}
         <ProductCategoryTabs
           categories={categories}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
         />
 
-        {/* Active filters indicator */}
         {activeFiltersCount > 0 && !bulkMode && (
-          <div className="flex items-center gap-2 text-xs text-[#64748b]">
+          <div className="flex items-center gap-2 text-xs text-[#64748b] animate-fadeIn">
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>
-              Showing {filteredProducts.length} of {products.length} products
+              Showing <span className="font-bold text-[#1e293b]">{filteredProducts.length}</span> of {products.length} products
             </span>
             <button
               onClick={clearAllFilters}
-              className="flex items-center gap-1 ml-2 px-2 py-1 rounded-lg bg-[#f1f5f9] hover:bg-red-50 hover:text-red-500 transition-colors"
+              className="flex items-center gap-1 ml-2 px-2 py-1 rounded-lg bg-[#f1f5f9] hover:bg-red-50 hover:text-red-500 transition-colors text-[10px] font-bold"
             >
               <X className="w-3 h-3" />
               Clear
@@ -613,50 +735,16 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* Content */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 md:py-24">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-[#f0fdf4] flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-[#25D366] animate-spin" />
-              </div>
-            </div>
-            <p className="mt-4 text-sm font-medium text-[#64748b]">Loading products...</p>
-          </div>
+          <LoadingState />
         ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 md:py-24 bg-white rounded-2xl border border-[#e2e8f0]">
-            <div className="w-16 h-16 rounded-2xl bg-[#f8fafc] flex items-center justify-center mb-4">
-              <SearchX className="w-8 h-8 text-[#94a3b8]" />
-            </div>
-            <h3 className="text-lg font-bold text-[#1e293b] mb-2">
-              {products.length === 0 ? "No products yet" : "No matching products"}
-            </h3>
-            <p className="text-sm text-[#64748b] text-center max-w-sm mb-6">
-              {products.length === 0
-                ? "Add your first product to start selling on WhatsApp."
-                : "Try adjusting your filters or search terms to find what you're looking for."}
-            </p>
-            {products.length === 0 ? (
-              <button
-                onClick={() => setAddProductModalOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 transition-all active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                Add First Product
-              </button>
-            ) : (
-              <button
-                onClick={clearAllFilters}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#25D366] transition-all"
-              >
-                <X className="w-4 h-4" />
-                Clear Filters
-              </button>
-            )}
-          </div>
+          <EmptyState
+            hasProducts={products.length > 0}
+            onAddProduct={() => setAddProductModalOpen(true)}
+            onClearFilters={clearAllFilters}
+          />
         ) : (
           <>
-            {/* Bulk toolbar */}
             {bulkMode && (
               <ProductBulkActionsToolbar
                 bulkSelected={bulkSelected}
@@ -672,7 +760,6 @@ export default function ProductsPage() {
               />
             )}
 
-            {/* Product views */}
             {view === "grid" ? (
               <ProductGridView
                 products={filteredProducts}
@@ -726,7 +813,10 @@ export default function ProductsPage() {
       <AddProductModal
         isOpen={addProductModalOpen}
         onClose={() => setAddProductModalOpen(false)}
-        onSuccess={() => loadProducts()}
+        onSuccess={() => {
+          loadProducts();
+          addToast("Product added successfully", "success");
+        }}
       />
       <DeleteConfirmModal
         isOpen={showDeleteConfirm !== null}
@@ -735,6 +825,9 @@ export default function ProductsPage() {
         productName={products.find((p) => p.id === showDeleteConfirm)?.name}
         isLoading={deleteLoading}
       />
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ScrollToTop />
     </div>
   );
 }

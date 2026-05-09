@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
-import { getAllBusinessSettings } from "@/lib/business-settings";
-import { getAllProductCategories, getProductCategory } from "@/lib/product-categories";
+import { getAllProductCategories } from "@/lib/product-categories";
 
-type StringSet = Set<string>;
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -21,20 +20,6 @@ interface FormData {
   price: string;
   initialStock: string;
   lowStockAlert: string;
-}
-
-interface ShippingMethod {
-  id: string;
-  name: string;
-  price: string;
-  enabled: boolean;
-}
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  details: string;
-  enabled: boolean;
 }
 
 interface ProductImage {
@@ -51,17 +36,6 @@ interface Variant {
   stock: string;
 }
 
-interface SpecOptions {
-  label: string;
-  options: string[];
-  icon: string;
-}
-
-interface CategorySubData {
-  name: string;
-  specs: Record<string, SpecOptions>;
-}
-
 interface CategoryFromDB {
   id: string;
   name: string;
@@ -70,285 +44,15 @@ interface CategoryFromDB {
   brands: string[];
 }
 
-interface CategoryData {
-  subcategories: Record<string, CategorySubData>;
-}
+// ─── Constants ─────────────────────────────────────────────────────────────
 
-// Keep existing hardcoded data as fallback
-const categoryData: Record<string, CategoryData> = {
-  electronics: {
-    subcategories: {
-      phones: {
-        name: "Phones",
-        specs: {
-          brand: { label: "Brand", options: ["Apple", "Samsung", "Google", "OnePlus", "Xiaomi", "Huawei"], icon: "fa-mobile-alt" },
-          storage: { label: "Storage", options: ["64GB", "128GB", "256GB", "512GB", "1TB"], icon: "fa-hdd" },
-          ram: { label: "RAM", options: ["4GB", "6GB", "8GB", "12GB", "16GB"], icon: "fa-memory" },
-          color: { label: "Color", options: ["Black", "White", "Blue", "Red", "Gold", "Silver", "Purple", "Green"], icon: "fa-palette" },
-          condition: { label: "Condition", options: ["New", "Used - Like New", "Used - Good", "Refurbished"], icon: "fa-star" },
-          network: { label: "Network", options: ["4G", "5G", "4G & 5G"], icon: "fa-signal" }
-        }
-      },
-      laptops: {
-        name: "Laptops",
-        specs: {
-          brand: { label: "Brand", options: ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "Microsoft"], icon: "fa-laptop" },
-          processor: { label: "Processor", options: ["Intel i3", "Intel i5", "Intel i7", "Intel i9", "AMD Ryzen 5", "AMD Ryzen 7", "M1", "M2", "M3"], icon: "fa-microchip" },
-          ram: { label: "RAM", options: ["4GB", "8GB", "16GB", "32GB", "64GB"], icon: "fa-memory" },
-          storage: { label: "Storage", options: ["256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD"], icon: "fa-hdd" },
-          screen_size: { label: "Screen Size", options: ['13"', '14"', '15.6"', '16"', '17"'], icon: "fa-expand" },
-          color: { label: "Color", options: ["Silver", "Space Gray", "Black", "White", "Blue"], icon: "fa-palette" },
-          condition: { label: "Condition", options: ["New", "Used - Like New", "Used - Good", "Refurbished"], icon: "fa-star" },
-          os: { label: "Operating System", options: ["Windows 11", "macOS", "Linux", "Chrome OS"], icon: "fa-desktop" }
-        }
-      },
-      tablets: {
-        name: "Tablets",
-        specs: {
-          brand: { label: "Brand", options: ["Apple", "Samsung", "Lenovo", "Microsoft", "Huawei"], icon: "fa-tablet-alt" },
-          screen_size: { label: "Screen Size", options: ['7"', '8"', '10.1"', '11"', '12.9"'], icon: "fa-expand" },
-          storage: { label: "Storage", options: ["64GB", "128GB", "256GB", "512GB", "1TB"], icon: "fa-hdd" },
-          ram: { label: "RAM", options: ["4GB", "6GB", "8GB", "12GB", "16GB"], icon: "fa-memory" },
-          color: { label: "Color", options: ["Silver", "Space Gray", "Gold", "Rose Gold", "Black"], icon: "fa-palette" },
-          network: { label: "Network", options: ["WiFi Only", "WiFi + Cellular"], icon: "fa-wifi" }
-        }
-      },
-      tvs: {
-        name: "TVs",
-        specs: {
-          brand: { label: "Brand", options: ["Samsung", "LG", "Sony", "TCL", "Hisense", "Philips"], icon: "fa-tv" },
-          screen_size: { label: "Screen Size", options: ['32"', '43"', '50"', '55"', '65"', '75"', '85"'], icon: "fa-expand" },
-          resolution: { label: "Resolution", options: ["Full HD", "4K Ultra HD", "8K"], icon: "fa-film" },
-          smart_tv: { label: "Smart TV", options: ["Android TV", "webOS", "Tizen", "Roku", "Fire TV"], icon: "fa-brain" },
-          condition: { label: "Condition", options: ["New", "Open Box", "Refurbished"], icon: "fa-star" }
-        }
-      },
-      earphones: {
-        name: "Earphones/Headphones",
-        specs: {
-          brand: { label: "Brand", options: ["Apple", "Samsung", "Sony", "Bose", "JBL", "Beats", "Sennheiser"], icon: "fa-headphones" },
-          type: { label: "Type", options: ["Wired", "Wireless", "True Wireless"], icon: "fa-bluetooth-b" },
-          color: { label: "Color", options: ["Black", "White", "Blue", "Red", "Silver", "Gold"], icon: "fa-palette" },
-          noise_cancelling: { label: "Noise Cancelling", options: ["Active ANC", "Passive", "None"], icon: "fa-volume-mute" }
-        }
-      },
-      cameras: {
-        name: "Cameras",
-        specs: {
-          brand: { label: "Brand", options: ["Canon", "Nikon", "Sony", "Fujifilm", "Panasonic"], icon: "fa-camera" },
-          type: { label: "Type", options: ["DSLR", "Mirrorless", "Point & Shoot", "Action Camera"], icon: "fa-camera-retro" },
-          megapixels: { label: "Megapixels", options: ["12MP", "20MP", "24MP", "45MP", "50MP+"], icon: "fa-image" },
-          color: { label: "Color", options: ["Black", "Silver", "White"], icon: "fa-palette" }
-        }
-      }
-    }
-  },
-  footwear: {
-    subcategories: {
-      shoes: {
-        name: "Shoes/Sneakers",
-        specs: {
-          brand: { label: "Brand", options: ["Nike", "Adidas", "Puma", "New Balance", "Converse", "Vans", "Reebok"], icon: "fa-shoe-prints" },
-          size: { label: "Size (US)", options: ["6", "7", "8", "9", "10", "11", "12", "13"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Black", "White", "Red", "Blue", "Green", "Yellow", "Multi"], icon: "fa-palette" },
-          gender: { label: "Gender", options: ["Men", "Women", "Unisex", "Kids"], icon: "fa-venus-mars" },
-          material: { label: "Material", options: ["Leather", "Canvas", "Mesh", "Synthetic", "Suede"], icon: "fa-layer-group" }
-        }
-      },
-      boots: {
-        name: "Boots",
-        specs: {
-          brand: { label: "Brand", options: ["Timberland", "Dr. Martens", "Caterpillar", "Red Wing"], icon: "fa-shoe-prints" },
-          size: { label: "Size", options: ["6", "7", "8", "9", "10", "11", "12"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Brown", "Black", "Tan", "Gray"], icon: "fa-palette" },
-          gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
-          heel_height: { label: "Heel Height", options: ["Flat", "Low (1-2\")", "Mid (2-3\")", "High (3\"+)"], icon: "fa-arrows-alt-v" }
-        }
-      },
-      sandals: {
-        name: "Sandals/Slippers",
-        specs: {
-          brand: { label: "Brand", options: ["Birkenstock", "Crocs", "Havaianas", "Nike"], icon: "fa-shoe-prints" },
-          size: { label: "Size", options: ["5", "6", "7", "8", "9", "10", "11", "12"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Black", "Brown", "White", "Blue", "Pink"], icon: "fa-palette" },
-          gender: { label: "Gender", options: ["Men", "Women", "Kids"], icon: "fa-venus-mars" }
-        }
-      }
-    }
-  },
-  clothing: {
-    subcategories: {
-      tops: {
-        name: "Tops/T-shirts",
-        specs: {
-          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Black", "White", "Gray", "Navy", "Red", "Blue", "Green", "Yellow", "Pink"], icon: "fa-palette" },
-          gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
-          material: { label: "Material", options: ["Cotton", "Polyester", "Linen", "Silk", "Wool"], icon: "fa-layer-group" },
-          style: { label: "Style", options: ["Casual", "Formal", "Sport", "Vintage"], icon: "fa-tshirt" }
-        }
-      },
-      trousers: {
-        name: "Trousers/Jeans",
-        specs: {
-          size: { label: "Size", options: ["28", "30", "32", "34", "36", "38", "40", "42"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Blue", "Black", "Gray", "Khaki", "White"], icon: "fa-palette" },
-          gender: { label: "Gender", options: ["Men", "Women"], icon: "fa-venus-mars" },
-          fit: { label: "Fit", options: ["Slim", "Regular", "Relaxed", "Skinny", "Bootcut"], icon: "fa-arrows-alt-h" }
-        }
-      },
-      dresses: {
-        name: "Dresses",
-        specs: {
-          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Black", "Red", "Blue", "White", "Pink", "Floral", "Green"], icon: "fa-palette" },
-          style: { label: "Style", options: ["Casual", "Evening", "Cocktail", "Maxi", "Midi"], icon: "fa-female" },
-          occasion: { label: "Occasion", options: ["Party", "Wedding", "Office", "Casual", "Beach"], icon: "fa-glass-cheers" }
-        }
-      },
-      jackets: {
-        name: "Jackets/Coats",
-        specs: {
-          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], icon: "fa-ruler" },
-          color: { label: "Color", options: ["Black", "Brown", "Navy", "Gray", "Beige", "Olive"], icon: "fa-palette" },
-          gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
-          material: { label: "Material", options: ["Leather", "Denim", "Wool", "Polyester", "Down"], icon: "fa-layer-group" }
-        }
-      }
-    }
-  },
-  beauty: {
-    subcategories: {
-      skincare: {
-        name: "Skincare",
-        specs: {
-          brand: { label: "Brand", options: ["Neutrogena", "CeraVe", "The Ordinary", "La Roche-Posay", "Olay"], icon: "fa-pump-soap" },
-          skin_type: { label: "Skin Type", options: ["Normal", "Dry", "Oily", "Combination", "Sensitive"], icon: "fa-hand-sparkles" },
-          volume: { label: "Volume", options: ["30ml", "50ml", "100ml", "200ml"], icon: "fa-flask" }
-        }
-      },
-      makeup: {
-        name: "Makeup",
-        specs: {
-          brand: { label: "Brand", options: ["MAC", "Maybelline", "L'Oreal", "NARS", "Fenty"], icon: "fa-magic" },
-          type: { label: "Type", options: ["Foundation", "Lipstick", "Mascara", "Eyeshadow", "Blush"], icon: "fa-lips" },
-          shade: { label: "Shade", options: ["Fair", "Light", "Medium", "Tan", "Deep", "Dark"], icon: "fa-palette" }
-        }
-      },
-      hair: {
-        name: "Hair Products",
-        specs: {
-          brand: { label: "Brand", options: ["Tresemme", "Pantene", "Dove", "L'Oreal", "Shea Moisture"], icon: "fa-air-freshener" },
-          hair_type: { label: "Hair Type", options: ["Straight", "Wavy", "Curly", "Coily"], icon: "fa-wind" },
-          type: { label: "Product Type", options: ["Shampoo", "Conditioner", "Hair Oil", "Styling"], icon: "fa-pump-soap" }
-        }
-      },
-      perfumes: {
-        name: "Perfumes",
-        specs: {
-          brand: { label: "Brand", options: ["Chanel", "Dior", "Gucci", "Versace", "Armani"], icon: "fa-spray-can" },
-          gender: { label: "Gender", options: ["Men", "Women", "Unisex"], icon: "fa-venus-mars" },
-          volume: { label: "Volume", options: ["30ml", "50ml", "100ml", "150ml"], icon: "fa-flask" },
-          scent_type: { label: "Scent Type", options: ["Floral", "Woody", "Oriental", "Fresh", "Citrus"], icon: "fa-leaf" }
-        }
-      }
-    }
-  },
-  furniture: {
-    subcategories: {
-      sofas: {
-        name: "Sofas/Chairs",
-        specs: {
-          material: { label: "Material", options: ["Leather", "Fabric", "Velvet", "Linen"], icon: "fa-couch" },
-          color: { label: "Color", options: ["Gray", "Beige", "Brown", "Black", "Blue", "Green"], icon: "fa-palette" },
-          seating: { label: "Seating Capacity", options: ["1 Seater", "2 Seater", "3 Seater", "L-Shape", "Sectional"], icon: "fa-users" }
-        }
-      },
-      beds: {
-        name: "Beds",
-        specs: {
-          size: { label: "Size", options: ["Single", "Double", "Queen", "King", "Super King"], icon: "fa-bed" },
-          material: { label: "Material", options: ["Wood", "Metal", "Upholstered", "Leather"], icon: "fa-tree" },
-          color: { label: "Color", options: ["White", "Brown", "Black", "Gray", "Beige"], icon: "fa-palette" }
-        }
-      },
-      tables: {
-        name: "Tables/Desks",
-        specs: {
-          material: { label: "Material", options: ["Wood", "Glass", "Metal", "Marble"], icon: "fa-table" },
-          color: { label: "Color", options: ["Brown", "Black", "White", "Gray", "Natural"], icon: "fa-palette" }
-        }
-      }
-    }
-  },
-  food: {
-    subcategories: {
-      fresh: {
-        name: "Fresh Produce",
-        specs: {
-          weight: { label: "Weight", options: ["500g", "1kg", "2kg", "5kg"], icon: "fa-weight" },
-          unit: { label: "Unit", options: ["per kg", "per piece", "per bunch", "per box"], icon: "fa-balance-scale" },
-          organic: { label: "Organic", options: ["Organic", "Conventional"], icon: "fa-leaf" }
-        }
-      },
-      packaged: {
-        name: "Packaged Food",
-        specs: {
-          brand: { label: "Brand", options: ["Nestle", "Unilever", "Kellogg's", "Cadbury"], icon: "fa-box" },
-          weight: { label: "Weight", options: ["100g", "250g", "500g", "1kg"], icon: "fa-weight" },
-          dietary: { label: "Dietary", options: ["Vegan", "Halal", "Kosher", "Gluten-Free", "None"], icon: "fa-utensils" }
-        }
-      },
-      beverages: {
-        name: "Beverages",
-        specs: {
-          brand: { label: "Brand", options: ["Coca-Cola", "Pepsi", "Red Bull", "Nescafe"], icon: "fa-wine-bottle" },
-          volume: { label: "Volume", options: ["250ml", "330ml", "500ml", "1L", "2L"], icon: "fa-flask" },
-          type: { label: "Type", options: ["Soda", "Juice", "Water", "Energy", "Coffee"], icon: "fa-glass-whiskey" }
-        }
-      }
-    }
-  },
-  sports: {
-    subcategories: {
-      equipment: {
-        name: "Equipment",
-        specs: {
-          brand: { label: "Brand", options: ["Nike", "Adidas", "Under Armour", "Puma"], icon: "fa-dumbbell" },
-          color: { label: "Color", options: ["Black", "Blue", "Red", "Green", "Yellow"], icon: "fa-palette" }
-        }
-      },
-      supplements: {
-        name: "Supplements",
-        specs: {
-          brand: { label: "Brand", options: ["Optimum Nutrition", "BSN", "MuscleTech", "Dymatize"], icon: "fa-capsules" },
-          flavor: { label: "Flavor", options: ["Chocolate", "Vanilla", "Strawberry", "Cookies & Cream"], icon: "fa-ice-cream" },
-          type: { label: "Type", options: ["Whey Protein", "Creatine", "BCAA", "Pre-Workout"], icon: "fa-bolt" }
-        }
-      }
-    }
-  },
-  toys: {
-    subcategories: {
-      toys: {
-        name: "Toys",
-        specs: {
-          age_range: { label: "Age Range", options: ["0-2 years", "3-5 years", "6-8 years", "9-12 years", "13+ years"], icon: "fa-baby" },
-          brand: { label: "Brand", options: ["LEGO", "Mattel", "Hasbro", "Fisher-Price"], icon: "fa-puzzle-piece" },
-          material: { label: "Material", options: ["Plastic", "Wood", "Fabric", "Metal"], icon: "fa-shapes" }
-        }
-      },
-      baby: {
-        name: "Baby Products",
-        specs: {
-          age_range: { label: "Age Range", options: ["Newborn", "0-6 months", "6-12 months", "1-2 years"], icon: "fa-baby" },
-          brand: { label: "Brand", options: ["Pampers", "Huggies", "Johnson's", "Aveeno"], icon: "fa-baby-carriage" },
-          size: { label: "Size", options: ["Newborn", "Small", "Medium", "Large", "X-Large"], icon: "fa-ruler" }
-        }
-      }
-    }
-  }
-};
+const STEPS = [
+  { id: 1, label: "Basic Info", icon: "fa-info-circle" },
+  { id: 2, label: "Category", icon: "fa-tags" },
+  { id: 3, label: "Specs", icon: "fa-cogs" },
+  { id: 4, label: "Variants", icon: "fa-cubes" },
+  { id: 5, label: "Images", icon: "fa-images" },
+];
 
 const categoryIcons: Record<string, string> = {
   electronics: "📱",
@@ -361,9 +65,328 @@ const categoryIcons: Record<string, string> = {
   toys: "🧸",
 };
 
+// ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function StepIndicator({ currentStep, completedSteps }: { currentStep: number; completedSteps: Set<number> }) {
+  return (
+    <div className="hidden md:flex items-center justify-center gap-1 px-8 py-4 bg-[#f8fafc] border-b border-[#e2e8f0]">
+      {STEPS.map((step, idx) => {
+        const isActive = currentStep === step.id;
+        const isCompleted = completedSteps.has(step.id);
+        const isLast = idx === STEPS.length - 1;
+
+        return (
+          <div key={step.id} className="flex items-center">
+            <div className="flex items-center gap-2">
+              <div className={`
+                w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300
+                ${isActive
+                  ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25"
+                  : isCompleted
+                    ? "bg-[#10b981] text-white"
+                    : "bg-[#e2e8f0] text-[#94a3b8]"
+                }
+              `}>
+                {isCompleted && !isActive ? (
+                  <i className="fas fa-check text-[10px]" />
+                ) : (
+                  <i className={`fas ${step.icon}`} />
+                )}
+              </div>
+              <span className={`
+                text-xs font-semibold transition-colors duration-200
+                ${isActive ? "text-[#8b5cf6]" : isCompleted ? "text-[#10b981]" : "text-[#94a3b8]"}
+              `}>
+                {step.label}
+              </span>
+            </div>
+            {!isLast && (
+              <div className={`
+                w-8 h-[2px] mx-2 rounded-full transition-colors duration-300
+                ${isCompleted ? "bg-[#10b981]" : "bg-[#e2e8f0]"}
+              `} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MobileStepIndicator({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
+  const progress = (currentStep / totalSteps) * 100;
+  return (
+    <div className="md:hidden px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-xs font-bold text-[#64748b]">
+          Step {currentStep} of {totalSteps}
+        </span>
+        <span className="text-xs font-bold text-[#8b5cf6]">
+          {STEPS[currentStep - 1]?.label}
+        </span>
+      </div>
+      <div className="h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  icon,
+  children,
+  isCollapsible = false,
+  defaultOpen = true,
+}: {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+  isCollapsible?: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mb-6 md:mb-8 pb-6 border-b border-[#e2e8f0] last:border-0">
+      <button
+        onClick={() => isCollapsible && setIsOpen(!isOpen)}
+        className={`
+          flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#64748b] mb-4 md:mb-5 w-full
+          ${isCollapsible ? "cursor-pointer hover:text-[#8b5cf6] transition-colors" : ""}
+        `}
+      >
+        <i className={`fas ${icon} text-[#8b5cf6]`} />
+        {title}
+        {isCollapsible && (
+          <i className={`fas fa-chevron-${isOpen ? "up" : "down"} text-[10px] ml-auto text-[#94a3b8]`} />
+        )}
+      </button>
+      <div className={`
+        transition-all duration-300 overflow-hidden
+        ${isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}
+      `}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function InputField({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block font-semibold text-sm mb-2 text-[#475569]">
+        {label}
+        {required && <span className="text-[#ef4444] ml-0.5">*</span>}
+      </label>
+      {children}
+      {error && (
+        <p className="text-[11px] text-[#ef4444] mt-1.5 flex items-center gap-1 animate-fadeIn">
+          <i className="fas fa-exclamation-circle text-[10px]" />
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SelectableCard({
+  selected,
+  onClick,
+  children,
+  className = "",
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const [isPressed, setIsPressed] = useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onMouseLeave={() => setIsPressed(false)}
+      onTouchStart={() => setIsPressed(true)}
+      onTouchEnd={() => setIsPressed(false)}
+      className={`
+        relative p-4 border-2 rounded-xl text-center cursor-pointer transition-all duration-200
+        active:scale-95
+        ${selected
+          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
+          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:shadow-sm"
+        }
+        ${isPressed ? "scale-95" : "scale-100"}
+        ${className}
+      `}
+    >
+      {selected && (
+        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-sm">
+          <i className="fas fa-check text-[9px]" />
+        </div>
+      )}
+      {children}
+    </button>
+  );
+}
+
+function SpecButton({
+  label,
+  selected,
+  onClick,
+  isCustom,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+  isCustom?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        px-3 py-1.5 md:px-4 md:py-2 rounded-full border-2 text-xs md:text-sm font-semibold transition-all duration-200
+        active:scale-95 flex items-center gap-1.5
+        ${selected
+          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md"
+          : isCustom
+            ? "border-dashed border-[#cbd5e1] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+            : "border-[#e2e8f0] text-[#475569] hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-white"
+        }
+      `}
+    >
+      {selected && <i className="fas fa-check text-[9px]" />}
+      {label}
+    </button>
+  );
+}
+
+function ImageCard({
+  image,
+  index,
+  onSetMain,
+  onRemove,
+  onReorder,
+  totalImages,
+}: {
+  image: ProductImage;
+  index: number;
+  onSetMain: () => void;
+  onRemove: () => void;
+  onReorder: (from: number, to: number) => void;
+  totalImages: number;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className={`
+        relative rounded-xl overflow-hidden border-2 transition-all duration-200 group
+        ${image.isMain ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10" : "border-[#e2e8f0]"}
+      `}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      draggable
+      onDragStart={(e) => e.dataTransfer.setData("imageIndex", String(index))}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const fromIndex = Number(e.dataTransfer.getData("imageIndex"));
+        if (fromIndex !== index) onReorder(fromIndex, index);
+      }}
+    >
+      <img src={image.url} alt="Product" className="w-full h-24 md:h-28 object-cover" />
+      
+      {/* Overlay actions */}
+      <div className={`
+        absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent
+        transition-opacity duration-200
+        ${isHovered ? "opacity-100" : "opacity-0"}
+      `}>
+        <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
+          <button
+            onClick={onSetMain}
+            className={`
+              text-[10px] px-2 py-1 rounded-md font-bold transition-all
+              ${image.isMain ? "bg-[#8b5cf6] text-white" : "bg-white/90 text-[#475569] hover:bg-white"}
+            `}
+          >
+            {image.isMain ? "✓ Main" : "Set Main"}
+          </button>
+          <button
+            onClick={onRemove}
+            className="w-6 h-6 rounded-md bg-white/90 text-[#ef4444] flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all"
+          >
+            <i className="fas fa-trash text-[9px]" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main badge */}
+      {image.isMain && (
+        <div className="absolute top-2 left-2 bg-[#8b5cf6] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+          Main
+        </div>
+      )}
+
+      {/* Drag handle */}
+      <div className={`
+        absolute top-2 right-2 w-6 h-6 rounded-md bg-black/40 text-white flex items-center justify-center
+        transition-opacity duration-200 cursor-move
+        ${isHovered ? "opacity-100" : "opacity-0"}
+      `}>
+        <i className="fas fa-grip-vertical text-[9px]" />
+      </div>
+    </div>
+  );
+}
+
+function ToastContainer({ toasts }: { toasts: { id: number; type: string; message: string }[] }) {
+  return (
+    <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className={`
+            pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5
+            animate-[slideInRight_0.3s_ease] min-w-[280px]
+            ${toast.type === "error" ? "bg-[#ef4444] text-white" : "bg-[#10b981] text-white"}
+          `}
+        >
+          <i className={`fas ${toast.type === "error" ? "fa-exclamation-circle" : "fa-check-circle"} text-sm`} />
+          <span className="text-sm font-semibold">{toast.message}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
   const { user } = useAuth();
-  
+
+  // ── State ──────────────────────────────────────────────────────────────────
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [direction, setDirection] = useState<"next" | "prev">("next");
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
@@ -371,29 +394,29 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     initialStock: "",
     lowStockAlert: "",
   });
-  
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [customSubcategories, setCustomSubcategories] = useState<Record<string, { name: string; specs: Record<string, { label: string; options: string[]; icon: string }> }>>({});
-  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
-  const [customSubcategoryInput, setCustomSubcategoryInput] = useState("");
-  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, StringSet>>({});
-  const [customSpecOptions, setCustomSpecOptions] = useState<Record<string, string[]>>({});
-  const [variants, setVariants] = useState<Variant[]>([]);
-  
-  const [saving, setSaving] = useState(false);
-  const [toasts, setToasts] = useState<{ id: number; type: string; message: string }[]>([]);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [productImages, setProductImages] = useState<ProductImage[]>([]);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [customInputKey, setCustomInputKey] = useState<string | null>(null);
-  const [customInputValue, setCustomInputValue] = useState("");
-  
-  // NEW: State for category hierarchy from database
   const [categoriesFromDB, setCategoriesFromDB] = useState<CategoryFromDB[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+
+  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, Set<string>>>({});
+  const [customSpecOptions, setCustomSpecOptions] = useState<Record<string, string[]>>({});
+  const [customInputKey, setCustomInputKey] = useState<string | null>(null);
+  const [customInputValue, setCustomInputValue] = useState("");
+  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
+  const [customSubcategoryInput, setCustomSubcategoryInput] = useState("");
+
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
+
+  const [saving, setSaving] = useState(false);
+  const [toasts, setToasts] = useState<{ id: number; type: string; message: string }[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Effects ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (isOpen) {
@@ -402,166 +425,103 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     }
   }, [isOpen]);
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const showToast = useCallback((type: string, message: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, type, message }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }, []);
+
+  const resetForm = () => {
+    setCurrentStep(1);
+    setCompletedSteps(new Set());
+    setFormData({ name: "", description: "", price: "", initialStock: "", lowStockAlert: "" });
+    setSelectedCategory(null);
+    setSelectedSubcategory(null);
+    setSelectedSpecs({});
+    setCustomSpecOptions({});
+    setVariants([]);
+    setProductImages([]);
+    setErrors({});
+    setCustomInputKey(null);
+    setCustomInputValue("");
+    setShowCustomSubcategory(false);
+    setCustomSubcategoryInput("");
+  };
+
   const loadCategoriesFromDB = async () => {
     setLoadingCategories(true);
     try {
       const categories = await getAllProductCategories();
-      setCategoriesFromDB(categories as any);
+      setCategoriesFromDB(categories as CategoryFromDB[]);
     } catch (error) {
-      console.error("Error loading categories from DB:", error);
-      // Fallback to empty array, will use hardcoded data
+      console.error("Error loading categories:", error);
       setCategoriesFromDB([]);
     } finally {
       setLoadingCategories(false);
     }
   };
 
-  const resetForm = () => {
-    setSelectedCategory(null);
-    setSelectedSubcategory(null);
-    setSelectedSpecs({});
-    setCustomSpecOptions({});
-    setVariants([]);
-    setFormData({ name: "", description: "", price: "", initialStock: "", lowStockAlert: "" });
-    setProductImages([]);
-    setSelectedImage(null);
-    setCustomInputKey(null);
-    setCustomInputValue("");
-    setCustomSubcategories({});
+  const validateStep = (step: number): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (step === 1) {
+      if (!formData.name.trim()) newErrors.name = "Product name is required";
+      if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = "Valid price is required";
+      if (!formData.initialStock || parseInt(formData.initialStock) <= 0) newErrors.initialStock = "Valid stock quantity is required";
+    }
+
+    if (step === 2) {
+      if (!selectedCategory) newErrors.category = "Please select a category";
+      if (!selectedSubcategory) newErrors.subcategory = "Please select a subcategory";
+    }
+
+    if (step === 3) {
+      const hasSpecs = Object.values(selectedSpecs).some((set) => set.size > 0);
+      if (!hasSpecs) newErrors.specs = "Please select at least one specification";
+    }
+
+    if (step === 4) {
+      const hasValidVariant = variants.some((v) => v.price && parseFloat(v.price) > 0 && v.stock && parseInt(v.stock) > 0);
+      if (!hasValidVariant) newErrors.variants = "Please add price and stock for at least one variant";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const addCustomSubcategory = () => {
-    if (!selectedCategory || !customSubcategoryInput.trim()) return;
-    const key = customSubcategoryInput.trim().toLowerCase().replace(/\s+/g, "_");
-    
-    // Get default specs from the first subcategory of the parent category
-    const subcategories = categoryData[selectedCategory]?.subcategories || {};
-    const firstSubcategoryKey = Object.keys(subcategories)[0];
-    const firstSubcategory = subcategories[firstSubcategoryKey];
-    const parentCategorySpecs = firstSubcategory?.specs || {};
-    
-    // Use parent category's specs as default for custom subcategory
-    const defaultSpecs: Record<string, { label: string; options: string[]; icon: string }> = {};
-    Object.keys(parentCategorySpecs).forEach(specKey => {
-      defaultSpecs[specKey] = {
-        ...parentCategorySpecs[specKey],
-        options: [...parentCategorySpecs[specKey].options]
-      };
-    });
-    
-    setCustomSubcategories(prev => ({ 
-      ...prev, 
-      [key]: { 
-        name: customSubcategoryInput.trim(),
-        specs: defaultSpecs
-      } 
-    }));
-    setSelectedSubcategory(key);
-    setCustomSubcategoryInput("");
-    setShowCustomSubcategory(false);
+  const goToStep = (step: number) => {
+    if (step > currentStep && !validateStep(currentStep)) return;
+    if (step < currentStep) {
+      setDirection("prev");
+    } else {
+      setDirection("next");
+    }
+    if (step > currentStep) {
+      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    }
+    setCurrentStep(step);
   };
 
-  const showToast = (type: string, message: string) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, type, message }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  const nextStep = () => {
+    if (!validateStep(currentStep)) return;
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    setDirection("next");
+    setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   };
+
+  const prevStep = () => {
+    setDirection("prev");
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    const newImages: ProductImage[] = [];
-    
-    Array.from(files).forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("error", "Image must be less than 5MB");
-        return;
-      }
-      
-      const id = Date.now() + Math.random();
-      const reader = new FileReader();
-      reader.onload = () => {
-        setProductImages(prev => [...prev, {
-          id,
-          url: reader.result as string,
-          isMain: prev.length === 0 && newImages.length === 0
-        }]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeImage = (id: number) => {
-    setProductImages(prev => {
-      const filtered = prev.filter(img => img.id !== id);
-      if (filtered.length > 0 && !filtered.some(img => img.isMain)) {
-        filtered[0].isMain = true;
-      }
-      return filtered;
-    });
-  };
-
-  const setMainImage = (id: number) => {
-    setProductImages(prev => prev.map(img => ({
-      ...img,
-      isMain: img.id === id
-    })));
-  };
-
-  const uploadAllImages = async (): Promise<string[]> => {
-    if (productImages.length === 0 || !user) return [];
-    
-    setUploadingImage(true);
-    const uploadedUrls: string[] = [];
-    
-    try {
-      for (const img of productImages) {
-        if (img.url.startsWith('data:')) {
-          const base64Response = await fetch(img.url);
-          const blob = await base64Response.blob();
-          const file = new File([blob], `image_${img.id}.jpg`, { type: 'image/jpeg' });
-          
-          const result = await bunnyStorage.uploadFile(user, file, "products");
-          if (result.success && result.url) {
-            uploadedUrls.push(result.url);
-          }
-        } else {
-          uploadedUrls.push(img.url);
-        }
-      }
-      return uploadedUrls;
-    } catch (error) {
-      console.error("Error uploading images:", error);
-      showToast("error", "Failed to upload images");
-      return [];
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const uploadImageFile = async () => {
-    if (!selectedImage || !user) return null;
-    setUploadingImage(true);
-    try {
-      const result = await bunnyStorage.uploadFile(user, selectedImage, "products");
-      if (result.success && result.url) {
-        return result.url;
-      }
-      showToast("error", "Failed to upload image");
-      return null;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      showToast("error", "Failed to upload image");
-      return null;
-    } finally {
-      setUploadingImage(false);
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
   };
 
   const selectCategory = (category: string) => {
@@ -569,266 +529,190 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setSelectedSubcategory(null);
     setSelectedSpecs({});
     setVariants([]);
-    setCustomSubcategories({});
-    
-    // Load subcategories from the selected category
-    const categoryFromDB = categoriesFromDB.find(c => c.id === category);
-    if (categoryFromDB && categoryFromDB.subcategories.length > 0) {
-      // Category has subcategories from DB, we'll use those
-      console.log("Loaded subcategories from DB:", categoryFromDB.subcategories);
-    }
   };
 
   const selectSubcategory = (subcategory: string) => {
     setSelectedSubcategory(subcategory);
     setSelectedSpecs({});
     setVariants([]);
-  };
-
-  const getCurrentSpecs = () => {
-    if (!selectedCategory || !selectedSubcategory) return {};
-    
-    // Check if it's a custom subcategory
-    if (customSubcategories[selectedSubcategory]) {
-      return customSubcategories[selectedSubcategory].specs || {};
-    }
-    
-    // Otherwise get from predefined category data
-    return categoryData[selectedCategory]?.subcategories?.[selectedSubcategory]?.specs || {};
+    if (errors.subcategory) setErrors((prev) => { const n = { ...prev }; delete n.subcategory; return n; });
   };
 
   const toggleSpec = (specKey: string, option: string) => {
-    const newSpecs = { ...selectedSpecs };
-    if (!newSpecs[specKey]) {
-      newSpecs[specKey] = new Set<string>();
-    }
-    
-    if (newSpecs[specKey].has(option)) {
-      newSpecs[specKey].delete(option);
-      if (newSpecs[specKey].size === 0) {
-        delete newSpecs[specKey];
+    setSelectedSpecs((prev) => {
+      const newSpecs = { ...prev };
+      if (!newSpecs[specKey]) newSpecs[specKey] = new Set();
+      if (newSpecs[specKey].has(option)) {
+        newSpecs[specKey].delete(option);
+        if (newSpecs[specKey].size === 0) delete newSpecs[specKey];
+      } else {
+        newSpecs[specKey].add(option);
       }
-    } else {
-      newSpecs[specKey].add(option);
-    }
-    
-    setSelectedSpecs(newSpecs);
-    generateVariants(newSpecs);
+      return newSpecs;
+    });
   };
 
-  const addCustomOption = (specKey: string) => {
-    setCustomInputKey(specKey);
-    setCustomInputValue("");
-  };
-
-  const saveCustomOption = () => {
+  const addCustomOption = () => {
     if (!customInputKey || !customInputValue.trim()) return;
-    
     const value = customInputValue.trim();
-    const newCustomOptions = { ...customSpecOptions };
-    
-    if (!newCustomOptions[customInputKey]) {
-      newCustomOptions[customInputKey] = [];
-    }
-    
-    if (!newCustomOptions[customInputKey].includes(value)) {
-      newCustomOptions[customInputKey].push(value);
-    }
-    
-    setCustomSpecOptions(newCustomOptions);
-    setCustomInputKey(null);
-    setCustomInputValue("");
-    
-    setTimeout(() => toggleSpec(customInputKey, value), 50);
-  };
-
-  const cancelCustomOption = () => {
+    setCustomSpecOptions((prev) => ({
+      ...prev,
+      [customInputKey]: [...(prev[customInputKey] || []), value],
+    }));
+    toggleSpec(customInputKey, value);
     setCustomInputKey(null);
     setCustomInputValue("");
   };
 
-  const generateSKU = (specs: Record<string, string>): string => {
-    const productName = formData.name || "PRODUCT";
-    const base = productName.toUpperCase().replace(/\s+/g, "-").substring(0, 10);
-    const specString = Object.values(specs).join("-").replace(/\s+/g, "").toUpperCase();
-    return `${base}-${specString}`;
-  };
-
-  const generateVariants = (specs: Record<string, Set<string>>) => {
-    const specEntries = Object.entries(specs).filter(([_, set]) => set.size > 0);
-    
+  const generateVariants = useCallback(() => {
+    const specEntries = Object.entries(selectedSpecs).filter(([_, set]) => set.size > 0);
     if (specEntries.length === 0) {
       setVariants([]);
       return;
     }
 
-    const combinations = specEntries.map(([_, set]) => Array.from(set)).reduce<string[][]>(
-      (acc, curr) => acc.flatMap(a => curr.map(c => [...a, c])), 
+    const combinations = specEntries.reduce<string[][]>(
+      (acc, [_, set]) => acc.flatMap((a) => Array.from(set).map((c) => [...a, c])),
       [[]]
     );
 
     if (combinations.length > 12) {
-      setVariants([]);
-      showToast("warning", `Too many combinations (${combinations.length}). Maximum 12 variants allowed. Please reduce selected options.`);
+      showToast("error", `Too many combinations (${combinations.length}). Max 12 allowed.`);
       return;
     }
-    
-    if (combinations.length === 0) {
-      setVariants([]);
-      return;
-    }
-    
+
     const newVariants: Variant[] = combinations.map((combo, index) => {
       const variantSpecs: Record<string, string> = {};
-      specEntries.forEach(([key, _], idx) => {
-        variantSpecs[key] = combo[idx];
-      });
-      
+      specEntries.forEach(([key, _], idx) => { variantSpecs[key] = combo[idx]; });
       return {
         id: index + 1,
         specs: variantSpecs,
-        sku: generateSKU(variantSpecs),
+        sku: `${formData.name?.toUpperCase().replace(/\s+/g, "-").slice(0, 10) || "PRODUCT"}-${Object.values(variantSpecs).join("-").replace(/\s+/g, "").toUpperCase()}`,
         price: "",
         stock: "",
       };
     });
-    
+
     setVariants(newVariants);
-  };
+  }, [selectedSpecs, formData.name]);
+
+  useEffect(() => {
+    generateVariants();
+  }, [generateVariants]);
 
   const updateVariant = (index: number, field: keyof Variant, value: string) => {
-    const newVariants = [...variants];
-    newVariants[index] = { ...newVariants[index], [field]: value };
-    setVariants(newVariants);
+    setVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("error", "Image must be less than 5MB");
+        return;
+      }
+      const id = Date.now() + Math.random();
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProductImages((prev) => [...prev, { id, url: reader.result as string, isMain: prev.length === 0 }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (id: number) => {
+    setProductImages((prev) => {
+      const filtered = prev.filter((img) => img.id !== id);
+      if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
+        filtered[0].isMain = true;
+      }
+      return [...filtered];
+    });
+  };
+
+  const setMainImage = (id: number) => {
+    setProductImages((prev) => prev.map((img) => ({ ...img, isMain: img.id === id })));
+  };
+
+  const reorderImages = (from: number, to: number) => {
+    setProductImages((prev) => {
+      const newImages = [...prev];
+      const [moved] = newImages.splice(from, 1);
+      newImages.splice(to, 0, moved);
+      return newImages;
+    });
+  };
+
+  const uploadAllImages = async (): Promise<string[]> => {
+    if (productImages.length === 0 || !user) return [];
+    const uploadedUrls: string[] = [];
+    for (const img of productImages) {
+      if (img.url.startsWith("data:")) {
+        const base64Response = await fetch(img.url);
+        const blob = await base64Response.blob();
+        const file = new File([blob], `image_${img.id}.jpg`, { type: "image/jpeg" });
+        const result = await bunnyStorage.uploadFile(user, file, "products");
+        if (result.success && result.url) uploadedUrls.push(result.url);
+      } else {
+        uploadedUrls.push(img.url);
+      }
+    }
+    return uploadedUrls;
   };
 
   const saveProduct = async () => {
     if (!user) return;
-    
-    if (!formData.name.trim()) {
-      showToast("error", "Please enter product name");
-      return;
-    }
-    
-    if (!selectedCategory || !selectedSubcategory) {
-      showToast("error", "Please select category and subcategory");
-      return;
-    }
-    
-    if (variants.length === 0) {
-      showToast("error", "Please select at least one specification option");
-      return;
-    }
-
-    const hasValidVariants = variants.some(v => v.price && parseFloat(v.price) > 0 && v.stock && parseInt(v.stock) > 0);
-    if (!hasValidVariants) {
-      showToast("error", "Please add price and stock for at least one variant");
-      return;
-    }
-
-    const hasPrice = formData.price && parseFloat(formData.price) > 0;
-    if (!hasPrice) {
-      showToast("error", "Please enter a base price for the product");
-      return;
-    }
-
-    const hasStock = formData.initialStock && parseInt(formData.initialStock) > 0;
-    if (!hasStock) {
-      showToast("error", "Please enter initial stock quantity");
-      return;
-    }
+    if (!validateStep(currentStep)) return;
 
     setSaving(true);
-    
     try {
-      let imageUrl: string | undefined;
-      let images: string[] = [];
-      
-      const allSpecs = getCurrentSpecs();
-      const allOptionsFilters: Record<string, string[]> = {};
-      Object.entries(allSpecs).forEach(([key, spec]) => {
-        const defaultOptions: string[] = spec.options || [];
-        const customOptions: string[] = customSpecOptions[key] || [];
-        const allOptions: string[] = [...new Set([...defaultOptions, ...customOptions])];
-        allOptionsFilters[key] = allOptions;
-      });
+      const images = await uploadAllImages();
+      const imageUrl = images[0];
 
-      const variantsWithPrice = variants.map(v => ({
+      const variantsWithPrice = variants.map((v) => ({
         ...v,
         price: parseFloat(v.price) || 0,
         stock: parseInt(v.stock) || 0,
       }));
 
       const totalStock = variantsWithPrice.reduce((sum, v) => sum + v.stock, 0);
-      const stock = totalStock > 0 ? totalStock : parseInt(formData.initialStock) || 0;
-      const minPrice = variantsWithPrice.length > 0 && variantsWithPrice.some(v => v.price > 0)
-        ? Math.min(...variantsWithPrice.filter(v => v.price > 0).map(v => v.price))
+      const minPrice = variantsWithPrice.some((v) => v.price > 0)
+        ? Math.min(...variantsWithPrice.filter((v) => v.price > 0).map((v) => v.price))
         : parseFloat(formData.price) || 0;
-      
-      if (productImages.length > 0) {
-        images = await uploadAllImages();
-        if (images.length > 0) {
-          imageUrl = images[0];
-        }
-      }
 
       const filters: Record<string, string[]> = {};
-      Object.entries(selectedSpecs).forEach(([key, set]) => {
-        filters[key] = Array.from(set);
-      });
-
-      // Get the human-readable category name from subcategory
-      let categoryName = selectedCategory;
-      if (selectedSubcategory) {
-        // Check if it's a custom subcategory
-        if (customSubcategories[selectedSubcategory]) {
-          categoryName = customSubcategories[selectedSubcategory].name || selectedSubcategory;
-        } else {
-          // Get from predefined category data
-          categoryName = categoryData[selectedCategory]?.subcategories?.[selectedSubcategory]?.name || selectedSubcategory;
-        }
-      }
+      Object.entries(selectedSpecs).forEach(([key, set]) => { filters[key] = Array.from(set); });
 
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
-        category: selectedCategory,
-        categoryName: categoryName,
-        // NEW: Add category hierarchy fields
-        categoryId: selectedCategory,
-        subcategoryId: selectedSubcategory && selectedSubcategory !== selectedCategory ? selectedSubcategory : null,
-        brandId: filters.brand && filters.brand.length > 0 ? filters.brand[0].toLowerCase() : null,
+        category: selectedCategory!,
+        categoryName: selectedSubcategory!,
+        categoryId: selectedCategory!,
+        subcategoryId: selectedSubcategory,
         price: minPrice,
-        stock: stock,
+        stock: totalStock || parseInt(formData.initialStock) || 0,
         image: imageUrl,
         images: images.length > 0 ? images : undefined,
-        status: "active" as const,
+        status: "active",
         filters: Object.keys(filters).length > 0 ? filters : undefined,
-        brand: filters.brand && filters.brand.length > 0 ? filters.brand[0] : undefined,
-        condition: filters.condition && filters.condition.length > 0 ? filters.condition[0] : undefined,
-        variants: variants.length > 0 ? variants.map((v, index) => ({
-          id: `variant_${index + 1}`,
+        variants: variants.length > 0 ? variants.map((v, idx) => ({
+          id: `variant_${idx + 1}`,
           specs: v.specs,
-          sku: v.sku || ``,
+          sku: v.sku || "",
           price: parseFloat(v.price) || 0,
           stock: parseInt(v.stock) || 0,
         })) : undefined,
       });
 
-      // Save the direct order link (will be shortened when sent to WhatsApp)
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
       const orderLink = `${baseUrl}/order?tenant=tenant_${user.uid}&product=${productToSave.id}`;
-      console.log('[AddProduct] Order link:', orderLink);
-      
-      await productService.updateProduct(user, productToSave.id, {
-        orderLink: orderLink,
-      });
+      await productService.updateProduct(user, productToSave.id, { orderLink });
 
-      showToast("success", `Product "${formData.name}" with ${variants.length} variants saved!`);
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 1500);
+      showToast("success", `Product "${formData.name}" saved!`);
+      setTimeout(() => { onSuccess(); onClose(); }, 1500);
     } catch (error) {
       console.error("Error saving product:", error);
       showToast("error", "Failed to save product");
@@ -837,485 +721,386 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     }
   };
 
+  // ── Render Steps ───────────────────────────────────────────────────────────
+
+  const renderStep1 = () => (
+    <div className="space-y-4 md:space-y-6 animate-fadeIn">
+      <InputField label="Product Name" required error={errors.name}>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          placeholder="e.g., iPhone 15 Pro Max"
+          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-[#f8fafc] transition-colors"
+        />
+      </InputField>
+
+      <InputField label="Description">
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          rows={3}
+          placeholder="Describe your product..."
+          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-[#f8fafc] resize-none transition-colors"
+        />
+      </InputField>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <InputField label="Price (KES)" required error={errors.price}>
+          <input
+            type="number"
+            name="price"
+            value={formData.price}
+            onChange={handleInputChange}
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-[#f8fafc] transition-colors"
+          />
+        </InputField>
+
+        <InputField label="Initial Stock" required error={errors.initialStock}>
+          <input
+            type="number"
+            name="initialStock"
+            value={formData.initialStock}
+            onChange={handleInputChange}
+            placeholder="e.g., 100"
+            min="0"
+            className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-[#f8fafc] transition-colors"
+          />
+        </InputField>
+      </div>
+
+      <InputField label="Low Stock Alert">
+        <input
+          type="number"
+          name="lowStockAlert"
+          value={formData.lowStockAlert}
+          onChange={handleInputChange}
+          placeholder="5"
+          min="0"
+          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-[#f8fafc] transition-colors"
+        />
+      </InputField>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-6 animate-fadeIn">
+      <InputField label="Category" required error={errors.category}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {loadingCategories ? (
+            <div className="col-span-full text-center py-8 text-[#64748b]">
+              <div className="w-8 h-8 border-2 border-[#8b5cf6]/30 border-t-[#8b5cf6] rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-sm">Loading categories...</p>
+            </div>
+          ) : (
+            (categoriesFromDB.length > 0 ? categoriesFromDB : Object.entries(categoryIcons).map(([id]) => ({ id, name: id, subcategories: [] }))).map((cat) => (
+              <SelectableCard
+                key={cat.id}
+                selected={selectedCategory === cat.id}
+                onClick={() => selectCategory(cat.id)}
+              >
+                <div className="text-2xl md:text-3xl mb-1 transition-transform duration-200">
+                  {categoryIcons[cat.id] || "📦"}
+                </div>
+                <div className="font-bold text-xs md:text-sm text-[#475569] capitalize">{cat.name}</div>
+              </SelectableCard>
+            ))
+          )}
+        </div>
+      </InputField>
+
+      {selectedCategory && (
+        <InputField label="Subcategory" required error={errors.subcategory}>
+          <div className="flex flex-wrap gap-2">
+            {(() => {
+              const catFromDB = categoriesFromDB.find((c) => c.id === selectedCategory);
+              const dbSubs = catFromDB?.subcategories || [];
+              const subs = dbSubs.length > 0 ? dbSubs : ["general"];
+              return subs.map((sub) => (
+                <SpecButton
+                  key={sub}
+                  label={sub}
+                  selected={selectedSubcategory === sub}
+                  onClick={() => selectSubcategory(sub)}
+                />
+              ));
+            })()}
+          </div>
+        </InputField>
+      )}
+    </div>
+  );
+
+  const renderStep3 = () => {
+    // Mock specs based on category/subcategory
+    const mockSpecs: Record<string, { label: string; options: string[]; icon: string }> = {
+      brand: { label: "Brand", options: ["Apple", "Samsung", "Google", "OnePlus"], icon: "fa-tag" },
+      color: { label: "Color", options: ["Black", "White", "Blue", "Red"], icon: "fa-palette" },
+      size: { label: "Size", options: ["S", "M", "L", "XL"], icon: "fa-ruler" },
+    };
+
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        {errors.specs && (
+          <div className="p-3 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] text-sm font-semibold flex items-center gap-2">
+            <i className="fas fa-exclamation-circle" />
+            {errors.specs}
+          </div>
+        )}
+
+        {Object.entries(mockSpecs).map(([specKey, spec]) => (
+          <div key={specKey} className="bg-[#f8fafc] rounded-xl p-4 md:p-5 border border-[#e2e8f0]">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white text-xs">
+                <i className={`fas ${spec.icon}`} />
+              </div>
+              <span className="font-bold text-sm text-[#475569]">{spec.label}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {spec.options.map((option) => (
+                <SpecButton
+                  key={option}
+                  label={option}
+                  selected={selectedSpecs[specKey]?.has(option) || false}
+                  onClick={() => toggleSpec(specKey, option)}
+                />
+              ))}
+              <SpecButton
+                label="Add Custom"
+                selected={false}
+                onClick={() => { setCustomInputKey(specKey); setCustomInputValue(""); }}
+                isCustom
+              />
+            </div>
+
+            {customInputKey === specKey && (
+              <div className="flex gap-2 mt-3 animate-fadeIn">
+                <input
+                  type="text"
+                  value={customInputValue}
+                  onChange={(e) => setCustomInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addCustomOption()}
+                  placeholder="Enter custom value..."
+                  className="flex-1 px-3 py-2 rounded-lg border-2 border-[#8b5cf6] text-sm focus:outline-none"
+                  autoFocus
+                />
+                <button
+                  onClick={addCustomOption}
+                  className="px-3 py-2 bg-[#8b5cf6] text-white rounded-lg hover:bg-[#7c3aed] transition-colors"
+                >
+                  <i className="fas fa-check" />
+                </button>
+                <button
+                  onClick={() => setCustomInputKey(null)}
+                  className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
+                >
+                  <i className="fas fa-times" />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderStep4 = () => (
+    <div className="space-y-4 animate-fadeIn">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-bold text-[#64748b]">
+          {variants.length} variant{variants.length !== 1 ? "s" : ""} generated
+        </span>
+        {errors.variants && (
+          <span className="text-xs text-[#ef4444] font-semibold">{errors.variants}</span>
+        )}
+      </div>
+
+      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+        {variants.map((variant, idx) => (
+          <div
+            key={variant.id}
+            className="bg-white border border-[#e2e8f0] rounded-xl p-3 md:p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-start animate-fadeIn"
+            style={{ animationDelay: `${idx * 50}ms` }}
+          >
+            <div>
+              <div className="font-bold text-xs text-[#64748b] mb-1">Variant #{variant.id}</div>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(variant.specs).map(([key, value]) => (
+                  <span key={key} className="text-[10px] px-2 py-0.5 bg-[#f1f5f9] rounded-full text-[#64748b] font-medium">
+                    {value}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">SKU</label>
+              <input
+                type="text"
+                value={variant.sku}
+                onChange={(e) => updateVariant(idx, "sku", e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Price (KES)</label>
+              <input
+                type="number"
+                value={variant.price}
+                onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                placeholder="0.00"
+                className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Stock</label>
+              <input
+                type="number"
+                value={variant.stock}
+                onChange={(e) => updateVariant(idx, "stock", e.target.value)}
+                placeholder="0"
+                className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderStep5 = () => (
+    <div className="space-y-4 animate-fadeIn">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+        {productImages.map((img, idx) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            index={idx}
+            onSetMain={() => setMainImage(img.id)}
+            onRemove={() => removeImage(img.id)}
+            onReorder={reorderImages}
+            totalImages={productImages.length}
+          />
+        ))}
+
+        <label className="border-2 border-dashed border-[#e2e8f0] rounded-xl p-4 text-center cursor-pointer hover:border-[#8b5cf6] hover:bg-[#f5f3ff] transition-all flex flex-col items-center justify-center h-24 md:h-28 group">
+          <i className="fas fa-plus text-[#94a3b8] text-xl mb-1 group-hover:text-[#8b5cf6] transition-colors" />
+          <span className="text-[10px] text-[#94a3b8] group-hover:text-[#8b5cf6] transition-colors">Add Image</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+        </label>
+      </div>
+
+      <p className="text-xs text-[#94a3b8]">
+        Drag images to reorder. Click "Set Main" to choose the primary image. First image is auto-set as main.
+      </p>
+    </div>
+  );
+
+  // ── Main Render ────────────────────────────────────────────────────────────
+
   if (!isOpen) return null;
 
-  const currentSpecs = getCurrentSpecs();
-  const customOptions = customSpecOptions[selectedSubcategory || ""] || [];
+  const stepContent = [renderStep1, renderStep2, renderStep3, renderStep4, renderStep5];
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4 overflow-y-auto">
-        <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-          
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4 overflow-y-auto animate-fadeIn">
+        <div
+          className={`
+            bg-white rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col
+            transition-all duration-300
+            ${direction === "next" ? "animate-slideInRightFull" : "animate-slideInLeftFull"}
+          `}
+        >
           {/* Header */}
-          <div className="px-4 md:px-8 py-4 md:py-6 border-b border-slate-200 bg-gradient-to-r from-green-50 to-purple-50">
+          <div className="px-4 md:px-8 py-4 md:py-5 border-b border-[#e2e8f0] bg-gradient-to-r from-[#ede9fe] to-[#f5f3ff] shrink-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg md:text-2xl font-extrabold flex items-center gap-2 md:gap-3">
-                <i className="fas fa-plus-circle text-green-500"></i>
-                <span className="md:hidden">Add Product</span>
-                <span className="hidden md:inline">Add New Product</span>
+              <h2 className="text-lg md:text-xl font-extrabold flex items-center gap-2 text-[#1e293b]">
+                <i className="fas fa-plus-circle text-[#8b5cf6]" />
+                Add New Product
               </h2>
-              <button onClick={onClose} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-lg md:text-xl text-slate-500">
-                <i className="fas fa-times"></i>
+              <button
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-white/80 hover:bg-[#ef4444] hover:text-white transition-all flex items-center justify-center text-[#64748b] shadow-sm"
+              >
+                <i className="fas fa-times text-sm" />
               </button>
             </div>
           </div>
 
+          {/* Step Indicators */}
+          <StepIndicator currentStep={currentStep} completedSteps={completedSteps} />
+          <MobileStepIndicator currentStep={currentStep} totalSteps={STEPS.length} />
+
           {/* Body */}
-          <div className="overflow-y-auto p-4 md:p-8 flex-1" style={{ maxHeight: "calc(90vh - 140px)" }}>
-            
-            {/* SECTION 1: Basic Information */}
-            <div className="mb-6 md:mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 md:mb-5">
-                <i className="fas fa-info-circle"></i>
-                Basic Info
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Product Name <span className="text-red-500">*</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    name="name" 
-                    value={formData.name} 
-                    onChange={handleInputChange}
-                    className="w-full px-3 md:px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
-                    placeholder="e.g., iPhone 15 Pro Max"
-                  />
-                </div>
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Description
-                  </label>
-                  <textarea 
-                    name="description" 
-                    value={formData.description} 
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full px-3 md:px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50 resize-none"
-                    placeholder="Describe your product..."
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 1.5: Pricing & Shipping */}
-            <div className="mb-6 md:mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 md:mb-5">
-                <i className="fas fa-dollar-sign"></i>
-                Pricing & Stock
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div>
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Price (KES) <span className="text-red-500">*</span>
-                  </label>
-                  <input 
-                    type="number" 
-                    name="price" 
-                    value={formData.price} 
-                    onChange={handleInputChange}
-                    className="w-full px-3 md:px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Initial Stock <span className="text-red-500">*</span>
-                  </label>
-                  <input 
-                    type="number" 
-                    name="initialStock" 
-                    value={formData.initialStock || ""} 
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
-                    placeholder="e.g., 100"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block font-semibold text-sm mb-2 text-slate-700">
-                    Low Stock Alert (notify when stock falls below)
-                  </label>
-                  <input 
-                    type="number" 
-                    name="lowStockAlert" 
-                    value={formData.lowStockAlert || ""} 
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500 bg-slate-50"
-                    placeholder="5"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 2: Category Selection */}
-            <div className="mb-8 pb-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
-                <i className="fas fa-tags"></i>
-                Select Category
-              </div>
-              
-              {/* Main Categories */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                {loadingCategories ? (
-                  <div className="col-span-4 text-center py-8 text-slate-500">
-                    <i className="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                    <p>Loading categories...</p>
-                  </div>
-                ) : categoriesFromDB.length > 0 ? (
-                  // Show categories from database
-                  categoriesFromDB.map((category) => {
-                    const icon = categoryIcons[category.id] || "📦";
-                    return (
-                      <button
-                        key={category.id}
-                        onClick={() => selectCategory(category.id)}
-                        className={`p-4 border-2 border-slate-200 rounded-xl cursor-pointer text-center transition-all hover:border-green-500 hover:-translate-y-1 hover:shadow-lg ${selectedCategory === category.id ? "border-green-500 bg-gradient-to-br from-green-100 to-teal-100 shadow-md" : "bg-white"}`}
-                      >
-                        <div className={`text-3xl mb-2 ${selectedCategory === category.id ? "scale-110" : ""}`}>{icon}</div>
-                        <div className="font-bold text-sm text-slate-700">{category.name}</div>
-                        {category.subcategories.length > 0 && (
-                          <div className="text-xs text-slate-500 mt-1">{category.subcategories.length} subcategories</div>
-                        )}
-                      </button>
-                    );
-                  })
-                ) : (
-                  // Fallback to hardcoded categories
-                  Object.entries(categoryIcons).map(([key, icon]) => (
-                    <button
-                      key={key}
-                      onClick={() => selectCategory(key)}
-                      className={`p-4 border-2 border-slate-200 rounded-xl cursor-pointer text-center transition-all hover:border-green-500 hover:-translate-y-1 hover:shadow-lg ${selectedCategory === key ? "border-green-500 bg-gradient-to-br from-green-100 to-teal-100 shadow-md" : "bg-white"}`}
-                    >
-                      <div className={`text-3xl mb-2 ${selectedCategory === key ? "scale-110" : ""}`}>{icon}</div>
-                      <div className="font-bold text-sm text-slate-700 capitalize">{key}</div>
-                    </button>
-                  ))
-                )}
-              </div>
-
-              {/* Subcategories */}
-              {selectedCategory && (
-                <div className="bg-slate-50 rounded-xl p-5 border-2 border-slate-200">
-                  <div className="section-title mb-4">Select Subcategory</div>
-                  <div className="flex flex-wrap gap-3">
-                    {(() => {
-                      // Get subcategories from database first
-                      const categoryFromDB = categoriesFromDB.find(c => c.id === selectedCategory);
-                      const dbSubcategories = categoryFromDB?.subcategories || [];
-                      
-                      // Get subcategories from hardcoded data as fallback
-                      const hardcodedSubcategories = categoryData[selectedCategory]?.subcategories || {};
-                      
-                      // Merge both sources
-                      const allSubcategories = new Set([...dbSubcategories, ...Object.keys(hardcodedSubcategories)]);
-                      
-                      return Array.from(allSubcategories).map((key) => {
-                        // Get name from hardcoded data first, then from custom, then use the key
-                        const hardcodedName = hardcodedSubcategories[key]?.name;
-                        const customName = customSubcategories[key]?.name;
-                        const displayName = hardcodedName || customName || key;
-                        
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => selectSubcategory(key)}
-                            className={`px-5 py-2.5 border-2 border-slate-200 rounded-full bg-white cursor-pointer font-semibold text-sm transition-all ${selectedSubcategory === key ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-lg" : "hover:border-green-500 hover:text-green-500"}`}
-                          >
-                            {displayName}
-                          </button>
-                        );
-                      });
-                    })()}
-                    <button
-                      onClick={() => setShowCustomSubcategory(true)}
-                      className="px-5 py-2.5 border-2 border-dashed border-green-500 rounded-full bg-white cursor-pointer font-semibold text-sm text-green-500 hover:bg-green-50 transition-all flex items-center gap-2"
-                    >
-                      <i className="fas fa-plus"></i> Add Custom
-                    </button>
-                  </div>
-                  
-                  {showCustomSubcategory && (
-                    <div className="mt-4 flex gap-2">
-                      <input
-                        type="text"
-                        value={customSubcategoryInput}
-                        onChange={(e) => setCustomSubcategoryInput(e.target.value)}
-                        placeholder="Enter custom subcategory name"
-                        className="flex-1 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-green-500"
-                        onKeyPress={(e) => e.key === "Enter" && addCustomSubcategory()}
-                      />
-                      <button
-                        onClick={addCustomSubcategory}
-                        className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-semibold text-sm"
-                      >
-                        Add
-                      </button>
-                      <button
-                        onClick={() => { setShowCustomSubcategory(false); setCustomSubcategoryInput(""); }}
-                        className="px-4 py-2.5 border-2 border-slate-200 rounded-xl font-semibold text-sm hover:bg-slate-100"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* SECTION 3: Specifications Builder */}
-            {selectedSubcategory && (
-              <div className="mb-8 pb-6 border-b border-slate-200">
-                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
-                  <i className="fas fa-cogs"></i>
-                  Configure Specifications <span className="font-normal normal-case">(Click buttons to select)</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  {Object.entries(currentSpecs).map(([specKey, spec]) => (
-                    <div key={specKey} className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm">
-                          <i className={`fas ${spec.icon}`}></i>
-                        </div>
-                        <div className="font-bold text-base">{spec.label}</div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {spec.options.map((option: string) => {
-                          const isSelected = selectedSpecs[specKey]?.has(option);
-                          return (
-                            <button
-                              key={option}
-                              onClick={() => toggleSpec(specKey, option)}
-                              className={`px-4 py-2 rounded-full border-2 font-semibold text-sm transition-all flex items-center gap-2 ${isSelected 
-                                ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-md" 
-                                : "bg-white border-slate-200 text-slate-700 hover:border-green-500 hover:text-green-500"}`}
-                            >
-                              {isSelected && <i className="fas fa-check text-xs"></i>}
-                              {option}
-                            </button>
-                          );
-                        })}
-                        
-                        {/* Custom Options */}
-                        {(customSpecOptions[specKey] || []).map((option: string) => {
-                          const isSelected = selectedSpecs[specKey]?.has(option);
-                          return (
-                            <button
-                              key={option}
-                              onClick={() => toggleSpec(specKey, option)}
-                              className={`px-4 py-2 rounded-full border-2 font-semibold text-sm transition-all flex items-center gap-2 ${isSelected 
-                                ? "bg-gradient-to-r from-green-500 to-teal-600 text-white border-green-500 shadow-md" 
-                                : "bg-white border-slate-200 text-slate-700 hover:border-green-500 hover:text-green-500"}`}
-                            >
-                              {isSelected && <i className="fas fa-check text-xs"></i>}
-                              {option}
-                            </button>
-                          );
-                        })}
-                        
-                        {/* Add Custom Button */}
-                        <button
-                          onClick={() => addCustomOption(specKey)}
-                          className="px-4 py-2 rounded-full border-2 border-dashed border-slate-300 bg-transparent cursor-pointer font-semibold text-sm text-slate-500 hover:border-green-500 hover:text-green-500 transition-all flex items-center gap-2"
-                        >
-                          <i className="fas fa-plus"></i>
-                          Add Custom
-                        </button>
-                        
-                        {/* Custom Input */}
-                        {customInputKey === specKey && (
-                          <div className="flex gap-2 items-center w-full">
-                            <input
-                              type="text"
-                              value={customInputValue}
-                              onChange={(e) => setCustomInputValue(e.target.value)}
-                              onKeyDown={(e) => e.key === "Enter" && saveCustomOption()}
-                              placeholder="Enter value..."
-                              className="px-3 py-2 border-2 border-green-500 rounded-full text-sm flex-1 outline-none"
-                              autoFocus
-                            />
-                            <button
-                              onClick={saveCustomOption}
-                              className="px-3 py-2 bg-green-500 text-white rounded-full text-sm"
-                            >
-                              <i className="fas fa-check"></i>
-                            </button>
-                            <button
-                              onClick={cancelCustomOption}
-                              className="px-3 py-2 bg-red-500 text-white rounded-full text-sm"
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* SECTION 4: Variants Preview */}
-            {variants.length > 0 && (
-              <div className="mb-8 pb-6 border-b border-slate-200">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
-                    <i className="fas fa-cubes text-green-500"></i>
-                    Generated Variants
-                  </div>
-                  <span className="px-3 py-1 bg-green-500 text-white rounded-full text-sm font-bold">
-                    {variants.length} variants
-                  </span>
-                </div>
-                
-                <div className="grid gap-4 max-h-80 overflow-y-auto">
-                  {variants.map((variant, idx) => (
-                    <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-4 gap-4 items-center">
-                      <div>
-                        <div className="font-bold text-sm mb-1">Variant #{variant.id}</div>
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(variant.specs).map(([key, value]) => (
-                            <span key={key} className="text-xs px-2 py-0.5 bg-slate-100 rounded-full text-slate-500">
-                              {value}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-xs text-slate-500 block mb-1">SKU</label>
-                        <input 
-                          type="text" 
-                          value={variant.sku}
-                          onChange={(e) => updateVariant(idx, "sku", e.target.value)}
-                          className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:border-green-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-slate-500 block mb-1">Price (KES)</label>
-                        <input 
-                          type="number" 
-                          value={variant.price}
-                          onChange={(e) => updateVariant(idx, "price", e.target.value)}
-                          placeholder="0.00"
-                          className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:border-green-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-slate-500 block mb-1">Stock</label>
-                        <input 
-                          type="number" 
-                          value={variant.stock}
-                          onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                          placeholder="0"
-                          className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:border-green-500 outline-none"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* SECTION 5: Images */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500 mb-5">
-                <i className="fas fa-images"></i>
-                Product Images <span className="text-slate-400 font-normal normal-case">(select multiple)</span>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                {productImages.map((img) => (
-                  <div key={img.id} className={`relative rounded-xl overflow-hidden border-2 ${img.isMain ? "border-green-500" : "border-slate-200"}`}>
-                    <img src={img.url} alt="Product" className="w-full h-24 object-cover" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 flex justify-between">
-                      <button 
-                        onClick={() => setMainImage(img.id)}
-                        className={`text-xs px-2 py-1 rounded ${img.isMain ? "bg-green-500 text-white" : "bg-white/20 text-white hover:bg-white/30"}`}
-                      >
-                        {img.isMain ? "✓ Main" : "Set Main"}
-                      </button>
-                      <button 
-                        onClick={() => removeImage(img.id)}
-                        className="text-white hover:text-red-400"
-                      >
-                        <i className="fas fa-trash text-xs"></i>
-                      </button>
-                    </div>
-                    {img.isMain && (
-                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
-                        Main
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                <label className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all flex flex-col items-center justify-center h-24">
-                  <i className="fas fa-plus text-slate-400 text-xl mb-1"></i>
-                  <span className="text-xs text-slate-500">Add More</span>
-                  <input 
-                    ref={fileInputRef}
-                    type="file" 
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageSelect}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-              
-              <p className="text-xs text-slate-500">
-                Click on an image to set it as the main product image. You can add multiple images to show different variants or angles.
-              </p>
-            </div>
+          <div className="overflow-y-auto p-4 md:p-8 flex-1">
+            {stepContent[currentStep - 1]()}
           </div>
 
           {/* Footer */}
-          <div className="px-4 md:px-8 py-4 md:py-5 border-t border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-end gap-2 md:gap-4">
-            <button 
-              onClick={onClose}
-              className="flex-1 md:flex-none px-4 md:px-6 py-3 bg-white text-slate-700 border-2 border-slate-200 rounded-xl font-bold text-sm hover:border-green-500 hover:text-green-500 transition-all flex items-center justify-center gap-2 min-h-[48px]"
-            >
-              <i className="fas fa-times"></i>
-              Cancel
-            </button>
-            <button 
-              onClick={saveProduct}
-              disabled={saving}
-              className="flex-1 md:flex-none px-4 md:px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span className="md:hidden">Saving...</span>
-                  <span className="hidden md:inline">Saving...</span>
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-save"></i>
-                  <span className="md:hidden">Save</span>
-                  <span className="hidden md:inline">Save Product</span>
-                </>
-              )}
-            </button>
+          <div className="px-4 md:px-8 py-4 md:py-5 border-t border-[#e2e8f0] bg-[#f8fafc] shrink-0">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className={`
+                  px-4 md:px-6 py-2.5 rounded-xl font-bold text-sm transition-all
+                  ${currentStep === 1
+                    ? "opacity-0 pointer-events-none"
+                    : "bg-white text-[#64748b] border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:text-[#8b5cf6] active:scale-95"
+                  }
+                `}
+              >
+                <i className="fas fa-arrow-left mr-2 text-xs" />
+                Back
+              </button>
+
+              <div className="flex gap-2 md:gap-3">
+                {currentStep < STEPS.length ? (
+                  <button
+                    onClick={nextStep}
+                    className="px-4 md:px-6 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:shadow-[#8b5cf6]/20 transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    Next
+                    <i className="fas fa-arrow-right text-xs" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={saveProduct}
+                    disabled={saving}
+                    className="px-4 md:px-6 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:shadow-[#8b5cf6]/20 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2 min-w-[120px] justify-center"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save text-xs" />
+                        Save Product
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map(toast => (
-          <div 
-            key={toast.id}
-            className={`px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-[slideIn_0.3s_ease] ${toast.type === "error" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
-          >
-            <i className={`fas ${toast.type === "error" ? "fa-exclamation-circle" : "fa-check-circle"}`}></i>
-            {toast.message}
-          </div>
-        ))}
-      </div>
+      <ToastContainer toasts={toasts} />
     </>
   );
 }
