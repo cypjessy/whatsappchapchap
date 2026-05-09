@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { serviceService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface AddServiceButtonRef {
+  open: () => void;
+}
 
 type BusinessKey = keyof typeof businessSpecs;
 type Tier = "basic" | "standard" | "premium";
@@ -351,7 +355,7 @@ function ToggleSwitch({ label, checked, onChange }: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function AddServiceButton() {
+const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
   const { user } = useAuth();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -384,6 +388,14 @@ export default function AddServiceButton() {
   });
 
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Expose open method to parent
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      setIsOpen(true);
+      setCurrentStep(1);
+    },
+  }));
 
   // ─── Form Helpers ──────────────────────────────────────────────────────────
 
@@ -1173,4 +1185,8 @@ export default function AddServiceButton() {
       )}
     </>
   );
-}
+});
+
+AddServiceButton.displayName = "AddServiceButton";
+
+export default AddServiceButton;
