@@ -374,7 +374,6 @@ export default function ServicesPage() {
 
   const handleBulkDelete = async () => {
     if (!user || bulkSelected.length === 0) return;
-    if (!window.confirm(`Delete ${bulkSelected.length} services? This cannot be undone.`)) return;
     try {
       await Promise.all(bulkSelected.map((id) => serviceService.deleteService(user, id)));
       loadServices();

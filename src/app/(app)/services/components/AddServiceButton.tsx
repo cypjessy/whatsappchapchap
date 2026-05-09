@@ -365,6 +365,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
   const [activeCustomSpec, setActiveCustomSpec] = useState<string | null>(null);
   const [tempCustomValue, setTempCustomValue] = useState("");
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const [form, setForm] = useState<ServiceFormData>({
     providerName: "",
@@ -477,30 +478,37 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
 
   const closeModal = () => {
     if (isSaving || isUploading) return;
-    if (window.confirm("Close without saving? All progress will be lost.")) {
-      setIsOpen(false);
-      setCurrentStep(1);
-      setForm({
-        providerName: "",
-        serviceName: "",
-        description: "",
-        businessType: null,
-        mode: "in-person",
-        location: "client-place",
-        duration: "60",
-        customDuration: "",
-        tier: "standard",
-        specs: {},
-        days: new Set(["Mon", "Tue", "Wed", "Thu", "Fri"]),
-        times: new Set(),
-        prices: { basic: "", standard: "", premium: "" },
-        deposit: false,
-        rescheduling: true,
-        cancellationNotice: true,
-        serviceRadius: "",
-        portfolioImages: [],
-      });
-    }
+    setShowCloseConfirm(true);
+  };
+
+  const confirmClose = () => {
+    setIsOpen(false);
+    setShowCloseConfirm(false);
+    setCurrentStep(1);
+    setForm({
+      providerName: "",
+      serviceName: "",
+      description: "",
+      businessType: null,
+      mode: "in-person",
+      location: "client-place",
+      duration: "60",
+      customDuration: "",
+      tier: "standard",
+      specs: {},
+      days: new Set(["Mon", "Tue", "Wed", "Thu", "Fri"]),
+      times: new Set(),
+      prices: { basic: "", standard: "", premium: "" },
+      deposit: false,
+      rescheduling: true,
+      cancellationNotice: true,
+      serviceRadius: "",
+      portfolioImages: [],
+    });
+  };
+
+  const cancelClose = () => {
+    setShowCloseConfirm(false);
   };
 
   // ─── Save ──────────────────────────────────────────────────────────────────
@@ -1179,6 +1187,38 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Close Confirmation Modal */}
+      {showCloseConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 md:p-8 shadow-2xl animate-scaleIn">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-[#f59e0b]/10 flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-exclamation-triangle text-2xl text-[#f59e0b]" />
+              </div>
+              <h3 className="text-xl font-extrabold text-[#1e293b] mb-2">Discard Changes?</h3>
+              <p className="text-sm text-[#64748b] leading-relaxed">
+                Close without saving? All progress will be lost.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={cancelClose}
+                className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all duration-200 active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmClose}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md shadow-[#ef4444]/20 hover:shadow-lg active:scale-95 transition-all duration-200"
+              >
+                <i className="fas fa-times mr-2" />
+                Discard
+              </button>
             </div>
           </div>
         </div>
