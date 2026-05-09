@@ -10,7 +10,6 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import {
   Box,
-  Layers,
   Download,
   Upload,
   CheckSquare,
@@ -21,7 +20,6 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import CategoriesModal from "@/components/categories/CategoriesModal";
 import ViewProductModal from "@/components/products/ViewProductModal";
 import AddProductModal from "@/components/products/AddProductModal";
 import {
@@ -32,6 +30,7 @@ import {
   ProductListView,
   ProductBulkActionsToolbar,
   DeleteConfirmModal,
+  ProductsHeader,
 } from "./components";
 
 export default function ProductsPage() {
@@ -59,7 +58,6 @@ export default function ProductsPage() {
   // Modal state
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [categoriesModalOpen, setCategoriesModalOpen] = useState(false);
   const [addProductModalOpen, setAddProductModalOpen] = useState(false);
 
   // Bulk state
@@ -543,89 +541,23 @@ export default function ProductsPage() {
   }, [searchTerm, stockFilter, activeCategory, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] animate-fadeIn">
+    <div className="min-h-screen animate-fadeIn">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-[#e2e8f0]">
-        <div className="max-w-7xl mx-auto px-3 md:px-6 py-3 md:py-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-lg shadow-[#25D366]/20">
-                <Box className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg md:text-xl font-extrabold text-[#1e293b] tracking-tight">
-                  Products
-                </h1>
-                <p className="text-xs text-[#94a3b8] hidden md:block">
-                  {products.length} items · {formatCurrency(stats.totalInventoryValue)} value
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar pb-1 md:pb-0">
-              {/* Categories */}
-              <button
-                onClick={() => setCategoriesModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#25D366] hover:text-[#128C7E] transition-all active:scale-95 shrink-0"
-              >
-                <Layers className="w-4 h-4" />
-                <span className="hidden sm:inline">Categories</span>
-              </button>
-
-              {/* Export */}
-              <button
-                onClick={exportProducts}
-                className="flex items-center gap-2 px-3 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#25D366] hover:text-[#128C7E] transition-all active:scale-95 shrink-0"
-              >
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Export</span>
-              </button>
-
-              {/* Import */}
-              <label className="flex items-center gap-2 px-3 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#25D366] hover:text-[#128C7E] transition-all active:scale-95 shrink-0 cursor-pointer">
-                <Upload className="w-4 h-4" />
-                <span className="hidden sm:inline">Import</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={importProducts}
-                  className="hidden"
-                />
-              </label>
-
-              {/* Bulk toggle */}
-              <button
-                onClick={() => {
-                  setBulkMode(!bulkMode);
-                  if (bulkMode) setBulkSelected([]);
-                }}
-                className={`
-                  flex items-center gap-2 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 shrink-0
-                  ${bulkMode
-                    ? "bg-[#25D366] text-white shadow-lg shadow-[#25D366]/25"
-                    : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]"
-                  }
-                `}
-              >
-                <CheckSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">{bulkMode ? "Done" : "Bulk"}</span>
-              </button>
-
-              {/* Add product */}
-              <button
-                onClick={() => setAddProductModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 transition-all active:scale-95 shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add Product</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <ProductsHeader
+        productsCount={products.length}
+        totalInventoryValue={stats.totalInventoryValue}
+        bulkMode={bulkMode}
+        setBulkMode={(mode) => {
+          setBulkMode(mode);
+          if (mode) setBulkSelected([]);
+        }}
+        setAddProductModalOpen={setAddProductModalOpen}
+        exportProducts={exportProducts}
+        importProducts={importProducts}
+      />
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
+      <main className="max-w-7xl mx-auto py-4 md:py-6 space-y-4 md:space-y-6">
         {/* Stats */}
         <ProductStats
           totalProducts={products.length}
@@ -782,11 +714,6 @@ export default function ProductsPage() {
       </main>
 
       {/* Modals */}
-      <CategoriesModal
-        isOpen={categoriesModalOpen}
-        onClose={() => setCategoriesModalOpen(false)}
-        products={products}
-      />
       <ViewProductModal
         isOpen={productModalOpen}
         onClose={() => setProductModalOpen(false)}

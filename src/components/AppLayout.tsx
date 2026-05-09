@@ -52,7 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content - Full width on mobile */}
       <div className="flex-1 flex flex-col min-h-screen w-full max-w-full lg:pl-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 w-full p-3 md:p-6 bg-[#f8fafc] overflow-y-auto pb-24">
+        <main className="flex-1 w-full p-3 md:p-6 overflow-y-auto pb-24">
           {children}
         </main>
       </div>

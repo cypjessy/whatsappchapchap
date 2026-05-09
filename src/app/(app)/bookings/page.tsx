@@ -478,7 +478,7 @@ export default function BookingsPage() {
   const hasData = filteredBookings.length > 0;
 
   return (
-    <div ref={pageRef} className="min-h-screen bg-[#f8fafc]">
+    <div ref={pageRef} className="min-h-screen">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
       {/* Sticky Header */}

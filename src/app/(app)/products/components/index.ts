@@ -5,3 +5,4 @@ export { default as ProductGridView } from './ProductGridView';
 export { default as ProductListView } from './ProductListView';
 export { default as ProductBulkActionsToolbar } from './ProductBulkActionsToolbar';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
+export { default as ProductsHeader } from './ProductsHeader';
