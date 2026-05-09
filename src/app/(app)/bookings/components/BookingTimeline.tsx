@@ -426,7 +426,7 @@ export default function BookingTimeline({
         <div key={group.date} className="mb-6 md:mb-8">
           <DateHeader group={group} index={groupIndex} />
 
-          {group.bookings.map((booking, bookingIndex) => (
+          {group.bookings.filter(b => b !== null && b !== undefined).map((booking, bookingIndex) => (
             <TimelineItem
               key={booking.id}
               booking={booking}

@@ -266,7 +266,7 @@ export default function PaymentConfirmationModal({
   const booking = item as Booking;
   const order = item as Order;
 
-  const itemName = isBooking ? booking.service : order.productName || `${order.products?.length || 0} items`;
+  const itemName = isBooking ? (booking?.service || 'N/A') : order.productName || `${order.products?.length || 0} items`;
   const customerName = isBooking ? booking.client : order.customerName;
   const totalAmount = isBooking ? booking.price : order.total;
 

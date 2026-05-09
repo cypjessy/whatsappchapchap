@@ -386,7 +386,7 @@ export default function ViewBookingModal({
                   )}
                 </div>
                 <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b] leading-tight truncate">
-                  {booking.service}
+                  {booking.service || 'N/A'}
                 </h2>
                 <p className="text-xs md:text-sm text-[#64748b] flex items-center gap-2 mt-1 flex-wrap">
                   <i className="fas fa-calendar-alt text-[10px]" />

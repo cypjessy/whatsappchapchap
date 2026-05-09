@@ -310,7 +310,7 @@ export default function BookingsPage() {
 
   const handleSendMessage = async (booking: Booking) => {
     if (!booking) return;
-    const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n📋 Service: ${booking.service}\n📅 Date: ${formatDate(booking.date)}\n⏰ Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${booking.price.toLocaleString()}\n\nThank you!`;
+    const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n Service: ${booking.service || 'N/A'}\n📅 Date: ${formatDate(booking.date)}\n⏰ Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${(booking.price || 0).toLocaleString()}\n\nThank you!`;
 
     try {
       if (user) {

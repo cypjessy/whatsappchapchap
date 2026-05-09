@@ -662,7 +662,13 @@ export const bookingService = {
       q = query(collection(db, "bookings"), where("tenantId", "==", tenantId), where("status", "==", statusFilter), orderBy("createdAt", "desc"));
     }
     const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Booking[];
+    return snap.docs
+      .map(doc => {
+        const data = doc.data();
+        if (!data) return null;
+        return { id: doc.id, ...data } as Booking;
+      })
+      .filter((booking): booking is Booking => booking !== null && booking.service !== undefined) as Booking[];
   },
 
   async getBookingById(user: User, bookingId: string): Promise<Booking | null> {

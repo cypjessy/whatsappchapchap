@@ -371,7 +371,7 @@ function MobileRow({
             </span>
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[#64748b]">
-            <span className="truncate">{booking.service}</span>
+            <span className="truncate">{booking.service || 'N/A'}</span>
             <span className="text-[#e2e8f0]">•</span>
             <span>{formatShortDate(booking.date)}</span>
           </div>
