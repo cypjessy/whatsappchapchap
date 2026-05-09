@@ -1,16 +1,13 @@
 {
-  "name": "WhatsApp ChapChap",
+  "name": "WhatsApp Chap Chap",
   "short_name": "ChapChap",
-  "description": "Manage your WhatsApp business, orders, products and customers all in one place",
+  "description": "AI-Powered Sales Automation for WhatsApp Sellers",
   "start_url": "/dashboard",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#25D366",
-  "lang": "en",
+  "orientation": "portrait",
   "scope": "/",
-  "prefer_related_applications": false,
-  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/icon.svg",
@@ -20,33 +17,30 @@
     },
     {
       "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
-  "shortcuts": [
+  "categories": ["business", "productivity", "shopping"],
+  "screenshots": [
     {
-      "name": "Orders",
-      "short_name": "Orders",
-      "description": "View and manage orders",
-      "url": "/orders",
-      "icons": [{ "src": "/icon.svg", "sizes": "96x96" }]
+      "src": "/screenshot-1.jpg",
+      "sizes": "1170x2532",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
     },
     {
-      "name": "Products",
-      "short_name": "Products",
-      "description": "Manage products",
-      "url": "/products",
-      "icons": [{ "src": "/icon.svg", "sizes": "96x96" }]
-    },
-    {
-      "name": "Customers",
-      "short_name": "Customers",
-      "description": "Manage customers",
-      "url": "/customers",
-      "icons": [{ "src": "/icon.svg", "sizes": "96x96" }]
+      "src": "/screenshot-2.jpg",
+      "sizes": "1280x800",
+      "type": "image/jpeg",
+      "form_factor": "wide"
     }
   ]
 }

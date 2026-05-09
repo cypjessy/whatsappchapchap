@@ -1,0 +1,28 @@
+/* Material ripple */
+@keyframes materialRipple {
+  to {
+    transform: scale(80);
+    opacity: 0;
+  }
+}
+.animate-materialRipple {
+  animation: materialRipple 0.6s ease-out;
+}
+
+/* Badge pop */
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.animate-badgePop {
+  animation: badgePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Shimmer */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
