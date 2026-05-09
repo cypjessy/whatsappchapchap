@@ -485,7 +485,7 @@ export default function ProductFilters({
   const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label || "Sort";
 
   return (
-    <div className="space-y-3 mb-4 md:mb-6">
+    <div className="space-y-3 mb-4 md:mb-6 px-0">
       {/* Main toolbar */}
       <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-4 border border-[#e2e8f0] shadow-sm">
         <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">

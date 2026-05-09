@@ -677,7 +677,7 @@ export default function ProductsPage() {
         importProducts={importProducts}
       />
 
-      <main className="px-3">
+      <main className="px-0">
         <ProductStats
           totalProducts={products.length}
           inventoryValue={stats.totalInventoryValue}

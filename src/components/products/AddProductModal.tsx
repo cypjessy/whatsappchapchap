@@ -602,14 +602,28 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         ? Math.min(...variantsWithPrice.filter((v) => v.price > 0).map((v) => v.price))
         : parseFloat(formData.price) || 0;
 
+      // Extract brand from specs for top-level field (bot compatibility)
+      const brandValue = selectedSpecs.brand ? Array.from(selectedSpecs.brand)[0] : undefined;
+      const extractedBrand = brandValue && brandValue !== "Generic" ? brandValue : undefined;
+
+      // Build filters from selected specs (excluding brand since it's top-level)
       const filters: Record<string, string[]> = {};
-      Object.entries(selectedSpecs).forEach(([key, set]) => { filters[key] = Array.from(set); });
+      Object.entries(selectedSpecs).forEach(([key, set]) => {
+        if (key !== 'brand' && set.size > 0) {
+          filters[key] = Array.from(set);
+        }
+      });
 
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
+        // Backward compatibility fields (bot uses these)
         category: selectedCategoryId!,
         categoryName: currentCategory?.name || selectedCategoryId!,
+        subcategory: selectedSubcategoryKey!, // Bot queries this field
+        brand: extractedBrand, // Top-level brand for bot extraction
+        // Hybrid structure fields
+        categoryId: selectedCategoryId!,
         subcategoryId: selectedSubcategoryKey!,
         price: minPrice,
         stock: totalStock || parseInt(formData.initialStock) || 0,

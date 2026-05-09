@@ -348,7 +348,7 @@ export default function ProductCategoryTabs({
   if (categories.length === 0) return null;
 
   return (
-    <div className="relative group mb-6 md:mb-8">
+    <div className="relative group mb-6 md:mb-8 px-0">
       {/* Left scroll button */}
       <ScrollButton
         direction="left"
@@ -392,7 +392,7 @@ export default function ProductCategoryTabs({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className={`
-          flex gap-2 md:gap-3 overflow-x-auto pb-3 pt-1 px-1 -mx-1
+          flex gap-2 md:gap-3 overflow-x-auto pb-3 pt-1
           scrollbar-hide select-none snap-x snap-mandatory
           ${isDragging ? "cursor-grabbing" : "cursor-grab md:cursor-default"}
         `}
@@ -417,7 +417,7 @@ export default function ProductCategoryTabs({
       </div>
 
       {/* Progress bar */}
-      <div className="md:hidden h-[3px] bg-[#e2e8f0] rounded-full mt-1 mx-4 overflow-hidden">
+      <div className="md:hidden h-[3px] bg-[#e2e8f0] rounded-full mt-1 mx-0 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progressPercent}%` }}
@@ -425,7 +425,7 @@ export default function ProductCategoryTabs({
       </div>
 
       {/* Active indicator line (desktop) */}
-      <div className="hidden md:block absolute -bottom-1 left-0 right-0 h-[2px] bg-[#e2e8f0] rounded-full mx-4 overflow-hidden">
+      <div className="hidden md:block absolute -bottom-1 left-0 right-0 h-[2px] bg-[#e2e8f0] rounded-full mx-0 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full transition-all duration-500 ease-out"
           style={{

@@ -363,7 +363,7 @@ export default function ProductStats({
 
   if (isLoading) {
     return (
-      <div className="relative mb-6 md:mb-8">
+      <div className="relative mb-6 md:mb-8 px-0">
         <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 hide-scrollbar snap-x snap-mandatory">
           {Array.from({ length: 4 }).map((_, i) => (
             <ShimmerCard key={i} />
@@ -374,7 +374,7 @@ export default function ProductStats({
   }
 
   return (
-    <div className="relative mb-6 md:mb-8">
+    <div className="relative mb-6 md:mb-8 px-0">
       {/* Right scroll hint */}
       <button
         onClick={() => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}

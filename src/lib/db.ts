@@ -292,6 +292,7 @@ export interface Product {
   
   // New hybrid structure fields
   categoryId?: string; // Reference to productCategories collection
+  subcategory?: string | null; // Subcategory key for bot compatibility (e.g., "smartphones", "dresses")
   subcategoryId?: string | null; // Subcategory within the main category
   brandId?: string | null; // Reference to brand within category
   
@@ -1393,8 +1394,11 @@ export const productService = {
     await setDoc(docRef, productData);
     
     // Save category name to categoryNames collection for AI
-    if (product.categoryName && product.category) {
-      await this.saveCategoryName(user, product.category, product.categoryName);
+    // Save the subcategory name, not the main category name
+    if (product.category && product.categoryName) {
+      // If subcategory is provided, save subcategory name instead of main category name
+      const nameToSave = product.subcategory || product.categoryName;
+      await this.saveCategoryName(user, product.category, nameToSave);
     }
     
     return productData;
