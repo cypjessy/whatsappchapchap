@@ -262,6 +262,9 @@ export default function PaymentConfirmationModal({
   const [paymentNotes, setPaymentNotes] = useState("");
   const [proofImage, setProofImage] = useState("");
 
+  // ✅ Guard BEFORE any item.* access
+  if (!open || !item) return null;
+
   const isBooking = itemType === "booking";
   const booking = item as Booking;
   const order = item as Order;
@@ -273,14 +276,17 @@ export default function PaymentConfirmationModal({
   // Reset form when item changes
   useEffect(() => {
     if (item) {
-      setAmount(totalAmount);
+      const total = itemType === "booking" 
+        ? (item as Booking).price 
+        : (item as Order).total;
+      setAmount(total);
       setTransactionId("");
       setPaymentMethod("mpesa");
       setPaymentNotes("");
       setProofImage("");
       setShowSuccess(false);
     }
-  }, [item, totalAmount]);
+  }, [item, itemType]);
 
   // Keyboard: Escape to close
   useEffect(() => {
