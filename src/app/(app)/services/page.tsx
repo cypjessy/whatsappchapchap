@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AddServiceButton from "@/app/(app)/services/components/AddServiceButton";
 import ViewServiceModal from "@/app/(app)/services/components/ViewServiceModal";
@@ -84,9 +84,11 @@ function LoadingState() {
 function EmptyState({
   hasFilters,
   onClearFilters,
+  onAddService,
 }: {
   hasFilters: boolean;
   onClearFilters: () => void;
+  onAddService: () => void;
 }) {
   return (
     <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-8 md:p-16 text-center animate-fadeIn">
@@ -108,7 +110,13 @@ function EmptyState({
           Clear Filters
         </button>
       ) : (
-        <AddServiceButton />
+        <button
+          onClick={onAddService}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+        >
+          <i className="fas fa-plus mr-2" />
+          Add Service
+        </button>
       )}
     </div>
   );
@@ -251,6 +259,7 @@ export default function ServicesPage() {
   const [bulkSelected, setBulkSelected] = useState<string[]>([]);
   const [bulkMode, setBulkMode] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const addServiceRef = useRef<{ open: () => void }>(null);
 
   // ─── Data Loading ──────────────────────────────────────────────────────────
 
@@ -482,7 +491,7 @@ export default function ServicesPage() {
           handleBulkStatusUpdate={handleBulkStatusUpdate}
           handleBulkDelete={handleBulkDelete}
           handleExportCSV={handleExportCSV}
-          onAddService={() => {}}
+          onAddService={() => addServiceRef.current?.open()}
         />
 
         {/* Search & Filters */}
@@ -596,6 +605,7 @@ export default function ServicesPage() {
               setPriceRangeMax("");
               setFilterStatus("all");
             }}
+            onAddService={() => addServiceRef.current?.open()}
           />
         )}
 
@@ -616,15 +626,15 @@ export default function ServicesPage() {
 
       {/* Mobile FAB */}
       <button
-        onClick={() => {
-          // Trigger AddServiceButton modal - you'll need to expose this from the component
-          document.getElementById("add-service-trigger")?.click();
-        }}
+        onClick={() => addServiceRef.current?.open()}
         className="fixed bottom-6 right-4 md:hidden w-14 h-14 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-xl shadow-[#8b5cf6]/30 flex items-center justify-center text-xl z-40 hover:scale-110 active:scale-95 transition-all duration-200"
         aria-label="Add new service"
       >
         <i className="fas fa-plus" />
       </button>
+
+      {/* Add Service Modal - rendered at root level */}
+      <AddServiceButton ref={addServiceRef} />
     </div>
   );
 }
