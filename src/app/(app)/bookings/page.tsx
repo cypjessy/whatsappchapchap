@@ -248,7 +248,8 @@ export default function BookingsPage() {
         filterStatus === "all"
           ? await bookingService.getBookings(user)
           : await bookingService.getBookings(user, filterStatus);
-      setBookings(bookingsData);
+      // Filter out any null/undefined entries
+      setBookings(bookingsData.filter(b => b !== null && b !== undefined));
     } catch (error) {
       console.error("Error loading bookings:", error);
       addToast("Failed to load bookings", "error");
@@ -308,6 +309,7 @@ export default function BookingsPage() {
   };
 
   const handleSendMessage = async (booking: Booking) => {
+    if (!booking) return;
     const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n📋 Service: ${booking.service}\n📅 Date: ${formatDate(booking.date)}\n⏰ Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${booking.price.toLocaleString()}\n\nThank you!`;
 
     try {
@@ -376,12 +378,14 @@ export default function BookingsPage() {
   // Filter bookings
   const filteredBookings = useMemo(() => {
     return bookings.filter((booking) => {
+      if (!booking) return false;
+      
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
-          booking.client.toLowerCase().includes(query) ||
-          booking.phone.toLowerCase().includes(query) ||
-          booking.service.toLowerCase().includes(query);
+          booking.client?.toLowerCase().includes(query) ||
+          booking.phone?.toLowerCase().includes(query) ||
+          booking.service?.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
@@ -410,15 +414,15 @@ export default function BookingsPage() {
     try {
       const headers = ["Client", "Phone", "Service", "Date", "Time", "Duration", "Location", "Price", "Status", "Payment Status"];
       const rows = filteredBookings.map((b) => [
-        b.client,
-        b.phone,
-        b.service,
-        b.date,
-        b.time,
-        b.duration,
-        b.location,
-        b.price,
-        b.status,
+        b.client || "",
+        b.phone || "",
+        b.service || "",
+        b.date || "",
+        b.time || "",
+        b.duration || "",
+        b.location || "",
+        b.price || 0,
+        b.status || "",
         b.paymentStatus || "unpaid",
       ]);
 
@@ -441,10 +445,10 @@ export default function BookingsPage() {
 
   // Analytics
   const analytics = useMemo(() => {
-    const totalRevenue = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
+    const totalRevenue = bookings.reduce((sum, b) => sum + ((b?.price) || 0), 0);
     const averageBookingValue = bookings.length > 0 ? totalRevenue / bookings.length : 0;
-    const completedRevenue = bookings.filter((b) => b.status === "completed").reduce((sum, b) => sum + (b.price || 0), 0);
-    const pendingRevenue = bookings.filter((b) => b.status === "pending").reduce((sum, b) => sum + (b.price || 0), 0);
+    const completedRevenue = bookings.filter((b) => b?.status === "completed").reduce((sum, b) => sum + ((b?.price) || 0), 0);
+    const pendingRevenue = bookings.filter((b) => b?.status === "pending").reduce((sum, b) => sum + ((b?.price) || 0), 0);
 
     const today = new Date();
     const thirtyDaysAgo = new Date(today);
@@ -454,17 +458,19 @@ export default function BookingsPage() {
 
     const currentPeriodRevenue = bookings
       .filter((b) => {
+        if (!b?.date) return false;
         const d = new Date(b.date);
         return d >= thirtyDaysAgo && d <= today;
       })
-      .reduce((sum, b) => sum + (b.price || 0), 0);
+      .reduce((sum, b) => sum + ((b?.price) || 0), 0);
 
     const previousPeriodRevenue = bookings
       .filter((b) => {
+        if (!b?.date) return false;
         const d = new Date(b.date);
         return d >= sixtyDaysAgo && d < thirtyDaysAgo;
       })
-      .reduce((sum, b) => sum + (b.price || 0), 0);
+      .reduce((sum, b) => sum + ((b?.price) || 0), 0);
 
     return { totalRevenue, averageBookingValue, completedRevenue, pendingRevenue, currentPeriodRevenue, previousPeriodRevenue };
   }, [bookings]);

@@ -357,11 +357,11 @@ function BookingCard({ booking, index, onViewBooking }: {
       <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3">
         <span className="text-[11px] md:text-xs bg-white px-2 py-1 rounded-md text-[#64748b] border border-[#e2e8f0]/60 flex items-center gap-1">
           <i className="fas fa-cut text-[#8b5cf6] text-[10px]" />
-          {booking.service}
+          {booking?.service || "N/A"}
         </span>
         <span className="text-[11px] md:text-xs bg-white px-2 py-1 rounded-md text-[#64748b] border border-[#e2e8f0]/60 flex items-center gap-1">
           <i className="fas fa-clock text-[#8b5cf6] text-[10px]" />
-          {booking.time}
+          {booking?.time || "N/A"}
         </span>
         <span className="text-[11px] md:text-xs bg-white px-2 py-1 rounded-md text-[#64748b] border border-[#e2e8f0]/60 flex items-center gap-1 hidden sm:flex">
           <i className="fas fa-map-marker-alt text-[#8b5cf6] text-[10px]" />

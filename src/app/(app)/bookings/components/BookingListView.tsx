@@ -177,12 +177,12 @@ function DesktopRow({
 
   const handleWhatsApp = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `https://wa.me/${booking.phone.replace(/\D/g, "")}`;
+    const url = `https://wa.me/${(booking?.phone || "").replace(/\D/g, "")}`;
     window.open(url, "_blank", "noopener,noreferrer");
-  }, [booking.phone]);
+  }, [booking?.phone]);
 
-  const paymentPercent = booking.paymentProof?.amount && booking.price > 0
-    ? Math.min((booking.paymentProof.amount / booking.price) * 100, 100)
+  const paymentPercent = booking?.paymentProof?.amount && (booking?.price || 0) > 0
+    ? Math.min((booking.paymentProof.amount / (booking?.price || 1)) * 100, 100)
     : 0;
 
   return (
@@ -220,28 +220,28 @@ function DesktopRow({
         </div>
         <div className="min-w-0">
           <div className="font-bold text-sm truncate flex items-center gap-1.5">
-            {booking.client}
-            {booking.verified && (
+            {booking?.client || "Unknown"}
+            {booking?.verified && (
               <i className="fas fa-badge-check text-[#10b981] text-xs shrink-0" title="Verified" />
             )}
           </div>
-          <div className="text-xs text-[#64748b] truncate">{booking.service}</div>
+          <div className="text-xs text-[#64748b] truncate">{booking?.service || "N/A"}</div>
         </div>
       </div>
 
       {/* Date & Time */}
       <div className="text-sm">
-        <div className="font-medium text-[#1e293b]">{formatDate(booking.date)}</div>
+        <div className="font-medium text-[#1e293b]">{formatDate(booking?.date || "")}</div>
         <div className="text-xs text-[#64748b] flex items-center gap-1 mt-0.5">
           <i className="fas fa-clock text-[10px] text-[#8b5cf6]" />
-          {booking.time}
+          {booking?.time || "N/A"}
         </div>
       </div>
 
       {/* Location */}
       <div className="text-sm text-[#64748b] flex items-center gap-1.5 min-w-0">
         <i className="fas fa-map-marker-alt text-[#8b5cf6] text-xs shrink-0" />
-        <span className="truncate">{booking.location}</span>
+        <span className="truncate">{booking?.location || "N/A"}</span>
       </div>
 
       {/* Status */}

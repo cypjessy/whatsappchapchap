@@ -116,8 +116,8 @@ function BookingCard({
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const statusConfig = getStatusConfig(booking.status);
-  const paymentConfig = getPaymentConfig(booking.paymentStatus);
+  const statusConfig = getStatusConfig(booking?.status || "pending");
+  const paymentConfig = getPaymentConfig(booking?.paymentStatus);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 80);
@@ -126,9 +126,9 @@ function BookingCard({
 
   const handleWhatsApp = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `https://wa.me/${booking.phone.replace(/\D/g, "")}`;
+    const url = `https://wa.me/${(booking?.phone || "").replace(/\D/g, "")}`;
     window.open(url, "_blank", "noopener,noreferrer");
-  }, [booking.phone]);
+  }, [booking?.phone]);
 
   return (
     <div
@@ -171,19 +171,19 @@ function BookingCard({
               }
             `}
           >
-            {booking.clientInitials}
+            {booking?.clientInitials || "??"}
           </div>
 
           <div className="min-w-0">
             <div className="font-bold text-sm md:text-base truncate flex items-center gap-1.5">
-              {booking.client}
+              {booking?.client || "Unknown Client"}
               {booking.verified && (
                 <i className="fas fa-badge-check text-[#10b981] text-xs md:text-sm shrink-0" title="Verified client" />
               )}
             </div>
             <div className="text-[11px] md:text-xs text-[#64748b] flex items-center gap-1">
               <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
-              <span className="truncate">{booking.phone}</span>
+              <span className="truncate">{booking?.phone || "N/A"}</span>
             </div>
           </div>
         </div>
@@ -203,25 +203,25 @@ function BookingCard({
 
       {/* Service info */}
       <div className="mb-3.5 md:mb-4">
-        <div className="font-bold text-sm md:text-base mb-1.5 md:mb-2 truncate">{booking.service}</div>
+        <div className="font-bold text-sm md:text-base mb-1.5 md:mb-2 truncate">{booking?.service || "N/A"}</div>
         <div className="space-y-1.5 md:space-y-2">
           <div className="flex items-center gap-2 text-[11px] md:text-xs text-[#64748b]">
             <div className="w-5 h-5 rounded-md bg-[#f8fafc] flex items-center justify-center shrink-0">
               <i className="fas fa-calendar text-[#8b5cf6] text-[9px]" />
             </div>
-            <span>{formatDate(booking.date)}</span>
+            <span>{formatDate(booking?.date || "")}</span>
           </div>
           <div className="flex items-center gap-2 text-[11px] md:text-xs text-[#64748b]">
             <div className="w-5 h-5 rounded-md bg-[#f8fafc] flex items-center justify-center shrink-0">
               <i className="fas fa-clock text-[#8b5cf6] text-[9px]" />
             </div>
-            <span>{booking.time} • {booking.duration}</span>
+            <span>{booking?.time || "N/A"} • {booking?.duration || "N/A"}</span>
           </div>
           <div className="flex items-center gap-2 text-[11px] md:text-xs text-[#64748b]">
             <div className="w-5 h-5 rounded-md bg-[#f8fafc] flex items-center justify-center shrink-0">
               <i className="fas fa-map-marker-alt text-[#8b5cf6] text-[9px]" />
             </div>
-            <span className="truncate">{booking.location}</span>
+            <span className="truncate">{booking?.location || "N/A"}</span>
           </div>
         </div>
       </div>
@@ -236,9 +236,9 @@ function BookingCard({
         >
           <i className={`fas ${paymentConfig.icon}`} />
           <span>Payment: {paymentConfig.label}</span>
-          {booking.paymentProof?.amount !== undefined && booking.price > 0 && (
+          {booking?.paymentProof?.amount !== undefined && (booking?.price || 0) > 0 && (
             <span className="ml-auto font-bold">
-              KES {booking.paymentProof.amount.toLocaleString()} / {booking.price.toLocaleString()}
+              KES {booking?.paymentProof?.amount?.toLocaleString()} / {(booking?.price || 0).toLocaleString()}
             </span>
           )}
         </div>
@@ -249,7 +249,7 @@ function BookingCard({
         <div className="flex flex-col">
           <span className="text-[10px] text-[#94a3b8] font-semibold uppercase tracking-wider">Total</span>
           <span className="font-extrabold text-base md:text-lg text-[#8b5cf6]">
-            KES {booking.price.toLocaleString()}
+            KES {(booking?.price || 0).toLocaleString()}
           </span>
         </div>
 

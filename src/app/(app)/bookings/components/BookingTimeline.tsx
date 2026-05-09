@@ -104,8 +104,8 @@ function groupBookingsByDate(bookings: Booking[]): GroupedBookings[] {
   const groups: Record<string, Booking[]> = {};
 
   bookings.forEach((booking) => {
-    if (!groups[booking.date]) groups[booking.date] = [];
-    groups[booking.date].push(booking);
+    if (!groups[booking?.date]) groups[booking?.date || ""] = [];
+    groups[booking?.date || ""].push(booking);
   });
 
   return Object.entries(groups)
@@ -201,7 +201,7 @@ function TimelineItem({
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const statusConfig = getStatusConfig(booking.status);
+  const statusConfig = getStatusConfig(booking?.status || "pending");
   const paymentConfig = getPaymentConfig(booking.paymentStatus);
 
   useEffect(() => {
@@ -211,9 +211,9 @@ function TimelineItem({
 
   const handleWhatsApp = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `https://wa.me/${booking.phone.replace(/\D/g, "")}`;
+    const url = `https://wa.me/${(booking?.phone || "").replace(/\D/g, "")}`;
     window.open(url, "_blank", "noopener,noreferrer");
-  }, [booking.phone]);
+  }, [booking?.phone]);
 
   return (
     <div
@@ -240,7 +240,7 @@ function TimelineItem({
       {/* Time label */}
       <div className="absolute -left-14 md:-left-16 w-12 md:w-14 text-right top-3 md:top-4">
         <span className="text-[10px] md:text-xs font-bold text-[#94a3b8]">
-          {booking.time}
+          {booking?.time || "N/A"}
         </span>
       </div>
 
@@ -270,18 +270,18 @@ function TimelineItem({
               }
               ${isHovered ? "scale-110" : "scale-100"}
             `}>
-              {booking.clientInitials}
+              {booking?.clientInitials || "??"}
             </div>
             <div className="min-w-0">
               <div className="font-bold text-sm md:text-base truncate flex items-center gap-1.5">
-                {booking.client}
+                {booking?.client || "Unknown Client"}
                 {booking.verified && (
                   <i className="fas fa-badge-check text-[#10b981] text-xs shrink-0" title="Verified" />
                 )}
               </div>
               <div className="text-[11px] md:text-xs text-[#64748b] flex items-center gap-1">
                 <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
-                <span className="truncate">{booking.phone}</span>
+                <span className="truncate">{booking?.phone || "N/A"}</span>
               </div>
             </div>
           </div>
@@ -304,7 +304,7 @@ function TimelineItem({
               ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}
             `}>
               <span className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full ${statusConfig.dot}`} />
-              {booking.status}
+              {booking?.status || "N/A"}
             </span>
           </div>
         </div>
@@ -314,7 +314,7 @@ function TimelineItem({
           <div className="w-5 h-5 rounded-md bg-[#f8fafc] flex items-center justify-center shrink-0">
             <i className="fas fa-cut text-[#8b5cf6] text-[9px]" />
           </div>
-          <span className="font-medium text-[#475569]">{booking.service}</span>
+          <span className="font-medium text-[#475569]">{booking?.service || "N/A"}</span>
         </div>
 
         {/* Bottom row: Meta + Price + Actions */}
@@ -322,17 +322,17 @@ function TimelineItem({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-[#94a3b8]">
             <span className="flex items-center gap-1">
               <i className="fas fa-clock text-[9px]" />
-              {booking.duration}
+              {booking?.duration || "N/A"}
             </span>
             <span className="flex items-center gap-1 hidden sm:flex">
               <i className="fas fa-map-marker-alt text-[9px]" />
-              {booking.location}
+              {booking?.location || "N/A"}
             </span>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
             <span className="font-extrabold text-sm md:text-base text-[#8b5cf6]">
-              KES {booking.price.toLocaleString()}
+              KES {(booking?.price || 0).toLocaleString()}
             </span>
 
             {/* WhatsApp quick action */}

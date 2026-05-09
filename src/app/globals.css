@@ -33,6 +33,32 @@ body {
   background: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('https://i.postimg.cc/T3mXHzFz/milad-fakurian-PGd-W-b-HDbp-I-unsplash.jpg') center/cover no-repeat;
+  opacity: 0.08;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.03) 0%, rgba(18, 140, 126, 0.05) 100%);
+  z-index: -1;
+  pointer-events: none;
 }
 
 @keyframes float {
