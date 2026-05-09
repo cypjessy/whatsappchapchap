@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-import AddServiceButton from "./components/AddServiceButton";
-import ViewServiceModal from "./components/ViewServiceModal";
-import ServicesHeader from "./components/ServicesHeader";
-import ServiceStats from "./components/ServiceStats";
-import ServiceFilters from "./components/ServiceFilters";
-import ServiceGridView from "./components/ServiceGridView";
-import ServiceListView from "./components/ServiceListView";
+import AddServiceButton from "@/app/(app)/services/components/AddServiceButton";
+import ViewServiceModal from "@/app/(app)/services/components/ViewServiceModal";
+import ServicesHeader from "@/app/(app)/services/components/ServicesHeader";
+import ServiceStats from "@/app/(app)/services/components/ServiceStats";
+import ServiceFilters from "@/app/(app)/services/components/ServiceFilters";
+import ServiceGridView from "@/app/(app)/services/components/ServiceGridView";
+import ServiceListView from "@/app/(app)/services/components/ServiceListView";
 import { serviceService, Service } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 
