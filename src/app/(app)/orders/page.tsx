@@ -856,9 +856,9 @@ export default function OrdersPage() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="animate-fadeIn max-w-[1400px] mx-auto px-4 py-6">
+    <div className="animate-fadeIn max-w-[1400px] mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-3 pt-3" style={{ animationDelay: '0.1s' }}>
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-[#1e293b] flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
@@ -916,7 +916,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1 animate-fadeIn" style={{ animationDelay: '0.15s' }}>
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide animate-fadeIn px-3" style={{ animationDelay: '0.15s' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -956,6 +956,7 @@ export default function OrdersPage() {
       ) : (
         <>
           {/* Stats */}
+          <div className="px-3">
           <OrderStats
             totalOrders={counts.all}
             totalRevenue={analytics.totalRevenue}
@@ -963,9 +964,10 @@ export default function OrdersPage() {
             completionRate={analytics.completionRate}
             isLoading={loading}
           />
+          </div>
 
           {/* Filters & Table */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+          <div className="bg-white md:rounded-2xl md:border border-[#e2e8f0] md:shadow-sm overflow-hidden">
             <OrderFilters
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -986,7 +988,7 @@ export default function OrdersPage() {
             />
 
             {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-[#e2e8f0]">
+            <div className="md:hidden divide-y divide-[#e2e8f0] px-3">
               {loading ? (
                 <div className="p-8 text-center">
                   <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto" />
@@ -1017,6 +1019,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Desktop Table */}
+            <div className="hidden md:block px-3">
             <OrderTable
               orders={filteredOrders}
               selectedOrders={selectedOrders}
@@ -1073,6 +1076,7 @@ export default function OrdersPage() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </>
       )}
