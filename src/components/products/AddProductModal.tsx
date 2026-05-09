@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
-import { getAllProductCategories } from "@/lib/product-categories";
+import categoryData from "@/lib/categoryData"; // Import your hardcoded data
+import type { Category, Subcategory, SpecField } from "@/lib/categoryData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,14 +37,6 @@ interface Variant {
   stock: string;
 }
 
-interface CategoryFromDB {
-  id: string;
-  name: string;
-  description: string;
-  subcategories: string[];
-  brands: string[];
-}
-
 // ─── Constants ─────────────────────────────────────────────────────────────
 
 const STEPS = [
@@ -54,18 +47,13 @@ const STEPS = [
   { id: 5, label: "Images", icon: "fa-images" },
 ];
 
-const categoryIcons: Record<string, string> = {
-  electronics: "📱",
-  footwear: "👟",
-  clothing: "👕",
-  beauty: "💄",
-  furniture: "🛋️",
-  food: "🍎",
-  sports: "🏋️",
-  toys: "🧸",
+// ─── Helper to get category icons ───────────────────────────────────────────
+
+const getCategoryIcon = (categoryId: string): string => {
+  return categoryData[categoryId]?.icon || "📦";
 };
 
-// ─── Sub-Components ───────────────────────────────────────────────────────────
+// ─── Sub-Components (same as original) ───────────────────────────────────────
 
 function StepIndicator({ currentStep, completedSteps }: { currentStep: number; completedSteps: Set<number> }) {
   return (
@@ -130,46 +118,6 @@ function MobileStepIndicator({ currentStep, totalSteps }: { currentStep: number;
           className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
-      </div>
-    </div>
-  );
-}
-
-function SectionCard({
-  title,
-  icon,
-  children,
-  isCollapsible = false,
-  defaultOpen = true,
-}: {
-  title: string;
-  icon: string;
-  children: React.ReactNode;
-  isCollapsible?: boolean;
-  defaultOpen?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-6 md:mb-8 pb-6 border-b border-[#e2e8f0] last:border-0">
-      <button
-        onClick={() => isCollapsible && setIsOpen(!isOpen)}
-        className={`
-          flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#64748b] mb-4 md:mb-5 w-full
-          ${isCollapsible ? "cursor-pointer hover:text-[#8b5cf6] transition-colors" : ""}
-        `}
-      >
-        <i className={`fas ${icon} text-[#8b5cf6]`} />
-        {title}
-        {isCollapsible && (
-          <i className={`fas fa-chevron-${isOpen ? "up" : "down"} text-[10px] ml-auto text-[#94a3b8]`} />
-        )}
-      </button>
-      <div className={`
-        transition-all duration-300 overflow-hidden
-        ${isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}
-      `}>
-        {children}
       </div>
     </div>
   );
@@ -312,7 +260,6 @@ function ImageCard({
     >
       <img src={image.url} alt="Product" className="w-full h-24 md:h-28 object-cover" />
       
-      {/* Overlay actions */}
       <div className={`
         absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent
         transition-opacity duration-200
@@ -337,14 +284,12 @@ function ImageCard({
         </div>
       </div>
 
-      {/* Main badge */}
       {image.isMain && (
         <div className="absolute top-2 left-2 bg-[#8b5cf6] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
           Main
         </div>
       )}
 
-      {/* Drag handle */}
       <div className={`
         absolute top-2 right-2 w-6 h-6 rounded-md bg-black/40 text-white flex items-center justify-center
         transition-opacity duration-200 cursor-move
@@ -395,17 +340,19 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     lowStockAlert: "",
   });
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [categoriesFromDB, setCategoriesFromDB] = useState<CategoryFromDB[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedSubcategoryKey, setSelectedSubcategoryKey] = useState<string | null>(null);
+  
+  // Get current category and subcategory objects
+  const currentCategory = selectedCategoryId ? categoryData[selectedCategoryId] : null;
+  const currentSubcategory = currentCategory && selectedSubcategoryKey 
+    ? currentCategory.subcategories[selectedSubcategoryKey] 
+    : null;
 
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, Set<string>>>({});
   const [customSpecOptions, setCustomSpecOptions] = useState<Record<string, string[]>>({});
   const [customInputKey, setCustomInputKey] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
-  const [showCustomSubcategory, setShowCustomSubcategory] = useState(false);
-  const [customSubcategoryInput, setCustomSubcategoryInput] = useState("");
 
   const [variants, setVariants] = useState<Variant[]>([]);
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
@@ -421,9 +368,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   useEffect(() => {
     if (isOpen) {
       resetForm();
-      loadCategoriesFromDB();
     }
   }, [isOpen]);
+
+  // Reset specs when category or subcategory changes
+  useEffect(() => {
+    setSelectedSpecs({});
+    setVariants([]);
+  }, [selectedCategoryId, selectedSubcategoryKey]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -437,8 +389,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setCurrentStep(1);
     setCompletedSteps(new Set());
     setFormData({ name: "", description: "", price: "", initialStock: "", lowStockAlert: "" });
-    setSelectedCategory(null);
-    setSelectedSubcategory(null);
+    setSelectedCategoryId(null);
+    setSelectedSubcategoryKey(null);
     setSelectedSpecs({});
     setCustomSpecOptions({});
     setVariants([]);
@@ -446,21 +398,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setErrors({});
     setCustomInputKey(null);
     setCustomInputValue("");
-    setShowCustomSubcategory(false);
-    setCustomSubcategoryInput("");
-  };
-
-  const loadCategoriesFromDB = async () => {
-    setLoadingCategories(true);
-    try {
-      const categories = await getAllProductCategories();
-      setCategoriesFromDB(categories as CategoryFromDB[]);
-    } catch (error) {
-      console.error("Error loading categories:", error);
-      setCategoriesFromDB([]);
-    } finally {
-      setLoadingCategories(false);
-    }
   };
 
   const validateStep = (step: number): boolean => {
@@ -473,8 +410,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     }
 
     if (step === 2) {
-      if (!selectedCategory) newErrors.category = "Please select a category";
-      if (!selectedSubcategory) newErrors.subcategory = "Please select a subcategory";
+      if (!selectedCategoryId) newErrors.category = "Please select a category";
+      if (!selectedSubcategoryKey) newErrors.subcategory = "Please select a subcategory";
     }
 
     if (step === 3) {
@@ -484,24 +421,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
     if (step === 4) {
       const hasValidVariant = variants.some((v) => v.price && parseFloat(v.price) > 0 && v.stock && parseInt(v.stock) > 0);
-      if (!hasValidVariant) newErrors.variants = "Please add price and stock for at least one variant";
+      if (!hasValidVariant && variants.length > 0) newErrors.variants = "Please add price and stock for at least one variant";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const goToStep = (step: number) => {
-    if (step > currentStep && !validateStep(currentStep)) return;
-    if (step < currentStep) {
-      setDirection("prev");
-    } else {
-      setDirection("next");
-    }
-    if (step > currentStep) {
-      setCompletedSteps((prev) => new Set([...prev, currentStep]));
-    }
-    setCurrentStep(step);
   };
 
   const nextStep = () => {
@@ -524,17 +448,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     if (errors[name]) setErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
   };
 
-  const selectCategory = (category: string) => {
-    setSelectedCategory(category);
-    setSelectedSubcategory(null);
-    setSelectedSpecs({});
-    setVariants([]);
+  const selectCategory = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setSelectedSubcategoryKey(null);
   };
 
-  const selectSubcategory = (subcategory: string) => {
-    setSelectedSubcategory(subcategory);
-    setSelectedSpecs({});
-    setVariants([]);
+  const selectSubcategory = (subcategoryKey: string) => {
+    setSelectedSubcategoryKey(subcategoryKey);
     if (errors.subcategory) setErrors((prev) => { const n = { ...prev }; delete n.subcategory; return n; });
   };
 
@@ -576,8 +496,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       [[]]
     );
 
-    if (combinations.length > 12) {
-      showToast("error", `Too many combinations (${combinations.length}). Max 12 allowed.`);
+    if (combinations.length > 50) {
+      showToast("error", `Too many combinations (${combinations.length}). Max 50 allowed.`);
       return;
     }
 
@@ -587,14 +507,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       return {
         id: index + 1,
         specs: variantSpecs,
-        sku: `${formData.name?.toUpperCase().replace(/\s+/g, "-").slice(0, 10) || "PRODUCT"}-${Object.values(variantSpecs).join("-").replace(/\s+/g, "").toUpperCase()}`,
+        sku: `${formData.name?.toUpperCase().replace(/\s+/g, "-").slice(0, 10) || "PRODUCT"}-${Object.values(variantSpecs).join("-").replace(/\s+/g, "").toUpperCase().slice(0, 20)}`,
         price: "",
         stock: "",
       };
     });
 
     setVariants(newVariants);
-  }, [selectedSpecs, formData.name]);
+  }, [selectedSpecs, formData.name, showToast]);
 
   useEffect(() => {
     generateVariants();
@@ -688,10 +608,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
-        category: selectedCategory!,
-        categoryName: selectedSubcategory!,
-        categoryId: selectedCategory!,
-        subcategoryId: selectedSubcategory,
+        category: selectedCategoryId!,
+        categoryName: currentCategory?.name || selectedCategoryId!,
+        subcategoryId: selectedSubcategoryKey!,
         price: minPrice,
         stock: totalStock || parseInt(formData.initialStock) || 0,
         image: imageUrl,
@@ -792,44 +711,38 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     <div className="space-y-6 animate-fadeIn">
       <InputField label="Category" required error={errors.category}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {loadingCategories ? (
-            <div className="col-span-full text-center py-8 text-[#64748b]">
-              <div className="w-8 h-8 border-2 border-[#8b5cf6]/30 border-t-[#8b5cf6] rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-sm">Loading categories...</p>
-            </div>
-          ) : (
-            (categoriesFromDB.length > 0 ? categoriesFromDB : Object.entries(categoryIcons).map(([id]) => ({ id, name: id, subcategories: [] }))).map((cat) => (
+          {Object.entries(categoryData).map(([catId, cat]) => {
+            const category = cat as Category;
+            return (
               <SelectableCard
-                key={cat.id}
-                selected={selectedCategory === cat.id}
-                onClick={() => selectCategory(cat.id)}
+                key={catId}
+                selected={selectedCategoryId === catId}
+                onClick={() => selectCategory(catId)}
               >
                 <div className="text-2xl md:text-3xl mb-1 transition-transform duration-200">
-                  {categoryIcons[cat.id] || "📦"}
+                  {category.icon}
                 </div>
-                <div className="font-bold text-xs md:text-sm text-[#475569] capitalize">{cat.name}</div>
+                <div className="font-bold text-xs md:text-sm text-[#475569]">{category.name}</div>
               </SelectableCard>
-            ))
-          )}
+            );
+          })}
         </div>
       </InputField>
 
-      {selectedCategory && (
+      {selectedCategoryId && currentCategory && (
         <InputField label="Subcategory" required error={errors.subcategory}>
           <div className="flex flex-wrap gap-2">
-            {(() => {
-              const catFromDB = categoriesFromDB.find((c) => c.id === selectedCategory);
-              const dbSubs = catFromDB?.subcategories || [];
-              const subs = dbSubs.length > 0 ? dbSubs : ["general"];
-              return subs.map((sub) => (
+            {Object.entries(currentCategory.subcategories).map(([subKey, sub]) => {
+              const subcategory = sub as Subcategory;
+              return (
                 <SpecButton
-                  key={sub}
-                  label={sub}
-                  selected={selectedSubcategory === sub}
-                  onClick={() => selectSubcategory(sub)}
+                  key={subKey}
+                  label={subcategory.name}
+                  selected={selectedSubcategoryKey === subKey}
+                  onClick={() => selectSubcategory(subKey)}
                 />
-              ));
-            })()}
+              );
+            })}
           </div>
         </InputField>
       )}
@@ -837,12 +750,16 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   );
 
   const renderStep3 = () => {
-    // Mock specs based on category/subcategory
-    const mockSpecs: Record<string, { label: string; options: string[]; icon: string }> = {
-      brand: { label: "Brand", options: ["Apple", "Samsung", "Google", "OnePlus"], icon: "fa-tag" },
-      color: { label: "Color", options: ["Black", "White", "Blue", "Red"], icon: "fa-palette" },
-      size: { label: "Size", options: ["S", "M", "L", "XL"], icon: "fa-ruler" },
-    };
+    if (!currentSubcategory) {
+      return (
+        <div className="text-center py-12 text-[#64748b]">
+          <i className="fas fa-tag text-4xl mb-3 opacity-50" />
+          <p>Please select a category and subcategory first</p>
+        </div>
+      );
+    }
+
+    const specs = currentSubcategory.specs;
 
     return (
       <div className="space-y-6 animate-fadeIn">
@@ -853,58 +770,78 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </div>
         )}
 
-        {Object.entries(mockSpecs).map(([specKey, spec]) => (
-          <div key={specKey} className="bg-[#f8fafc] rounded-xl p-4 md:p-5 border border-[#e2e8f0]">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white text-xs">
-                <i className={`fas ${spec.icon}`} />
-              </div>
-              <span className="font-bold text-sm text-[#475569]">{spec.label}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {spec.options.map((option) => (
-                <SpecButton
-                  key={option}
-                  label={option}
-                  selected={selectedSpecs[specKey]?.has(option) || false}
-                  onClick={() => toggleSpec(specKey, option)}
-                />
-              ))}
-              <SpecButton
-                label="Add Custom"
-                selected={false}
-                onClick={() => { setCustomInputKey(specKey); setCustomInputValue(""); }}
-                isCustom
-              />
-            </div>
+        {Object.entries(specs).map(([specKey, spec]) => {
+          const specField = spec as SpecField;
+          const specOptions = specField.options;
+          const customOptions = customSpecOptions[specKey] || [];
+          const allOptions = [...specOptions, ...customOptions];
 
-            {customInputKey === specKey && (
-              <div className="flex gap-2 mt-3 animate-fadeIn">
-                <input
-                  type="text"
-                  value={customInputValue}
-                  onChange={(e) => setCustomInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addCustomOption()}
-                  placeholder="Enter custom value..."
-                  className="flex-1 px-3 py-2 rounded-lg border-2 border-[#8b5cf6] text-sm focus:outline-none"
-                  autoFocus
-                />
-                <button
-                  onClick={addCustomOption}
-                  className="px-3 py-2 bg-[#8b5cf6] text-white rounded-lg hover:bg-[#7c3aed] transition-colors"
-                >
-                  <i className="fas fa-check" />
-                </button>
-                <button
-                  onClick={() => setCustomInputKey(null)}
-                  className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
-                >
-                  <i className="fas fa-times" />
-                </button>
+          return (
+            <div key={specKey} className="bg-[#f8fafc] rounded-xl p-4 md:p-5 border border-[#e2e8f0]">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white text-xs">
+                  <i className={`fas ${specField.icon || "fa-tag"}`} />
+                </div>
+                <span className="font-bold text-sm text-[#475569]">{specField.label}</span>
+                {specField.multiple && (
+                  <span className="text-[10px] bg-[#e2e8f0] px-2 py-0.5 rounded-full text-[#64748b]">
+                    Multi-select
+                  </span>
+                )}
               </div>
-            )}
+              <div className="flex flex-wrap gap-2">
+                {allOptions.map((option) => (
+                  <SpecButton
+                    key={option}
+                    label={option}
+                    selected={selectedSpecs[specKey]?.has(option) || false}
+                    onClick={() => toggleSpec(specKey, option)}
+                  />
+                ))}
+                <SpecButton
+                  label="Add Custom"
+                  selected={false}
+                  onClick={() => { setCustomInputKey(specKey); setCustomInputValue(""); }}
+                  isCustom
+                />
+              </div>
+
+              {customInputKey === specKey && (
+                <div className="flex gap-2 mt-3 animate-fadeIn">
+                  <input
+                    type="text"
+                    value={customInputValue}
+                    onChange={(e) => setCustomInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addCustomOption()}
+                    placeholder="Enter custom value..."
+                    className="flex-1 px-3 py-2 rounded-lg border-2 border-[#8b5cf6] text-sm focus:outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={addCustomOption}
+                    className="px-3 py-2 bg-[#8b5cf6] text-white rounded-lg hover:bg-[#7c3aed] transition-colors"
+                  >
+                    <i className="fas fa-check" />
+                  </button>
+                  <button
+                    onClick={() => setCustomInputKey(null)}
+                    className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
+                  >
+                    <i className="fas fa-times" />
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {Object.keys(specs).length === 0 && (
+          <div className="text-center py-12 text-[#64748b]">
+            <i className="fas fa-cogs text-4xl mb-3 opacity-50" />
+            <p>No specifications available for this subcategory</p>
+            <p className="text-xs mt-1">You can still add variants directly in the next step</p>
           </div>
-        ))}
+        )}
       </div>
     );
   };
@@ -920,55 +857,63 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         )}
       </div>
 
-      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-        {variants.map((variant, idx) => (
-          <div
-            key={variant.id}
-            className="bg-white border border-[#e2e8f0] rounded-xl p-3 md:p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-start animate-fadeIn"
-            style={{ animationDelay: `${idx * 50}ms` }}
-          >
-            <div>
-              <div className="font-bold text-xs text-[#64748b] mb-1">Variant #{variant.id}</div>
-              <div className="flex flex-wrap gap-1">
-                {Object.entries(variant.specs).map(([key, value]) => (
-                  <span key={key} className="text-[10px] px-2 py-0.5 bg-[#f1f5f9] rounded-full text-[#64748b] font-medium">
-                    {value}
-                  </span>
-                ))}
+      {variants.length === 0 ? (
+        <div className="text-center py-12 text-[#64748b] bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
+          <i className="fas fa-cubes text-4xl mb-3 opacity-50" />
+          <p>No variants generated</p>
+          <p className="text-xs mt-1">Select specifications in the previous step to generate variants</p>
+        </div>
+      ) : (
+        <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+          {variants.map((variant, idx) => (
+            <div
+              key={variant.id}
+              className="bg-white border border-[#e2e8f0] rounded-xl p-3 md:p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-start animate-fadeIn"
+              style={{ animationDelay: `${idx * 50}ms` }}
+            >
+              <div>
+                <div className="font-bold text-xs text-[#64748b] mb-1">Variant #{variant.id}</div>
+                <div className="flex flex-wrap gap-1">
+                  {Object.entries(variant.specs).map(([key, value]) => (
+                    <span key={key} className="text-[10px] px-2 py-0.5 bg-[#f1f5f9] rounded-full text-[#64748b] font-medium">
+                      {value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">SKU</label>
+                <input
+                  type="text"
+                  value={variant.sku}
+                  onChange={(e) => updateVariant(idx, "sku", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Price (KES)</label>
+                <input
+                  type="number"
+                  value={variant.price}
+                  onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Stock</label>
+                <input
+                  type="number"
+                  value={variant.stock}
+                  onChange={(e) => updateVariant(idx, "stock", e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+                />
               </div>
             </div>
-            <div>
-              <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">SKU</label>
-              <input
-                type="text"
-                value={variant.sku}
-                onChange={(e) => updateVariant(idx, "sku", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Price (KES)</label>
-              <input
-                type="number"
-                value={variant.price}
-                onChange={(e) => updateVariant(idx, "price", e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Stock</label>
-              <input
-                type="number"
-                value={variant.stock}
-                onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
