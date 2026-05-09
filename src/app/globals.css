@@ -103,12 +103,12 @@ body::after {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes shimmer {
@@ -149,8 +149,8 @@ body::after {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 500px; }
 }
 
 .animate-slideDown {
@@ -205,22 +205,12 @@ body::after {
 }
 
 @keyframes scaleIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.2s ease;
-}
-
-/* Scrollbar Hide Utilities */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  animation: scaleIn 0.2s ease-out;
 }
 
 /* Scrollbar Thin Utilities */
