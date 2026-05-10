@@ -576,107 +576,116 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="px-3 md:px-6 py-3 md:py-4 animate-fadeIn">
+    <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 animate-fadeIn">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
-          <i className="fas fa-cog text-[#8b5cf6]"></i>
-          Settings
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[#1e293b] flex items-center gap-2.5 md:gap-3">
+          <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6]/10 to-[#7c3aed]/10 flex items-center justify-center shrink-0">
+            <i className="fas fa-cog text-[#8b5cf6] text-sm md:text-base"></i>
+          </div>
+          <span>Settings</span>
         </h1>
-        <p className="text-[#64748b] text-sm mt-1">
+        <p className="text-[#64748b] text-sm mt-1.5 md:mt-2 max-w-2xl">
           Manage your business profile, products, services, shipping, and WhatsApp automation
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      {/* Tabs - Mobile Optimized */}
+      <div className="flex gap-2 md:gap-2.5 mb-4 md:mb-6 overflow-x-auto pb-3 md:pb-4 scrollbar-hide snap-x snap-mandatory -mx-3 px-3 md:mx-0 md:px-0">
         <button
           onClick={() => setActiveTab("profile")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "profile"
-              ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6]"
+              ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fas fa-building"></i>
-          Business Profile
+          <i className="fas fa-building text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">Business Profile</span>
+          <span className="sm:hidden">Profile</span>
         </button>
         <button
           onClick={() => setActiveTab("products")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "products"
-              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-blue-500"
+              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-blue-500 hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fas fa-store"></i>
-          Product Store
+          <i className="fas fa-store text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">Product Store</span>
+          <span className="sm:hidden">Products</span>
         </button>
         <button
           onClick={() => setActiveTab("services")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "services"
-              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-purple-500"
+              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-purple-500 hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fas fa-concierge-bell"></i>
-          Services
+          <i className="fas fa-concierge-bell text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">Services</span>
+          <span className="sm:hidden">Services</span>
         </button>
         <button
           onClick={() => setActiveTab("shipping")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "shipping"
-              ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-green-500"
+              ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg shadow-green-500/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-green-500 hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fas fa-shipping-fast"></i>
-          Shipping
+          <i className="fas fa-shipping-fast text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">Shipping</span>
+          <span className="sm:hidden">Shipping</span>
         </button>
         <button
           onClick={() => setActiveTab("pickup-stations")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "pickup-stations"
-              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-blue-500"
+              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-blue-500 hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fas fa-map-marker-alt"></i>
-          Pickup Stations
+          <i className="fas fa-map-marker-alt text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">Pickup Stations</span>
+          <span className="sm:hidden">Pickup</span>
         </button>
         <button
           onClick={() => setActiveTab("whatsapp")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "whatsapp"
-              ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6]"
+              ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fab fa-whatsapp"></i>
-          WhatsApp
+          <i className="fab fa-whatsapp text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">WhatsApp</span>
+          <span className="sm:hidden">WhatsApp</span>
         </button>
         <button
           onClick={() => setActiveTab("payments")}
-          className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+          className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "payments"
-              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-green-500"
+              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/20 scale-100"
+              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-green-500 hover:shadow-sm scale-95"
           }`}
         >
-          <i className="fas fa-credit-card"></i>
-          Payment Methods
+          <i className="fas fa-credit-card text-xs md:text-sm"></i>
+          <span className="hidden sm:inline">Payment Methods</span>
+          <span className="sm:hidden">Payments</span>
         </button>
       </div>
 
       {/* Business Profile Tab */}
       {activeTab === "profile" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-purple-500">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-purple-500">
             <div className="flex items-start gap-3">
-              <i className="fas fa-info-circle text-2xl text-purple-500"></i>
+              <i className="fas fa-info-circle text-xl md:text-2xl text-purple-500"></i>
               <div>
-                <h3 className="font-bold text-lg mb-1">Unified Business Profile</h3>
+                <h3 className="font-bold text-base md:text-lg mb-1">Unified Business Profile</h3>
                 <p className="text-sm text-[#64748b]">
                   This information is shared across both products and services. Customers will see this in WhatsApp chats.
                 </p>
@@ -687,44 +696,44 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="md:col-span-2">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2">
                 <i className="fas fa-info-circle text-[#8b5cf6]"></i>
                 Basic Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Business Name *
                   </label>
                   <input
                     type="text"
                     value={profile.businessName || ""}
                     onChange={(e) => handleProfileChange("businessName", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="Your business name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Tagline
                   </label>
                   <input
                     type="text"
                     value={profile.tagline || ""}
                     onChange={(e) => handleProfileChange("tagline", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="Your business tagline"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Description
                   </label>
                   <textarea
                     value={profile.description || ""}
                     onChange={(e) => handleProfileChange("description", e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none text-sm"
                     placeholder="Tell customers about your business..."
                   />
                 </div>
@@ -733,56 +742,56 @@ export default function SettingsPage() {
 
             {/* Contact Information */}
             <div className="md:col-span-2">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2">
                 <i className="fas fa-phone text-[#8b5cf6]"></i>
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Email
                   </label>
                   <input
                     type="email"
                     value={profile.email || ""}
                     onChange={(e) => handleProfileChange("email", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="business@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Phone Number
                   </label>
                   <input
                     type="tel"
                     value={profile.phone || ""}
                     onChange={(e) => handleProfileChange("phone", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="+254 7XX XXX XXX"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     WhatsApp Number
                   </label>
                   <input
                     type="tel"
                     value={profile.whatsappNumber || ""}
                     onChange={(e) => handleProfileChange("whatsappNumber", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="+254 7XX XXX XXX"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Website
                   </label>
                   <input
                     type="url"
                     value={profile.website || ""}
                     onChange={(e) => handleProfileChange("website", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="https://www.example.com"
                   />
                 </div>
@@ -791,55 +800,55 @@ export default function SettingsPage() {
 
             {/* Address */}
             <div className="md:col-span-2">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2">
                 <i className="fas fa-map-marker-alt text-[#8b5cf6]"></i>
                 Business Address
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Street Address
                   </label>
                   <input
                     type="text"
                     value={profile.address || ""}
                     onChange={(e) => handleProfileChange("address", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="Street address or building name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     City
                   </label>
                   <input
                     type="text"
                     value={profile.city || ""}
                     onChange={(e) => handleProfileChange("city", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="Nairobi"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Postal Code
                   </label>
                   <input
                     type="text"
                     value={profile.postalCode || ""}
                     onChange={(e) => handleProfileChange("postalCode", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="00100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Country
                   </label>
                   <select
                     value={profile.country || "Kenya"}
                     onChange={(e) => handleProfileChange("country", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                   >
                     <option value="Kenya">Kenya</option>
                     <option value="Uganda">Uganda</option>
@@ -848,14 +857,14 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                     Business Category
                   </label>
                   <input
                     type="text"
                     value={profile.category || ""}
                     onChange={(e) => handleProfileChange("category", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                     placeholder="e.g., Electronics, Healthcare, Beauty"
                   />
                 </div>
@@ -868,7 +877,7 @@ export default function SettingsPage() {
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -888,12 +897,12 @@ export default function SettingsPage() {
 
       {/* Product Store Tab */}
       {activeTab === "products" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
             <div className="flex items-start gap-3">
-              <i className="fas fa-store text-2xl text-blue-500"></i>
+              <i className="fas fa-store text-xl md:text-2xl text-blue-500"></i>
               <div>
-                <h3 className="font-bold text-lg mb-1">Product Store Settings</h3>
+                <h3 className="font-bold text-base md:text-lg mb-1">Product Store Settings</h3>
                 <p className="text-sm text-[#64748b]">
                   Configure settings specific to your product store. Enable this tab if you sell products.
                 </p>
@@ -924,7 +933,7 @@ export default function SettingsPage() {
                     value={productSettings.storeDescription}
                     onChange={(e) => setProductSettings(prev => ({ ...prev, storeDescription: e.target.value }))}
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none text-sm"
                     placeholder="Tell customers about your products, what you sell, and why they should shop with you..."
                   />
                 </div>
@@ -937,7 +946,7 @@ export default function SettingsPage() {
                     value={productSettings.returnPolicy}
                     onChange={(e) => setProductSettings(prev => ({ ...prev, returnPolicy: e.target.value }))}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none text-sm"
                     placeholder="Your return and refund policy..."
                   />
                 </div>
@@ -950,7 +959,7 @@ export default function SettingsPage() {
                     value={productSettings.warrantyInfo}
                     onChange={(e) => setProductSettings(prev => ({ ...prev, warrantyInfo: e.target.value }))}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none text-sm"
                     placeholder="Warranty details for your products..."
                   />
                 </div>
@@ -963,7 +972,7 @@ export default function SettingsPage() {
             <button
               onClick={saveProductSettings}
               disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -983,12 +992,12 @@ export default function SettingsPage() {
 
       {/* Services Tab */}
       {activeTab === "services" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500">
             <div className="flex items-start gap-3">
-              <i className="fas fa-concierge-bell text-2xl text-purple-500"></i>
+              <i className="fas fa-concierge-bell text-xl md:text-2xl text-purple-500"></i>
               <div>
-                <h3 className="font-bold text-lg mb-1">Service Business Settings</h3>
+                <h3 className="font-bold text-base md:text-lg mb-1">Service Business Settings</h3>
                 <p className="text-sm text-[#64748b]">
                   Configure settings specific to your services. Enable this tab if you offer services.
                 </p>
@@ -1019,7 +1028,7 @@ export default function SettingsPage() {
                     value={serviceSettings.serviceDescription}
                     onChange={(e) => setServiceSettings(prev => ({ ...prev, serviceDescription: e.target.value }))}
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
                     placeholder="Describe your services, expertise, and what makes you stand out..."
                   />
                 </div>
@@ -1032,7 +1041,7 @@ export default function SettingsPage() {
                     value={serviceSettings.bookingPolicy}
                     onChange={(e) => setServiceSettings(prev => ({ ...prev, bookingPolicy: e.target.value }))}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
                     placeholder="How customers can book your services..."
                   />
                 </div>
@@ -1045,7 +1054,7 @@ export default function SettingsPage() {
                     value={serviceSettings.cancellationPolicy}
                     onChange={(e) => setServiceSettings(prev => ({ ...prev, cancellationPolicy: e.target.value }))}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
                     placeholder="Your cancellation and rescheduling policy..."
                   />
                 </div>
@@ -1058,7 +1067,7 @@ export default function SettingsPage() {
             <button
               onClick={saveServiceSettings}
               disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -1078,12 +1087,12 @@ export default function SettingsPage() {
 
       {/* Shipping Tab */}
       {activeTab === "shipping" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border-l-4 border-green-500">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border-l-4 border-green-500">
             <div className="flex items-start gap-3">
-              <i className="fas fa-shipping-fast text-2xl text-green-500"></i>
+              <i className="fas fa-shipping-fast text-xl md:text-2xl text-green-500"></i>
               <div>
-                <h3 className="font-bold text-lg mb-1">Shipping Methods</h3>
+                <h3 className="font-bold text-base md:text-lg mb-1">Shipping Methods</h3>
                 <p className="text-sm text-[#64748b]">
                   Configure delivery options for your customers. These will be used in orders and shown by the AI.
                 </p>
@@ -1093,7 +1102,7 @@ export default function SettingsPage() {
 
           {/* Add New Shipping Method */}
           <div className="mb-6 p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
-            <h3 className="font-bold text-lg mb-4">Add Shipping Method</h3>
+            <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">Add Shipping Method</h3>
             
             {/* Preset Selection */}
             <div className="mb-4">
@@ -1126,7 +1135,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newShippingMethod.name}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
                   placeholder="e.g., Standard Delivery"
                 />
               </div>
@@ -1138,7 +1147,7 @@ export default function SettingsPage() {
                   type="number"
                   value={newShippingMethod.price}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
                   placeholder="0"
                 />
               </div>
@@ -1150,7 +1159,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newShippingMethod.estimatedDays}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, estimatedDays: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
                   placeholder="e.g., 2-3 days"
                 />
               </div>
@@ -1162,7 +1171,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newShippingMethod.description}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
                   placeholder="e.g., Free delivery for orders over KES 5000"
                 />
               </div>
@@ -1170,7 +1179,7 @@ export default function SettingsPage() {
             <button
               onClick={editingMethodId ? () => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); } : addShippingMethod}
               disabled={saving || !newShippingMethod.name}
-              className={`mt-4 px-6 py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 ${
+              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
                 editingMethodId 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
                   : "bg-gradient-to-r from-green-500 to-teal-500"
@@ -1182,7 +1191,7 @@ export default function SettingsPage() {
             {editingMethodId && (
               <button
                 onClick={() => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); }}
-                className="mt-4 ml-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2"
+                className="mt-3 md:mt-4 ml-0 md:ml-2 px-5 md:px-6 py-2.5 md:py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2 text-sm md:text-base"
               >
                 <i className="fas fa-times"></i>
                 Cancel
@@ -1192,7 +1201,7 @@ export default function SettingsPage() {
 
           {/* Existing Shipping Methods */}
           <div>
-            <h3 className="font-bold text-lg mb-4">Current Shipping Methods</h3>
+            <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">Current Shipping Methods</h3>
             {/* Debug: Show count */}
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
               Debug: shippingMethods.length = {shippingMethods.length}
@@ -1237,12 +1246,12 @@ export default function SettingsPage() {
 
       {/* Pickup Stations Tab */}
       {activeTab === "pickup-stations" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500">
             <div className="flex items-start gap-3">
-              <i className="fas fa-map-marker-alt text-2xl text-blue-500"></i>
+              <i className="fas fa-map-marker-alt text-xl md:text-2xl text-blue-500"></i>
               <div>
-                <h3 className="font-bold text-lg mb-1">Pickup Stations</h3>
+                <h3 className="font-bold text-base md:text-lg mb-1">Pickup Stations</h3>
                 <p className="text-sm text-[#64748b]">
                   Configure pickup locations for customers. Organized by county and town.
                 </p>
@@ -1252,7 +1261,7 @@ export default function SettingsPage() {
 
           {/* Add New Pickup Station */}
           <div className="mb-6 p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
-            <h3 className="font-bold text-lg mb-4">{editingStationId ? "Edit Pickup Station" : "Add Pickup Station"}</h3>
+            <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">{editingStationId ? "Edit Pickup Station" : "Add Pickup Station"}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1263,7 +1272,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newPickupStation.county}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, county: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., Nairobi"
                 />
               </div>
@@ -1275,7 +1284,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newPickupStation.town}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, town: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., Westlands"
                 />
               </div>
@@ -1287,7 +1296,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newPickupStation.stationName}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, stationName: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., Sarit Centre Pickup Point"
                 />
               </div>
@@ -1299,7 +1308,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newPickupStation.address}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, address: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., 4th Floor, Sarit Centre Mall"
                 />
               </div>
@@ -1311,7 +1320,7 @@ export default function SettingsPage() {
                   type="tel"
                   value={newPickupStation.contactPhone}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, contactPhone: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., +254 7XX XXX XXX"
                 />
               </div>
@@ -1355,7 +1364,7 @@ export default function SettingsPage() {
             <button
               onClick={editingStationId ? updatePickupStation : addPickupStation}
               disabled={saving || !newPickupStation.county || !newPickupStation.town || !newPickupStation.stationName}
-              className={`mt-4 px-6 py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 ${
+              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
                 editingStationId 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
                   : "bg-gradient-to-r from-green-500 to-teal-500"
@@ -1379,7 +1388,7 @@ export default function SettingsPage() {
                     isActive: true,
                   }); 
                 }}
-                className="mt-4 ml-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2"
+                className="mt-3 md:mt-4 ml-0 md:ml-2 px-5 md:px-6 py-2.5 md:py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2 text-sm md:text-base"
               >
                 <i className="fas fa-times"></i>
                 Cancel
@@ -1389,7 +1398,7 @@ export default function SettingsPage() {
 
           {/* Existing Pickup Stations */}
           <div>
-            <h3 className="font-bold text-lg mb-4">Current Pickup Stations</h3>
+            <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">Current Pickup Stations</h3>
             {pickupStations.length === 0 ? (
               <div className="text-center py-12 text-[#64748b]">
                 <i className="fas fa-map-marker-alt text-4xl mb-3 opacity-30"></i>
@@ -1458,8 +1467,8 @@ export default function SettingsPage() {
       {activeTab === "whatsapp" && (
         <div className="space-y-6">
           {/* Business Name */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-4">
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+            <h3 className="font-bold text-base md:text-lg flex items-center gap-2 mb-3 md:mb-4">
               <i className="fas fa-store text-[#8b5cf6]"></i>
               Business Name
             </h3>
@@ -1469,7 +1478,7 @@ export default function SettingsPage() {
                 type="text"
                 value={whatsappSettings.businessName || ""}
                 onChange={(e) => handleWhatsAppChange("businessName", e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                 placeholder="e.g., Campus Hub Store"
               />
               <p className="text-xs text-[#64748b] mt-2">This will be used in automated messages and greetings</p>
@@ -1477,9 +1486,9 @@ export default function SettingsPage() {
           </div>
 
           {/* Welcome Message */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg flex items-center gap-2">
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
+              <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
                 <i className="fas fa-hand-sparkles text-[#8b5cf6]"></i>
                 Welcome Message
               </h3>
@@ -1495,7 +1504,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
                 Message Template
               </label>
               <textarea
@@ -1503,7 +1512,7 @@ export default function SettingsPage() {
                 value={whatsappSettings.welcomeMessage || ""}
                 onChange={(e) => handleWhatsAppChange("welcomeMessage", e.target.value)}
                 rows={12}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none font-mono text-sm resize-none"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none font-mono text-xs md:text-sm resize-none"
                 placeholder="Enter your welcome message or choose a template below..."
               />
             </div>
@@ -1655,8 +1664,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Auto Reply */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-reply text-[#8b5cf6]"></i>
                 Auto Reply
@@ -1687,8 +1696,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Away Message */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-moon text-[#8b5cf6]"></i>
                 Away Message
@@ -1723,7 +1732,7 @@ export default function SettingsPage() {
             <button
               onClick={saveWhatsAppSettings}
               disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -1743,12 +1752,12 @@ export default function SettingsPage() {
 
       {/* Payment Methods Tab */}
       {activeTab === "payments" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6">
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500">
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-4 md:p-6">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500">
             <div className="flex items-start gap-3">
-              <i className="fas fa-credit-card text-2xl text-green-500"></i>
+              <i className="fas fa-credit-card text-xl md:text-2xl text-green-500"></i>
               <div>
-                <h3 className="font-bold text-lg mb-1">Payment Methods Configuration</h3>
+                <h3 className="font-bold text-base md:text-lg mb-1">Payment Methods Configuration</h3>
                 <p className="text-sm text-[#64748b]">
                   Configure payment methods that will be displayed to customers when booking services or purchasing products.
                   These settings are automatically applied to all your services and products.
@@ -1759,15 +1768,15 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
             {/* M-Pesa Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-green-500 transition-all">
-              <div className="flex items-center justify-between mb-4">
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-green-500 transition-all">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <i className="fas fa-mobile-alt text-green-600 text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <i className="fas fa-mobile-alt text-green-600 text-lg md:text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">M-Pesa (Kenya)</h3>
-                    <p className="text-sm text-[#64748b]">Accept payments via M-Pesa mobile money</p>
+                    <h3 className="font-bold text-base md:text-lg">M-Pesa (Kenya)</h3>
+                    <p className="text-xs md:text-sm text-[#64748b]">Accept payments via M-Pesa mobile money</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1913,15 +1922,15 @@ export default function SettingsPage() {
             </div>
 
             {/* Bank Transfer Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-blue-500 transition-all">
-              <div className="flex items-center justify-between mb-4">
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-blue-500 transition-all">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <i className="fas fa-university text-blue-600 text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i className="fas fa-university text-blue-600 text-lg md:text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Bank Transfer</h3>
-                    <p className="text-sm text-[#64748b]">Accept direct bank transfers</p>
+                    <h3 className="font-bold text-base md:text-lg">Bank Transfer</h3>
+                    <p className="text-xs md:text-sm text-[#64748b]">Accept direct bank transfers</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1936,55 +1945,55 @@ export default function SettingsPage() {
               </div>
 
               {paymentMethods.bank.enabled && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
                   <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Bank Name *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Bank Name *</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.bankName}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, bankName: e.target.value } }))}
                       placeholder="KCB Bank"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Name *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Account Name *</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.accountName}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, accountName: e.target.value } }))}
                       placeholder="Business Name Ltd"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Number *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Account Number *</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.accountNumber}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, accountNumber: e.target.value } }))}
                       placeholder="1234567890"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Branch</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Branch</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.branch}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, branch: e.target.value } }))}
                       placeholder="Nairobi Branch"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">SWIFT Code</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">SWIFT Code</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.swiftCode}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, swiftCode: e.target.value } }))}
                       placeholder="KCBLKENX"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                 </div>
@@ -1992,15 +2001,15 @@ export default function SettingsPage() {
             </div>
 
             {/* Card Payment Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-purple-500 transition-all">
-              <div className="flex items-center justify-between mb-4">
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-purple-500 transition-all">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                    <i className="fas fa-credit-card text-purple-600 text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                    <i className="fas fa-credit-card text-purple-600 text-lg md:text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Card Payments</h3>
-                    <p className="text-sm text-[#64748b]">Accept credit/debit card payments</p>
+                    <h3 className="font-bold text-base md:text-lg">Card Payments</h3>
+                    <p className="text-xs md:text-sm text-[#64748b]">Accept credit/debit card payments</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -2015,13 +2024,13 @@ export default function SettingsPage() {
               </div>
 
               {paymentMethods.card.enabled && (
-                <div className="space-y-4 mt-4">
+                <div className="space-y-3 md:space-y-4 mt-3 md:mt-4">
                   <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Payment Provider</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Payment Provider</label>
                     <select
                       value={paymentMethods.card.provider}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, provider: e.target.value as any } }))}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none text-sm"
                     >
                       <option value="stripe">Stripe</option>
                       <option value="paypal">PayPal</option>
@@ -2029,13 +2038,13 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#64748b] mb-2">Payment Instructions</label>
+                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Payment Instructions</label>
                     <textarea
                       value={paymentMethods.card.instructions}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, instructions: e.target.value } }))}
                       placeholder="Pay via Stripe link sent separately..."
                       rows={3}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
                     />
                   </div>
                 </div>
@@ -2043,15 +2052,15 @@ export default function SettingsPage() {
             </div>
 
             {/* Cash Payment Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-6 hover:border-orange-500 transition-all">
-              <div className="flex items-center justify-between mb-4">
+            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-orange-500 transition-all">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-                    <i className="fas fa-money-bill-wave text-orange-600 text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                    <i className="fas fa-money-bill-wave text-orange-600 text-lg md:text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Cash on Delivery</h3>
-                    <p className="text-sm text-[#64748b]">Accept cash payments</p>
+                    <h3 className="font-bold text-base md:text-lg">Cash on Delivery</h3>
+                    <p className="text-xs md:text-sm text-[#64748b]">Accept cash payments</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -2066,14 +2075,14 @@ export default function SettingsPage() {
               </div>
 
               {paymentMethods.cash.enabled && (
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">Cash Payment Instructions</label>
+                <div className="mt-3 md:mt-4">
+                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Cash Payment Instructions</label>
                   <textarea
                     value={paymentMethods.cash.instructions}
                     onChange={(e) => setPaymentMethods(prev => ({ ...prev, cash: { ...prev.cash, instructions: e.target.value } }))}
                     placeholder="Pay on delivery or at our office..."
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-orange-500 focus:outline-none resize-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-orange-500 focus:outline-none resize-none text-sm"
                   />
                 </div>
               )}
@@ -2081,11 +2090,11 @@ export default function SettingsPage() {
           </div>
 
           {/* Save Button */}
-          <div className="flex justify-end mt-6 pt-6 border-t border-[#e2e8f0]">
+          <div className="flex justify-end mt-4 md:mt-6 pt-4 md:pt-6 border-t border-[#e2e8f0]">
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
