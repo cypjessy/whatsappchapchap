@@ -420,33 +420,35 @@ export function RecentOrders({
           </div>
 
           {/* Desktop */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                  {[
-                    { label: "Order ID", width: "w-24" },
-                    { label: "Product", width: "w-auto" },
-                    { label: "Customer", width: "w-40" },
-                    { label: "Amount", width: "w-28" },
-                    { label: "Status", width: "w-32" },
-                    { label: "Date", width: "w-28" },
-                  ].map((h) => (
-                    <th
-                      key={h.label}
-                      className={`text-left p-4 text-[11px] font-bold uppercase tracking-wider text-[#64748b] ${h.width}`}
-                    >
-                      {h.label}
-                    </th>
+          <div className="hidden md:block">
+            <div className="overflow-x-auto rounded-b-2xl">
+              <table className="w-full min-w-[800px]">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                    {[
+                      { label: "Order ID", width: "w-24" },
+                      { label: "Product", width: "w-auto" },
+                      { label: "Customer", width: "w-40" },
+                      { label: "Amount", width: "w-28" },
+                      { label: "Status", width: "w-32" },
+                      { label: "Date", width: "w-28" },
+                    ].map((h) => (
+                      <th
+                        key={h.label}
+                        className={`text-left p-4 text-[11px] font-bold uppercase tracking-wider text-[#64748b] ${h.width}`}
+                      >
+                        {h.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order, index) => (
+                    <DesktopTableRow key={order.id || index} order={order} index={index} />
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order, index) => (
-                  <DesktopTableRow key={order.id || index} order={order} index={index} />
-                ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}
