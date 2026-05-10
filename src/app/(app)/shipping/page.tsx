@@ -401,7 +401,7 @@ export default function ShippingPage() {
   };
 
 return (
-    <div>
+    <div className="px-3 md:px-6 py-3 md:py-4">
       <style jsx>{`
         @media (max-width: 768px) {
           .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -409,7 +409,7 @@ return (
         }
       `}</style>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-extrabold flex items-center gap-2">
             <i className="fas fa-truck text-[#25D366]"></i>
@@ -459,7 +459,7 @@ return (
       />
 
       {/* Status Tabs - Scrollable on mobile */}
-      <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 hide-scrollbar">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2 hide-scrollbar">
         <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${!statusFilter ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("")}>
           All <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{shipments.length}</span>
         </div>
@@ -475,7 +475,7 @@ return (
       </div>
 
       {/* Enhanced Filters */}
-      <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-4 mb-4 flex flex-col md:flex-row gap-3 md:gap-4 border border-[#e2e8f0] justify-between">
+      <div className="bg-white rounded-xl p-3 mb-4 flex flex-col md:flex-row gap-3 border border-[#e2e8f0] justify-between">
         <div className="flex gap-2 md:gap-4 flex-1 flex-wrap">
           <select className="px-4 py-2 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-xl text-sm" value={carrierFilter} onChange={(e) => setCarrierFilter(e.target.value)}>
             <option value="">All Carriers</option>
