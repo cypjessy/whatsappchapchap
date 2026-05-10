@@ -164,7 +164,7 @@ function StatCard({
           : "border-[#e2e8f0] hover:border-[#cbd5e1]"
         }
         ${isHovered && !isActive ? "shadow-md -translate-y-0.5" : "shadow-sm"}
-        bg-gradient-to-br ${config.bgGradient}
+        bg-white bg-gradient-to-br ${config.bgGradient}
       `}
       style={{ transitionDelay: `${delay}ms` }}
       aria-pressed={isActive}

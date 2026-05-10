@@ -484,7 +484,7 @@ export default function BookingsPage() {
       {/* Sticky Header */}
       <div
         className={`
-          sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b transition-all duration-300
+          sticky top-0 z-[60] bg-white/80 backdrop-blur-md border-b transition-all duration-300
           ${headerScrolled ? "border-[#e2e8f0] shadow-sm" : "border-transparent"}
         `}
       >
