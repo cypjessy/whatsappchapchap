@@ -264,7 +264,6 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
   const { user } = useAuth();
   const [pendingOrders, setPendingOrders] = useState(0);
   const [loading, setLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -301,19 +300,11 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
 
   return (
     <div className="mb-6 md:mb-8">
-      {/* Mobile: Horizontal scroll with snap */}
-      <div
-        ref={scrollRef}
-        className="
-          md:hidden flex gap-3 overflow-x-auto pb-2 px-1 -mx-1
-          snap-x snap-mandatory scrollbar-hide
-          scroll-pl-4
-        "
-      >
+      {/* Mobile: 2x2 Grid */}
+      <div className="md:hidden grid grid-cols-2 gap-3">
         {QUICK_ACTIONS.map((action, index) => (
           <div
             key={action.id}
-            className="snap-start shrink-0 w-[calc(50%-6px)]"
             onClick={() => handleActionClick(action.id)}
           >
             <ActionCard
