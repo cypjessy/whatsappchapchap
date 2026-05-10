@@ -362,7 +362,7 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
         shadow-[0_-4px_20px_rgba(0,0,0,0.05)]
         safe-area-bottom
       `}>
-        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2 relative">
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
           {MAIN_NAV_ITEMS.map((item, index) => (
             <BottomNavItem
               key={item.id}
@@ -370,31 +370,31 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
               isActive={isActive(item.href)}
             />
           ))}
-
-          {/* Center FAB */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-5">
-            <RippleButton
-              onClick={handleFabClick}
-              active={fabOpen}
-              className={`
-                w-14 h-14 rounded-full
-                bg-gradient-to-r from-[#25D366] to-[#128C7E]
-                flex items-center justify-center text-white
-                shadow-lg shadow-[#25D366]/40
-                transition-all duration-300
-                ${fabPressed ? "scale-85" : "scale-100"}
-                ${fabOpen ? "rotate-45 shadow-xl shadow-[#25D366]/50" : "rotate-0"}
-                ${fabOpen ? "ring-4 ring-[#25D366]/20" : "ring-0"}
-              `}
-            >
-              <i className="fas fa-plus text-xl" />
-            </RippleButton>
-          </div>
         </div>
 
         {/* Home indicator spacing */}
         <div className="h-1 bg-transparent" />
       </nav>
+
+      {/* Floating Action Button - Bottom Right */}
+      <div className="fixed bottom-20 right-4 z-50 lg:hidden">
+        <RippleButton
+          onClick={handleFabClick}
+          active={fabOpen}
+          className={`
+            w-12 h-12 rounded-full
+            bg-gradient-to-r from-[#25D366] to-[#128C7E]
+            flex items-center justify-center text-white
+            shadow-lg shadow-[#25D366]/40
+            transition-all duration-300
+            ${fabPressed ? "scale-85" : "scale-100"}
+            ${fabOpen ? "rotate-45 shadow-xl shadow-[#25D366]/50" : "rotate-0"}
+            ${fabOpen ? "ring-4 ring-[#25D366]/20" : "ring-0"}
+          `}
+        >
+          <i className="fas fa-plus text-lg" />
+        </RippleButton>
+      </div>
     </>
   );
 }

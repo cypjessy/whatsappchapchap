@@ -236,7 +236,7 @@ function StatCard({
     return (
       <div
         className={`
-          bg-white rounded-xl p-3 min-w-[140px] flex-shrink-0 border border-[#e2e8f0] shadow-sm
+          bg-white rounded-xl p-3 border border-[#e2e8f0] shadow-sm
           transition-all duration-300
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
         `}
@@ -422,20 +422,11 @@ export function StatsGrid({ refreshTrigger, previousStats }: StatsGridProps) {
 
   if (loading || !stats) {
     return (
-      <>
-        {/* Mobile shimmer */}
-        <div className="md:hidden flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
-          {[0, 1, 2, 3].map((i) => (
-            <ShimmerCard key={i} isMobile />
-          ))}
-        </div>
-        {/* Desktop shimmer */}
-        <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-          {[0, 1, 2, 3].map((i) => (
-            <ShimmerCard key={i} />
-          ))}
-        </div>
-      </>
+      <div className="grid grid-cols-2 gap-3 md:gap-6 mb-6 md:mb-8">
+        {[0, 1, 2, 3].map((i) => (
+          <ShimmerCard key={i} />
+        ))}
+      </div>
     );
   }
 
@@ -444,8 +435,8 @@ export function StatsGrid({ refreshTrigger, previousStats }: StatsGridProps) {
       transition-all duration-500
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
-      {/* Mobile: Horizontal scrollable */}
-      <div className="md:hidden flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
+      {/* Mobile: 2x2 Grid */}
+      <div className="md:hidden grid grid-cols-2 gap-3 mb-6">
         {STATS_CONFIG.map((config, index) => (
           <StatCard
             key={config.id}
