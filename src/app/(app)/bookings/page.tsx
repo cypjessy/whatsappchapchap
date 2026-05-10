@@ -550,7 +550,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-4 px-4 md:px-6">
+      <div className="space-y-4 px-3 md:px-6 py-3 md:py-4">
         {/* Stats */}
         <BookingStats
           bookings={bookings}
