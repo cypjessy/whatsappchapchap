@@ -2,18 +2,12 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-<<<<<<< HEAD
-=======
 import Link from "next/link";
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
 import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
 import MobileLogo from "@/components/auth/MobileLogo";
 import FloatingShapes from "@/components/auth/FloatingShapes";
-<<<<<<< HEAD
-import "../page-styles.css";
-=======
 import "./page-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -21,7 +15,6 @@ import "./page-styles.css";
 interface LoginPageProps {
   redirectTo?: string;
 }
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
@@ -86,11 +79,7 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-export default function LoginPage() {
-=======
 export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps) {
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -125,11 +114,7 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
 
       try {
         await signIn(email, password);
-<<<<<<< HEAD
-        router.push("/dashboard");
-=======
         router.push(redirectTo);
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
       } catch (err: any) {
         setError(err.message || "Invalid email or password. Please try again.");
         setIsLoading(false);
@@ -140,11 +125,7 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
         }
       }
     },
-<<<<<<< HEAD
-    [email, password, signIn, router]
-=======
     [email, password, signIn, router, redirectTo]
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
   );
 
   const handleGoogleLogin = useCallback(async () => {
@@ -157,11 +138,7 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
 
     try {
       await signInWithGoogle();
-<<<<<<< HEAD
-      router.push("/dashboard");
-=======
       router.push(redirectTo);
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
     } catch (err: any) {
       setError(err.message || "Google sign-in failed. Please try again.");
       setIsLoading(false);
@@ -170,11 +147,7 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
         navigator.vibrate([50, 100, 50]);
       }
     }
-<<<<<<< HEAD
-  }, [signInWithGoogle, router]);
-=======
   }, [signInWithGoogle, router, redirectTo]);
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden">
@@ -259,8 +232,6 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
                 Start free trial
               </button>
             </p>
-<<<<<<< HEAD
-=======
             <p className="mt-4">
               <Link
                 href="/"
@@ -272,14 +243,9 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
                 Back to Home
               </Link>
             </p>
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
           </div>
         </div>
       </div>
     </div>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
