@@ -384,11 +384,11 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
             <p className="text-xs text-[#94a3b8] mt-1">Start making sales to see analytics</p>
           </div>
         ) : (
-          <div className="h-[220px] md:h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[220px] md:h-[320px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart
                 data={salesData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
