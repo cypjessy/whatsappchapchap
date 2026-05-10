@@ -204,7 +204,7 @@ export default function PortfolioPage() {
   ];
 
   return (
-    <div className="p-3 md:p-6 animate-fadeIn">
+    <div className="px-3 md:px-6 py-3 md:py-4 animate-fadeIn">
       {/* Profile Hero */}
       <div className="bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-2xl p-6 md:p-8 text-white mb-6 relative overflow-hidden">
         <div className="absolute top-[-50%] right-[-20%] w-[400px] h-[400px] bg-white/10 rounded-full"></div>

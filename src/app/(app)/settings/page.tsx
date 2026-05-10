@@ -576,7 +576,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 animate-fadeIn">
+    <div className="px-3 md:px-6 py-3 md:py-4 animate-fadeIn">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
