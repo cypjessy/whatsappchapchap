@@ -488,7 +488,7 @@ export default function BookingsPage() {
           ${headerScrolled ? "border-[#e2e8f0] shadow-sm" : "border-transparent"}
         `}
       >
-        <div className="px-3 md:px-6 py-3 md:py-4">
+        <div className="px-0 md:px-0 py-3 md:py-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div>
               <div className="flex items-center gap-2 text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">
@@ -553,9 +553,9 @@ export default function BookingsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-4 md:space-y-6">
+      <div className="space-y-0">
         {/* Stats */}
-        <div className="px-3">
+        <div className="px-0">
         <BookingStats
           bookings={bookings}
           filterStatus={filterStatus}
@@ -565,7 +565,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Analytics */}
-        <div className="px-3">
+        <div className="px-0">
         <BookingAnalytics
           totalRevenue={analytics.currentPeriodRevenue}
           averageBookingValue={analytics.averageBookingValue}
@@ -577,7 +577,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Filters */}
-        <div className="px-3">
+        <div className="px-0">
         <BookingFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -596,7 +596,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Bulk Toolbar */}
-        <div className="px-3">
+        <div className="px-0">
         <BulkActionsToolbar
           bulkSelected={bulkSelected}
           filteredBookingsCount={filteredBookings.length}
@@ -611,7 +611,7 @@ export default function BookingsPage() {
         </div>
 
         {/* View Tabs */}
-        <div className="px-3">
+        <div className="px-0">
         <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-1 shadow-sm">
           <div className="flex overflow-x-auto scrollbar-hide">
             {VIEW_TABS.map((tab) => (
@@ -639,7 +639,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Status Chips */}
-        <div className="px-3">
+        <div className="px-0">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {STATUS_CHIPS.map((chip) => (
             <button
@@ -667,7 +667,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="px-3">
+        <div className="px-0">
         <div className="min-h-[300px]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
