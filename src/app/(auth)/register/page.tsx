@@ -189,7 +189,7 @@ export default function RegisterPage() {
           {/* Back to Home Link - Desktop */}
           <div className="absolute bottom-6 left-6 right-6">
             <Link
-              href="/landing"
+              href="/"
               className="text-white/70 hover:text-white transition-colors inline-flex items-center gap-2 text-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +224,7 @@ export default function RegisterPage() {
         {/* Back to Home Link - Mobile */}
         <div className="md:hidden px-4 pb-2">
           <Link
-            href="/landing"
+            href="/"
             className="text-[#64748b] hover:text-[#25D366] transition-colors inline-flex items-center gap-2 text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
