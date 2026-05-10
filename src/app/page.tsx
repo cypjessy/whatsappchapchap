@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
@@ -230,6 +231,17 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
               >
                 Start free trial
               </button>
+            </p>
+            <p className="mt-4">
+              <Link
+                href="/landing"
+                className="text-[#6b7280] hover:text-[#25D366] transition-colors inline-flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Link>
             </p>
           </div>
         </div>
