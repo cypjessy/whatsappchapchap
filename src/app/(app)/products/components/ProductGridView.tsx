@@ -626,7 +626,7 @@ export default function ProductGridView({
   if (products.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm animate-fadeIn px-0">
+    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm animate-fadeIn">
       {/* Bulk selection header */}
       {bulkMode && (
         <div className="p-3 md:p-4 border-b border-[#e2e8f0] bg-[#f8fafc]">
@@ -639,8 +639,8 @@ export default function ProductGridView({
       )}
 
       {/* Grid */}
-      <div className="p-0">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-0">
+      <div className="p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
           {products.map((product, index) => (
             <ProductCard
               key={product.id}
