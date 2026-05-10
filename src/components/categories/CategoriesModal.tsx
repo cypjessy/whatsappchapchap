@@ -216,7 +216,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
 
   return (
     <>
-      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto" onClick={onClose}>
+      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] flex items-center justify-center p-2 md:p-4 overflow-y-auto" onClick={onClose}>
         <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-[slideUp_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={e => e.stopPropagation()}>
           
           {/* Header */}
@@ -423,7 +423,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
 
       {/* Add/Edit Form Modal */}
       {formModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-2 md:p-4" onClick={() => setFormModalOpen(false)}>
+        <div className="fixed inset-0 bg-black/50 z-[2500] flex items-center justify-center p-2 md:p-4" onClick={() => setFormModalOpen(false)}>
           <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-[480px] p-4 md:p-8 shadow-2xl animate-[slideUp_0.3s_ease]" onClick={e => e.stopPropagation()}>
             <div className="mb-4 md:mb-6">
               <h3 className="text-lg md:text-lg font-extrabold mb-1 md:mb-2">{editingCategory ? "Edit Category" : "Add Category"}</h3>

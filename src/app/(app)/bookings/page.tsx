@@ -91,7 +91,7 @@ function DeleteConfirmDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-white rounded-2xl w-full max-w-md p-6 animate-scaleIn">
         <div className="text-center mb-6">
@@ -763,7 +763,7 @@ export default function BookingsPage() {
 
       {/* Edit Modal - simplified inline for now */}
       {editModalOpen && editingBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setEditModalOpen(false); setEditingBooking(null); }} />
           <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
             <div className="px-5 py-4 border-b border-[#e2e8f0] flex justify-between items-center bg-white">

@@ -349,12 +349,12 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 animate-fadeIn"
+        className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] animate-fadeIn"
         onClick={handleCloseAttempt}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 pointer-events-none">
         <div
           ref={modalRef}
           className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl pointer-events-auto animate-slideUp max-h-[90vh] flex flex-col"
@@ -520,7 +520,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
 
       {/* Unsaved Changes Warning Modal */}
       {showUnsavedWarning && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowUnsavedWarning(false)}

@@ -346,7 +346,7 @@ export default function PaymentConfirmationModal({
 
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center p-3 md:p-4 animate-fadeIn"
+      className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 animate-fadeIn"
       onClick={handleClose}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />

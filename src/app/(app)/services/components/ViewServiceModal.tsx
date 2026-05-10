@@ -240,7 +240,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 z-[2500] bg-black/90 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
           onClick={closeLightbox}
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full p-4" onClick={(e) => e.stopPropagation()}>

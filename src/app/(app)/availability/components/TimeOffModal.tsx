@@ -57,7 +57,7 @@ export default function TimeOffModal({ open, onClose, onTimeOffCreated }: TimeOf
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[3000] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2500] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
         <div className="p-5 border-b border-[#e2e8f0] flex items-center justify-between">
           <h2 className="text-xl font-extrabold text-[#1e293b] flex items-center gap-2">

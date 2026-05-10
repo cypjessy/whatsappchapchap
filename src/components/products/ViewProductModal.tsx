@@ -186,7 +186,7 @@ function ImageLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+      className="fixed inset-0 z-[2500] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
       onClick={onClose}
     >
       <button

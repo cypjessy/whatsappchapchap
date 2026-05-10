@@ -155,7 +155,7 @@ function DetailCard({
 
 function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[3000] bg-black/90 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
+    <div className="fixed inset-0 z-[2500] bg-black/90 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
       <img src={src} alt="Payment proof" className="max-w-full max-h-[85vh] rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
       <button
         onClick={onClose}

@@ -110,7 +110,7 @@ function ConfirmModal({
 }) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slideUp">
         <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmColor.replace("bg-gradient-to-r", "").split(" ")[0]?.replace("from-", "bg-") || "bg-gray-100"}`}>
@@ -422,10 +422,10 @@ export default function OrderDetailModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 animate-fadeIn" onClick={onClose} />
+      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] animate-fadeIn" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-start justify-center p-0 md:p-4 lg:p-6 pointer-events-none overflow-y-auto">
+      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-0 md:p-4 lg:p-6 pointer-events-none overflow-y-auto">
         <div
           className="bg-white w-full min-h-screen md:min-h-0 md:rounded-2xl md:max-w-[1000px] md:max-h-[calc(100vh-3rem)] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp"
           onClick={(e) => e.stopPropagation()}
