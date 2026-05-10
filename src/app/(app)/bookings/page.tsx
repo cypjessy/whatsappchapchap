@@ -714,15 +714,6 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      {/* Mobile FAB */}
-      <button
-        onClick={() => setModalOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-xl shadow-[#8b5cf6]/30 flex items-center justify-center text-xl md:hidden z-50 hover:scale-110 active:scale-95 transition-all"
-        aria-label="Create new booking"
-      >
-        <i className="fas fa-plus" />
-      </button>
-
       {/* Modals */}
       <ViewBookingModal
         booking={selectedBooking}
