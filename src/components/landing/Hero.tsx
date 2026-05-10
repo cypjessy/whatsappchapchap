@@ -885,10 +885,20 @@ export default function Hero({ typedText, particles, onNavigate }: HeroProps) {
           .hero-content {
             grid-template-columns: 1fr;
             text-align: center;
+            gap: 3rem;
           }
 
           .hero-title {
             font-size: 3rem;
+          }
+
+          .hero-description {
+            margin-left: auto;
+            margin-right: auto;
+          }
+
+          .hero-buttons {
+            justify-content: center;
           }
 
           .hero-stats {
@@ -904,25 +914,113 @@ export default function Hero({ typedText, particles, onNavigate }: HeroProps) {
           }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .hero {
-            padding: 5rem 1rem 3rem;
+            padding: 5rem 1.5rem 4rem;
+          }
+
+          .hero-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
           }
 
           .hero-title {
             font-size: 2.5rem;
           }
 
-          .hero-buttons {
-            flex-direction: column;
-          }
-
           .typing-container {
             font-size: 1.25rem;
           }
 
+          .hero-description {
+            font-size: 1rem;
+          }
+
+          .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+          }
+
+          .hero-stats {
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+          }
+
+          .stat-item {
+            text-align: center;
+          }
+
+          .stat-number {
+            font-size: 2rem;
+          }
+
+          .slide-indicators {
+            bottom: 0.75rem;
+            gap: 0.5rem;
+          }
+
           .indicator {
             width: 30px;
+            height: 3px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .hero {
+            padding: 4.5rem 1rem 3.5rem;
+          }
+
+          .hero-title {
+            font-size: 2rem;
+          }
+
+          .typing-container {
+            font-size: 1.1rem;
+            min-height: 1.5rem;
+          }
+
+          .typing-cursor {
+            height: 1.2rem;
+          }
+
+          .hero-description {
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+          }
+
+          .hero-buttons {
+            margin-bottom: 2rem;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            padding: 0.9rem 1.5rem;
+            font-size: 0.95rem;
+          }
+
+          .stat-number {
+            font-size: 1.75rem;
+          }
+
+          .stat-label {
+            font-size: 0.8rem;
+          }
+
+          .slide-indicators {
+            bottom: 0.5rem;
+          }
+
+          .indicator {
+            width: 25px;
+            height: 3px;
           }
         }
       `}</style>

@@ -231,21 +231,87 @@ export default function LandingPage() {
           .hero-title { font-size: 3rem; }
           .hero-stats { justify-content: center; }
           .phone-mockup { display: none; }
-          .features-grid { grid-template-columns: repeat(2, 1fr); }
-          .steps-container { grid-template-columns: repeat(2, 1fr); }
-          .footer-container { grid-template-columns: repeat(2, 1fr); }
+          .features-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+          .steps-container { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+          .footer-container { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+          .section-title { font-size: 2.5rem; }
+          .cta-title { font-size: 3rem; }
+        }
+        @media (max-width: 768px) {
+          .navbar { padding: 0.75rem 1rem; }
+          .nav-brand { font-size: 1.25rem; }
+          .nav-logo { width: 35px; height: 35px; font-size: 1.1rem; }
+          .mobile-menu-btn { display: flex !important; }
+          .nav-links { 
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            flex-direction: column;
+            padding: 2rem;
+            gap: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-150%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 999;
+          }
+          .nav-links.active {
+            transform: translateY(0);
+            opacity: 1;
+          }
+          .nav-link { font-size: 1.1rem; width: 100%; text-align: center; }
+          .nav-cta { width: 100%; justify-content: center; }
+          .mobile-menu-btn {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+          }
+          .mobile-menu-btn span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s;
+          }
+          .features { padding: 4rem 1rem; }
+          .features-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+          .feature-card { padding: 2rem; }
+          .how-it-works { padding: 4rem 1rem; }
+          .steps-container { grid-template-columns: 1fr; gap: 2.5rem; }
+          .step-card { max-width: 400px; margin: 0 auto; }
+          .cta-section { padding: 4rem 1rem; }
+          .cta-title { font-size: 2.5rem; }
+          .cta-desc { font-size: 1.1rem; }
+          .footer { padding: 3rem 1rem 1.5rem; }
+          .footer-container { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+          .footer-social { justify-content: center; }
+          .section-header { margin-bottom: 3rem; }
+          .section-title { font-size: 2.25rem; }
+          .section-subtitle { font-size: 1rem; }
         }
         @media (max-width: 640px) {
-          .navbar { padding: 1rem; }
-          .nav-links { display: none; }
           .hero { padding: 5rem 1rem 3rem; }
-          .hero-title { font-size: 2.5rem; }
-          .hero-buttons { flex-direction: column; }
+          .hero-title { font-size: 2.25rem; }
+          .hero-description { font-size: 1rem; }
+          .hero-buttons { flex-direction: column; gap: 0.75rem; }
+          .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+          .hero-stats { flex-direction: column; gap: 1.5rem; align-items: center; }
+          .stat-item { text-align: center; }
+          .typing-container { font-size: 1.1rem; }
+          .slide-indicators { bottom: 1rem; gap: 0.5rem; }
+          .indicator { width: 30px; }
           .features-grid { grid-template-columns: 1fr; }
           .steps-container { grid-template-columns: 1fr; }
           .section-title { font-size: 2rem; }
-          .cta-title { font-size: 2.5rem; }
+          .cta-title { font-size: 2rem; }
+          .cta-desc { font-size: 1rem; }
           .footer-container { grid-template-columns: 1fr; }
+          .footer-bottom { font-size: 0.8rem; }
         }
       `}</style>
 
