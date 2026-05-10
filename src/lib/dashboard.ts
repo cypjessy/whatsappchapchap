@@ -37,12 +37,14 @@ export interface OrderData {
 
 export interface ActivityItem {
   id: string;
-  type: "order" | "customer" | "product" | "payment";
+  type: "order" | "customer" | "product" | "payment" | "booking" | "message" | "alert";
   message: string;
   time: string;
   icon: string;
   iconBg: string;
   iconColor: string;
+  isUnread?: boolean;
+  details?: string;
 }
 
 export const dashboardService = {

@@ -200,16 +200,11 @@ function ProductRow({
   getCategoryColor: (category: string) => string;
   getStockStyle: (stock: number) => { color: string; width: string };
 }) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), index * 40);
-    return () => clearTimeout(timer);
-  }, [index]);
 
   const stockStyle = getStockStyle(product.stock || 0);
   const hasImage = (product.image || product.imageUrl) && !imageError;
@@ -220,9 +215,7 @@ function ProductRow({
       className={`
         group relative transition-all duration-200
         ${isSelected ? "bg-[#f0fdf4]" : "hover:bg-[#f8fafc]"}
-        ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
       `}
-      style={{ transitionDelay: `${index * 40}ms` }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

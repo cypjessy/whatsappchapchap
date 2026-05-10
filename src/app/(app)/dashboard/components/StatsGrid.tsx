@@ -1,18 +1,398 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { dashboardService, DashboardStats } from "@/lib/dashboard";
 import { formatCurrency } from "@/lib/currency";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface StatsGridProps {
   refreshTrigger?: number;
+  previousStats?: DashboardStats;
 }
 
-export function StatsGrid({ refreshTrigger }: StatsGridProps) {
+interface StatConfig {
+  id: string;
+  label: string;
+  sublabel: string;
+  icon: string;
+  iconColor: string;
+  iconBg: string;
+  valueKey: keyof DashboardStats;
+  format?: (val: number) => string;
+  showTrend?: boolean;
+  trendKey?: keyof DashboardStats;
+  trendLabel?: string;
+  isPercentage?: boolean;
+}
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const STATS_CONFIG: StatConfig[] = [
+  {
+    id: "sales",
+    label: "Total Sales",
+    sublabel: "vs last month",
+    icon: "fa-wallet",
+    iconColor: "text-[#25D366]",
+    iconBg: "bg-[rgba(37,211,102,0.12)]",
+    valueKey: "totalSales",
+    format: (val) => formatCurrency(val),
+    showTrend: true,
+    trendKey: "salesChange",
+    trendLabel: "%",
+  },
+  {
+    id: "orders",
+    label: "Total Orders",
+    sublabel: "vs last month",
+    icon: "fa-shopping-bag",
+    iconColor: "text-[#3b82f6]",
+    iconBg: "bg-[rgba(59,130,246,0.12)]",
+    valueKey: "totalOrders",
+    format: (val) => val.toLocaleString(),
+    showTrend: true,
+    trendKey: "ordersChange",
+    trendLabel: "%",
+  },
+  {
+    id: "customers",
+    label: "Active Customers",
+    sublabel: "new today",
+    icon: "fa-users",
+    iconColor: "text-[#f59e0b]",
+    iconBg: "bg-[rgba(245,158,11,0.12)]",
+    valueKey: "activeCustomers",
+    format: (val) => val.toLocaleString(),
+    showTrend: true,
+    trendKey: "newCustomersToday",
+    trendLabel: "",
+  },
+  {
+    id: "ai",
+    label: "AI Response Rate",
+    sublabel: "performance",
+    icon: "fa-robot",
+    iconColor: "text-[#8b5cf6]",
+    iconBg: "bg-[rgba(139,92,246,0.12)]",
+    valueKey: "aiResponseRate",
+    format: (val) => `${val}%`,
+    isPercentage: true,
+  },
+];
+
+// ─── Animated Counter Hook ───────────────────────────────────────────────────
+
+function useAnimatedCounter(target: number, duration: number = 1200, delay: number = 0) {
+  const [count, setCount] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const frameRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHasStarted(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    const startTime = performance.now();
+    const startValue = 0;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(startValue + (target - startValue) * eased);
+
+      setCount(current);
+
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [hasStarted, target, duration]);
+
+  return count;
+}
+
+// ─── Helper Functions ─────────────────────────────────────────────────────────
+
+function getTrendColor(value: number, isPositiveGood: boolean = true): string {
+  if (value === 0) return "text-[#64748b]";
+  const isPositive = value > 0;
+  if (isPositiveGood) {
+    return isPositive ? "text-[#10b981]" : "text-[#ef4444]";
+  }
+  return isPositive ? "text-[#ef4444]" : "text-[#10b981]";
+}
+
+function getTrendIcon(value: number): string {
+  if (value === 0) return "fa-minus";
+  return value > 0 ? "fa-arrow-up" : "fa-arrow-down";
+}
+
+// ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function ShimmerCard({ isMobile = false }: { isMobile?: boolean }) {
+  return (
+    <div className={`
+      relative overflow-hidden bg-white rounded-xl border border-[#e2e8f0] shadow-sm
+      ${isMobile ? "p-3 min-w-[140px] flex-shrink-0" : "p-4 md:p-6"}
+    `}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+      <div className={isMobile ? "space-y-2" : "flex justify-between items-start"}>
+        {!isMobile && (
+          <div className="space-y-3 flex-1">
+            <div className="h-3 bg-[#f1f5f9] rounded-lg w-24" />
+            <div className="h-8 bg-[#f1f5f9] rounded-lg w-32" />
+            <div className="h-3 bg-[#f1f5f9] rounded-lg w-20" />
+          </div>
+        )}
+        {isMobile && (
+          <>
+            <div className="flex justify-between mb-2">
+              <div className="w-8 h-8 bg-[#f1f5f9] rounded-lg" />
+            </div>
+            <div className="h-3 bg-[#f1f5f9] rounded w-16" />
+            <div className="h-6 bg-[#f1f5f9] rounded w-24" />
+            <div className="h-3 bg-[#f1f5f9] rounded w-20" />
+          </>
+        )}
+        {!isMobile && <div className="w-12 h-12 bg-[#f1f5f9] rounded-xl shrink-0 ml-4" />}
+      </div>
+    </div>
+  );
+}
+
+function CircularProgress({ percentage, color }: { percentage: number; color: string }) {
+  const circumference = 2 * Math.PI * 18;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative w-12 h-12 md:w-14 md:h-14">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 40 40">
+        <circle
+          cx="20"
+          cy="20"
+          r="18"
+          fill="none"
+          stroke="#e2e8f0"
+          strokeWidth="3"
+        />
+        <circle
+          cx="20"
+          cy="20"
+          r="18"
+          fill="none"
+          stroke={color.replace("text-[", "").replace("]", "")}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-[10px] md:text-xs font-bold text-[#1e293b]">{Math.round(percentage)}%</span>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  config,
+  stats,
+  index,
+  isMobile = false,
+}: {
+  config: StatConfig;
+  stats: DashboardStats;
+  index: number;
+  isMobile?: boolean;
+}) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const rawValue = (stats[config.valueKey] as number) || 0;
+  const animatedValue = useAnimatedCounter(rawValue, 1200, index * 150);
+  const trendValue = config.trendKey ? (stats[config.trendKey] as number) || 0 : 0;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), index * 100);
+    return () => clearTimeout(timer);
+  }, [index]);
+
+  const displayValue = config.format
+    ? config.format(config.id === "sales" || config.id === "orders" || config.id === "customers" ? animatedValue : rawValue)
+    : animatedValue.toLocaleString();
+
+  if (isMobile) {
+    return (
+      <div
+        className={`
+          bg-white rounded-xl p-3 min-w-[140px] flex-shrink-0 border border-[#e2e8f0] shadow-sm
+          transition-all duration-300
+          ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
+        `}
+        style={{ transitionDelay: `${index * 100}ms` }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className={`
+            w-8 h-8 rounded-lg flex items-center justify-center
+            ${config.iconBg} ${config.iconColor}
+          `}>
+            <i className={`fas ${config.icon} text-xs`} />
+          </div>
+          {config.isPercentage && (
+            <CircularProgress percentage={rawValue} color={config.iconColor} />
+          )}
+        </div>
+        <div className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">{config.label}</div>
+        <div className="text-lg font-extrabold text-[#1e293b] mt-0.5">{displayValue}</div>
+        {config.showTrend && (
+          <div className={`text-[10px] font-semibold mt-1 ${getTrendColor(trendValue)}`}>
+            <i className={`fas ${getTrendIcon(trendValue)} text-[8px] mr-0.5`} />
+            {trendValue > 0 ? "+" : ""}{trendValue}{config.trendLabel}
+          </div>
+        )}
+        {!config.showTrend && !config.isPercentage && (
+          <div className="text-[10px] text-[#94a3b8] mt-1">{config.sublabel}</div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`
+        group relative bg-white rounded-xl md:rounded-2xl p-4 md:p-6 
+        border border-[#e2e8f0] overflow-hidden cursor-default
+        transition-all duration-300 ease-out
+        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        ${isHovered
+          ? "border-[#cbd5e1] shadow-lg shadow-[#e2e8f0]/40 -translate-y-1"
+          : "shadow-sm hover:shadow-md"
+        }
+      `}
+      style={{ transitionDelay: `${index * 100}ms` }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Top accent line */}
+      <div
+        className={`
+          absolute top-0 left-4 right-4 h-[2px] rounded-full transition-all duration-500
+          ${isHovered ? "opacity-100" : "opacity-0"}
+        `}
+        style={{
+          backgroundColor: config.iconColor.replace("text-[", "").replace("]", ""),
+        }}
+      />
+
+      <div className="flex justify-between items-start">
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] md:text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-1.5 md:mb-2">
+            {config.label}
+          </div>
+          <div
+            className={`
+              text-2xl md:text-3xl font-extrabold text-[#1e293b] tracking-tight
+              transition-transform duration-300
+              ${isHovered ? "scale-[1.02]" : "scale-100"}
+            `}
+          >
+            {displayValue}
+          </div>
+
+          {/* Trend or sublabel */}
+          {config.showTrend ? (
+            <div className="flex items-center gap-1.5 mt-1.5 md:mt-2">
+              <span className={`
+                inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] md:text-xs font-bold
+                ${getTrendColor(trendValue)}
+                ${trendValue !== 0 ? "bg-current/10" : "bg-[#f1f5f9]"}
+              `}>
+                <i className={`fas ${getTrendIcon(trendValue)} text-[8px]`} />
+                {trendValue > 0 ? "+" : ""}{trendValue}{config.trendLabel}
+              </span>
+              <span className="text-[10px] md:text-xs text-[#94a3b8]">{config.sublabel}</span>
+            </div>
+          ) : config.isPercentage ? (
+            <div className="flex items-center gap-1.5 mt-1.5 md:mt-2">
+              <span className={`
+                inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] md:text-xs font-bold
+                ${rawValue >= 90 ? "text-[#10b981] bg-[#10b981]/10" : "text-[#f59e0b] bg-[#f59e0b]/10"}
+              `}>
+                <i className={`fas ${rawValue >= 90 ? "fa-check" : "fa-exclamation"} text-[8px]`} />
+                {rawValue >= 90 ? "Excellent" : "Good"}
+              </span>
+              <span className="text-[10px] md:text-xs text-[#94a3b8]">{config.sublabel}</span>
+            </div>
+          ) : (
+            <div className="text-[10px] md:text-xs text-[#94a3b8] mt-1.5 md:mt-2">
+              {config.sublabel}
+            </div>
+          )}
+        </div>
+
+        {/* Icon or progress ring */}
+        <div className="shrink-0 ml-3 md:ml-4">
+          {config.isPercentage ? (
+            <div className={`
+              transition-transform duration-300
+              ${isHovered ? "scale-110" : "scale-100"}
+            `}>
+              <CircularProgress percentage={rawValue} color={config.iconColor} />
+            </div>
+          ) : (
+            <div className={`
+              w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center
+              ${config.iconBg} ${config.iconColor}
+              transition-all duration-300
+              ${isHovered ? "scale-110 shadow-md" : "scale-100"}
+            `}>
+              <i className={`fas ${config.icon} text-sm md:text-xl`} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mini progress bar for non-percentage stats */}
+      {!config.isPercentage && (
+        <div className="mt-3 md:mt-4 h-1 bg-[#f1f5f9] rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-1000 ease-out"
+            style={{
+              width: isVisible ? "65%" : "0%",
+              opacity: 0.4,
+              backgroundColor: config.iconColor
+                .replace("text-[", "")
+                .replace("]", ""),
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export function StatsGrid({ refreshTrigger, previousStats }: StatsGridProps) {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -40,141 +420,54 @@ export function StatsGrid({ refreshTrigger }: StatsGridProps) {
     loadStats();
   }, [user, refreshTrigger]);
 
-  if (loading) {
+  if (loading || !stats) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="android-card p-4 min-w-[140px] flex-shrink-0">
-            <div className="animate-pulse">
-              <div className="h-3 bg-gray-200 rounded w-16 mb-3"></div>
-              <div className="h-6 bg-gray-200 rounded w-24 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-20"></div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <>
+        {/* Mobile shimmer */}
+        <div className="md:hidden flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
+          {[0, 1, 2, 3].map((i) => (
+            <ShimmerCard key={i} isMobile />
+          ))}
+        </div>
+        {/* Desktop shimmer */}
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+          {[0, 1, 2, 3].map((i) => (
+            <ShimmerCard key={i} />
+          ))}
+        </div>
+      </>
     );
   }
 
   return (
-    <>
-      {/* Mobile: Horizontal scrollable stats */}
+    <div className={`
+      transition-all duration-500
+      ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+    `}>
+      {/* Mobile: Horizontal scrollable */}
       <div className="md:hidden flex gap-3 overflow-x-auto pb-2 mb-6 hide-scrollbar">
-        <div className="android-card p-3 min-w-[130px] flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 bg-[rgba(37,211,102,0.1)] rounded-lg flex items-center justify-center text-[#25D366]">
-              <i className="fas fa-dollar-sign"></i>
-            </div>
-          </div>
-          <div className="text-xs text-[#64748b]">Sales</div>
-          <div className="text-lg font-bold">{formatCurrency(stats?.totalSales || 0)}</div>
-          <div className="text-[10px] text-[#00C853]">+{stats?.salesChange || 0}%</div>
-        </div>
-        
-        <div className="android-card p-3 min-w-[130px] flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 bg-[rgba(59,130,246,0.1)] rounded-lg flex items-center justify-center text-[#3b82f6]">
-              <i className="fas fa-shopping-bag"></i>
-            </div>
-          </div>
-          <div className="text-xs text-[#64748b]">Orders</div>
-          <div className="text-lg font-bold">{stats?.totalOrders || 0}</div>
-          <div className="text-[10px] text-[#00C853]">+{stats?.ordersChange || 0}%</div>
-        </div>
-        
-        <div className="android-card p-3 min-w-[130px] flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 bg-[rgba(245,158,11,0.1)] rounded-lg flex items-center justify-center text-[#f59e0b]">
-              <i className="fas fa-users"></i>
-            </div>
-          </div>
-          <div className="text-xs text-[#64748b]">Customers</div>
-          <div className="text-lg font-bold">{stats?.activeCustomers || 0}</div>
-          <div className="text-[10px] text-[#00C853]">+{stats?.newCustomersToday || 0} today</div>
-        </div>
-        
-        <div className="android-card p-3 min-w-[130px] flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 bg-[rgba(139,92,246,0.1)] rounded-lg flex items-center justify-center text-[#8b5cf6]">
-              <i className="fas fa-robot"></i>
-            </div>
-          </div>
-          <div className="text-xs text-[#64748b]">AI Rate</div>
-          <div className="text-lg font-bold">{stats?.aiResponseRate || 0}%</div>
-          <div className="text-[10px] text-[#00C853]">{(stats?.aiResponseRate || 0) >= 90 ? "Excellent" : "Good"}</div>
-        </div>
+        {STATS_CONFIG.map((config, index) => (
+          <StatCard
+            key={config.id}
+            config={config}
+            stats={stats}
+            index={index}
+            isMobile
+          />
+        ))}
       </div>
-      
+
       {/* Desktop: Grid layout */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="android-card p-6 hover:shadow-md hover:-translate-y-1 transition-all">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#64748b] mb-2">Total Sales</div>
-              <div className="text-3xl font-extrabold text-[#1e293b] mb-2">{formatCurrency(stats?.totalSales || 0)}</div>
-              <div className="flex items-center gap-1 text-sm">
-                <i className="fas fa-arrow-up text-[#00C853]"></i>
-                <span className="text-[#00C853] font-semibold">+{stats?.salesChange || 0}%</span>
-                <span className="text-[#64748b] font-normal">vs last month</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-[rgba(37,211,102,0.1)] rounded-xl flex items-center justify-center text-[#25D366]">
-              <i className="fas fa-dollar-sign text-xl"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="android-card p-6 hover:shadow-md hover:-translate-y-1 transition-all">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#64748b] mb-2">Total Orders</div>
-              <div className="text-3xl font-extrabold text-[#1e293b] mb-2">{stats?.totalOrders || 0}</div>
-              <div className="flex items-center gap-1 text-sm">
-                <i className="fas fa-arrow-up text-[#00C853]"></i>
-                <span className="text-[#00C853] font-semibold">+{stats?.ordersChange || 0}%</span>
-                <span className="text-[#64748b] font-normal">vs last month</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-[rgba(59,130,246,0.1)] rounded-xl flex items-center justify-center text-[#3b82f6]">
-              <i className="fas fa-shopping-cart text-xl"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="android-card p-6 hover:shadow-md hover:-translate-y-1 transition-all">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#64748b] mb-2">Active Customers</div>
-              <div className="text-3xl font-extrabold text-[#1e293b] mb-2">{stats?.activeCustomers || 0}</div>
-              <div className="flex items-center gap-1 text-sm">
-                <i className="fas fa-arrow-up text-[#00C853]"></i>
-                <span className="text-[#00C853] font-semibold">+{stats?.newCustomersToday || 0}</span>
-                <span className="text-[#64748b] font-normal">new today</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-[rgba(245,158,11,0.1)] rounded-xl flex items-center justify-center text-[#f59e0b]">
-              <i className="fas fa-users text-xl"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="android-card p-6 hover:shadow-md hover:-translate-y-1 transition-all">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#64748b] mb-2">AI Response Rate</div>
-              <div className="text-3xl font-extrabold text-[#1e293b] mb-2">{stats?.aiResponseRate || 0}%</div>
-              <div className="flex items-center gap-1 text-sm">
-                <i className="fas fa-check text-[#00C853]"></i>
-                <span className="text-[#00C853] font-semibold">{(stats?.aiResponseRate || 0) >= 90 ? "Excellent" : "Good"}</span>
-                <span className="text-[#64748b] font-normal">performance</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-[rgba(139,92,246,0.1)] rounded-xl flex items-center justify-center text-[#8b5cf6]">
-              <i className="fas fa-robot text-xl"></i>
-            </div>
-          </div>
-        </div>
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        {STATS_CONFIG.map((config, index) => (
+          <StatCard
+            key={config.id}
+            config={config}
+            stats={stats}
+            index={index}
+          />
+        ))}
       </div>
-    </>
+    </div>
   );
 }

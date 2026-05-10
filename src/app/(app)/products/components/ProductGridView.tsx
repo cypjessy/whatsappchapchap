@@ -182,16 +182,11 @@ function ProductCard({
   getStockStyle: (stock: number) => { color: string; width: string };
   getBadgeStyle: (stock: number) => { badge: string; label: string };
 }) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), index * 60);
-    return () => clearTimeout(timer);
-  }, [index]);
 
   const stockStyle = getStockStyle(product.stock || 0);
   const badgeInfo = getBadgeStyle(product.stock || 0);
@@ -208,14 +203,12 @@ function ProductCard({
     <div
       className={`
         group relative bg-white rounded-xl md:rounded-2xl border overflow-hidden 
-        transition-all duration-300 ease-out
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        transition-all duration-200 ease-out
         ${isSelected
           ? "border-[#25D366] ring-2 ring-[#25D366]/20 shadow-lg shadow-[#25D366]/10"
           : "border-[#e2e8f0] hover:border-[#25D366]/30 hover:shadow-xl hover:-translate-y-1"
         }
       `}
-      style={{ transitionDelay: `${index * 60}ms` }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => !bulkMode && onOpenModal(product)}

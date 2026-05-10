@@ -28,48 +28,6 @@ interface ActionButton {
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-function StatusBar() {
-  const [time, setTime] = useState("");
-  const [battery, setBattery] = useState(100);
-  const [isCharging, setIsCharging] = useState(false);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTime(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Battery API (if supported)
-  useEffect(() => {
-    if ("getBattery" in navigator) {
-      (navigator as any).getBattery().then((bat: any) => {
-        setBattery(Math.round(bat.level * 100));
-        setIsCharging(bat.charging);
-        bat.addEventListener("levelchange", () => setBattery(Math.round(bat.level * 100)));
-        bat.addEventListener("chargingchange", () => setIsCharging(bat.charging));
-      });
-    }
-  }, []);
-
-  return (
-    <div className="flex items-center justify-between px-6 py-1 text-[11px] font-semibold text-white/90 select-none">
-      <span>{time}</span>
-      <div className="flex items-center gap-1.5">
-        <i className="fas fa-signal text-[10px]" />
-        <i className="fas fa-wifi text-[10px]" />
-        <div className="flex items-center gap-1">
-          <span className="text-[10px]">{battery}%</span>
-          <i className={`fas ${isCharging ? "fa-bolt" : "fa-battery-three-quarters"} text-[10px]`} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function NotchCenter({
   title,
   subtitle,
@@ -243,7 +201,7 @@ export default function AndroidTopBar({
   return (
     <>
       {/* Spacer for fixed header */}
-      <div className="h-[88px] lg:hidden" />
+      <div className="h-[60px] lg:hidden" />
 
       {/* Main Top Bar */}
       <header
@@ -251,19 +209,10 @@ export default function AndroidTopBar({
           fixed top-0 left-0 right-0 z-50 lg:hidden
           transition-all duration-500 ease-out
           ${isVisible ? "translate-y-0" : "-translate-y-full"}
+          pt-[env(safe-area-inset-top)]
         `}
       >
-        {/* Status Bar Area */}
-        <div
-          className={`
-            transition-colors duration-500
-            ${isScrolled ? "bg-white/90 backdrop-blur-xl" : "bg-[#25D366]"}
-          `}
-        >
-          <StatusBar />
-        </div>
-
-        {/* App Bar */}
+        {/* App Bar - Full height, no separate status bar */}
         <div
           className={`
             relative transition-all duration-500
@@ -274,7 +223,7 @@ export default function AndroidTopBar({
           `}
         >
           {/* Content */}
-          <div className="flex items-center justify-between px-4 py-3 pb-6">
+          <div className="flex items-center justify-between px-4 py-3">
             {/* Left Actions */}
             <div className="flex items-center gap-2 z-10">
               {leftActions.map((action) => (

@@ -100,7 +100,6 @@ function FilterChipPill({
         transition-all duration-200 active:scale-95
         ${isRemoving ? "opacity-0 scale-75 -translate-x-2" : "opacity-100 scale-100 translate-x-0"}
       `}
-      style={{ transitionDelay: `${index * 40}ms` }}
     >
       <span className="max-w-[140px] truncate">{chip.label}</span>
       <X className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />

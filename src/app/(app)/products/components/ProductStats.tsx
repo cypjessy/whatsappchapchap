@@ -163,14 +163,9 @@ function StatCard({
   index: number;
   onClick?: () => void;
 }) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
-  const animatedValue = useAnimatedCounter(value, 1200, index * 100);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), index * 80);
-    return () => clearTimeout(timer);
-  }, [index]);
+  const animatedValue = useAnimatedCounter(value, 800, 0);
 
   const trend = useMemo(() => {
     if (previousValue === undefined) return null;
@@ -191,15 +186,13 @@ function StatCard({
       className={`
         group relative flex-shrink-0 snap-start
         px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl 
-        border-2 transition-all duration-300 ease-out text-left
+        border-2 transition-all duration-200 ease-out text-left
         min-w-[160px] md:min-w-0 md:flex-1
         ${config.borderColor} ${config.hoverBorder}
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isHovered ? "shadow-lg -translate-y-0.5" : "shadow-sm"}
         ${onClick ? "cursor-pointer active:scale-[0.98]" : "cursor-default"}
         bg-white
       `}
-      style={{ transitionDelay: `${index * 80}ms` }}
       disabled={!onClick}
     >
       {/* Top row: Icon + Trend */}
