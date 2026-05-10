@@ -63,7 +63,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
             text-sm font-semibold animate-slideInRight
             ${toast.type === "success" ? "bg-[#10b981] text-white" : ""}
             ${toast.type === "error" ? "bg-[#ef4444] text-white" : ""}
-            ${toast.type === "info" ? "bg-[#8b5cf6] text-white" : ""}
+            ${toast.type === "info" ? "bg-[#3b82f6] text-white" : ""}
           `}
         >
           <i className={`fas ${toast.type === "success" ? "fa-check-circle" : toast.type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}`} />
@@ -108,7 +108,7 @@ function DeleteConfirmDialog({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+            className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#3b82f6] hover:text-[#3b82f6] transition-all active:scale-95"
           >
             Cancel
           </button>
@@ -478,29 +478,26 @@ export default function BookingsPage() {
   const hasData = filteredBookings.length > 0;
 
   return (
-    <div ref={pageRef} className="min-h-screen">
+    <div ref={pageRef} className="min-h-screen pb-20">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
-      {/* Sticky Header */}
+      {/* Sticky Header - REMOVED PURPLE ICON */}
       <div
         className={`
           sticky top-0 z-[60] bg-white/80 backdrop-blur-md border-b transition-all duration-300
           ${headerScrolled ? "border-[#e2e8f0] shadow-sm" : "border-transparent"}
         `}
       >
-        <div className="px-0 md:px-0 py-3 md:py-4">
+        <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div>
               <div className="flex items-center gap-2 text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">
                 <i className="fas fa-home text-[8px]" />
                 <span>Dashboard</span>
                 <i className="fas fa-chevron-right text-[6px]" />
-                <span className="text-[#8b5cf6]">Bookings</span>
+                <span className="text-[#1e293b]">Bookings</span>
               </div>
               <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md shadow-[#8b5cf6]/20">
-                  <i className="fas fa-calendar-alt text-white text-sm" />
-                </div>
                 Bookings
                 <span className="text-sm font-bold text-[#94a3b8] ml-1">
                   ({filteredBookings.length})
@@ -514,8 +511,8 @@ export default function BookingsPage() {
                 className={`
                   flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
                   ${bulkMode
-                    ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/20"
-                    : "border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+                    ? "bg-[#1e293b] text-white shadow-md"
+                    : "border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b]"
                   }
                 `}
               >
@@ -528,12 +525,12 @@ export default function BookingsPage() {
                 disabled={isExporting || filteredBookings.length === 0}
                 className={`
                   flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
-                  border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]
+                  border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b]
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
                 {isExporting ? (
-                  <div className="w-3.5 h-3.5 border-2 border-[#8b5cf6]/30 border-t-[#8b5cf6] rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-[#1e293b]/30 border-t-[#1e293b] rounded-full animate-spin" />
                 ) : (
                   <i className="fas fa-download text-xs" />
                 )}
@@ -542,7 +539,7 @@ export default function BookingsPage() {
 
               <button
                 onClick={() => setModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-xs md:text-sm shadow-lg shadow-[#8b5cf6]/20 hover:opacity-90 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-semibold text-xs md:text-sm shadow-lg hover:opacity-90 transition-all active:scale-95"
               >
                 <i className="fas fa-plus text-xs" />
                 <span className="hidden sm:inline">New Booking</span>
@@ -553,19 +550,16 @@ export default function BookingsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-0">
+      <div className="space-y-4 px-4 md:px-6">
         {/* Stats */}
-        <div className="px-0">
         <BookingStats
           bookings={bookings}
           filterStatus={filterStatus}
           onStatusClick={(status) => setFilterStatus(filterStatus === status ? "all" : status)}
           isLoading={loading}
         />
-        </div>
 
         {/* Analytics */}
-        <div className="px-0">
         <BookingAnalytics
           totalRevenue={analytics.currentPeriodRevenue}
           averageBookingValue={analytics.averageBookingValue}
@@ -574,10 +568,8 @@ export default function BookingsPage() {
           isLoading={loading}
           previousPeriodRevenue={analytics.previousPeriodRevenue}
         />
-        </div>
 
         {/* Filters */}
-        <div className="px-0">
         <BookingFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -593,10 +585,8 @@ export default function BookingsPage() {
           setSelectedDate={setSelectedDate}
           services={services}
         />
-        </div>
 
         {/* Bulk Toolbar */}
-        <div className="px-0">
         <BulkActionsToolbar
           bulkSelected={bulkSelected}
           filteredBookingsCount={filteredBookings.length}
@@ -608,10 +598,8 @@ export default function BookingsPage() {
             setBulkSelected([]);
           }}
         />
-        </div>
 
         {/* View Tabs */}
-        <div className="px-0">
         <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-1 shadow-sm">
           <div className="flex overflow-x-auto scrollbar-hide">
             {VIEW_TABS.map((tab) => (
@@ -622,8 +610,8 @@ export default function BookingsPage() {
                   flex-1 min-w-[80px] flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2
                   px-3 py-2.5 md:px-4 md:py-3 rounded-lg font-bold text-[10px] md:text-xs transition-all duration-200
                   ${viewMode === tab.id
-                    ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md"
-                    : "text-[#64748b] hover:text-[#8b5cf6] hover:bg-[#f5f3ff]"
+                    ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
+                    : "text-[#64748b] hover:text-[#1e293b] hover:bg-[#f1f5f9]"
                   }
                 `}
               >
@@ -636,10 +624,8 @@ export default function BookingsPage() {
             ))}
           </div>
         </div>
-        </div>
 
         {/* Status Chips */}
-        <div className="px-0">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {STATUS_CHIPS.map((chip) => (
             <button
@@ -648,8 +634,8 @@ export default function BookingsPage() {
               className={`
                 shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-bold text-[11px] md:text-xs transition-all duration-200 active:scale-95
                 ${filterStatus === chip.id
-                  ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md shadow-[#8b5cf6]/20"
-                  : "bg-white border border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
+                  : "bg-white border border-[#e2e8f0] text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b]"
                 }
               `}
             >
@@ -664,14 +650,12 @@ export default function BookingsPage() {
             </button>
           ))}
         </div>
-        </div>
 
         {/* Content Area */}
-        <div className="px-0">
         <div className="min-h-[300px]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-10 h-10 border-3 border-[#e2e8f0] border-t-[#8b5cf6] rounded-full animate-spin mb-4" />
+              <div className="w-10 h-10 border-3 border-[#e2e8f0] border-t-[#1e293b] rounded-full animate-spin mb-4" />
               <p className="text-sm text-[#64748b] font-medium">Loading bookings...</p>
             </div>
           ) : !hasData ? (
@@ -710,7 +694,6 @@ export default function BookingsPage() {
               )}
             </>
           )}
-        </div>
         </div>
       </div>
 
@@ -759,14 +742,14 @@ export default function BookingsPage() {
           <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
             <div className="px-5 py-4 border-b border-[#e2e8f0] flex justify-between items-center bg-white">
               <h2 className="text-lg font-bold flex items-center gap-2 text-[#1e293b]">
-                <div className="w-8 h-8 rounded-lg bg-[#ede9fe] flex items-center justify-center">
-                  <i className="fas fa-edit text-[#8b5cf6] text-sm" />
+                <div className="w-8 h-8 rounded-lg bg-[#f1f5f9] flex items-center justify-center">
+                  <i className="fas fa-edit text-[#1e293b] text-sm" />
                 </div>
                 Edit Booking
               </h2>
               <button
                 onClick={() => { setEditModalOpen(false); setEditingBooking(null); }}
-                className="w-9 h-9 rounded-full border-2 border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+                className="w-9 h-9 rounded-full border-2 border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95"
               >
                 <i className="fas fa-times text-sm" />
               </button>
@@ -823,7 +806,7 @@ export default function BookingsPage() {
                         name={field.name}
                         type={field.type}
                         defaultValue={field.defaultValue}
-                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10 focus:outline-none text-sm transition-all"
+                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#1e293b] focus:shadow-md focus:outline-none text-sm transition-all"
                         required={field.name !== "deposit"}
                       />
                     </div>
@@ -833,7 +816,7 @@ export default function BookingsPage() {
                     <select
                       name="paymentMethod"
                       defaultValue={editingBooking.paymentMethod || ""}
-                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10 focus:outline-none text-sm transition-all"
+                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#1e293b] focus:shadow-md focus:outline-none text-sm transition-all"
                     >
                       <option value="">Select method</option>
                       <option value="cash">Cash</option>
@@ -849,20 +832,20 @@ export default function BookingsPage() {
                     name="notes"
                     defaultValue={editingBooking.notes || ""}
                     rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10 focus:outline-none text-sm resize-none transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#1e293b] focus:shadow-md focus:outline-none text-sm resize-none transition-all"
                   />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => { setEditModalOpen(false); setEditingBooking(null); }}
-                    className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+                    className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[#8b5cf6]/20"
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all active:scale-95 shadow-lg"
                   >
                     <i className="fas fa-save mr-2 text-xs" />
                     Save Changes

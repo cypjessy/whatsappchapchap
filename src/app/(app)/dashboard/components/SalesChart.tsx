@@ -225,10 +225,32 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
   const [period, setPeriod] = useState<Period>("7d");
   const [isVisible, setIsVisible] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [chartReady, setChartReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVisible(true);
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => setChartReady(true), 100);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Resize observer to handle container size changes
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0 && !chartReady) {
+          setChartReady(true);
+        }
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [chartReady]);
 
   useEffect(() => {
     const loadSalesData = async () => {
@@ -384,74 +406,81 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
             <p className="text-xs text-[#94a3b8] mt-1">Start making sales to see analytics</p>
           </div>
         ) : (
-          <div className="h-[220px] md:h-[320px] w-full relative">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
-              <AreaChart
-                data={salesData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.15} />
-                    <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={CHART_COLORS.grid}
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="date"
-                  stroke={CHART_COLORS.text}
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  stroke={CHART_COLORS.text}
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => formatCurrency(value)}
-                  dx={-5}
-                />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_COLORS.primary, strokeWidth: 1, strokeDasharray: "4 4" }} />
-                <ReferenceLine
-                  y={maxSales}
-                  stroke={CHART_COLORS.primary}
-                  strokeDasharray="6 6"
-                  strokeOpacity={0.3}
-                  label={{
-                    value: "Peak",
-                    position: "right",
-                    fill: CHART_COLORS.primary,
-                    fontSize: 10,
-                    fontWeight: "bold",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="sales"
-                  stroke={CHART_COLORS.primary}
-                  strokeWidth={2.5}
-                  fill="url(#salesGradient)"
-                  activeDot={{
-                    r: 6,
-                    stroke: "#fff",
-                    strokeWidth: 3,
-                    fill: CHART_COLORS.primary,
-                  }}
-                  dot={{
-                    fill: CHART_COLORS.primary,
-                    stroke: "#fff",
-                    strokeWidth: 2,
-                    r: 4,
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div 
+            ref={containerRef}
+            className="h-[220px] md:h-[320px] w-full relative min-h-[220px]"
+            style={{ minHeight: "220px" }}
+          >
+            {chartReady && (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={salesData}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={CHART_COLORS.grid}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    stroke={CHART_COLORS.text}
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={10}
+                  />
+                  <YAxis
+                    stroke={CHART_COLORS.text}
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => formatCurrency(value)}
+                    dx={-5}
+                    width={60}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_COLORS.primary, strokeWidth: 1, strokeDasharray: "4 4" }} />
+                  <ReferenceLine
+                    y={maxSales}
+                    stroke={CHART_COLORS.primary}
+                    strokeDasharray="6 6"
+                    strokeOpacity={0.3}
+                    label={{
+                      value: "Peak",
+                      position: "right",
+                      fill: CHART_COLORS.primary,
+                      fontSize: 10,
+                      fontWeight: "bold",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="sales"
+                    stroke={CHART_COLORS.primary}
+                    strokeWidth={2.5}
+                    fill="url(#salesGradient)"
+                    activeDot={{
+                      r: 6,
+                      stroke: "#fff",
+                      strokeWidth: 3,
+                      fill: CHART_COLORS.primary,
+                    }}
+                    dot={{
+                      fill: CHART_COLORS.primary,
+                      stroke: "#fff",
+                      strokeWidth: 2,
+                      r: 4,
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         )}
       </div>

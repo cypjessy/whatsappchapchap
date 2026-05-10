@@ -362,18 +362,32 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
         shadow-[0_-4px_20px_rgba(0,0,0,0.05)]
         safe-area-bottom
       `}>
-        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
-          {/* Left nav items */}
-          {MAIN_NAV_ITEMS.slice(0, 2).map((item, index) => (
-            <BottomNavItem
-              key={item.id}
-              item={item}
-              isActive={isActive(item.href)}
-            />
+        <div className="flex items-center justify-between h-16 max-w-lg mx-auto px-2 relative">
+          
+          {/* Left nav items (first 2) */}
+          {MAIN_NAV_ITEMS.slice(0, 2).map((item) => (
+            <div key={item.id} className="flex-1">
+              <BottomNavItem
+                item={item}
+                isActive={isActive(item.href)}
+              />
+            </div>
           ))}
 
-          {/* Center FAB Button */}
-          <div className="flex-1 flex items-center justify-center">
+          {/* Center Curved FAB Container */}
+          <div className="relative -mt-8 flex items-center justify-center">
+            {/* Curved background indicator */}
+            <div className="absolute inset-0 -top-4">
+              <svg width="80" height="48" viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute -top-2 left-1/2 -translate-x-1/2">
+                <path 
+                  d="M0 0 L80 0 L80 48 C60 48 50 32 40 32 C30 32 20 48 0 48 Z" 
+                  fill="#ffffff"
+                  className="shadow-md"
+                />
+              </svg>
+            </div>
+            
+            {/* FAB Button */}
             <RippleButton
               onClick={handleFabClick}
               active={fabOpen}
@@ -383,7 +397,7 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
                 flex items-center justify-center text-white
                 shadow-lg shadow-[#25D366]/40
                 transition-all duration-300
-                -mt-6
+                relative z-10
                 ${fabPressed ? "scale-90" : "scale-100"}
                 ${fabOpen ? "rotate-45 shadow-xl shadow-[#25D366]/50" : "rotate-0"}
                 ${fabOpen ? "ring-4 ring-[#25D366]/20" : "ring-0"}
@@ -393,19 +407,38 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
             </RippleButton>
           </div>
 
-          {/* Right nav items */}
-          {MAIN_NAV_ITEMS.slice(2).map((item, index) => (
-            <BottomNavItem
-              key={item.id}
-              item={item}
-              isActive={isActive(item.href)}
-            />
+          {/* Right nav items (last 2) */}
+          {MAIN_NAV_ITEMS.slice(2).map((item) => (
+            <div key={item.id} className="flex-1">
+              <BottomNavItem
+                item={item}
+                isActive={isActive(item.href)}
+              />
+            </div>
           ))}
         </div>
 
         {/* Home indicator spacing */}
         <div className="h-1 bg-transparent" />
       </nav>
+
+      {/* Add styles for curved effect */}
+      <style jsx>{`
+        @keyframes curveAppear {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .fab-curve {
+          animation: curveAppear 0.3s ease-out;
+        }
+      `}</style>
     </>
   );
 }
