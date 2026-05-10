@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { orderService, bookingService } from "@/lib/db";
 import "./topbar-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -143,10 +146,61 @@ export default function AndroidTopBar({
   transparent = false,
   scrollThreshold = 50,
 }: TopBarProps) {
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [dynamicNotificationCount, setDynamicNotificationCount] = useState(0);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const lastScrollY = useRef(0);
   const pathname = usePathname();
+
+  // Fetch notification count dynamically
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchNotifications = async () => {
+      try {
+        const orders = await orderService.getOrders(user, "pending");
+        const bookings = await bookingService.getBookings(user, "pending");
+        setDynamicNotificationCount(orders.length + bookings.length);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+    
+    fetchNotifications();
+  }, [user]);
+
+  // Handle search
+  const handleSearchClick = () => {
+    if (onSearchClick) {
+      onSearchClick();
+    } else {
+      setShowSearch(!showSearch);
+    }
+  };
+
+  // Handle notification click
+  const handleNotificationClick = () => {
+    if (onNotificationClick) {
+      onNotificationClick();
+    } else {
+      // Navigate to orders page with pending filter
+      router.push("/orders?status=pending");
+    }
+  };
+
+  // Handle logout from top bar
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   // Scroll behavior
   useEffect(() => {
@@ -188,13 +242,18 @@ export default function AndroidTopBar({
     {
       icon: "fa-search",
       label: "Search",
-      onClick: onSearchClick,
+      onClick: handleSearchClick,
     },
     {
       icon: "fa-bell",
       label: "Notifications",
-      onClick: onNotificationClick,
-      badge: notificationCount,
+      onClick: handleNotificationClick,
+      badge: notificationCount || dynamicNotificationCount,
+    },
+    {
+      icon: "fa-sign-out-alt",
+      label: "Logout",
+      onClick: handleLogout,
     },
   ];
 
@@ -231,8 +290,36 @@ export default function AndroidTopBar({
               ))}
             </div>
 
-            {/* Center Notch (visible when not scrolled) */}
-            {!isScrolled && (
+            {/* Search Bar (when active) */}
+            {showSearch && (
+              <div className="absolute inset-0 bg-white flex items-center px-4 animate-fadeIn">
+                <button
+                  onClick={() => setShowSearch(false)}
+                  className="mr-3 text-[#64748b] hover:text-[#1e293b]"
+                >
+                  <i className="fas fa-arrow-left"></i>
+                </button>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search orders, products..."
+                  className="flex-1 bg-[#f1f5f9] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#25D366]"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="ml-2 text-[#64748b] hover:text-[#1e293b]"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Center Notch (visible when not scrolled and search is not active) */}
+            {!isScrolled && !showSearch && (
               <NotchCenter
                 title={title}
                 subtitle={subtitle}

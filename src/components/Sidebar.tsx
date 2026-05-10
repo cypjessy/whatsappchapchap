@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { tenantService } from "@/lib/db";
 import "./sidebar-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -185,9 +188,42 @@ function NavLink({
 
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [localCollapsed, setLocalCollapsed] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
+  const [businessName, setBusinessName] = useState("User");
   const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Fetch business name from database
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchBusinessName = async () => {
+      try {
+        const tenant = await tenantService.getTenant(user);
+        if (tenant?.businessName) {
+          setBusinessName(tenant.businessName);
+        } else if (tenant?.name) {
+          setBusinessName(tenant.name);
+        }
+      } catch (error) {
+        console.error("Error fetching business name:", error);
+      }
+    };
+    
+    fetchBusinessName();
+  }, [user]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   // Mobile drawer: always expanded. Desktop: hover to expand
   const isCollapsed = isExpanded ? false : localCollapsed;
@@ -314,7 +350,7 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
 
           {!isCollapsed && (
             <div className="flex-1 min-w-0 animate-fadeIn">
-              <div className="font-bold text-sm text-[#1e293b] truncate">John Doe</div>
+              <div className="font-bold text-sm text-[#1e293b] truncate">{businessName}</div>
               <div className="text-[11px] text-[#64748b] flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
                 Premium Seller
@@ -323,7 +359,13 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
           )}
 
           {!isCollapsed && (
-            <i className="fas fa-chevron-right text-[10px] text-[#94a3b8] group-hover:text-[#64748b] transition-colors shrink-0" />
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-lg hover:bg-[#fee2e2] hover:text-[#ef4444] transition-colors shrink-0"
+              title="Logout"
+            >
+              <i className="fas fa-sign-out-alt text-[#94a3b8] hover:text-[#ef4444]" />
+            </button>
           )}
         </div>
       </div>
