@@ -2,12 +2,26 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+<<<<<<< HEAD
+=======
+import Link from "next/link";
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
 import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
 import MobileLogo from "@/components/auth/MobileLogo";
 import FloatingShapes from "@/components/auth/FloatingShapes";
+<<<<<<< HEAD
 import "../page-styles.css";
+=======
+import "./page-styles.css";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface LoginPageProps {
+  redirectTo?: string;
+}
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
@@ -72,7 +86,11 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 export default function LoginPage() {
+=======
+export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps) {
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -107,7 +125,11 @@ export default function LoginPage() {
 
       try {
         await signIn(email, password);
+<<<<<<< HEAD
         router.push("/dashboard");
+=======
+        router.push(redirectTo);
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
       } catch (err: any) {
         setError(err.message || "Invalid email or password. Please try again.");
         setIsLoading(false);
@@ -118,7 +140,11 @@ export default function LoginPage() {
         }
       }
     },
+<<<<<<< HEAD
     [email, password, signIn, router]
+=======
+    [email, password, signIn, router, redirectTo]
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
   );
 
   const handleGoogleLogin = useCallback(async () => {
@@ -131,7 +157,11 @@ export default function LoginPage() {
 
     try {
       await signInWithGoogle();
+<<<<<<< HEAD
       router.push("/dashboard");
+=======
+      router.push(redirectTo);
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
     } catch (err: any) {
       setError(err.message || "Google sign-in failed. Please try again.");
       setIsLoading(false);
@@ -140,7 +170,11 @@ export default function LoginPage() {
         navigator.vibrate([50, 100, 50]);
       }
     }
+<<<<<<< HEAD
   }, [signInWithGoogle, router]);
+=======
+  }, [signInWithGoogle, router, redirectTo]);
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden">
@@ -225,9 +259,27 @@ export default function LoginPage() {
                 Start free trial
               </button>
             </p>
+<<<<<<< HEAD
+=======
+            <p className="mt-4">
+              <Link
+                href="/"
+                className="text-[#6b7280] hover:text-[#25D366] transition-colors inline-flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Link>
+            </p>
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe
           </div>
         </div>
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 6ea11bd5b5fe5b9a2b95cbfa6f15aed1021d7afe

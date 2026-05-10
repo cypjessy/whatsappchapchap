@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Legacy Variables */
   --primary: #25D366;
   --primary-dark: #128C7E;
   --service: #8b5cf6;
@@ -21,6 +22,31 @@
   --radius: 16px;
   --radius-sm: 12px;
   --radius-xs: 8px;
+
+  /* Landing Page Design Tokens */
+  --obsidian: #0A0B0F;
+  --deep: #0F1117;
+  --surface: #151820;
+  --elevated: #1C2030;
+  --border-light: rgba(255,255,255,0.12);
+  --green: #25D366;
+  --green-glow: rgba(37,211,102,0.15);
+  --purple: #8B5CF6;
+  --purple-glow: rgba(139,92,246,0.15);
+  --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --gold-glow: rgba(201,168,76,0.12);
+  --white: #FFFFFF;
+  --text: rgba(255,255,255,0.88);
+  --muted: rgba(255,255,255,0.5);
+  --faint: rgba(255,255,255,0.25);
+
+  /* Landing Page Spacing & Typography */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --font-display: var(--font-plus-jakarta), system-ui, sans-serif;
 }
 
 @theme inline {
@@ -1611,4 +1637,54 @@ body::after {
 
 .custom-input {
   @apply flex-1 px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none;
+}
+
+/* ============================================
+   LANDING PAGE SPECIFIC STYLES
+   ============================================ */
+
+/* Hero Background Mesh */
+.bg-hero-mesh {
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(37, 211, 102, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(201, 168, 76, 0.1) 0%, transparent 50%);
+}
+
+/* Gradient Text Utility */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r;
+}
+
+/* Smooth Scroll Behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Landing Page Specific Animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* Custom Scrollbar for Landing Page */
+.landing-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.landing-scroll::-webkit-scrollbar-track {
+  background: var(--obsidian);
+}
+
+.landing-scroll::-webkit-scrollbar-thumb {
+  background: var(--elevated);
+  border-radius: 4px;
+}
+
+.landing-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--surface);
 }

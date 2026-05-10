@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
@@ -182,8 +183,21 @@ export default function RegisterPage() {
       {/* Mobile: Full width card, Desktop: Split layout */}
       <div className="w-full md:max-w-[1200px] m-auto grid grid-cols-1 md:grid-cols-5 bg-white md:rounded-2xl shadow-2xl overflow-hidden relative z-10 min-h-[700px]">
         {/* Desktop Sidebar only */}
-        <div className="hidden md:block">
+        <div className="hidden md:block relative">
           <RegisterSidebar currentStep={currentStep} />
+          
+          {/* Back to Home Link - Desktop */}
+          <div className="absolute bottom-6 left-6 right-6">
+            <Link
+              href="/"
+              className="text-white/70 hover:text-white transition-colors inline-flex items-center gap-2 text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Home
+            </Link>
+          </div>
         </div>
 
         {/* Mobile Progress Bar */}
@@ -205,6 +219,19 @@ export default function RegisterPage() {
             <span>Verify</span>
             <span>Done</span>
           </div>
+        </div>
+        
+        {/* Back to Home Link - Mobile */}
+        <div className="md:hidden px-4 pb-2">
+          <Link
+            href="/"
+            className="text-[#64748b] hover:text-[#25D366] transition-colors inline-flex items-center gap-2 text-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
+          </Link>
         </div>
 
         {/* Content - Mobile full width, Desktop col-span-3 */}
