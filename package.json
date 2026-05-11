@@ -6,9 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:android": "npm run build && npx cap sync android",
+    "open:android": "npx cap open android",
+    "run:android": "npx cap run android",
+    "run:android:live": "npx cap run android --livereload --external"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.3",
+    "@capacitor/cli": "^8.3.3",
+    "@capacitor/core": "^8.3.3",
     "@google/generative-ai": "^0.24.1",
     "firebase": "^12.11.0",
     "firebase-admin": "^13.7.0",

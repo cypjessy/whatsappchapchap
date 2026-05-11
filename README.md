@@ -1,5 +1,22 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 📱 Android App
+
+This project has been converted to an Android app using Capacitor!
+
+**Get your APK without Android Studio:**
+- Quick Start: [GET_APK_QUICK.md](GET_APK_QUICK.md)
+- Full Guide: [BUILD_APK_NO_STUDIO.md](BUILD_APK_NO_STUDIO.md)
+- GitHub Actions: Automatically builds APK on push
+
+**Configuration:**
+- ✅ Vercel URL: `https://whatsappchapchap.vercel.app`
+- ✅ Capacitor configured
+- ✅ Android platform added
+- ✅ Cloud build ready
+
+---
+
 ## Getting Started
 
 First, run the development server:
