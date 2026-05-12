@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
     url: 'https://whatsappchapchap.vercel.app',
     cleartext: false
   },
+  android: {
+    allowMixedContent: true,
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,

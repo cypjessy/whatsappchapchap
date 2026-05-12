@@ -11,6 +11,18 @@ export default function LandingPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [phraseIndex, setPhraseIndex] = useState(0);
 
+  // Check if running in Capacitor (mobile app)
+  useEffect(() => {
+    const isCapacitor = typeof window !== 'undefined' && 
+      ((window as any).Capacitor?.isNativePlatform?.() || 
+       (window as any).Capacitor?.getPlatform?.() === 'android');
+    
+    if (isCapacitor) {
+      // Redirect to login page for mobile app
+      router.replace('/login');
+    }
+  }, [router]);
+
   const phrases = [
     "Automate your sales with AI...",
     "Manage orders in real-time...",
