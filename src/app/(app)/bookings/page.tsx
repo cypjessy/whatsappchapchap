@@ -512,7 +512,7 @@ export default function BookingsPage() {
   const hasData = filteredBookings.length > 0;
 
   return (
-    <div ref={pageRef} className="min-h-screen pb-20 px-3 md:px-6 py-3 md:py-4">
+    <div ref={pageRef} className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
       {/* Sticky Header - REMOVED PURPLE ICON */}

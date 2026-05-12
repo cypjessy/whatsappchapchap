@@ -514,7 +514,7 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] animate-fadeIn">
+    <div className="min-h-screen bg-[#f8fafc] animate-fadeIn px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       <div className="px-3 md:px-6 py-3 md:py-4 max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* Header */}
         <ServicesHeader

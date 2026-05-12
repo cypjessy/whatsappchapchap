@@ -609,7 +609,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 animate-fadeIn">
+    <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36 animate-fadeIn">
       {/* Header */}
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[#1e293b] flex items-center gap-2.5 md:gap-3">

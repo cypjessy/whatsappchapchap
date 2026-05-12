@@ -603,7 +603,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="animate-fadeIn px-3 md:px-6 py-3 md:py-4">
+    <div className="animate-fadeIn px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       <CustomersHeader
         bulkMode={bulkMode}
         onToggleBulkMode={() => { setBulkMode(!bulkMode); setBulkSelected([]); }}

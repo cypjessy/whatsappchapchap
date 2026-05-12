@@ -908,7 +908,7 @@ export default function OrdersPage() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="animate-fadeIn max-w-[1400px] mx-auto">
+    <div className="animate-fadeIn max-w-[1400px] mx-auto px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-3 pt-3" style={{ animationDelay: '0.1s' }}>
         <div>
