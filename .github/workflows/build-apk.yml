@@ -51,18 +51,14 @@ jobs:
       - name: Install Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
       
-      - name: Build Next.js app
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.VERCEL_URL || 'https://whatsappchapchap.vercel.app' }}
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          EVOLUTION_API_URL: ${{ secrets.EVOLUTION_API_URL }}
-          EVOLUTION_API_KEY: ${{ secrets.EVOLUTION_API_KEY }}
-      
       - name: Sync with Capacitor
-        run: npx cap sync android
+        run: |
+          # Create assets directory for Capacitor
+          mkdir -p android/app/src/main/assets/public
+          # Create a minimal index.html for Capacitor (since we load from Vercel)
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://whatsappchapchap.vercel.app"></head><body></body></html>' > android/app/src/main/assets/public/index.html
+          # Sync Capacitor
+          npx cap sync android
       
       - name: Build APK
         run: |
