@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
 import FloatingShapes from "@/components/auth/FloatingShapes";
@@ -34,6 +35,7 @@ export default function RegisterPage() {
   const [isConnected, setIsConnected] = useState(false);
   const router = useRouter();
   const { signUp, user } = useAuth();
+  const { impactLight, notificationSuccess } = useHaptics();
 
   const currencyMap: Record<string, string> = {
     KE: "KES (Kenyan Shilling)",
@@ -106,6 +108,7 @@ export default function RegisterPage() {
   }, [resendTimer]);
 
   const verifyAndComplete = async () => {
+    await impactLight();
     setIsLoading(true);
     setError("");
     
@@ -124,6 +127,7 @@ export default function RegisterPage() {
         whatsappConnectionStatus: "pending",
       });
 
+      await notificationSuccess();
       setCurrentStep(5);
       setIsLoading(false);
     } catch (err: any) {
@@ -133,6 +137,7 @@ export default function RegisterPage() {
   };
 
   const handleBack = () => {
+    impactLight();
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
@@ -141,6 +146,7 @@ export default function RegisterPage() {
   const handleWhatsAppConnected = async (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string; evolutionUUID?: string }) => {
     if (!user || !instanceName) return;
 
+    await notificationSuccess();
     setIsConnected(true);
     
     const tenantId = `tenant_${user.uid}`;

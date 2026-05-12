@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
 import MobileLogo from "@/components/auth/MobileLogo";
@@ -96,6 +97,7 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
   const { signIn, signInWithGoogle } = useAuth();
+  const { impactLight, notificationSuccess, notificationError } = useHaptics();
 
   // Entrance animation - hide splash after short delay
   useEffect(() => {
@@ -116,50 +118,43 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
     async (e: React.FormEvent) => {
       e.preventDefault();
       
-      // Haptic feedback (if supported)
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate(50);
-      }
+      // Haptic feedback on button press
+      await impactLight();
 
       setIsLoading(true);
       setError("");
 
       try {
         await signIn(email, password);
+        await notificationSuccess();
         router.push(redirectTo);
       } catch (err: any) {
         setError(err.message || "Invalid email or password. Please try again.");
         setIsLoading(false);
         
         // Error haptic
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          navigator.vibrate([50, 100, 50]);
-        }
+        await notificationError();
       }
     },
-    [email, password, signIn, router, redirectTo]
+    [email, password, signIn, router, redirectTo, impactLight, notificationSuccess, notificationError]
   );
 
   const handleGoogleLogin = useCallback(async () => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(50);
-    }
+    await impactLight();
 
     setIsLoading(true);
     setError("");
 
     try {
       await signInWithGoogle();
+      await notificationSuccess();
       router.push(redirectTo);
     } catch (err: any) {
       setError(err.message || "Google sign-in failed. Please try again.");
       setIsLoading(false);
-      
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([50, 100, 50]);
-      }
+      await notificationError();
     }
-  }, [signInWithGoogle, router, redirectTo]);
+  }, [signInWithGoogle, router, redirectTo, impactLight, notificationSuccess, notificationError]);
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden">

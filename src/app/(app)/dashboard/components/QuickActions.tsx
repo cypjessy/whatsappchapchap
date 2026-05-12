@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 import { dashboardService } from "@/lib/dashboard";
 import Link from "next/link";
 
@@ -264,6 +265,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
   const { user } = useAuth();
   const [pendingOrders, setPendingOrders] = useState(0);
   const [loading, setLoading] = useState(true);
+  const { impactMedium } = useHaptics();
 
   useEffect(() => {
     const loadData = async () => {
@@ -282,10 +284,11 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
   }, [user]);
 
   const handleActionClick = useCallback(
-    (actionId: string) => {
+    async (actionId: string) => {
+      await impactMedium();
       onActionClick?.(actionId);
     },
-    [onActionClick]
+    [onActionClick, impactMedium]
   );
 
   if (loading) {

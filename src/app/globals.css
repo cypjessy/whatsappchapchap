@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 :root {
+  /* Safe Area Insets for notch/punch-hole screens */
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-left: env(safe-area-inset-left);
+  --safe-area-right: env(safe-area-inset-right);
+
   /* Legacy Variables */
   --primary: #25D366;
   --primary-dark: #128C7E;
@@ -47,6 +53,79 @@
   --r-lg: 16px;
   --r-xl: 24px;
   --font-display: var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+/* Native Mobile Experience Enhancements */
+
+/* Prevent weird bounce on scroll */
+html {
+  overscroll-behavior-y: contain;
+}
+
+/* Smooth momentum scrolling */
+body {
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection (feels more native) */
+* {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow selection in inputs and textareas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Android-style ripple effect on buttons and clickable elements */
+button, .clickable, [role="button"] {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button::after, .clickable::after, [role="button"]::after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 10%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.4s, opacity 0.8s;
+}
+
+button:active::after, .clickable:active::after, [role="button"]:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Safe area padding utilities */
+.safe-top {
+  padding-top: calc(16px + var(--safe-area-top));
+}
+
+.safe-bottom {
+  padding-bottom: calc(16px + var(--safe-area-bottom));
+}
+
+.safe-left {
+  padding-left: calc(16px + var(--safe-area-left));
+}
+
+.safe-right {
+  padding-right: calc(16px + var(--safe-area-right));
 }
 
 @theme inline {
