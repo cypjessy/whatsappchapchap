@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
+import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import { customerService, Customer, orderService, Order } from "@/lib/db";
 import {
   CustomersHeader,
@@ -77,6 +78,12 @@ export default function CustomersPage() {
   const [dateRangeEnd, setDateRangeEnd] = useState("");
   const [spendingMin, setSpendingMin] = useState<number | "">("");
   const [spendingMax, setSpendingMax] = useState<number | "">("");
+
+  // Register modals for Android back button handling
+  useModalBackHandler(showModal, () => setShowModal(false));
+  useModalBackHandler(showAddModal, () => { setShowAddModal(false); setFormErrors({}); });
+  useModalBackHandler(showBroadcastModal, () => setShowBroadcastModal(false));
+  useModalBackHandler(showDeleteConfirm, () => setShowDeleteConfirm(false));
 
   useEffect(() => {
     if (!user) return;

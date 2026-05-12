@@ -14,6 +14,7 @@ import {
   ShippingMethodsModal,
 } from "@/components/shipping";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
+import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 
 interface ShippingMethod {
   id: string;
@@ -48,6 +49,11 @@ export default function ShippingPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [dateRangeStart, setDateRangeStart] = useState("");
   const [dateRangeEnd, setDateRangeEnd] = useState("");
+
+  // Register modals for Android back button handling
+  useModalBackHandler(showTrackingModal, () => setShowTrackingModal(false));
+  useModalBackHandler(showCreateModal, () => setShowCreateModal(false));
+  useModalBackHandler(showShippingMethodsModal, () => setShowShippingMethodsModal(false));
 
   useEffect(() => {
     if (!user) return;

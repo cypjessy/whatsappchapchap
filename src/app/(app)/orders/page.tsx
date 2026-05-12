@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
+import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import {
   orderService,
   Order,
@@ -213,6 +214,11 @@ export default function OrdersPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  // Register modals for Android back button handling
+  useModalBackHandler(modalOpen, () => setModalOpen(false));
+  useModalBackHandler(editModalOpen, () => setEditModalOpen(false));
+  useModalBackHandler(newOrderModalOpen, () => setNewOrderModalOpen(false));
 
   // Cancellation
   const [cancellationFilter, setCancellationFilter] = useState<

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
+import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import {
   productService,
   Product,
@@ -197,6 +198,11 @@ export default function ProductsPage() {
   // Delete state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Register modals for Android back button handling
+  useModalBackHandler(productModalOpen, () => setProductModalOpen(false));
+  useModalBackHandler(addProductModalOpen, () => setAddProductModalOpen(false));
+  useModalBackHandler(showDeleteConfirm !== null, () => setShowDeleteConfirm(null));
 
   // Toast state
   const [toasts, setToasts] = useState<Toast[]>([]);

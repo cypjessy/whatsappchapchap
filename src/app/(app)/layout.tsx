@@ -5,6 +5,7 @@ import DashboardProtection from "@/components/DashboardProtection";
 import { ModeProvider } from "@/context/ModeContext";
 import { useAppLifecycle } from "@/hooks/useAppLifecycle";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { modalRegistry } from "@/lib/modal-registry";
 import { useEffect, useState } from 'react';
 
 // Helper function to show exit toast on Android back button
@@ -105,16 +106,24 @@ export default function DashboardLayout({
           console.warn('[Layout] Failed to lock orientation:', err);
         }
 
-        // 4. Handle Android back button with double-press-to-exit
+        // 4. Handle Android back button with modal support and double-press-to-exit
         let lastBackPress = 0;
         App.addListener('backButton', ({ canGoBack }) => {
           const now = Date.now();
           
+          // Priority 1: If any modal is open, close the topmost modal
+          if (modalRegistry.hasOpenModals()) {
+            console.log('[Layout] Back button pressed - closing top modal');
+            const closed = modalRegistry.closeTopModal();
+            if (closed) return; // Modal was closed, don't navigate
+          }
+          
+          // Priority 2: Navigate back in app history
           if (canGoBack) {
-            // Go back in app history
+            console.log('[Layout] Back button pressed - navigating back');
             window.history.back();
           } else {
-            // On root page — double press to exit
+            // Priority 3: On root page — double press to exit
             if (now - lastBackPress < 2000) {
               console.log('[Layout] Double back press detected - exiting app');
               App.exitApp();
@@ -124,7 +133,7 @@ export default function DashboardLayout({
             }
           }
         });
-        console.log('[Layout] Back button handler registered with double-press-to-exit');
+        console.log('[Layout] Back button handler registered with modal support');
 
         // 5. Hide splash screen with fade effect
         setTimeout(async () => {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
+import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import { serviceService, bookingService, Booking, Service } from "@/lib/db";
 import ManualBookingModal from "./components/ManualBookingModal";
 import ViewBookingModal from "./components/ViewBookingModal";
@@ -176,6 +177,12 @@ export default function BookingsPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  // Register modals for Android back button handling
+  useModalBackHandler(modalOpen, () => setModalOpen(false));
+  useModalBackHandler(editModalOpen, () => setEditModalOpen(false));
+  useModalBackHandler(paymentModalOpen, () => setPaymentModalOpen(false));
+  useModalBackHandler(showDeleteConfirm !== null, () => setShowDeleteConfirm(null));
 
   const toastIdRef = useRef(0);
   const pageRef = useRef<HTMLDivElement>(null);
