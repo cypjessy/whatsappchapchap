@@ -2,6 +2,7 @@
 
 import { Shipment } from "@/lib/db";
 import { statusLabels } from "./types";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 
 interface ShippingTableProps {
   shipments: Shipment[];
@@ -24,6 +25,7 @@ export function ShippingTable({
   selectedIds = [],
   onToggleSelect
 }: ShippingTableProps) {
+  const { impactLight } = useHaptics();
   const getStatusClass = (status: string) => {
     const classes: Record<string, string> = {
       pending: "status-badge status-pending",
@@ -216,7 +218,7 @@ export function ShippingTable({
                     </div>
                   </>
                 ) : (
-                  <button className="btn btn-primary" onClick={() => onAssign(shipment)}>
+                  <button className="btn btn-primary" onClick={async () => { await impactLight(); onAssign(shipment); }}>
                     <i className="fas fa-user-plus"></i> Assign
                   </button>
                 )}
@@ -224,9 +226,9 @@ export function ShippingTable({
               <td className="eta-cell">{getEtaDisplay(shipment)}</td>
               <td>
                 <div className="actions-cell">
-                  <button className="action-btn" onClick={() => onView(shipment)} title="View"><i className="fas fa-eye"></i></button>
-                  <button className="action-btn" onClick={() => onPrint(shipment)} title="Print Label"><i className="fas fa-print"></i></button>
-                  <button className="action-btn whatsapp" onClick={() => onWhatsApp(shipment)} title="WhatsApp"><i className="fab fa-whatsapp"></i></button>
+                  <button className="action-btn" onClick={async () => { await impactLight(); onView(shipment); }} title="View"><i className="fas fa-eye"></i></button>
+                  <button className="action-btn" onClick={async () => { await impactLight(); onPrint(shipment); }} title="Print Label"><i className="fas fa-print"></i></button>
+                  <button className="action-btn whatsapp" onClick={async () => { await impactLight(); onWhatsApp(shipment); }} title="WhatsApp"><i className="fab fa-whatsapp"></i></button>
                 </div>
               </td>
             </tr>
@@ -280,9 +282,9 @@ export function ShippingTable({
               <span className="card-row-value">{getDateString(shipment.createdAt)}</span>
             </div>
             <div className="card-actions">
-              <button className="action-btn" onClick={() => onView(shipment)}><i className="fas fa-eye"></i> View</button>
-              <button className="action-btn" onClick={() => onPrint(shipment)}><i className="fas fa-print"></i> Print</button>
-              <button className="action-btn whatsapp" onClick={() => onWhatsApp(shipment)}><i className="fab fa-whatsapp"></i> WhatsApp</button>
+              <button className="action-btn" onClick={async () => { await impactLight(); onView(shipment); }}><i className="fas fa-eye"></i> View</button>
+              <button className="action-btn" onClick={async () => { await impactLight(); onPrint(shipment); }}><i className="fas fa-print"></i> Print</button>
+              <button className="action-btn whatsapp" onClick={async () => { await impactLight(); onWhatsApp(shipment); }}><i className="fab fa-whatsapp"></i> WhatsApp</button>
             </div>
           </div>
         ))}

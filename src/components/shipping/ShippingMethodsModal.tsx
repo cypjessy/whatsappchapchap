@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 
 interface ShippingMethod {
   id: string;
@@ -16,6 +17,7 @@ interface ShippingMethodsModalProps {
 }
 
 export function ShippingMethodsModal({ isOpen, onClose, methods = [], onSave }: ShippingMethodsModalProps) {
+  const { impactLight, impactMedium } = useHaptics();
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>(
     methods.length > 0 ? methods : [
       { id: "standard", name: "Standard Delivery", price: 500 },
@@ -26,8 +28,9 @@ export function ShippingMethodsModal({ isOpen, onClose, methods = [], onSave }: 
 
   const [newMethod, setNewMethod] = useState({ name: "", price: "" });
 
-  const addMethod = () => {
+  const addMethod = async () => {
     if (!newMethod.name.trim()) return;
+    await impactLight();
     const method: ShippingMethod = {
       id: newMethod.name.toLowerCase().replace(/\s+/g, "_"),
       name: newMethod.name.trim(),
@@ -37,7 +40,8 @@ export function ShippingMethodsModal({ isOpen, onClose, methods = [], onSave }: 
     setNewMethod({ name: "", price: "" });
   };
 
-  const removeMethod = (id: string) => {
+  const removeMethod = async (id: string) => {
+    await impactMedium();
     setShippingMethods(shippingMethods.filter(m => m.id !== id));
   };
 
@@ -237,8 +241,8 @@ export function ShippingMethodsModal({ isOpen, onClose, methods = [], onSave }: 
         </div>
         
         <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose}>Cancel</button>
-          <button className="btn-save" onClick={handleSave}>Save Methods</button>
+          <button className="btn-cancel" onClick={async () => { await impactLight(); onClose(); }}>Cancel</button>
+          <button className="btn-save" onClick={async () => { await impactLight(); handleSave(); }}>Save Methods</button>
         </div>
       </div>
     </div>

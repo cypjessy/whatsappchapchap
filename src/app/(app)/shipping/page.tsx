@@ -13,6 +13,7 @@ import {
   CreateShipmentModal,
   ShippingMethodsModal,
 } from "@/components/shipping";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 
 interface ShippingMethod {
   id: string;
@@ -22,6 +23,10 @@ interface ShippingMethod {
 
 export default function ShippingPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToastNative } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([
@@ -94,10 +99,12 @@ export default function ShippingPage() {
     try {
       await tenantService.updateTenant(user, { shippingMethods: methods });
       setShippingMethods(methods);
-      alert("Shipping methods saved!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Shipping methods saved!', duration: 'short' });
     } catch (error) {
       console.error("Error saving shipping methods:", error);
-      alert("Failed to save shipping methods");
+      await notificationError();
+      await showToastNative({ text: 'Failed to save shipping methods', position: 'top' });
     }
   };
 
@@ -111,8 +118,9 @@ export default function ShippingPage() {
     setShowCreateModal(true);
   };
 
-  const handlePrintLabel = (shipment: Shipment) => {
-    alert(`Printing shipping label for ${shipment.orderId}`);
+  const handlePrintLabel = async (shipment: Shipment) => {
+    await impactLight();
+    await showToastNative({ text: `Printing label for ${shipment.orderId}`, duration: 'short' });
   };
 
   const handleWhatsApp = (shipment: Shipment) => {
@@ -129,14 +137,14 @@ export default function ShippingPage() {
     
     const orderId = data.orderId || (data.orders && data.orders[0]);
     if (!orderId) {
-      alert("No order selected");
+      await showToastNative({ text: 'No order selected', position: 'top' });
       return;
     }
     
     try {
       const order = pendingOrders.find(o => o.id === orderId);
       if (!order) {
-        alert("Order not found");
+        await showToastNative({ text: 'Order not found', position: 'top' });
         return;
       }
       
@@ -160,10 +168,12 @@ export default function ShippingPage() {
       
       loadShipments();
       loadPendingOrders();
-      alert(`Shipment created for order ${order.orderNumber || orderId}!`);
+      await notificationSuccess();
+      await showToastNative({ text: `Shipment created for order ${order.orderNumber || orderId}!`, duration: 'short' });
     } catch (error) {
       console.error("Error creating shipment:", error);
-      alert("Failed to create shipment");
+      await notificationError();
+      await showToastNative({ text: 'Failed to create shipment', position: 'top' });
     }
   };
 
@@ -212,6 +222,9 @@ export default function ShippingPage() {
   // Bulk status update
   const handleBulkStatusUpdate = async (newStatus: Shipment["status"]) => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(
         bulkSelected.map(id => shippingService.updateShipment(user, id, { status: newStatus }))
@@ -219,17 +232,21 @@ export default function ShippingPage() {
       loadShipments();
       setBulkSelected([]);
       setBulkMode(false);
-      alert(`Updated ${bulkSelected.length} shipments to ${newStatus}`);
+      await notificationSuccess();
+      await showToastNative({ text: `Updated ${bulkSelected.length} shipments to ${newStatus}`, duration: 'short' });
     } catch (error) {
       console.error("Error updating shipments:", error);
-      alert("Failed to update some shipments");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update some shipments', position: 'top' });
     }
   };
 
   // Bulk delete
   const handleBulkDelete = async () => {
     if (!user || bulkSelected.length === 0) return;
-    if (!confirm(`Are you sure you want to delete ${bulkSelected.length} shipments?`)) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(
         bulkSelected.map(id => shippingService.deleteShipment(user, id))
@@ -237,10 +254,12 @@ export default function ShippingPage() {
       loadShipments();
       setBulkSelected([]);
       setBulkMode(false);
-      alert(`Deleted ${bulkSelected.length} shipments`);
+      await notificationSuccess();
+      await showToastNative({ text: `Deleted ${bulkSelected.length} shipments`, duration: 'short' });
     } catch (error) {
       console.error("Error deleting shipments:", error);
-      alert("Failed to delete some shipments");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete some shipments', position: 'top' });
     }
   };
 
@@ -431,7 +450,7 @@ return (
           </div>
           <button 
             className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-xl font-semibold text-sm shadow text-nowrap transition-all ${bulkMode ? 'bg-[#ef4444] text-white' : 'bg-white border border-[#e2e8f0] text-[#64748b]'}`}
-            onClick={() => { setBulkMode(!bulkMode); setBulkSelected([]); }}
+            onClick={async () => { await impactLight(); setBulkMode(!bulkMode); setBulkSelected([]); }}
           >
             <i className={`fas ${bulkMode ? 'fa-times' : 'fa-check-square'} mr-1`}></i>
             <span className="hidden md:inline">{bulkMode ? 'Cancel' : 'Select'}</span>
@@ -455,21 +474,24 @@ return (
         carrierFilter={carrierFilter}
         onCarrierFilterChange={setCarrierFilter}
         onRefresh={loadShipments}
-        onExport={() => alert("Exporting shipments...")}
+        onExport={async () => {
+          await impactLight();
+          await showToastNative({ text: 'Exporting shipments...', duration: 'short' });
+        }}
       />
 
       {/* Status Tabs - Scrollable on mobile */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 hide-scrollbar">
-        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${!statusFilter ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("")}>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${!statusFilter ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={async () => { await impactLight(); setStatusFilter(""); }}>
           All <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{shipments.length}</span>
         </div>
-        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "pending" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("pending")}>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "pending" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={async () => { await impactLight(); setStatusFilter("pending"); }}>
           <i className="fas fa-clock mr-1"></i>Pending <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{stats.pending}</span>
         </div>
-        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "shipped" || statusFilter === "in_transit" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("shipped")}>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "shipped" || statusFilter === "in_transit" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={async () => { await impactLight(); setStatusFilter("shipped"); }}>
           <i className="fas fa-shipping-fast mr-1"></i>In Transit <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{stats.inTransit}</span>
         </div>
-        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "delivered" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={() => setStatusFilter("delivered")}>
+        <div className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap cursor-pointer ${statusFilter === "delivered" ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white" : "bg-white border border-[#e2e8f0] text-[#64748b]"}`} onClick={async () => { await impactLight(); setStatusFilter("delivered"); }}>
           <i className="fas fa-check-circle mr-1"></i>Delivered <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-white/20">{stats.delivered}</span>
         </div>
       </div>

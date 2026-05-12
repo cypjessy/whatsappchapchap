@@ -1,6 +1,7 @@
 "use client";
 
 import { ShippingToolbarProps } from "./types";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 
 export function ShippingToolbar({
   searchTerm,
@@ -12,6 +13,7 @@ export function ShippingToolbar({
   onRefresh,
   onExport,
 }: ShippingToolbarProps) {
+  const { impactLight } = useHaptics();
   return (
     <div className="toolbar">
       <style jsx>{`
@@ -98,8 +100,8 @@ export function ShippingToolbar({
         </select>
       </div>
       <div className="toolbar-right">
-        <button className="btn btn-secondary" onClick={onRefresh}><i className="fas fa-sync-alt"></i></button>
-        <button className="btn btn-secondary" onClick={onExport}><i className="fas fa-download"></i></button>
+        <button className="btn btn-secondary" onClick={async () => { await impactLight(); onRefresh(); }}><i className="fas fa-sync-alt"></i></button>
+        <button className="btn btn-secondary" onClick={async () => { await impactLight(); onExport(); }}><i className="fas fa-download"></i></button>
       </div>
     </div>
   );

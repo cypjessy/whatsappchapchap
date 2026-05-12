@@ -2,6 +2,7 @@
 
 import { Shipment } from "@/lib/db";
 import { statusLabels } from "./types";
+import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 
 interface TrackingModalProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface TrackingModalProps {
 }
 
 export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: TrackingModalProps) {
+  const { impactLight } = useHaptics();
+  const { show: showToastNative } = useToast();
   if (!isOpen || !shipment) return null;
 
   const getDateString = (date: any) => {
@@ -40,9 +43,11 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
     vehicle: "KBA 123X",
   };
 
-  const handleNotifyCustomer = () => {
+  const handleNotifyCustomer = async () => {
+    await impactLight();
     const message = encodeURIComponent(`Hello ${shipment.customerName || 'Customer'}! Your order #${shipment.orderId} is out for delivery. Track: ${shipment.trackingNumber || 'WS-2026-00000'}`);
     window.open(`https://wa.me/${shipment.customerPhone?.replace(/\D/g, '')}?text=${message}`, '_blank');
+    await showToastNative({ text: 'Opening WhatsApp...', duration: 'short' });
   };
 
   return (
@@ -561,10 +566,10 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
               </div>
             </div>
             <div className="header-actions">
-              <button className="header-btn" onClick={() => window.print()} title="Print">
+              <button className="header-btn" onClick={async () => { await impactLight(); window.print(); }} title="Print">
                 <i className="fas fa-print"></i>
               </button>
-              <button className="header-btn" onClick={onClose} title="Close">
+              <button className="header-btn" onClick={async () => { await impactLight(); onClose(); }} title="Close">
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -583,7 +588,7 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
             </div>
           </div>
           <div className="status-right">
-            <button className="action-pill" onClick={() => window.open('https://sendyit.com', '_blank')}>
+            <button className="action-pill" onClick={async () => { await impactLight(); window.open('https://sendyit.com', '_blank'); }}>
               <i className="fas fa-external-link-alt"></i>
               Track on {carrier.name}
             </button>
@@ -881,11 +886,11 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
             <span>Fully insured • Real-time tracking • WhatsApp notifications enabled</span>
           </div>
           <div className="footer-actions">
-            <button className="btn btn-secondary">
+            <button className="btn btn-secondary" onClick={async () => { await impactLight(); }}>
               <i className="fas fa-edit"></i>
               Edit
             </button>
-            <button className="btn btn-danger">
+            <button className="btn btn-danger" onClick={async () => { await impactLight(); }}>
               <i className="fas fa-times"></i>
               Cancel
             </button>
@@ -893,7 +898,7 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
               <i className="fab fa-whatsapp"></i>
               Notify
             </button>
-            <button className="btn btn-primary" onClick={() => window.print()}>
+            <button className="btn btn-primary" onClick={async () => { await impactLight(); window.print(); }}>
               <i className="fas fa-print"></i>
               Reprint Label
             </button>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Order } from "@/lib/db";
+import { useToast } from "@/hooks/useNativeAndroid";
 
 interface ShippingMethod {
   id: string;
@@ -19,6 +20,7 @@ interface CreateShipmentModalProps {
 }
 
 export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], shippingMethods = [], selectedOrder = null }: CreateShipmentModalProps) {
+  const { show: showToastNative } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
@@ -46,30 +48,30 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
     setSelectedOrders(newSelected);
   };
 
-  const validateStep = (step: number): boolean => {
+  const validateStep = async (step: number): Promise<boolean> => {
     if (step === 1) {
       if (selectedOrders.size === 0) {
-        alert("Please select at least one order to ship");
+        await showToastNative({ text: 'Please select at least one order to ship', position: 'top' });
         return false;
       }
     }
     if (step === 2) {
       if (!formData.carrier) {
-        alert("Please select a shipping carrier");
+        await showToastNative({ text: 'Please select a shipping carrier', position: 'top' });
         return false;
       }
     }
     if (step === 3) {
       if (!formData.weight || parseFloat(formData.weight) <= 0) {
-        alert("Please enter a valid weight");
+        await showToastNative({ text: 'Please enter a valid weight', position: 'top' });
         return false;
       }
     }
     return true;
   };
 
-  const nextStep = () => {
-    if (validateStep(currentStep)) {
+  const nextStep = async () => {
+    if (await validateStep(currentStep)) {
       if (currentStep < totalSteps) {
         setCurrentStep(prev => prev + 1);
       }
@@ -97,9 +99,9 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
     return `${prefix}-${year}-${random}`;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.confirm) {
-      alert("Please confirm the shipment details");
+      await showToastNative({ text: 'Please confirm the shipment details', position: 'top' });
       return;
     }
     const selectedOrderData = selectedOrder || orders.find(o => selectedOrders.has(o.id));
