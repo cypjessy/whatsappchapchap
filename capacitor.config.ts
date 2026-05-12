@@ -24,7 +24,7 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true, // Hides status+nav bar during splash
-      fadeOutDuration: 300,
+      launchFadeOutDuration: 300,
     },
     StatusBar: {
       style: 'light',
