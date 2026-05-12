@@ -64,7 +64,7 @@ export default function LoginForm({
               id="password"
               value={password}
               onChange={(e) => onPasswordChange(e.target.value)}
-              className="w-full px-4 py-4 pl-14 border-2 border-[#e5e7eb] rounded-xl text-base bg-[#fafafa] text-[#1a1a2e] focus:outline-none focus:border-[#25D366] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)] transition-all"
+              className="w-full px-4 py-4 pl-14 pr-14 border-2 border-[#e5e7eb] rounded-xl text-base bg-[#fafafa] text-[#1a1a2e] focus:outline-none focus:border-[#25D366] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)] transition-all"
               placeholder="Enter your password"
               required
             />
