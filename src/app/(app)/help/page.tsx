@@ -40,7 +40,7 @@ export default function HelpPage() {
   };
 
   return (
-    <div className="animate-fadeIn px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
+    <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-[#25D366] to-[#128C7E] py-16 text-center text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-30" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "20px 20px" }}></div>

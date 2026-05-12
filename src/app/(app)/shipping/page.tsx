@@ -426,7 +426,7 @@ export default function ShippingPage() {
   };
 
 return (
-    <div className="px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
+    <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       <style jsx>{`
         @media (max-width: 768px) {
           .hide-scrollbar::-webkit-scrollbar { display: none; }
