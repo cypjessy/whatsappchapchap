@@ -16,7 +16,6 @@ export default function WhatsAppConnectionManager({
 }: WhatsAppConnectionManagerProps) {
   const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [confirmingLogout, setConfirmingLogout] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
@@ -27,25 +26,22 @@ export default function WhatsAppConnectionManager({
       setIsLoading(true);
       
       await logoutInstance(instanceName);
-      
-      setConnectionStatus('disconnected');
-      setConfirmingLogout(false);
-      
       await notificationSuccess();
-      if (onConnectionChange) onConnectionChange(false);
     } catch (err) {
       console.error('Failed to disconnect:', err);
       await notificationError();
     } finally {
+      setConnectionStatus('disconnected');
+      setConfirmingLogout(false);
       setIsLoading(false);
+      if (onConnectionChange) onConnectionChange(false);
     }
   };
 
-  const handleConnectSuccess = (data?: any) => {
+  const handleConnectSuccess = () => {
     impactLight();
     setConnectionStatus('connected');
     setShowConnectModal(false);
-    setIsConnecting(false);
     if (onConnectionChange) onConnectionChange(true);
   };
 
@@ -184,7 +180,6 @@ export default function WhatsAppConnectionManager({
           onClick={() => {
             impactLight();
             setShowConnectModal(true);
-            setIsConnecting(true);
           }}
           disabled={isLoading}
           className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
@@ -201,10 +196,7 @@ export default function WhatsAppConnectionManager({
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
               <h3 className="text-lg font-bold text-gray-900">Connect WhatsApp</h3>
               <button
-                onClick={() => {
-                  setShowConnectModal(false);
-                  setIsConnecting(false);
-                }}
+                onClick={() => setShowConnectModal(false)}
                 className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
               >
                 <i className="fas fa-times text-gray-500"></i>
@@ -215,7 +207,7 @@ export default function WhatsAppConnectionManager({
               <WhatsAppConnect 
                 instanceName={instanceName}
                 onConnected={handleConnectSuccess}
-                autoStart={isConnecting}
+                autoStart={showConnectModal}
               />
             </div>
           </div>
