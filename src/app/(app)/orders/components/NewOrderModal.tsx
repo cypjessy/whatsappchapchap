@@ -446,10 +446,10 @@ export default function NewOrderModal({
       <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] animate-fadeIn" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-2 sm:p-4 pointer-events-none overflow-y-auto">
+      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 pointer-events-none overflow-y-auto">
         <div
           ref={modalRef}
-          className="bg-white rounded-2xl w-full max-w-[900px] max-h-[92vh] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp my-auto"
+          className="bg-white rounded-2xl w-full max-w-sm md:max-w-2xl lg:max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp my-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

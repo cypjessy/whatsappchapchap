@@ -742,11 +742,11 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
 
   return (
     <div
-      className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] flex items-start justify-center p-3 md:p-4 overflow-y-auto animate-fadeIn"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-2 md:my-8 animate-scaleIn"
+        className="bg-white rounded-2xl w-full max-w-sm md:max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden my-2 md:my-8 animate-scaleIn flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

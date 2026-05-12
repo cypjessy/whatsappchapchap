@@ -178,7 +178,7 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
           background: #ffffff;
           border-radius: 20px 20px 0 0;
           width: 100%;
-          max-width: 1000px;
+          max-width: 448px;
           max-height: 95vh;
           overflow: hidden;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -189,8 +189,11 @@ export function CreateShipmentModal({ isOpen, onClose, onSubmit, orders = [], sh
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @media (min-width: 768px) {
           .modal-overlay { padding: 2rem; align-items: center; }
-          .modal-container { border-radius: 20px; max-height: 90vh; animation-name: slideUpDesktop; }
+          .modal-container { border-radius: 20px; max-height: 90vh; max-width: 672px; animation-name: slideUpDesktop; }
           @keyframes slideUpDesktop { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        }
+        @media (min-width: 1024px) {
+          .modal-container { max-width: 1000px; }
         }
         .modal-header {
           background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);

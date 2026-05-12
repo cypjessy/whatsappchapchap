@@ -425,9 +425,9 @@ export default function OrderDetailModal({
       <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] animate-fadeIn" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-0 md:p-4 lg:p-6 pointer-events-none overflow-y-auto">
+      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 lg:p-6 pointer-events-none overflow-y-auto">
         <div
-          className="bg-white w-full min-h-screen md:min-h-0 md:rounded-2xl md:max-w-[1000px] md:max-h-[calc(100vh-3rem)] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp"
+          className="bg-white w-full max-w-sm md:max-w-[1000px] max-h-[90vh] md:max-h-[calc(100vh-3rem)] rounded-2xl overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ─── Unified Header ─── */}

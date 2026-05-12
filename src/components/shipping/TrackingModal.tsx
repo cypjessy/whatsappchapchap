@@ -74,7 +74,7 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
           background: #ffffff;
           border-radius: 20px 20px 0 0;
           width: 100%;
-          max-width: 1100px;
+          max-width: 448px;
           max-height: 95vh;
           overflow: hidden;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -85,8 +85,11 @@ export function TrackingModal({ isOpen, shipment, onClose, onUpdateStatus }: Tra
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @media (min-width: 768px) {
           .modal-overlay { padding: 2rem; align-items: center; }
-          .modal { border-radius: 20px; max-height: 90vh; animation-name: slideUpDesktop; }
+          .modal { border-radius: 20px; max-height: 90vh; max-width: 672px; animation-name: slideUpDesktop; }
           @keyframes slideUpDesktop { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        }
+        @media (min-width: 1024px) {
+          .modal { max-width: 1100px; }
         }
         .modal-handle { display: block; width: 40px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0.75rem auto; }
         @media (min-width: 768px) { .modal-handle { display: none; } }

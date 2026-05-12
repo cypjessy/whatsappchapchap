@@ -773,7 +773,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
         {/* Modal */}
         <div
           className={`
-            relative bg-white w-full md:w-[95vw] md:max-w-[1100px] max-h-[92vh] md:max-h-[90vh]
+            relative bg-white w-full max-w-sm md:max-w-2xl lg:max-w-[1100px] max-h-[90vh] md:max-h-[90vh]
             rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden
             transition-all duration-300
             ${isClosing ? "translate-y-8 opacity-0" : "translate-y-0 opacity-100"}
