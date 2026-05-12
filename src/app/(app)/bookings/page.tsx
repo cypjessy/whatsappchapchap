@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { serviceService, bookingService, Booking, Service } from "@/lib/db";
 import ManualBookingModal from "./components/ManualBookingModal";
 import ViewBookingModal from "./components/ViewBookingModal";
@@ -149,6 +150,10 @@ function EmptyState({ viewMode }: { viewMode: ViewMode }) {
 
 export default function BookingsPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToastNative } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState("all");
@@ -258,64 +263,81 @@ export default function BookingsPage() {
     }
   };
 
-  const handleBookingCreated = () => {
+  const handleBookingCreated = async () => {
+    await notificationSuccess();
+    await showToastNative({ text: 'Booking created successfully!', duration: 'short' });
     loadBookings();
-    addToast("Booking created successfully!");
   };
 
   const handleUpdateStatus = async (bookingId: string, newStatus: Booking["status"]) => {
     if (!user) return;
+    
+    await impactMedium();
+    
     try {
       await bookingService.updateBooking(user, bookingId, { status: newStatus });
+      await notificationSuccess();
+      await showToastNative({ text: `Booking ${newStatus}`, duration: 'short' });
       loadBookings();
       setSelectedBooking(null);
-      addToast(`Booking marked as ${newStatus}`);
     } catch (error) {
       console.error("Error updating status:", error);
-      addToast("Failed to update booking status", "error");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update booking', position: 'top' });
     }
   };
 
   const handleConfirmPayment = async (bookingId: string, paymentProof: any) => {
     if (!user) return;
+    
+    await notificationSuccess();
+    
     try {
       await bookingService.updateBooking(user, bookingId, {
         paymentProof,
         paymentStatus: "paid",
         status: "confirmed",
       });
+      await showToastNative({ text: 'Payment confirmed!', duration: 'short' });
       loadBookings();
       setPaymentModalOpen(false);
       setSelectedBooking(null);
-      addToast("Payment confirmed successfully!");
     } catch (error) {
       console.error("Error confirming payment:", error);
+      await notificationError();
       throw error;
     }
   };
 
   const handleDeleteBooking = async (bookingId: string) => {
     if (!user) return;
+    
+    await impactMedium();
+    
     try {
       await bookingService.deleteBooking(user, bookingId);
+      await showToastNative({ text: 'Booking deleted', duration: 'short' });
       loadBookings();
       setShowDeleteConfirm(null);
       setBulkSelected((prev) => prev.filter((id) => id !== bookingId));
-      addToast("Booking deleted");
     } catch (error) {
       console.error("Error deleting booking:", error);
-      addToast("Failed to delete booking", "error");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete booking', position: 'top' });
     }
   };
 
   const handleSendMessage = async (booking: Booking) => {
     if (!booking) return;
+    
+    await impactLight();
+    
     const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n Service: ${booking.service || 'N/A'}\n📅 Date: ${formatDate(booking.date)}\n⏰ Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${(booking.price || 0).toLocaleString()}\n\nThank you!`;
 
     try {
       if (user) {
         await sendEvolutionWhatsAppMessage(booking.phone, message, `tenant_${user.uid}`);
-        addToast("Message sent!");
+        await showToastNative({ text: 'Message sent!', duration: 'short' });
       }
     } catch {
       window.open(
@@ -326,12 +348,14 @@ export default function BookingsPage() {
     }
   };
 
-  const handleEditBooking = (booking: Booking) => {
+  const handleEditBooking = async (booking: Booking) => {
+    await impactLight();
     setEditingBooking(booking);
     setEditModalOpen(true);
   };
 
-  const toggleBulkSelect = (bookingId: string) => {
+  const toggleBulkSelect = async (bookingId: string) => {
+    await impactLight();
     setBulkSelected((prev) =>
       prev.includes(bookingId) ? prev.filter((id) => id !== bookingId) : [...prev, bookingId]
     );
@@ -347,31 +371,40 @@ export default function BookingsPage() {
 
   const handleBulkStatusUpdate = async (newStatus: Booking["status"]) => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(
         bulkSelected.map((id) => bookingService.updateBooking(user, id, { status: newStatus }))
       );
+      await notificationSuccess();
+      await showToastNative({ text: `${bulkSelected.length} bookings updated`, duration: 'short' });
       loadBookings();
       setBulkSelected([]);
       setBulkMode(false);
-      addToast(`${bulkSelected.length} bookings updated`);
     } catch (error) {
       console.error("Error updating bookings:", error);
-      addToast("Failed to update some bookings", "error");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update bookings', position: 'top' });
     }
   };
 
   const handleBulkDelete = async () => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(bulkSelected.map((id) => bookingService.deleteBooking(user, id)));
+      await showToastNative({ text: `${bulkSelected.length} bookings deleted`, duration: 'short' });
       loadBookings();
       setBulkSelected([]);
       setBulkMode(false);
-      addToast(`${bulkSelected.length} bookings deleted`);
     } catch (error) {
       console.error("Error deleting bookings:", error);
-      addToast("Failed to delete some bookings", "error");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete bookings', position: 'top' });
     }
   };
 
@@ -410,6 +443,7 @@ export default function BookingsPage() {
   }, [bookings, searchQuery, selectedServiceFilter, filterPaymentStatus, dateRangeStart, dateRangeEnd, selectedDate]);
 
   const handleExportCSV = useCallback(async () => {
+    await impactLight();
     setIsExporting(true);
     try {
       const headers = ["Client", "Phone", "Service", "Date", "Time", "Duration", "Location", "Price", "Status", "Payment Status"];
@@ -437,11 +471,11 @@ export default function BookingsPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      addToast(`Exported ${filteredBookings.length} bookings`);
+      await showToastNative({ text: `Exported ${filteredBookings.length} bookings`, duration: 'short' });
     } finally {
       setIsExporting(false);
     }
-  }, [filteredBookings, addToast]);
+  }, [filteredBookings, impactLight, showToastNative]);
 
   // Analytics
   const analytics = useMemo(() => {
@@ -605,7 +639,10 @@ export default function BookingsPage() {
             {VIEW_TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setViewMode(tab.id)}
+                onClick={async () => {
+                  await impactLight();
+                  setViewMode(tab.id);
+                }}
                 className={`
                   flex-1 min-w-[80px] flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2
                   px-3 py-2.5 md:px-4 md:py-3 rounded-lg font-bold text-[10px] md:text-xs transition-all duration-200
