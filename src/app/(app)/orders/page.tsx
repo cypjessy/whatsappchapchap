@@ -914,9 +914,9 @@ export default function OrdersPage() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="animate-fadeIn max-w-[1400px] mx-auto px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
+    <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-3 pt-3" style={{ animationDelay: '0.1s' }}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-[#1e293b] flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
