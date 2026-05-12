@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { customerService, Customer, orderService, Order } from "@/lib/db";
 import {
   CustomersHeader,
@@ -19,6 +20,10 @@ import {
 
 export default function CustomersPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToastNative } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSegment, setActiveSegment] = useState("all");
@@ -153,6 +158,8 @@ export default function CustomersPage() {
         rating: 0,
         services: [],
       });
+      await notificationSuccess();
+      await showToastNative({ text: 'Customer added successfully', duration: 'short' });
       loadCustomers();
       setShowAddModal(false);
       setNewCustomer({
@@ -165,6 +172,8 @@ export default function CustomersPage() {
       setFormErrors({});
     } catch (error) {
       console.error("Error creating customer:", error);
+      await notificationError();
+      await showToastNative({ text: 'Failed to add customer', position: 'top' });
     } finally {
       setSavingCustomer(false);
     }
@@ -256,7 +265,7 @@ export default function CustomersPage() {
 
   const sendBroadcast = async () => {
     if (!broadcastMessage.trim()) {
-      alert("Please enter a message");
+      await showToastNative({ text: 'Please enter a message', position: 'top' });
       return;
     }
     setSendingBroadcast(true);
@@ -267,11 +276,14 @@ export default function CustomersPage() {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
-      alert(`Broadcast sent to ${customers.length} customers!`);
+      await notificationSuccess();
+      await showToastNative({ text: `Broadcast sent to ${customers.length} customers`, duration: 'short' });
       setShowBroadcastModal(false);
       setBroadcastMessage("");
     } catch (error) {
       console.error("Error sending broadcast:", error);
+      await notificationError();
+      await showToastNative({ text: 'Failed to send broadcast', position: 'top' });
     } finally {
       setSendingBroadcast(false);
     }
@@ -279,11 +291,17 @@ export default function CustomersPage() {
 
   const updateCustomerNotes = async () => {
     if (!user || !selectedCustomer) return;
+    
+    await impactLight();
+    
     try {
       await customerService.updateClient(user, selectedCustomer.id, { notes: customerNotes });
+      await showToastNative({ text: 'Notes updated', duration: 'short' });
       loadCustomers();
     } catch (error) {
       console.error("Error updating notes:", error);
+      await notificationError();
+      await showToastNative({ text: 'Failed to update notes', position: 'top' });
     }
   };
 
@@ -326,7 +344,8 @@ export default function CustomersPage() {
     }
   };
 
-  const toggleCustomerSelection = (customerId: string) => {
+  const toggleCustomerSelection = async (customerId: string) => {
+    await impactLight();
     setBulkSelected(prev => 
       prev.includes(customerId) 
         ? prev.filter(id => id !== customerId)
@@ -337,40 +356,52 @@ export default function CustomersPage() {
   // Bulk status update
   const handleBulkStatusUpdate = async (newStatus: 'active' | 'new' | 'vip' | 'inactive') => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(
         bulkSelected.map(id => customerService.updateClient(user, id, { status: newStatus }))
       );
+      await notificationSuccess();
+      await showToastNative({ text: `Updated ${bulkSelected.length} customers`, duration: 'short' });
       loadCustomers();
       setBulkSelected([]);
       setBulkMode(false);
-      alert(`Updated ${bulkSelected.length} customers to ${newStatus}`);
     } catch (error) {
       console.error("Error updating customers:", error);
-      alert("Failed to update some customers");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update customers', position: 'top' });
     }
   };
 
   // Bulk delete
   const handleBulkDelete = async () => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(
         bulkSelected.map(id => customerService.deleteClient(user, id))
       );
+      await showToastNative({ text: `Deleted ${bulkSelected.length} customers`, duration: 'short' });
       loadCustomers();
       setBulkSelected([]);
       setBulkMode(false);
-      alert(`Deleted ${bulkSelected.length} customers`);
     } catch (error) {
       console.error("Error deleting customers:", error);
-      alert("Failed to delete some customers");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete customers', position: 'top' });
     }
   };
 
   // Duplicate customer
   const handleDuplicateCustomer = async (customer: Customer) => {
     if (!user) return;
+    
+    await impactLight();
+    
     try {
       const initials = customer.initials || customer.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
       await customerService.createClient(user, {
@@ -387,11 +418,13 @@ export default function CustomersPage() {
         rating: customer.rating,
         services: customer.services,
       });
+      await notificationSuccess();
+      await showToastNative({ text: 'Customer duplicated', duration: 'short' });
       loadCustomers();
-      alert('Customer duplicated successfully!');
     } catch (error) {
       console.error("Error duplicating customer:", error);
-      alert("Failed to duplicate customer");
+      await notificationError();
+      await showToastNative({ text: 'Failed to duplicate customer', position: 'top' });
     }
   };
 
