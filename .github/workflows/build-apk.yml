@@ -48,9 +48,18 @@ jobs:
           mv cmdline-tools latest
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0" 2>&1 | tail -n 1
       
-      - name: Install Capacitor
+      - name: Install Capacitor CLI
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
-      
+
+      - name: Create dummy out directory
+        run: mkdir -p out && echo "<html></html>" > out/index.html
+
+      - name: Add Android platform if missing
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
       - name: Sync with Capacitor
         run: npx cap sync android
       

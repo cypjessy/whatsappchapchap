@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     url: 'https://whatsappchapchap.vercel.app',
-    cleartext: true
+    cleartext: false
   },
   plugins: {
     SplashScreen: {
