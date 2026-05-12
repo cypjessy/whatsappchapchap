@@ -174,8 +174,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('https://i.postimg.cc/4dq5cfwN/pexels-aboodi-18889461.jpg') center/cover no-repeat;
-  opacity: 0.25;
+  background: rgba(255, 255, 255, 0.97);
   z-index: -1;
   pointer-events: none;
 }
