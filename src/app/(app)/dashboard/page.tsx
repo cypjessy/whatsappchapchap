@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 import {
   DashboardHeader,
   QuickActions,
@@ -73,15 +74,17 @@ function SectionWrapper({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { impactLight } = useHaptics();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
+    await impactLight();
     setIsRefreshing(true);
     setRefreshTrigger((prev) => prev + 1);
     // Allow components to reload
     setTimeout(() => setIsRefreshing(false), 1000);
-  }, []);
+  }, [impactLight]);
 
   return (
     <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4">
