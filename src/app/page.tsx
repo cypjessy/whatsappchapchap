@@ -126,7 +126,7 @@ export default function LandingPage() {
 
   // Show landing page for web browsers
   return (
-    <div className="min-h-screen">
+    <div className="landing-page-wrapper">
       <Navbar scrolled={scrolled} onNavigate={handleNavigate} onScroll={handleScrollTo} />
       <Hero typedText={typedText} particles={particles} onNavigate={handleNavigate} />
       <Features />
