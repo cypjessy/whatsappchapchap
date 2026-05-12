@@ -174,8 +174,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('https://i.postimg.cc/9f1zp2kr/pexels-steve-12977019.jpg') center/cover no-repeat;
-  opacity: 0.15;
+  background: #ffffff;
   z-index: -1;
   pointer-events: none;
 }
