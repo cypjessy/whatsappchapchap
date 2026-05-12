@@ -7,6 +7,37 @@ import { useAppLifecycle } from "@/hooks/useAppLifecycle";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useEffect, useState } from 'react';
 
+// Helper function to show exit toast on Android back button
+const showExitToast = () => {
+  if (typeof window === 'undefined') return;
+  
+  // Don't show multiple toasts
+  if (document.getElementById('exit-toast')) return;
+  
+  const toast = document.createElement('div');
+  toast.id = 'exit-toast';
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 9999;
+    white-space: nowrap;
+    pointer-events: none;
+  `;
+  toast.innerText = 'Press back again to exit';
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    document.getElementById('exit-toast')?.remove();
+  }, 2000);
+};
+
 export default function DashboardLayout({
   children,
 }: {
@@ -74,17 +105,26 @@ export default function DashboardLayout({
           console.warn('[Layout] Failed to lock orientation:', err);
         }
 
-        // 4. Handle Android back button
+        // 4. Handle Android back button with double-press-to-exit
+        let lastBackPress = 0;
         App.addListener('backButton', ({ canGoBack }) => {
+          const now = Date.now();
+          
           if (canGoBack) {
+            // Go back in app history
             window.history.back();
           } else {
-            // Show exit confirmation or exit app
-            console.log('[Layout] Back button pressed at root - exiting app');
-            App.exitApp();
+            // On root page — double press to exit
+            if (now - lastBackPress < 2000) {
+              console.log('[Layout] Double back press detected - exiting app');
+              App.exitApp();
+            } else {
+              lastBackPress = now;
+              showExitToast();
+            }
           }
         });
-        console.log('[Layout] Back button handler registered');
+        console.log('[Layout] Back button handler registered with double-press-to-exit');
 
         // 5. Hide splash screen with fade effect
         setTimeout(async () => {
