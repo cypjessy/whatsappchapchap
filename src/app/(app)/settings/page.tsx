@@ -3,9 +3,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { businessProfileService, whatsappSettingsService, shippingService, pickupStationService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, PickupStation, ProductSettings, ServiceSettings } from "@/lib/db";
+import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { show: showToastNative } = useToast();
   const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments">("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -246,7 +249,8 @@ export default function SettingsPage() {
       console.log("Settings data loaded successfully");
     } catch (error) {
       console.error("Error loading data:", error);
-      alert("Error loading settings. Please refresh the page.");
+      await notificationError();
+      await showToastNative({ text: 'Error loading settings. Please refresh the page.', position: 'top' });
     } finally {
       setLoading(false);
     }
@@ -265,7 +269,7 @@ export default function SettingsPage() {
     
     // Validate required fields
     if (!profile.businessName || profile.businessName.trim() === "") {
-      alert("Business Name is required!");
+      await showToastNative({ text: 'Business Name is required!', position: 'top' });
       return;
     }
     
@@ -306,10 +310,12 @@ export default function SettingsPage() {
       
       console.log("Saving profile:", cleanedProfile);
       await businessProfileService.createOrUpdateProfile(user, cleanedProfile as any);
-      alert("Business profile saved successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Business profile saved successfully!', duration: 'short' });
     } catch (error: any) {
       console.error("Error saving profile:", error);
-      alert(`Failed to save profile: ${error.message || "Unknown error"}`);
+      await notificationError();
+      await showToastNative({ text: `Failed to save profile: ${error.message || "Unknown error"}`, position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -320,7 +326,7 @@ export default function SettingsPage() {
     
     // Validate required fields
     if (!whatsappSettings.businessName || whatsappSettings.businessName.trim() === "") {
-      alert("Business Name is required for WhatsApp settings!");
+      await showToastNative({ text: 'Business Name is required for WhatsApp settings!', position: 'top' });
       return;
     }
     
@@ -333,10 +339,12 @@ export default function SettingsPage() {
       
       console.log("Saving WhatsApp settings:", cleanedSettings);
       await whatsappSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
-      alert("WhatsApp settings saved successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'WhatsApp settings saved successfully!', duration: 'short' });
     } catch (error: any) {
       console.error("Error saving WhatsApp settings:", error);
-      alert(`Failed to save WhatsApp settings: ${error.message || "Unknown error"}`);
+      await notificationError();
+      await showToastNative({ text: `Failed to save WhatsApp settings: ${error.message || "Unknown error"}`, position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -354,10 +362,12 @@ export default function SettingsPage() {
       
       console.log("Saving product settings:", cleanedSettings);
       await productSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
-      alert("Product settings saved successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Product settings saved successfully!', duration: 'short' });
     } catch (error: any) {
       console.error("Error saving product settings:", error);
-      alert(`Failed to save product settings: ${error.message || "Unknown error"}`);
+      await notificationError();
+      await showToastNative({ text: `Failed to save product settings: ${error.message || "Unknown error"}`, position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -375,10 +385,12 @@ export default function SettingsPage() {
       
       console.log("Saving service settings:", cleanedSettings);
       await serviceSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
-      alert("Service settings saved successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Service settings saved successfully!', duration: 'short' });
     } catch (error: any) {
       console.error("Error saving service settings:", error);
-      alert(`Failed to save service settings: ${error.message || "Unknown error"}`);
+      await notificationError();
+      await showToastNative({ text: `Failed to save service settings: ${error.message || "Unknown error"}`, position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -392,18 +404,22 @@ export default function SettingsPage() {
         // Update existing method
         await shippingService.updateShippingMethod(user, editingMethodId, newShippingMethod as any);
         setEditingMethodId(null);
-        alert("Shipping method updated!");
+        await notificationSuccess();
+        await showToastNative({ text: 'Shipping method updated!', duration: 'short' });
       } else {
         // Create new method
+        await impactLight();
         await shippingService.createShippingMethod(user, newShippingMethod as any);
-        alert("Shipping method added!");
+        await notificationSuccess();
+        await showToastNative({ text: 'Shipping method added!', duration: 'short' });
       }
       setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" });
       setSelectedPreset("");
       await loadData();
     } catch (error) {
       console.error("Error saving shipping method:", error);
-      alert("Failed to save shipping method");
+      await notificationError();
+      await showToastNative({ text: 'Failed to save shipping method', position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -424,7 +440,9 @@ export default function SettingsPage() {
 
   const deleteShippingMethod = async (methodId: string) => {
     if (!user) return;
-    if (!confirm("Delete this shipping method?")) return;
+    
+    await impactMedium();
+    
     try {
       await shippingService.deleteShippingMethod(user, methodId);
       // If we're editing this method, clear the form
@@ -432,13 +450,18 @@ export default function SettingsPage() {
         setEditingMethodId(null);
         setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" });
       }
+      await notificationSuccess();
+      await showToastNative({ text: 'Shipping method deleted', duration: 'short' });
       await loadData();
     } catch (error) {
       console.error("Error deleting shipping method:", error);
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete shipping method', position: 'top' });
     }
   };
 
-  const editShippingMethod = (method: ShippingMethod) => {
+  const editShippingMethod = async (method: ShippingMethod) => {
+    await impactLight();
     setEditingMethodId(method.id);
     setNewShippingMethod({
       name: method.name,
@@ -456,6 +479,7 @@ export default function SettingsPage() {
     if (!user || !newPickupStation.county || !newPickupStation.town || !newPickupStation.stationName) return;
     setSaving(true);
     try {
+      await impactLight();
       await pickupStationService.createPickupStation(user, newPickupStation as any);
       
       // Refresh stations list
@@ -474,10 +498,12 @@ export default function SettingsPage() {
         isActive: true,
       });
       
-      alert("Pickup station added successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Pickup station added successfully!', duration: 'short' });
     } catch (error) {
       console.error("Error adding pickup station:", error);
-      alert("Failed to add pickup station");
+      await notificationError();
+      await showToastNative({ text: 'Failed to add pickup station', position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -506,10 +532,12 @@ export default function SettingsPage() {
         isActive: true,
       });
       
-      alert("Pickup station updated successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Pickup station updated successfully!', duration: 'short' });
     } catch (error) {
       console.error("Error updating pickup station:", error);
-      alert("Failed to update pickup station");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update pickup station', position: 'top' });
     } finally {
       setSaving(false);
     }
@@ -517,7 +545,9 @@ export default function SettingsPage() {
 
   const deletePickupStation = async (stationId: string) => {
     if (!user) return;
-    if (!confirm("Delete this pickup station?")) return;
+    
+    await impactMedium();
+    
     try {
       await pickupStationService.deletePickupStation(user, stationId);
       
@@ -525,14 +555,17 @@ export default function SettingsPage() {
       const stations = await pickupStationService.getPickupStations(user);
       setPickupStations(stations);
       
-      alert("Pickup station deleted successfully!");
+      await notificationSuccess();
+      await showToastNative({ text: 'Pickup station deleted successfully!', duration: 'short' });
     } catch (error) {
       console.error("Error deleting pickup station:", error);
-      alert("Failed to delete pickup station");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete pickup station', position: 'top' });
     }
   };
 
-  const editPickupStation = (station: PickupStation) => {
+  const editPickupStation = async (station: PickupStation) => {
+    await impactLight();
     setEditingStationId(station.id);
     setNewPickupStation({
       county: station.county,
@@ -593,7 +626,7 @@ export default function SettingsPage() {
       {/* Tabs - Mobile Optimized */}
       <div className="flex gap-2 md:gap-2.5 mb-4 md:mb-6 overflow-x-auto pb-3 md:pb-4 scrollbar-hide snap-x snap-mandatory -mx-3 px-3 md:mx-0 md:px-0">
         <button
-          onClick={() => setActiveTab("profile")}
+          onClick={async () => { await impactLight(); setActiveTab("profile"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "profile"
               ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/20 scale-100"
@@ -605,7 +638,7 @@ export default function SettingsPage() {
           <span className="sm:hidden">Profile</span>
         </button>
         <button
-          onClick={() => setActiveTab("products")}
+          onClick={async () => { await impactLight(); setActiveTab("products"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "products"
               ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20 scale-100"
@@ -617,7 +650,7 @@ export default function SettingsPage() {
           <span className="sm:hidden">Products</span>
         </button>
         <button
-          onClick={() => setActiveTab("services")}
+          onClick={async () => { await impactLight(); setActiveTab("services"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "services"
               ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/20 scale-100"
@@ -629,7 +662,7 @@ export default function SettingsPage() {
           <span className="sm:hidden">Services</span>
         </button>
         <button
-          onClick={() => setActiveTab("shipping")}
+          onClick={async () => { await impactLight(); setActiveTab("shipping"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "shipping"
               ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg shadow-green-500/20 scale-100"
@@ -641,7 +674,7 @@ export default function SettingsPage() {
           <span className="sm:hidden">Shipping</span>
         </button>
         <button
-          onClick={() => setActiveTab("pickup-stations")}
+          onClick={async () => { await impactLight(); setActiveTab("pickup-stations"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "pickup-stations"
               ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20 scale-100"
@@ -653,7 +686,7 @@ export default function SettingsPage() {
           <span className="sm:hidden">Pickup</span>
         </button>
         <button
-          onClick={() => setActiveTab("whatsapp")}
+          onClick={async () => { await impactLight(); setActiveTab("whatsapp"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "whatsapp"
               ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/20 scale-100"
@@ -665,7 +698,7 @@ export default function SettingsPage() {
           <span className="sm:hidden">WhatsApp</span>
         </button>
         <button
-          onClick={() => setActiveTab("payments")}
+          onClick={async () => { await impactLight(); setActiveTab("payments"); }}
           className={`flex-shrink-0 px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all flex items-center gap-2 snap-start whitespace-nowrap select-none ${
             activeTab === "payments"
               ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/20 scale-100"
@@ -875,7 +908,7 @@ export default function SettingsPage() {
           {/* Save Button */}
           <div className="mt-6 flex justify-end">
             <button
-              onClick={saveProfile}
+              onClick={async () => { await impactLight(); saveProfile(); }}
               disabled={saving}
               className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
@@ -970,7 +1003,7 @@ export default function SettingsPage() {
           {/* Save Button */}
           <div className="mt-6 flex justify-end">
             <button
-              onClick={saveProductSettings}
+              onClick={async () => { await impactLight(); saveProductSettings(); }}
               disabled={saving}
               className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
@@ -1065,7 +1098,7 @@ export default function SettingsPage() {
           {/* Save Button */}
           <div className="mt-6 flex justify-end">
             <button
-              onClick={saveServiceSettings}
+              onClick={async () => { await impactLight(); saveServiceSettings(); }}
               disabled={saving}
               className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
@@ -1730,7 +1763,7 @@ export default function SettingsPage() {
           {/* Save Button */}
           <div className="flex justify-end">
             <button
-              onClick={saveWhatsAppSettings}
+              onClick={async () => { await impactLight(); saveWhatsAppSettings(); }}
               disabled={saving}
               className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
@@ -2092,7 +2125,7 @@ export default function SettingsPage() {
           {/* Save Button */}
           <div className="flex justify-end mt-4 md:mt-6 pt-4 md:pt-6 border-t border-[#e2e8f0]">
             <button
-              onClick={saveProfile}
+              onClick={async () => { await impactLight(); saveProfile(); }}
               disabled={saving}
               className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base"
             >
