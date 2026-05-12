@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
+import WhatsAppConnectionManager from "@/components/WhatsAppConnectionManager";
 import {
   DashboardHeader,
   QuickActions,
@@ -74,9 +76,11 @@ function SectionWrapper({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const { impactLight } = useHaptics();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [instanceName, setInstanceName] = useState<string | null>(null);
 
   const handleRefresh = useCallback(async () => {
     await impactLight();
@@ -85,6 +89,31 @@ export default function DashboardPage() {
     // Allow components to reload
     setTimeout(() => setIsRefreshing(false), 1000);
   }, [impactLight]);
+
+  // Fetch tenant instance name from Firestore
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchInstanceName = async () => {
+      try {
+        const tenantId = `tenant_${user.uid}`;
+        const { doc, getDoc } = await import("firebase/firestore");
+        const { db } = await import("@/lib/firebase");
+        
+        const tenantDoc = await getDoc(doc(db, "tenants", tenantId));
+        if (tenantDoc.exists()) {
+          const data = tenantDoc.data();
+          const instance = data.evolutionInstanceId || data.whatsappInstanceId || null;
+          setInstanceName(instance);
+          console.log('[Dashboard] Instance name:', instance);
+        }
+      } catch (err) {
+        console.error('[Dashboard] Error fetching instance name:', err);
+      }
+    };
+    
+    fetchInstanceName();
+  }, [user]);
 
   return (
     <div className="min-h-screen overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-32 md:pb-36">
@@ -97,6 +126,18 @@ export default function DashboardPage() {
       <SectionWrapper delay={100}>
         <QuickActions />
       </SectionWrapper>
+
+      {/* WhatsApp Connection Manager */}
+      {instanceName && (
+        <SectionWrapper delay={150}>
+          <WhatsAppConnectionManager 
+            instanceName={instanceName}
+            onConnectionChange={(connected) => {
+              console.log('[Dashboard] Connection changed:', connected);
+            }}
+          />
+        </SectionWrapper>
+      )}
 
       {/* Stats Grid */}
       <SectionWrapper delay={200}>

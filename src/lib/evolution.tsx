@@ -186,3 +186,13 @@ export const checkInstanceExists = async (instanceName: string): Promise<boolean
     return false;
   }
 };
+
+export const logoutInstance = async (instanceName: string) => {
+  try {
+    const result = await callEvolutionApi(`instance/logout/${instanceName}`, "POST");
+    return result;
+  } catch (err: any) {
+    console.error('[Evolution] Logout error:', err);
+    throw err;
+  }
+};
