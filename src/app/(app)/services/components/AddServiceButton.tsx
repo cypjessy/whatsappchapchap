@@ -604,12 +604,10 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       const bookingUrl = `${window.location.origin}/book/${createdService.id}`;
       await serviceService.updateService(user, createdService.id, { bookingUrl });
 
-      alert(`Service "${form.serviceName}" saved successfully!`);
       closeModal();
       window.location.reload();
     } catch (error) {
       console.error("Error saving service:", error);
-      alert("Failed to save service. Please try again.");
     } finally {
       setIsSaving(false);
       setIsUploading(false);

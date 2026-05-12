@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import AddServiceButton from "@/app/(app)/services/components/AddServiceButton";
 import ViewServiceModal from "@/app/(app)/services/components/ViewServiceModal";
 import ServicesHeader from "@/app/(app)/services/components/ServicesHeader";
@@ -246,6 +247,10 @@ function BulkActionBar({
 
 export default function ServicesPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToastNative } = useToast();
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [services, setServices] = useState<Service[]>([]);
@@ -285,47 +290,62 @@ export default function ServicesPage() {
 
   const handleDeleteService = async (serviceId: string) => {
     if (!user) return;
+    
+    await impactMedium();
+    
     try {
       await serviceService.deleteService(user, serviceId);
+      await showToastNative({ text: 'Service deleted', duration: 'short' });
       loadServices();
       setShowDeleteConfirm(null);
       setBulkSelected((prev) => prev.filter((id) => id !== serviceId));
     } catch (error) {
       console.error("Error deleting service:", error);
-      alert("Failed to delete service");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete service', position: 'top' });
     }
   };
 
   const handleToggleStatus = async (service: Service) => {
     if (!user) return;
+    
+    await impactLight();
+    
     const newStatus = service.status === "active" ? "paused" : "active";
     try {
       await serviceService.updateService(user, service.id, { status: newStatus });
+      await notificationSuccess();
+      await showToastNative({ text: `Service ${newStatus}`, duration: 'short' });
       loadServices();
     } catch (error) {
       console.error("Error updating service:", error);
-      alert("Failed to update service status");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update service', position: 'top' });
     }
   };
 
   const handleShareService = async (service: Service) => {
+    await impactLight();
+    
     const shareUrl = service.bookingUrl || `${window.location.origin}/book/${service.id}`;
     const shareText = `Book ${service.name} - Professional ${service.businessType} service`;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: service.name, text: shareText, url: shareUrl });
-      } catch {
-        // User cancelled
-      }
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      alert("Booking link copied to clipboard!");
+    const success = await share({
+      title: service.name,
+      text: shareText,
+      url: shareUrl
+    });
+    
+    if (success) {
+      await showToastNative({ text: 'Shared successfully', duration: 'short' });
     }
   };
 
   const handleDuplicateService = async (service: Service) => {
     if (!user) return;
+    
+    await impactLight();
+    
     try {
       const { id, createdAt, updatedAt, ...rest } = service as any;
       const duplicated = {
@@ -336,17 +356,20 @@ export default function ServicesPage() {
         views: 0,
       };
       await serviceService.createService(user, duplicated);
+      await notificationSuccess();
+      await showToastNative({ text: 'Service duplicated', duration: 'short' });
       loadServices();
-      alert("Service duplicated successfully!");
     } catch (error) {
       console.error("Error duplicating service:", error);
-      alert("Failed to duplicate service");
+      await notificationError();
+      await showToastNative({ text: 'Failed to duplicate service', position: 'top' });
     }
   };
 
   // ─── Bulk Operations ───────────────────────────────────────────────────────
 
-  const toggleBulkSelect = (serviceId: string) => {
+  const toggleBulkSelect = async (serviceId: string) => {
+    await impactLight();
     setBulkSelected((prev) =>
       prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
     );
@@ -362,30 +385,43 @@ export default function ServicesPage() {
 
   const handleBulkStatusUpdate = async (newStatus: ServiceStatus) => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(bulkSelected.map((id) => serviceService.updateService(user, id, { status: newStatus })));
+      await notificationSuccess();
+      await showToastNative({ text: `${bulkSelected.length} services updated`, duration: 'short' });
       loadServices();
       setBulkSelected([]);
     } catch (error) {
       console.error("Error updating services:", error);
-      alert("Failed to update some services");
+      await notificationError();
+      await showToastNative({ text: 'Failed to update services', position: 'top' });
     }
   };
 
   const handleBulkDelete = async () => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
+    
     try {
       await Promise.all(bulkSelected.map((id) => serviceService.deleteService(user, id)));
+      await showToastNative({ text: `${bulkSelected.length} services deleted`, duration: 'short' });
       loadServices();
       setBulkSelected([]);
       setBulkMode(false);
     } catch (error) {
       console.error("Error deleting services:", error);
-      alert("Failed to delete some services");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete services', position: 'top' });
     }
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
+    await impactLight();
+    
     const headers = ["Name", "Description", "Business Type", "Price Min", "Price Max", "Duration", "Location", "Status", "Bookings", "Views"];
     const rows = filteredServices.map((s) => [
       s.name,
@@ -409,6 +445,8 @@ export default function ServicesPage() {
     a.download = `services_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+    
+    await showToastNative({ text: 'Services exported', duration: 'short' });
   };
 
   // ─── Filtering & Sorting ────────────────────────────────────────────────────
