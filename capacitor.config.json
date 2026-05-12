@@ -1,0 +1,17 @@
+{
+  "icon": {
+    "foreground": {
+      "image": "assets/icon.png",
+      "padding": "0"
+    },
+    "background": {
+      "color": "#25D366"
+    }
+  },
+  "splash": {
+    "image": "assets/splash.png",
+    "backgroundColor": "#667eea",
+    "androidSplashResourceName": "splash",
+    "androidScaleType": "CENTER_CROP"
+  }
+}
