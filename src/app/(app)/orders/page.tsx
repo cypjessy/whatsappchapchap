@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import {
   orderService,
   Order,
@@ -170,6 +171,10 @@ function getStatusBadge(status?: string) {
 
 export default function OrdersPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToast } = useToast();
 
   // ─── Data State ─────────────────────────────────────────────────────────────
   const [orders, setOrders] = useState<Order[]>([]);
@@ -420,6 +425,9 @@ export default function OrdersPage() {
   const handleUpdateStatus = useCallback(
     async (status: OrderStatus) => {
       if (!user || !selectedOrder) return;
+      
+      await impactMedium();
+      
       try {
         await orderService.updateOrder(user, selectedOrder.id, { status });
 
@@ -430,13 +438,24 @@ export default function OrdersPage() {
           );
         }
 
+        await notificationSuccess();
+        await showToast({ 
+          text: `Order ${STATUS_BADGES[status]?.label || status}`, 
+          duration: 'short' 
+        });
+        
         loadOrders();
         loadCounts();
       } catch (error) {
         console.error("Error updating status:", error);
+        await notificationError();
+        await showToast({ 
+          text: 'Failed to update order', 
+          position: 'top' 
+        });
       }
     },
-    [user, selectedOrder, loadOrders, loadCounts]
+    [user, selectedOrder, loadOrders, loadCounts, impactMedium, notificationSuccess, notificationError, showToast]
   );
 
   const handlePrintInvoice = useCallback((order: Order) => {
@@ -549,6 +568,9 @@ export default function OrdersPage() {
   const handleDuplicateOrder = useCallback(
     async (order: Order) => {
       if (!user) return;
+      
+      await impactLight();
+      
       try {
         await orderService.createOrder(user, {
           orderNumber:
@@ -569,13 +591,18 @@ export default function OrdersPage() {
           status: "pending",
           notes: order.notes || "",
         });
+        
+        await notificationSuccess();
+        await showToast({ text: 'Order duplicated', duration: 'short' });
+        
         loadOrders();
         loadCounts();
       } catch (error) {
         console.error("Error duplicating order:", error);
+        await notificationError();
       }
     },
-    [user, loadOrders, loadCounts]
+    [user, loadOrders, loadCounts, impactLight, notificationSuccess, notificationError, showToast]
   );
 
   const sendWhatsAppNotification = useCallback(
@@ -613,21 +640,34 @@ export default function OrdersPage() {
   const handleBulkUpdateStatus = useCallback(
     async (status: Order["status"]) => {
       if (!user || selectedOrders.size === 0) return;
+      
+      await impactMedium();
+      
       try {
         for (const orderId of selectedOrders) {
           await orderService.updateOrder(user, orderId, { status });
         }
         setSelectedOrders(new Set());
+        
+        await notificationSuccess();
+        await showToast({ 
+          text: `${selectedOrders.size} orders updated`, 
+          duration: 'short' 
+        });
+        
         loadOrders();
         loadCounts();
       } catch (error) {
         console.error("Error bulk updating:", error);
+        await notificationError();
       }
     },
-    [user, selectedOrders, loadOrders, loadCounts]
+    [user, selectedOrders, loadOrders, loadCounts, impactMedium, notificationSuccess, notificationError, showToast]
   );
 
-  const handleExportCSV = useCallback(() => {
+  const handleExportCSV = useCallback(async () => {
+    await impactLight();
+    
     const headers = [
       "Order Number",
       "Customer Name",
@@ -656,7 +696,9 @@ export default function OrdersPage() {
     link.href = URL.createObjectURL(blob);
     link.download = `orders_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
-  }, [filteredOrders]);
+    
+    await showToast({ text: 'Orders exported', duration: 'short' });
+  }, [filteredOrders, impactLight, showToast]);
 
   // ─── Cancellation Handler ───────────────────────────────────────────────────
 
@@ -776,15 +818,19 @@ export default function OrdersPage() {
           notes: formData.notes,
         });
 
+        await notificationSuccess();
+        await showToast({ text: 'Order created successfully', duration: 'short' });
+        
         loadOrders();
         loadCounts();
         setNewOrderModalOpen(false);
       } catch (error) {
         console.error("Error creating order:", error);
+        await notificationError();
         throw error;
       }
     },
-    [user, loadOrders, loadCounts]
+    [user, loadOrders, loadCounts, notificationSuccess, notificationError, showToast]
   );
 
   // ─── Edit Order ─────────────────────────────────────────────────────────────
@@ -810,15 +856,19 @@ export default function OrdersPage() {
           status: formData.status,
         });
 
+        await notificationSuccess();
+        await showToast({ text: 'Order updated', duration: 'short' });
+        
         loadOrders();
         loadCounts();
         setEditModalOpen(false);
       } catch (error) {
         console.error("Error updating order:", error);
+        await notificationError();
         throw error;
       }
     },
-    [user, selectedOrder, loadOrders, loadCounts]
+    [user, selectedOrder, loadOrders, loadCounts, notificationSuccess, notificationError, showToast]
   );
 
   // ─── Tab Config ─────────────────────────────────────────────────────────────
@@ -843,7 +893,9 @@ export default function OrdersPage() {
     }));
   }, [counts]);
 
-  const handleTabClick = useCallback((tabId: string) => {
+  const handleTabClick = useCallback(async (tabId: string) => {
+    await impactLight();
+    
     if (tabId === "cancellation_requests") {
       setViewMode("cancellations");
     } else {
@@ -851,7 +903,7 @@ export default function OrdersPage() {
       setActiveStatus(tabId);
     }
     setSelectedOrders(new Set());
-  }, []);
+  }, [impactLight]);
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Order, OrderStatus } from "@/lib/db";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { formatCurrency } from "@/lib/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -156,6 +157,11 @@ export default function OrderCard({
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const { impactLight } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToast } = useToast();
+
   const statusStyle = getStatusBadge(order.status);
   const statusIcon = STATUS_ICONS[order.status || "pending"] || "fa-circle";
 
@@ -205,6 +211,36 @@ export default function OrderCard({
     onEditOrder?.(order);
     setShowDropdown(false);
   }, [onEditOrder, order]);
+
+  // Copy Order ID to clipboard
+  const handleCopyOrderId = useCallback(async () => {
+    await impactLight();
+    
+    const orderId = order.orderNumber || order.id.substring(0, 8);
+    const success = await copy(orderId);
+    
+    if (success) {
+      await showToast({ text: 'Order ID copied!', duration: 'short' });
+    }
+    setShowDropdown(false);
+  }, [order, impactLight, copy, showToast]);
+
+  // Share Order
+  const handleShareOrder = useCallback(async () => {
+    await impactLight();
+    
+    const orderId = order.orderNumber || order.id.substring(0, 8);
+    const success = await share({
+      title: `Order ${orderId}`,
+      text: `Check out order ${orderId} for ${formatCurrency(order.total || 0)}`,
+      url: `${window.location.origin}/orders`
+    });
+    
+    if (success) {
+      await showToast({ text: 'Shared successfully', duration: 'short' });
+    }
+    setShowDropdown(false);
+  }, [order, impactLight, share, showToast]);
 
   const itemCount = order.products?.length || 0;
   const isPending = order.status === "pending";
@@ -276,6 +312,16 @@ export default function OrderCard({
                     onClick={handleEdit}
                   />
                 )}
+                <DropdownItem
+                  icon="fa-copy"
+                  label="Copy Order ID"
+                  onClick={handleCopyOrderId}
+                />
+                <DropdownItem
+                  icon="fa-share-alt"
+                  label="Share Order"
+                  onClick={handleShareOrder}
+                />
                 <DropdownItem
                   icon="fa-print"
                   label="Print Invoice"
