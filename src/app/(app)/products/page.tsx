@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import {
   productService,
   Product,
@@ -161,6 +162,10 @@ function LoadingState() {
 
 export default function ProductsPage() {
   const { user } = useAuth();
+  const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
+  const { copy } = useClipboard();
+  const { share } = useShare();
+  const { show: showToastNative } = useToast();
 
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
@@ -323,39 +328,47 @@ export default function ProductsPage() {
   const handleToggleStatus = useCallback(
     async (product: Product) => {
       if (!user) return;
+      
+      await impactLight();
+      
       const newStatus = product.status === "active" ? "paused" : "active";
       try {
         await productService.updateProduct(user, product.id, { status: newStatus });
+        await notificationSuccess();
+        await showToastNative({ text: `Product ${newStatus === "active" ? "activated" : "paused"}`, duration: 'short' });
         loadProducts();
-        addToast(`Product ${newStatus === "active" ? "activated" : "paused"}`, "success");
       } catch (error) {
         console.error("Error updating product:", error);
-        addToast("Failed to update product", "error");
+        await notificationError();
+        await showToastNative({ text: 'Failed to update product', position: 'top' });
       }
     },
-    [user, loadProducts, addToast]
+    [user, loadProducts, impactLight, notificationSuccess, notificationError, showToastNative]
   );
 
   const handleShareProduct = useCallback(async (product: Product) => {
+    await impactLight();
+    
     const shareUrl = `${window.location.origin}/products/${product.id}`;
     const shareText = `Check out ${product.name} - ${formatCurrency(product.price)}`;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: product.name, text: shareText, url: shareUrl });
-        addToast("Shared successfully", "success");
-      } catch {
-        // User cancelled
-      }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      addToast("Link copied to clipboard", "info");
+    const success = await share({
+      title: product.name,
+      text: shareText,
+      url: shareUrl
+    });
+    
+    if (success) {
+      await showToastNative({ text: 'Shared successfully', duration: 'short' });
     }
-  }, [addToast]);
+  }, [impactLight, share, showToastNative]);
 
   const handleDuplicateProduct = useCallback(
     async (product: Product) => {
       if (!user) return;
+      
+      await impactLight();
+      
       try {
         const { id, createdAt, updatedAt, ...duplicated } = product;
         await productService.createProduct(user, {
@@ -365,42 +378,49 @@ export default function ProductsPage() {
           views: 0,
           orders: 0,
         });
+        await notificationSuccess();
+        await showToastNative({ text: 'Product duplicated', duration: 'short' });
         loadProducts();
-        addToast("Product duplicated", "success");
       } catch (error) {
         console.error("Error duplicating product:", error);
-        addToast("Failed to duplicate product", "error");
+        await notificationError();
+        await showToastNative({ text: 'Failed to duplicate product', position: 'top' });
       }
     },
-    [user, loadProducts, addToast]
+    [user, loadProducts, impactLight, notificationSuccess, notificationError, showToastNative]
   );
 
   const handleDeleteProduct = useCallback(
     async (productId: string) => {
       if (!user) return;
+      
+      await impactMedium();
       setDeleteLoading(true);
+      
       try {
         await productService.deleteProduct(user, productId);
+        await showToastNative({ text: 'Product deleted', duration: 'short' });
         loadProducts();
         setShowDeleteConfirm(null);
         setBulkSelected((prev) => prev.filter((id) => id !== productId));
-        addToast("Product deleted", "success");
       } catch (error) {
         console.error("Error deleting product:", error);
-        addToast("Failed to delete product", "error");
+        await notificationError();
+        await showToastNative({ text: 'Failed to delete product', position: 'top' });
       } finally {
         setDeleteLoading(false);
       }
     },
-    [user, loadProducts, addToast]
+    [user, loadProducts, impactMedium, notificationError, showToastNative]
   );
 
   // Bulk handlers
-  const toggleBulkSelect = useCallback((productId: string) => {
+  const toggleBulkSelect = useCallback(async (productId: string) => {
+    await impactLight();
     setBulkSelected((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
     );
-  }, []);
+  }, [impactLight]);
 
   const selectAllProducts = useCallback(() => {
     setBulkSelected((prev) => (prev.length === filteredProducts.length ? [] : filteredProducts.map((p) => p.id)));
@@ -409,39 +429,48 @@ export default function ProductsPage() {
   const handleBulkStatusUpdate = useCallback(
     async (newStatus: "active" | "paused" | "draft") => {
       if (!user || bulkSelected.length === 0) return;
+      
+      await impactMedium();
       setBulkLoading(true);
+      
       try {
         await Promise.all(bulkSelected.map((id) => productService.updateProduct(user, id, { status: newStatus })));
+        await notificationSuccess();
+        await showToastNative({ text: `${bulkSelected.length} products updated`, duration: 'short' });
         loadProducts();
         setBulkSelected([]);
         setBulkMode(false);
-        addToast(`${bulkSelected.length} products updated`, "success");
       } catch (error) {
         console.error("Error bulk updating:", error);
-        addToast("Failed to update products", "error");
+        await notificationError();
+        await showToastNative({ text: 'Failed to update products', position: 'top' });
       } finally {
         setBulkLoading(false);
       }
     },
-    [user, bulkSelected, loadProducts, addToast]
+    [user, bulkSelected, loadProducts, impactMedium, notificationSuccess, notificationError, showToastNative]
   );
 
   const handleBulkDelete = useCallback(async () => {
     if (!user || bulkSelected.length === 0) return;
+    
+    await impactMedium();
     setBulkLoading(true);
+    
     try {
       await Promise.all(bulkSelected.map((id) => productService.deleteProduct(user, id)));
+      await showToastNative({ text: `${bulkSelected.length} products deleted`, duration: 'short' });
       loadProducts();
       setBulkSelected([]);
       setBulkMode(false);
-      addToast(`${bulkSelected.length} products deleted`, "success");
     } catch (error) {
       console.error("Error bulk deleting:", error);
-      addToast("Failed to delete products", "error");
+      await notificationError();
+      await showToastNative({ text: 'Failed to delete products', position: 'top' });
     } finally {
       setBulkLoading(false);
     }
-  }, [user, bulkSelected, loadProducts, addToast]);
+  }, [user, bulkSelected, loadProducts, impactMedium, notificationError, showToastNative]);
 
   // Export/Import
   const exportProducts = useCallback(() => {
@@ -805,7 +834,8 @@ export default function ProductsPage() {
         isOpen={productModalOpen}
         onClose={() => setProductModalOpen(false)}
         product={selectedProduct}
-        onEdit={() => {
+        onEdit={async () => {
+          await impactLight();
           setAddProductModalOpen(true);
           setProductModalOpen(false);
         }}
@@ -813,9 +843,10 @@ export default function ProductsPage() {
       <AddProductModal
         isOpen={addProductModalOpen}
         onClose={() => setAddProductModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
+          await notificationSuccess();
+          await showToastNative({ text: 'Product added successfully', duration: 'short' });
           loadProducts();
-          addToast("Product added successfully", "success");
         }}
       />
       <DeleteConfirmModal
