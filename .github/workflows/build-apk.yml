@@ -52,13 +52,7 @@ jobs:
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
       
       - name: Sync with Capacitor
-        run: |
-          # Create assets directory for Capacitor
-          mkdir -p android/app/src/main/assets/public
-          # Create a minimal index.html for Capacitor (since we load from Vercel)
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://whatsappchapchap.vercel.app"></head><body></body></html>' > android/app/src/main/assets/public/index.html
-          # Sync Capacitor
-          npx cap sync android
+        run: npx cap sync android
       
       - name: Build APK
         run: |
