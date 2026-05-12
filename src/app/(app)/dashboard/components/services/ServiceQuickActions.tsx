@@ -29,8 +29,6 @@ export default function ServiceQuickActions() {
 
   const actions = [
     { id: "add-service", icon: "fa-plus", label: "Add Service", desc: "Create new service", color: "from-[#8b5cf6] to-[#7c3aed]", href: "/services?new=true" },
-    { id: "availability", icon: "fa-clock", label: "Availability", desc: "Manage schedule", color: "from-[#3b82f6] to-[#2563eb]", href: "/availability" },
-    { id: "portfolio", icon: "fa-images", label: "Portfolio", desc: "Showcase work", color: "from-[#f59e0b] to-[#d97706]", href: "/portfolio" },
     { 
       id: "bookings", 
       icon: "fa-calendar-alt", 

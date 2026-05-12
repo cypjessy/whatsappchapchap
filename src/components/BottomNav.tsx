@@ -51,7 +51,6 @@ const FAB_MENU_SECTIONS = [
   {
     title: "Support",
     items: [
-      { id: "campaigns", label: "Campaigns", icon: "fa-bullhorn", href: "/campaigns" },
       { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help" },
     ],
   },
