@@ -29,39 +29,39 @@ interface Toast {
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: string; dot: string }> = {
   confirmed: {
-    bg: "bg-[rgba(37,211,102,0.12)]",
-    text: "text-[#10b981]",
-    border: "border-[#10b981]/20",
+    bg: "bg-[#D1FAE5]",
+    text: "text-[#059669]",
+    border: "border-[#059669]/20",
     icon: "fa-check-circle",
-    dot: "bg-[#10b981]",
+    dot: "bg-[#059669]",
   },
   pending: {
-    bg: "bg-[rgba(245,158,11,0.12)]",
-    text: "text-[#f59e0b]",
-    border: "border-[#f59e0b]/20",
+    bg: "bg-[#FEF3C7]",
+    text: "text-[#D97706]",
+    border: "border-[#D97706]/20",
     icon: "fa-clock",
-    dot: "bg-[#f59e0b]",
+    dot: "bg-[#D97706]",
   },
   completed: {
-    bg: "bg-[rgba(59,130,246,0.12)]",
-    text: "text-[#3b82f6]",
-    border: "border-[#3b82f6]/20",
+    bg: "bg-[#EFF6FF]",
+    text: "text-[#2563EB]",
+    border: "border-[#2563EB]/20",
     icon: "fa-check-double",
-    dot: "bg-[#3b82f6]",
+    dot: "bg-[#2563EB]",
   },
   cancelled: {
-    bg: "bg-[rgba(239,68,68,0.12)]",
-    text: "text-[#ef4444]",
-    border: "border-[#ef4444]/20",
+    bg: "bg-[#FEE2E2]",
+    text: "text-[#DC2626]",
+    border: "border-[#DC2626]/20",
     icon: "fa-times-circle",
-    dot: "bg-[#ef4444]",
+    dot: "bg-[#DC2626]",
   },
 };
 
 const PAYMENT_CONFIG: Record<string, { bg: string; text: string; border: string; icon: string }> = {
-  paid: { bg: "bg-[#10b981]/10", text: "text-[#10b981]", border: "border-[#10b981]/20", icon: "fa-check-circle" },
-  partial: { bg: "bg-[#f59e0b]/10", text: "text-[#f59e0b]", border: "border-[#f59e0b]/20", icon: "fa-adjust" },
-  unpaid: { bg: "bg-[#ef4444]/10", text: "text-[#ef4444]", border: "border-[#ef4444]/20", icon: "fa-times-circle" },
+  paid: { bg: "bg-[#D1FAE5]", text: "text-[#059669]", border: "border-[#059669]/20", icon: "fa-check-circle" },
+  partial: { bg: "bg-[#FEF3C7]", text: "text-[#D97706]", border: "border-[#D97706]/20", icon: "fa-adjust" },
+  unpaid: { bg: "bg-[#FEE2E2]", text: "text-[#DC2626]", border: "border-[#DC2626]/20", icon: "fa-times-circle" },
 };
 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -78,11 +78,11 @@ function formatDate(dateStr: string) {
 
 function getStatusConfig(status: string) {
   return STATUS_CONFIG[status] || {
-    bg: "bg-[#f1f5f9]",
-    text: "text-[#64748b]",
-    border: "border-[#e2e8f0]",
+    bg: "bg-[#F1F5F9]",
+    text: "text-[#64748B]",
+    border: "border-[#E2E8F0]",
     icon: "fa-question",
-    dot: "bg-[#94a3b8]",
+    dot: "bg-[#94A3B8]",
   };
 }
 
@@ -110,9 +110,9 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
           className={`
             pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg
             text-sm font-semibold animate-slideInRight
-            ${toast.type === "success" ? "bg-[#10b981] text-white" : ""}
-            ${toast.type === "error" ? "bg-[#ef4444] text-white" : ""}
-            ${toast.type === "info" ? "bg-[#8b5cf6] text-white" : ""}
+            ${toast.type === "success" ? "bg-[#10B981] text-white" : ""}
+            ${toast.type === "error" ? "bg-[#EF4444] text-white" : ""}
+            ${toast.type === "info" ? "bg-[#8B5CF6] text-white" : ""}
           `}
         >
           <i className={`fas ${toast.type === "success" ? "fa-check-circle" : toast.type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}`} />
@@ -142,13 +142,13 @@ function DetailCard({
   subValue?: string;
 }) {
   return (
-    <div className="bg-[#f8fafc] rounded-xl p-3.5 md:p-4 border border-[#e2e8f0] hover:border-[#8b5cf6]/30 transition-all duration-200 group">
-      <div className={`w-8 h-8 md:w-9 md:h-9 rounded-lg ${iconBg} ${iconColor} flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform`}>
+    <div className="bg-[#F8FAFC] rounded-2xl p-3.5 md:p-4 border border-[#E2E8F0] hover:border-[#8B5CF6]/30 transition-all duration-200 group">
+      <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform`}>
         <i className={`fas ${icon} text-xs md:text-sm`} />
       </div>
-      <div className="text-[10px] md:text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-0.5">{label}</div>
-      <div className="font-bold text-xs md:text-sm text-[#1e293b] truncate">{value}</div>
-      {subValue && <div className="text-[10px] text-[#94a3b8] mt-0.5">{subValue}</div>}
+      <div className="text-[10px] md:text-xs text-[#94A3B8] font-semibold uppercase tracking-wide mb-0.5">{label}</div>
+      <div className="font-bold text-xs md:text-sm text-[#1E293B] truncate">{value}</div>
+      {subValue && <div className="text-[10px] text-[#94A3B8] mt-0.5">{subValue}</div>}
     </div>
   );
 }
@@ -156,10 +156,10 @@ function DetailCard({
 function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[2500] bg-black/90 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
-      <img src={src} alt="Payment proof" className="max-w-full max-h-[85vh] rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
+      <img src={src} alt="Payment proof" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
       >
         <i className="fas fa-times" />
       </button>
@@ -183,11 +183,11 @@ function ActionButton({
   loading?: boolean;
 }) {
   const variants = {
-    default: "bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0] hover:border-[#8b5cf6] hover:text-[#8b5cf6]",
-    danger: "bg-[#ef4444] text-white hover:bg-[#dc2626] shadow-lg shadow-[#ef4444]/20",
-    success: "bg-[#10b981] text-white hover:bg-[#059669] shadow-lg shadow-[#10b981]/20",
-    whatsapp: "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:opacity-90 shadow-lg shadow-[#25D366]/20",
-    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white hover:opacity-90 shadow-lg shadow-[#8b5cf6]/20",
+    default: "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:border-[#8B5CF6] hover:text-[#8B5CF6]",
+    danger: "bg-[#EF4444] text-white hover:bg-[#DC2626] shadow-md shadow-[#EF4444]/20",
+    success: "bg-[#10B981] text-white hover:bg-[#059669] shadow-md shadow-[#10B981]/20",
+    whatsapp: "bg-[#25D366] text-white hover:bg-[#128C7E] shadow-md shadow-[#25D366]/20",
+    primary: "bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-md shadow-[#8B5CF6]/20",
   };
 
   return (
@@ -195,7 +195,7 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs md:text-sm
+        flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm
         transition-all duration-200 active:scale-95
         ${variants[variant]}
         ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}
