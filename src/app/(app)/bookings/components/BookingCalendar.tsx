@@ -93,29 +93,29 @@ function getDaysInMonth(year: number, month: number): DayItem[] {
 function ShimmerBox({ className = "" }: { className?: string }) {
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
     </div>
   );
 }
 
 function CalendarSkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 md:p-6 mb-6">
+    <div className="md3-card-elevated p-4 md:p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
-        <ShimmerBox className="h-8 bg-[#E2E8F0] rounded-lg w-48" />
+        <ShimmerBox className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-48" />
         <div className="flex gap-2">
-          <ShimmerBox className="w-9 h-9 bg-[#E2E8F0] rounded-xl" />
-          <ShimmerBox className="w-9 h-9 bg-[#E2E8F0] rounded-xl" />
+          <ShimmerBox className="w-9 h-9 bg-[var(--md-sys-color-surface-variant)] rounded-xl" />
+          <ShimmerBox className="w-9 h-9 bg-[var(--md-sys-color-surface-variant)] rounded-xl" />
         </div>
       </div>
       <div className="grid grid-cols-7 gap-1 mb-2">
         {DAYS_OF_WEEK_SHORT.map((d) => (
-          <ShimmerBox key={d} className="h-8 bg-[#E2E8F0] rounded-lg" />
+          <ShimmerBox key={d} className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg" />
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: 35 }).map((_, i) => (
-          <ShimmerBox key={i} className="aspect-square bg-[#F1F5F9] rounded-xl" />
+          <ShimmerBox key={i} className="aspect-square bg-[var(--md-sys-color-surface)] rounded-xl" />
         ))}
       </div>
     </div>

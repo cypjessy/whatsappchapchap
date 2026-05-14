@@ -94,11 +94,11 @@ function getRelativeTime(timeStr: string): string {
 function ShimmerRow({ index }: { index: number }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-xl overflow-hidden relative">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-      <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] shrink-0 animate-pulse" />
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/60 to-transparent" />
+      <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-surface-variant)] shrink-0 animate-pulse" />
       <div className="flex-1 space-y-2 min-w-0">
-        <div className="h-4 bg-[#F1F5F9] rounded-lg w-3/4 animate-pulse" />
-        <div className="h-3 bg-[#F1F5F9] rounded-lg w-20 animate-pulse" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-3/4 animate-pulse" />
+        <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-20 animate-pulse" />
       </div>
     </div>
   );

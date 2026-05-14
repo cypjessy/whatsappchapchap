@@ -61,9 +61,9 @@ function ShimmerHeader() {
   return (
     <div className="mb-4 md:mb-6 animate-pulse">
       <div className="hidden md:flex items-center gap-2 mb-2">
-        <div className="h-4 bg-[#e2e8f0] rounded w-12" />
-        <div className="h-4 bg-[#e2e8f0] rounded w-4" />
-        <div className="h-4 bg-[#e2e8f0] rounded w-16" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded w-12" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded w-4" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded w-16" />
       </div>
       <div className="md:hidden bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-2xl p-4">
         <div className="h-6 bg-white/20 rounded w-32 mb-2" />
@@ -71,8 +71,8 @@ function ShimmerHeader() {
         <div className="h-3 bg-white/20 rounded w-40" />
       </div>
       <div className="hidden md:block">
-        <div className="h-8 bg-[#e2e8f0] rounded w-64 mb-2" />
-        <div className="h-4 bg-[#e2e8f0] rounded w-96" />
+        <div className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded w-64 mb-2" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded w-96" />
       </div>
     </div>
   );

@@ -128,14 +128,14 @@ function useAnimatedCounter(target: number, duration: number = 1500) {
 
 function ShimmerChart() {
   return (
-    <div className="relative overflow-hidden h-[220px] md:h-[320px] w-full bg-gradient-to-b from-[#F8FAFC] to-[#F1F5F9] rounded-2xl">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-      <div className="absolute bottom-4 left-4 right-4 h-32 bg-[#E2E8F0]/50 rounded-lg" />
+    <div className="relative overflow-hidden h-[220px] md:h-[320px] w-full bg-gradient-to-b from-[var(--md-sys-color-surface)] to-[var(--md-sys-color-surface-variant)] rounded-2xl">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/60 to-transparent" />
+      <div className="absolute bottom-4 left-4 right-4 h-32 bg-[var(--md-sys-color-surface-variant)]/50 rounded-lg" />
       <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-2 h-32">
         {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
-            className="flex-1 bg-[#E2E8F0]/70 rounded-t-lg animate-pulse"
+            className="flex-1 bg-[var(--md-sys-color-surface-variant)]/70 rounded-t-lg animate-pulse"
             style={{ height: `${30 + Math.random() * 60}%`, animationDelay: `${i * 100}ms` }}
           />
         ))}

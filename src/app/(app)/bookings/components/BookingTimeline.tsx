@@ -137,23 +137,23 @@ function groupBookingsByDate(bookings: Booking[]): GroupedBookings[] {
 function ShimmerTimelineItem() {
   return (
     <div className="relative mb-5 md:mb-6 overflow-hidden">
-      <div className="absolute -left-10 md:-left-12 top-1 w-3.5 h-3.5 rounded-full bg-[#e2e8f0] border-2 border-white" />
+      <div className="absolute -left-10 md:-left-12 top-1 w-3.5 h-3.5 rounded-full bg-[var(--md-sys-color-surface-variant)] border-2 border-[var(--md-sys-color-surface)]" />
       <div className="absolute -left-14 md:-left-16 w-12 text-right">
-        <div className="h-3 bg-[#e2e8f0] rounded w-10 ml-auto" />
+        <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded w-10 ml-auto" />
       </div>
-      <div className="bg-white rounded-xl border border-[#e2e8f0] p-4 relative overflow-hidden">
-        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+      <div className="md3-card-elevated p-4 relative overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
         <div className="flex justify-between items-start mb-3">
           <div className="space-y-2">
-            <div className="h-4 bg-[#f1f5f9] rounded-lg w-32" />
-            <div className="h-3 bg-[#f1f5f9] rounded-lg w-24" />
+            <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-32" />
+            <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-24" />
           </div>
-          <div className="h-6 bg-[#f1f5f9] rounded-full w-20" />
+          <div className="h-6 bg-[var(--md-sys-color-surface-variant)] rounded-full w-20" />
         </div>
-        <div className="h-4 bg-[#f1f5f9] rounded-lg w-40 mb-3" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-40 mb-3" />
         <div className="flex justify-between items-center">
-          <div className="h-3 bg-[#f1f5f9] rounded-lg w-48" />
-          <div className="h-5 bg-[#f1f5f9] rounded-lg w-20" />
+          <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-48" />
+          <div className="h-5 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-20" />
         </div>
       </div>
     </div>

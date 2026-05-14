@@ -86,10 +86,10 @@ export default function ServiceSchedule() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-6">
+      <div className="md3-card-elevated p-6">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-16 bg-gray-100 rounded-lg"></div>
+            <div key={i} className="h-16 bg-[var(--md-sys-color-surface-variant)] rounded-lg"></div>
           ))}
         </div>
       </div>

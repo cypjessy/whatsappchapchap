@@ -246,15 +246,15 @@ function ShimmerCard({ index }: { index: number }) {
   return (
     <div
       className={`
-        bg-white rounded-2xl border border-[#E2E8F0] p-4 md:p-5 overflow-hidden relative
+        md3-card-elevated p-4 md:p-5 overflow-hidden relative
         animate-pulse
       `}
       style={{ animationDelay: `${index * 150}ms` }}
     >
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-      <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-[#F1F5F9] rounded-2xl" />
-      <div className="h-4 bg-[#F1F5F9] rounded-lg w-20 mx-auto mb-2" />
-      <div className="h-3 bg-[#F1F5F9] rounded-lg w-16 mx-auto" />
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/60 to-transparent" />
+      <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-3 bg-[var(--md-sys-color-surface-variant)] rounded-2xl" />
+      <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-20 mx-auto mb-2" />
+      <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-16 mx-auto" />
     </div>
   );
 }

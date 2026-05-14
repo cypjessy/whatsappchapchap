@@ -25,10 +25,10 @@ interface BookingAnalyticsProps {
 
 function ShimmerSkeleton() {
   return (
-    <div className="bg-white p-4 rounded-xl border border-[#e2e8f0] overflow-hidden relative">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent z-10" />
-      <div className="h-3.5 bg-[#e2e8f0] rounded-full mb-3 w-20" />
-      <div className="h-8 bg-[#f1f5f9] rounded-lg w-28" />
+    <div className="md3-card-elevated p-4 overflow-hidden relative">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/60 to-transparent z-10" />
+      <div className="h-3.5 bg-[var(--md-sys-color-surface-variant)] rounded-full mb-3 w-20" />
+      <div className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-28" />
     </div>
   );
 }

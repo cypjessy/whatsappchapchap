@@ -109,16 +109,16 @@ function useAnimatedCounter(target: number, duration: number = 1200, delay: numb
 
 function ShimmerCard() {
   return (
-    <div className="bg-white p-4 md:p-5 rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden relative">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+    <div className="md3-card-elevated p-4 md:p-5 overflow-hidden relative">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-[#f1f5f9]" />
+        <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-surface-variant)]" />
         <div className="space-y-2 flex-1">
-          <div className="h-3 bg-[#f1f5f9] rounded-lg w-16" />
+          <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-16" />
         </div>
       </div>
-      <div className="h-8 bg-[#f1f5f9] rounded-lg w-16" />
-      <div className="mt-3 h-1.5 bg-[#f1f5f9] rounded-full w-full" />
+      <div className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-16" />
+      <div className="mt-3 h-1.5 bg-[var(--md-sys-color-surface-variant)] rounded-full w-full" />
     </div>
   );
 }

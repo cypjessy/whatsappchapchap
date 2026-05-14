@@ -78,24 +78,24 @@ function getPaymentConfig(status?: string) {
 
 function ShimmerRow() {
   return (
-    <div className="relative overflow-hidden px-4 md:px-6 py-4 border-b border-[#F1F5F9]">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+    <div className="relative overflow-hidden px-4 md:px-6 py-4 border-b border-[var(--md-sys-color-outline-variant)]">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
       <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-4 items-center">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#F1F5F9] shrink-0" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--md-sys-color-surface-variant)] shrink-0" />
           <div className="space-y-2 flex-1">
-            <div className="h-4 bg-[#F1F5F9] rounded-lg w-32" />
-            <div className="h-3 bg-[#F1F5F9] rounded-lg w-24" />
+            <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-32" />
+            <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-24" />
           </div>
         </div>
         <div className="space-y-2">
-          <div className="h-4 bg-[#F1F5F9] rounded-lg w-28" />
-          <div className="h-3 bg-[#F1F5F9] rounded-lg w-16" />
+          <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-28" />
+          <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-16" />
         </div>
-        <div className="h-4 bg-[#F1F5F9] rounded-lg w-20" />
-        <div className="h-6 bg-[#F1F5F9] rounded-full w-20" />
-        <div className="h-5 bg-[#F1F5F9] rounded-lg w-24" />
-        <div className="w-8 h-8 bg-[#F1F5F9] rounded-lg" />
+        <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-20" />
+        <div className="h-6 bg-[var(--md-sys-color-surface-variant)] rounded-full w-20" />
+        <div className="h-5 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-24" />
+        <div className="w-8 h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg" />
       </div>
       <div className="md:hidden space-y-3">
         <div className="flex items-center gap-3">

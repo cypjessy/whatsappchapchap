@@ -75,24 +75,24 @@ function getPaymentConfig(status?: string) {
 
 function ShimmerCard() {
   return (
-    <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 md:p-5 overflow-hidden relative">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+    <div className="md3-card-elevated p-4 md:p-5 overflow-hidden relative">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-[#F1F5F9] shrink-0" />
+          <div className="w-11 h-11 rounded-xl bg-[var(--md-sys-color-surface-variant)] shrink-0" />
           <div className="space-y-2">
-            <div className="h-4 bg-[#F1F5F9] rounded-lg w-28" />
-            <div className="h-3 bg-[#F1F5F9] rounded-lg w-20" />
+            <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-28" />
+            <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-20" />
           </div>
         </div>
-        <div className="h-6 bg-[#F1F5F9] rounded-full w-20" />
+        <div className="h-6 bg-[var(--md-sys-color-surface-variant)] rounded-full w-20" />
       </div>
       <div className="space-y-2 mb-4">
-        <div className="h-5 bg-[#F1F5F9] rounded-lg w-32" />
-        <div className="h-3 bg-[#F1F5F9] rounded-lg w-full" />
-        <div className="h-3 bg-[#F1F5F9] rounded-lg w-3/4" />
+        <div className="h-5 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-32" />
+        <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-full" />
+        <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-3/4" />
       </div>
-      <div className="flex justify-between items-center pt-3 border-t border-[#E2E8F0]">
+      <div className="flex justify-between items-center pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
         <div className="h-6 bg-[#F1F5F9] rounded-lg w-24" />
         <div className="flex gap-2">
           <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl" />

@@ -77,8 +77,8 @@ export default function RevenueChart() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-6">
-        <div className="animate-pulse h-64 bg-gray-100 rounded-lg"></div>
+      <div className="md3-card-elevated p-6">
+        <div className="animate-pulse h-64 bg-[var(--md-sys-color-surface-variant)] rounded-lg"></div>
       </div>
     );
   }
