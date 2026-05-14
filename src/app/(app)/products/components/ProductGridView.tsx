@@ -405,11 +405,11 @@ const ProductCard = memo(({
   return (
     <div
       className={`
-        group relative bg-white rounded-xl md:rounded-2xl border overflow-hidden 
+        group relative md3-card-elevated overflow-hidden 
         transition-all duration-200 ease-out
         ${isSelected
-          ? "border-[#25D366] ring-2 ring-[#25D366]/20 shadow-lg shadow-[#25D366]/10"
-          : "border-[#e2e8f0]"
+          ? "ring-2 ring-[var(--md-sys-color-primary)] shadow-lg"
+          : ""
         }
       `}
       style={{ contain: 'layout style paint' }}
@@ -423,7 +423,7 @@ const ProductCard = memo(({
       <div
         className={`
           relative h-36 sm:h-40 md:h-48 overflow-hidden
-          ${!hasImage ? `bg-gradient-to-br ${getCategoryColor(product.category || "")}` : "bg-white"}
+          ${!hasImage ? `bg-gradient-to-br ${getCategoryColor(product.category || "")}` : "bg-[var(--md-sys-color-surface)]"}
         `}
       >
         {/* Bulk checkbox overlay */}
@@ -439,8 +439,8 @@ const ProductCard = memo(({
               className={`
                 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all duration-200
                 ${isSelected
-                  ? "bg-[#25D366] border-[#25D366] text-white shadow-lg shadow-[#25D366]/30"
-                  : "bg-white/90 backdrop-blur-sm border-[#e2e8f0] hover:border-[#25D366] hover:shadow-md"
+                  ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md"
+                  : "bg-[var(--md-sys-color-surface)] border-[var(--md-sys-color-outline)] hover:border-[var(--md-sys-color-primary)] hover:shadow-sm"
                 }
               `}
             >
@@ -453,8 +453,8 @@ const ProductCard = memo(({
         {!bulkMode && badgeInfo.badge !== "new" && (
           <span
             className={`
-              absolute top-3 left-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-bold shadow-sm
-              ${badgeInfo.badge === "out" ? "bg-[#64748b] text-white" : "bg-[#f59e0b] text-white"}
+              absolute top-3 left-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-sm
+              ${badgeInfo.badge === "out" ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-error)]" : "bg-[var(--md-sys-color-warning-container)] text-[var(--md-sys-color-on-warning-container)]"}
             `}
             aria-label={`${badgeInfo.label} stock`}
           >
@@ -466,8 +466,8 @@ const ProductCard = memo(({
         {!bulkMode && product.status && product.status !== "active" && (
           <span
             className={`
-              absolute top-3 right-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-bold shadow-sm backdrop-blur-sm
-              ${product.status === "paused" ? "bg-[#f59e0b]/90 text-white" : "bg-[#64748b]/90 text-white"}
+              absolute top-3 right-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-sm
+              ${product.status === "paused" ? "bg-[var(--md-sys-color-warning-container)] text-[var(--md-sys-color-on-warning-container)]" : "bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]"}
             `}
             aria-label={`Product is ${product.status}`}
           >
@@ -478,7 +478,7 @@ const ProductCard = memo(({
         {/* Sale badge */}
         {isOnSale && !bulkMode && (
           <span
-            className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-[10px] font-bold bg-[#ef4444] text-white shadow-sm"
+            className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-error)] shadow-sm"
             aria-label={`${discountPercent}% off`}
           >
             -{discountPercent}%
@@ -489,8 +489,8 @@ const ProductCard = memo(({
         {hasImage ? (
           <>
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-white flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-[#25D366] animate-spin" aria-label="Loading image" />
+              <div className="absolute inset-0 bg-[var(--md-sys-color-surface)] flex items-center justify-center">
+                <Loader2 className="w-6 h-6 text-[var(--md-sys-color-primary)] animate-spin" aria-label="Loading image" />
               </div>
             )}
             <img
@@ -517,15 +517,16 @@ const ProductCard = memo(({
       </div>
 
       {/* Content */}
+      {/* Card content - MD3 Card Content */}
       <div className="p-3 md:p-4">
         {/* Category */}
         <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-[10px] md:text-xs font-bold text-[#25D366] uppercase tracking-wider truncate">
+          <span className="text-[10px] md:text-xs font-medium text-[var(--md-sys-color-primary)] uppercase tracking-wider truncate">
             {product.category || "Uncategorized"}
           </span>
           {product.sku && (
             <span 
-              className="text-[9px] text-[#94a3b8] font-mono truncate"
+              className="text-[9px] text-[var(--md-sys-color-on-surface-variant)] font-mono truncate"
               aria-label={`SKU: ${product.sku}`}
             >
               #{product.sku}
@@ -534,24 +535,24 @@ const ProductCard = memo(({
         </div>
 
         {/* Name */}
-        <h3 className="font-bold text-sm md:text-base text-[#1e293b] mb-2 line-clamp-2 leading-snug">
+        <h3 className="font-medium text-sm md:text-base text-[var(--md-sys-color-on-surface)] mb-2 line-clamp-2 leading-snug">
           {product.name}
         </h3>
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mb-2 md:mb-3">
-          <span className="text-lg md:text-xl font-extrabold text-[#1e293b]">
+          <span className="text-lg md:text-xl font-semibold text-[var(--md-sys-color-on-surface)]">
             {formatCurrency(product.price)}
           </span>
           {isOnSale && (
-            <span className="text-xs text-[#94a3b8] line-through font-medium" aria-label="Original price">
+            <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] line-through font-normal" aria-label="Original price">
               {formatCurrency(product.salePrice!)}
             </span>
           )}
         </div>
 
         {/* Stock & metrics */}
-        <div className="pt-2 md:pt-3 border-t border-[#e2e8f0]">
+        <div className="pt-2 md:pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
           <div className="flex justify-between items-start mb-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 text-xs text-[#64748b] mb-1">
@@ -559,7 +560,7 @@ const ProductCard = memo(({
                 <span className="truncate">{stock.toLocaleString()} in stock</span>
               </div>
               <div 
-                className="w-full max-w-[80px] h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden"
+                className="w-full max-w-[80px] h-1.5 bg-[var(--md-sys-color-surface-variant)] rounded-full overflow-hidden"
                 aria-label={`Stock level: ${Math.round((stock / 100) * 100)}%`}
               >
                 <div
@@ -597,7 +598,7 @@ const ProductCard = memo(({
 
           {/* Action buttons */}
           {!bulkMode && (
-            <div className="relative pt-2 border-t border-[#e2e8f0]">
+            <div className="relative pt-2 border-t border-[var(--md-sys-color-outline-variant)]">
               {/* Desktop: Full actions */}
               <div className="hidden sm:grid grid-cols-5 gap-1">
                 {ACTION_CONFIG.map((action) => {
