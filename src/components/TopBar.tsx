@@ -268,7 +268,8 @@ export default function AndroidTopBar({
         `}
         style={{
           top: 0,
-          minHeight: '64px',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
           willChange: 'transform',
           backgroundColor: isScrolled ? '#ffffff' : '#25D366',
           boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
@@ -278,14 +279,9 @@ export default function AndroidTopBar({
         <div
           className={`
             relative transition-all duration-300 flex-shrink-0 w-full
-            ${isScrolled 
-              ? "bg-white shadow-md" 
-              : "bg-gradient-to-br from-[#25D366] to-[#128C7E]"
-            }
           `}
           style={{ 
-            minHeight: '64px',
-            paddingTop: 'env(safe-area-inset-top, 0px)'
+            minHeight: '64px'
           }}
         >
           {/* Content Container */}
