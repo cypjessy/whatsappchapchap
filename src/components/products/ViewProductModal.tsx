@@ -13,7 +13,7 @@ interface ViewProductModalProps {
   onEdit: (product: Product) => void;
 }
 
-type TabId = "overview" | "details" | "inventory" | "specs" | "ai";
+type TabId = "overview" | "details" | "inventory" | "specs";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -22,7 +22,6 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "details", label: "Details", icon: "fa-list" },
   { id: "inventory", label: "Inventory", icon: "fa-boxes" },
   { id: "specs", label: "Specs", icon: "fa-cogs" },
-  { id: "ai", label: "AI Insights", icon: "fa-robot" },
 ];
 
 const STOCK_CONFIG = {
@@ -439,72 +438,11 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     );
   };
 
-  const renderAIInsights = () => (
-    <div className="space-y-6 animate-fadeIn">
-      {/* AI Pricing Suggestion */}
-      <div className="bg-primary-container/20 rounded-2xl p-6 space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <i className="fas fa-robot text-primary text-xl" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-on-primary-container">AI Pricing Insight</h3>
-            <p className="text-xs text-on-primary-container/70">Based on market analysis</p>
-          </div>
-        </div>
-        
-        <div className="space-y-2 text-sm">
-          <p className="text-on-primary-container">
-            💡 <strong>Recommendation:</strong> Your pricing is competitive. Consider offering bundle deals to increase average order value.
-          </p>
-        </div>
-      </div>
-
-      {/* Stock Insights */}
-      <div className="bg-surface-variant/20 rounded-2xl p-6 space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center">
-            <i className="fas fa-chart-line text-info text-xl" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-on-surface">Inventory Insights</h3>
-            <p className="text-xs text-on-surface-variant/70">Stock optimization tips</p>
-          </div>
-        </div>
-        
-        <div className="space-y-2 text-sm text-on-surface">
-          {product.stock === 0 && (
-            <p>⚠️ <strong>Critical:</strong> Product is out of stock. Restock immediately to avoid lost sales.</p>
-          )}
-          {product.stock && product.stock > 0 && product.stock <= 5 && (
-            <p>⚡ <strong>Low Stock:</strong> Only {product.stock} units remaining. Consider reordering soon.</p>
-          )}
-          {product.stock && product.stock > 20 && (
-            <p>✅ <strong>Good Level:</strong> Stock level is healthy. No immediate action needed.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-2">
-          <div className="text-2xl font-bold text-primary">{product.stock || 0}</div>
-          <div className="text-xs text-on-surface-variant">Units in Stock</div>
-        </div>
-        <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-2">
-          <div className="text-2xl font-bold text-success">{formatCurrency(product.price)}</div>
-          <div className="text-xs text-on-surface-variant">Price</div>
-        </div>
-      </div>
-    </div>
-  );
-
   const tabContent: Record<TabId, () => React.ReactNode> = {
     overview: renderOverview,
     details: renderDetails,
     inventory: renderInventory,
     specs: renderSpecs,
-    ai: renderAIInsights,
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
