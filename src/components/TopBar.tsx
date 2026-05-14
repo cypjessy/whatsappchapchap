@@ -225,6 +225,9 @@ export default function AndroidTopBar({
           ${isVisible ? "translate-y-0" : "-translate-y-full"}
           pt-[env(safe-area-inset-top)]
         `}
+        style={{
+          minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
+        }}
       >
         {/* App Bar Container - MD3 Style */}
         <div

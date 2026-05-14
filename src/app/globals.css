@@ -57,6 +57,20 @@
 
 /* Native Mobile Experience Enhancements */
 
+/* Prevent autofill popup from squishing the top bar */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+#__next {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Prevent weird bounce on scroll */
 html {
   overscroll-behavior-y: contain;
