@@ -338,7 +338,6 @@ MobileActionButton.displayName = "MobileActionButton";
 // Optimized ProductCard with memo
 const ProductCard = memo(({
   product,
-  index,
   bulkMode,
   isSelected,
   onToggleSelect,
@@ -350,7 +349,6 @@ const ProductCard = memo(({
   getBadgeStyle,
 }: {
   product: Product;
-  index: number;
   bulkMode: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
@@ -767,7 +765,7 @@ export default function ProductGridView({
 
       return () => observer.disconnect();
     } else {
-      // Simple pagination
+      // Simple pagination - always use paginated display
       setDisplayedProducts(products.slice(0, page * itemsPerPage));
     }
   }, [products, virtualScroll, page, itemsPerPage]);
@@ -786,7 +784,7 @@ export default function ProductGridView({
 
   if (products.length === 0) return null;
 
-  const productsToRender = virtualScroll ? displayedProducts : products;
+  const productsToRender = displayedProducts;
 
   return (
     <div 
@@ -811,11 +809,10 @@ export default function ProductGridView({
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
           style={{ contain: 'layout' }}
         >
-          {productsToRender.map((product, index) => (
+          {productsToRender.map((product) => (
             <ProductCard
-              key={`${product.id}-${index}`}
+              key={product.id}
               product={product}
-              index={index}
               bulkMode={bulkMode}
               isSelected={bulkSelected.includes(product.id)}
               onToggleSelect={toggleBulkSelect}

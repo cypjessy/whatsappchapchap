@@ -479,7 +479,6 @@ function ListHeader({
 // Optimized ProductRow with memo
 const ProductRow = memo(({
   product,
-  index,
   bulkMode,
   isSelected,
   onToggleSelect,
@@ -492,7 +491,6 @@ const ProductRow = memo(({
   onDeleteProduct,
 }: {
   product: Product;
-  index: number;
   bulkMode: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
@@ -954,14 +952,10 @@ export default function ProductListView({
     return () => observerRef.current?.disconnect();
   }, [products.length, visibleCount, isLoadingMore, displayedProducts.length, initialDisplayCount]);
 
-  // Initialize displayed products
+  // Initialize displayed products - ALWAYS use pagination
   useEffect(() => {
-    if (initialDisplayCount) {
-      setDisplayedProducts(products.slice(0, visibleCount));
-    } else {
-      setDisplayedProducts(products);
-    }
-  }, [products, visibleCount, initialDisplayCount]);
+    setDisplayedProducts(products.slice(0, visibleCount));
+  }, [products, visibleCount]);
 
   const loadMoreProducts = useCallback(() => {
     if (isLoadingMore) return;
@@ -978,8 +972,8 @@ export default function ProductListView({
 
   if (products.length === 0) return null;
 
-  const productsToRender = initialDisplayCount ? displayedProducts : products;
-  const hasMore = initialDisplayCount && productsToRender.length < products.length;
+  const productsToRender = displayedProducts;
+  const hasMore = productsToRender.length < products.length;
 
   return (
     <div 
@@ -995,11 +989,10 @@ export default function ProductListView({
       />
 
       <div className="divide-y divide-[#f1f5f9]" role="rowgroup">
-        {productsToRender.map((product, index) => (
+        {productsToRender.map((product) => (
           <ProductRow
-            key={`${product.id}-${index}`}
+            key={product.id}
             product={product}
-            index={index}
             bulkMode={bulkMode}
             isSelected={bulkSelected.includes(product.id)}
             onToggleSelect={toggleBulkSelect}

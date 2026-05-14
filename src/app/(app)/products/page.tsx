@@ -190,6 +190,13 @@ export default function ProductsPage() {
   const [productCategories, setProductCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  
+  // Pagination state
+  const ITEMS_PER_PAGE = 20;
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // UI state
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -253,10 +260,15 @@ export default function ProductsPage() {
     try {
       const data = await productService.getProducts(user);
       setProducts(data);
+      // Initialize displayed products with first page
+      setDisplayedProducts(data.slice(0, ITEMS_PER_PAGE));
+      setCurrentPage(1);
+      setHasMore(data.length > ITEMS_PER_PAGE);
     } catch (error) {
       console.error("Error loading products:", error);
       addToast("Failed to load products", "error");
       setProducts([]);
+      setDisplayedProducts([]);
     } finally {
       setLoading(false);
     }
@@ -338,6 +350,31 @@ export default function ProductsPage() {
         }
       });
   }, [products, activeCategory, searchTerm, stockFilter, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
+
+  // Update displayed products when filters change
+  useEffect(() => {
+    const filtered = filteredProducts;
+    setDisplayedProducts(filtered.slice(0, ITEMS_PER_PAGE));
+    setCurrentPage(1);
+    setHasMore(filtered.length > ITEMS_PER_PAGE);
+  }, [filteredProducts]);
+
+  // Load more products for infinite scroll
+  const loadMoreProducts = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+    const startIndex = 0;
+    const endIndex = nextPage * ITEMS_PER_PAGE;
+    
+    setTimeout(() => {
+      setDisplayedProducts(filteredProducts.slice(startIndex, endIndex));
+      setCurrentPage(nextPage);
+      setHasMore(endIndex < filteredProducts.length);
+      setIsLoadingMore(false);
+    }, 100);
+  }, [currentPage, hasMore, isLoadingMore, filteredProducts]);
 
   // Analytics
   const stats = useMemo(() => {
@@ -683,6 +720,27 @@ export default function ProductsPage() {
     if (bulkMode) setBulkSelected([]);
   }, [searchTerm, stockFilter, activeCategory, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
+  // Infinite scroll with IntersectionObserver
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreProducts();
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    );
+
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMoreProducts]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -828,7 +886,7 @@ export default function ProductsPage() {
 
             {view === "grid" ? (
               <ProductGridView
-                products={filteredProducts}
+                products={displayedProducts}
                 bulkMode={bulkMode}
                 bulkSelected={bulkSelected}
                 toggleBulkSelect={toggleBulkSelect}
@@ -846,7 +904,7 @@ export default function ProductsPage() {
               />
             ) : (
               <ProductListView
-                products={filteredProducts}
+                products={displayedProducts}
                 bulkMode={bulkMode}
                 bulkSelected={bulkSelected}
                 toggleBulkSelect={toggleBulkSelect}
@@ -861,6 +919,20 @@ export default function ProductsPage() {
                 getCategoryColor={getCategoryColor}
                 getStockStyle={getStockStyle}
               />
+            )}
+
+            {/* Infinite Scroll Sentinel */}
+            {!loading && hasMore && (
+              <div id="scroll-sentinel" className="py-8 flex items-center justify-center">
+                {isLoadingMore ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-6 h-6 text-[#25D366] animate-spin" />
+                    <span className="text-sm text-[#64748b]">Loading more products...</span>
+                  </div>
+                ) : (
+                  <div className="h-1" />
+                )}
+              </div>
             )}
           </>
         )}
