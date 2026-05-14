@@ -231,20 +231,23 @@ export default function AndroidTopBar({
           paddingTop: 'env(safe-area-inset-top, 0px)',
           minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
           willChange: 'transform',
+          backgroundColor: isScrolled ? '#ffffff' : '#25D366',
+          overflow: 'visible',
         }}
       >
         {/* App Bar Container - MD3 Style with flex-shrink-0 to prevent compression */}
         <div
           className={`
-            relative transition-all duration-300 shadow-sm flex-shrink-0
+            relative transition-all duration-300 shadow-sm flex-shrink-0 w-full
             ${isScrolled 
               ? "bg-white shadow-md border-b border-gray-200/50" 
               : "bg-[#25D366] shadow-sm"
             }
           `}
+          style={{ minHeight: '64px', overflow: 'visible' }}
         >
           {/* Content Container - fixed height with min to prevent collapse */}
-          <div className="flex items-center justify-between px-4 h-16 min-h-[64px]">
+          <div className="flex items-center justify-between px-4 h-16 min-h-[64px] w-full" style={{ overflow: 'visible' }}>
             {/* Left Actions */}
             <div className="flex items-center gap-1 z-10 min-w-[48px]">
               {leftActions.map((action) => (
