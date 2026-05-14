@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'src/**'
+      - 'android/**'
       - 'package.json'
       - 'capacitor.config.ts'
 
