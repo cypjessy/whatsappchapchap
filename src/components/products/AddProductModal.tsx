@@ -136,13 +136,13 @@ function InputField({
 }) {
   return (
     <div>
-      <label className="block font-semibold text-sm mb-2 text-[#475569]">
+      <label className="md3-label-large block mb-2 text-[#475569]">
         {label}
         {required && <span className="text-[#ef4444] ml-0.5">*</span>}
       </label>
       {children}
       {error && (
-        <p className="text-[11px] text-[#ef4444] mt-1.5 flex items-center gap-1 animate-fadeIn">
+        <p className="md3-label-small text-[#ef4444] mt-1.5 flex items-center gap-1 animate-fadeIn">
           <i className="fas fa-exclamation-circle text-[10px]" />
           {error}
         </p>
@@ -739,64 +739,84 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const renderStep1 = () => (
     <div className="space-y-4 md:space-y-6 animate-fadeIn">
       <InputField label="Product Name" required error={errors.name}>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          placeholder="e.g., iPhone 15 Pro Max"
-          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-white transition-colors"
-        />
+        <div className="md3-input-outlined">
+          <input
+            type="text"
+            name="name"
+            id="product-name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder=" "
+            className="w-full"
+          />
+          <label htmlFor="product-name">e.g., iPhone 15 Pro Max</label>
+        </div>
       </InputField>
 
       <InputField label="Description">
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          rows={3}
-          placeholder="Describe your product..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-white resize-none transition-colors"
-        />
+        <div className="md3-input-outlined">
+          <textarea
+            name="description"
+            id="product-description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={3}
+            placeholder=" "
+            className="w-full resize-none"
+          />
+          <label htmlFor="product-description">Describe your product...</label>
+        </div>
       </InputField>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <InputField label="Price (KES)" required error={errors.price}>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleInputChange}
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-            className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-white transition-colors"
-          />
+          <div className="md3-input-outlined">
+            <input
+              type="number"
+              name="price"
+              id="product-price"
+              value={formData.price}
+              onChange={handleInputChange}
+              placeholder=" "
+              min="0"
+              step="0.01"
+              className="w-full"
+            />
+            <label htmlFor="product-price">0.00</label>
+          </div>
         </InputField>
 
         <InputField label="Initial Stock" required error={errors.initialStock}>
-          <input
-            type="number"
-            name="initialStock"
-            value={formData.initialStock}
-            onChange={handleInputChange}
-            placeholder="e.g., 100"
-            min="0"
-            className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-white transition-colors"
-          />
+          <div className="md3-input-outlined">
+            <input
+              type="number"
+              name="initialStock"
+              id="product-stock"
+              value={formData.initialStock}
+              onChange={handleInputChange}
+              placeholder=" "
+              min="0"
+              className="w-full"
+            />
+            <label htmlFor="product-stock">e.g., 100</label>
+          </div>
         </InputField>
       </div>
 
       <InputField label="Low Stock Alert">
-        <input
-          type="number"
-          name="lowStockAlert"
-          value={formData.lowStockAlert}
-          onChange={handleInputChange}
-          placeholder="5"
-          min="0"
-          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm focus:outline-none focus:border-[#8b5cf6] bg-white transition-colors"
-        />
+        <div className="md3-input-outlined">
+          <input
+            type="number"
+            name="lowStockAlert"
+            id="product-alert"
+            value={formData.lowStockAlert}
+            onChange={handleInputChange}
+            placeholder=" "
+            min="0"
+            className="w-full"
+          />
+          <label htmlFor="product-alert">5</label>
+        </div>
       </InputField>
     </div>
   );
@@ -1063,28 +1083,26 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2500] flex items-center justify-center p-3 md:p-4 animate-fadeIn">
+      <div className="fixed inset-0 md3-dialog-backdrop z-[2500] flex items-center justify-center p-3 md:p-4 animate-fadeIn">
         <div
           className={`
-            bg-white rounded-2xl w-full max-w-sm md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col
+            md3-dialog w-full max-w-sm md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col
             transition-all duration-300
             ${direction === "next" ? "animate-slideInRightFull" : "animate-slideInLeftFull"}
           `}
         >
           {/* Header */}
-          <div className="px-4 md:px-8 py-4 md:py-5 border-b border-[#e2e8f0] bg-gradient-to-r from-[#ede9fe] to-[#f5f3ff] shrink-0">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg md:text-xl font-extrabold flex items-center gap-2 text-[#1e293b]">
-                <i className="fas fa-plus-circle text-[#8b5cf6]" />
-                Add New Product
-              </h2>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-full bg-white/80 hover:bg-[#ef4444] hover:text-white transition-all flex items-center justify-center text-[#64748b] shadow-sm"
-              >
-                <i className="fas fa-times text-sm" />
-              </button>
-            </div>
+          <div className="md3-dialog-header flex items-center justify-between">
+            <h2 className="md3-headline-small flex items-center gap-2 text-[#1e293b]">
+              <i className="fas fa-plus-circle text-[#8b5cf6]" />
+              Add New Product
+            </h2>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full hover:bg-[#ef4444]/10 hover:text-[#ef4444] transition-all flex items-center justify-center text-[#64748b]"
+            >
+              <i className="fas fa-times text-lg" />
+            </button>
           </div>
 
           {/* Step Indicators */}
@@ -1092,57 +1110,55 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           <MobileStepIndicator currentStep={currentStep} totalSteps={STEPS.length} />
 
           {/* Body */}
-          <div className="overflow-y-auto p-4 md:p-8 flex-1">
+          <div className="md3-dialog-content">
             {stepContent[currentStep - 1]()}
           </div>
 
           {/* Footer */}
-          <div className="px-4 md:px-8 py-4 md:py-5 border-t border-[#e2e8f0] bg-white shrink-0">
-            <div className="flex justify-between items-center">
-              <button
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className={`
-                  px-4 md:px-6 py-2.5 rounded-xl font-bold text-sm transition-all
-                  ${currentStep === 1
-                    ? "opacity-0 pointer-events-none"
-                    : "bg-white text-[#64748b] border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:text-[#8b5cf6] active:scale-95"
-                  }
-                `}
-              >
-                <i className="fas fa-arrow-left mr-2 text-xs" />
-                Back
-              </button>
+          <div className="md3-dialog-actions">
+            <button
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className={`
+                md3-btn-text
+                ${currentStep === 1
+                  ? "opacity-0 pointer-events-none"
+                  : ""
+                }
+              `}
+            >
+              <i className="fas fa-arrow-left mr-2 text-xs" />
+              Back
+            </button>
 
-              <div className="flex gap-2 md:gap-3">
-                {currentStep < STEPS.length ? (
-                  <button
-                    onClick={nextStep}
-                    className="px-4 md:px-6 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:shadow-[#8b5cf6]/20 transition-all active:scale-95 flex items-center gap-2"
-                  >
-                    Next
-                    <i className="fas fa-arrow-right text-xs" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={saveProduct}
-                    disabled={saving}
-                    className="px-4 md:px-6 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:shadow-[#8b5cf6]/20 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2 min-w-[120px] justify-center"
-                  >
-                    {saving ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-save text-xs" />
-                        Save Product
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+            <div className="flex gap-2 md:gap-3">
+              {currentStep < STEPS.length ? (
+                <button
+                  onClick={nextStep}
+                  className="md3-btn-filled"
+                >
+                  Next
+                  <i className="fas fa-arrow-right text-xs" />
+                </button>
+              ) : (
+                <button
+                  onClick={saveProduct}
+                  disabled={saving}
+                  className="md3-btn-filled disabled:opacity-60 min-w-[140px]"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save text-xs" />
+                      Save Product
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
