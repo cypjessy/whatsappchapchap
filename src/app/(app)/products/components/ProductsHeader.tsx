@@ -163,7 +163,7 @@ function HeaderButton({
           ${isHovered && !isActive ? "scale-110" : "scale-100"}
         `}
       />
-      <span className="hidden sm:inline">{label}</span>
+      <span>{label}</span>
       {children}
     </Component>
   );

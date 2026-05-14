@@ -166,7 +166,7 @@ function IconButton({
       ) : (
         <Icon className={`w-4 h-4 transition-transform duration-200 ${isHovered ? "scale-110" : "scale-100"}`} />
       )}
-      <span className="hidden sm:inline">{label}</span>
+      <span>{label}</span>
       {badge !== undefined && badge > 0 && (
         <span className={`
           absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full 

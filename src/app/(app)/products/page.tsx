@@ -732,6 +732,17 @@ export default function ProductsPage() {
         />
       </div>
 
+      {/* Mobile Add Button - Visible at top of page */}
+      <div className="md:hidden px-3 mb-3">
+        <button
+          onClick={() => setAddProductModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Product</span>
+        </button>
+      </div>
+
       <main className="px-0 md:pt-4 space-y-2 md:space-y-6">
         <ProductStats
           totalProducts={products.length}
@@ -885,15 +896,6 @@ export default function ProductsPage() {
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <ScrollToTop />
-
-      {/* MD3 Floating Action Button - Mobile Only */}
-      <button
-        onClick={() => setAddProductModalOpen(true)}
-        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/40 flex items-center justify-center active:scale-90 transition-all duration-200"
-        aria-label="Add Product"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
     </div>
   );
 }
