@@ -195,43 +195,28 @@ function FormInput({
   }, [autoFocus, error]);
 
   return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-bold text-[#475569] uppercase tracking-wider">
+    <div className="md3-input-outlined">
+      {icon && (
+        <i className={`fas ${icon} absolute left-4 top-1/2 -translate-y-1/2 text-sm z-10 ${error ? "text-[var(--md-sys-color-error)]" : "text-[var(--md-sys-color-on-surface-variant)]"} transition-colors`} />
+      )}
+      <input
+        ref={inputRef}
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder=" "
+        className={`${icon ? 'pl-11' : 'pl-4'} pr-4 ${error ? 'input-error' : ''}`}
+      />
+      <label>
         {label}
-        {required && <span className="text-[#ef4444] ml-0.5">*</span>}
+        {required && <span className="text-[var(--md-sys-color-error)] ml-0.5">*</span>}
       </label>
-      <div className="relative">
-        {icon && (
-          <i className={`fas ${icon} absolute left-3 top-1/2 -translate-y-1/2 text-sm ${error ? "text-[#ef4444]" : "text-[#94a3b8]"} transition-colors`} />
-        )}
-        <input
-          ref={inputRef}
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={`
-            w-full rounded-xl border-2 text-sm font-medium transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-offset-0
-            ${icon ? "pl-10" : "pl-4"} pr-4 py-2.5 md:py-3
-            ${error
-              ? "border-[#ef4444] bg-[#fef2f2] focus:ring-[#ef4444]/20 text-[#ef4444] placeholder:text-[#ef4444]/50"
-              : "border-[#e2e8f0] bg-white focus:border-[#25D366] focus:ring-[#25D366]/20 text-[#1e293b] placeholder:text-[#94a3b8]"
-            }
-          `}
-        />
-        {error && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <i className="fas fa-exclamation-circle text-[#ef4444] text-sm" />
-          </div>
-        )}
-      </div>
       {error && (
-        <p className="text-[#ef4444] text-xs font-semibold flex items-center gap-1 animate-fadeIn">
-          <i className="fas fa-times-circle text-[10px]" />
+        <div className="md3-input-error-text flex items-center gap-1">
+          <i className="fas fa-exclamation-circle text-[10px]" />
           {error}
-        </p>
+        </div>
       )}
     </div>
   );
@@ -244,26 +229,26 @@ function ToggleSwitch({ label, description, checked, onChange }: {
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 md:p-4 bg-white rounded-xl border border-[#e2e8f0] hover:border-[#cbd5e1] transition-all duration-200">
+    <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-lg hover:bg-[var(--md-sys-color-surface-variant)] transition-all duration-200">
       <div className="min-w-0 mr-3">
-        <div className="font-bold text-sm text-[#475569]">{label}</div>
-        <div className="text-xs text-[#94a3b8] mt-0.5">{description}</div>
+        <div className="font-medium text-sm text-[var(--md-sys-color-on-surface)]">{label}</div>
+        <div className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">{description}</div>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
         className={`
-          relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0
-          ${checked ? "bg-[#25D366]" : "bg-[#e2e8f0]"}
+          relative w-14 h-8 rounded-full transition-colors duration-200 shrink-0
+          ${checked ? "bg-[var(--md-sys-color-primary)]" : "bg-[var(--md-sys-color-outline)]"}
         `}
         aria-checked={checked}
         role="switch"
       >
         <div
           className={`
-            absolute top-[3px] w-5 h-5 bg-white rounded-full shadow-sm
+            absolute top-1 w-6 h-6 bg-white rounded-full shadow-md
             transition-transform duration-200
-            ${checked ? "translate-x-6" : "translate-x-1"}
+            ${checked ? "translate-x-7" : "translate-x-1"}
           `}
         />
       </button>
@@ -394,8 +379,8 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
   // ─── Render Steps ──────────────────────────────────────────────────────────
 
   const renderStep1 = () => (
-    <div className="space-y-4 md:space-y-5 animate-fadeIn">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormInput
           label="First Name"
           name="firstName"
@@ -422,19 +407,19 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
   );
 
   const renderStep2 = () => (
-    <div className="space-y-4 md:space-y-5 animate-fadeIn">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-[#475569] uppercase tracking-wider">
-            WhatsApp Number <span className="text-[#ef4444]">*</span>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-0">
+          <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider mb-2">
+            WhatsApp Number <span className="text-[var(--md-sys-color-error)]">*</span>
           </label>
           <div className="flex gap-2">
-            <div className="relative shrink-0">
+            <div className="relative shrink-0 md3-input-outlined" style={{ minWidth: '110px' }}>
               <select
                 name="countryCode"
                 value={data.countryCode}
                 onChange={handleChange}
-                className="appearance-none pl-3 pr-8 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] bg-white text-sm font-medium focus:border-[#25D366] focus:outline-none cursor-pointer"
+                className="pl-3 pr-8 appearance-none cursor-pointer"
               >
                 {COUNTRY_CODES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -442,7 +427,8 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
                   </option>
                 ))}
               </select>
-              <i className="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[#94a3b8] pointer-events-none" />
+              <label>Code</label>
+              <i className="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--md-sys-color-on-surface-variant)] pointer-events-none" />
             </div>
             <FormInput
               label=""
@@ -455,8 +441,8 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
             />
           </div>
           {formErrors.phone && (
-            <p className="text-[#ef4444] text-xs font-semibold flex items-center gap-1">
-              <i className="fas fa-times-circle text-[10px]" />
+            <p className="md3-input-error-text flex items-center gap-1">
+              <i className="fas fa-exclamation-circle text-[10px]" />
               {formErrors.phone}
             </p>
           )}
@@ -477,7 +463,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
   );
 
   const renderStep3 = () => (
-    <div className="space-y-4 md:space-y-5 animate-fadeIn">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {CUSTOMER_TYPES.map((type) => (
           <button
@@ -485,32 +471,32 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
             type="button"
             onClick={() => updateField("customerType", type.id)}
             className={`
-              relative p-4 md:p-5 rounded-xl border-2 text-center transition-all duration-200
+              relative p-5 rounded-xl border-2 text-center transition-all duration-200
               ${data.customerType === type.id
-                ? "border-[#25D366] bg-gradient-to-br from-[#DCF8C6]/40 to-[#25D366]/5 shadow-md"
-                : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] shadow-md"
+                : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
               }
             `}
           >
             {data.customerType === type.id && (
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center shadow-sm">
-                <i className="fas fa-check text-white text-[10px]" />
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--md-sys-color-primary)] rounded-full flex items-center justify-center shadow-sm">
+                <i className="fas fa-check text-white text-xs" />
               </div>
             )}
             <div className={`
-              w-10 h-10 md:w-12 md:h-12 rounded-xl mx-auto mb-2 flex items-center justify-center
+              w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center
               bg-gradient-to-br ${type.color}
             `}>
-              <i className={`fas ${type.icon} text-lg ${data.customerType === type.id ? "text-[#25D366]" : "text-[#64748b]"}`} />
+              <i className={`fas ${type.icon} text-lg ${data.customerType === type.id ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"}`} />
             </div>
-            <div className="font-bold text-sm text-[#475569]">{type.label}</div>
-            <div className="text-[11px] text-[#94a3b8] mt-0.5">{type.desc}</div>
+            <div className="font-medium text-sm text-[var(--md-sys-color-on-surface)]">{type.label}</div>
+            <div className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-1">{type.desc}</div>
           </button>
         ))}
       </div>
 
       {data.customerType === "business" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 animate-slideDown">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormInput
             label="Company Name"
             name="companyName"
@@ -549,7 +535,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
   );
 
   const renderStep4 = () => (
-    <div className="space-y-4 md:space-y-5 animate-fadeIn">
+    <div className="space-y-4">
       <div className="flex gap-2 mb-3">
         {ADDRESS_TYPES.map((type) => (
           <button
@@ -557,11 +543,11 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
             type="button"
             onClick={() => updateField("addressType", type.id)}
             className={`
-              flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-xs font-bold
+              flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium
               transition-all duration-200
               ${data.addressType === type.id
-                ? "border-[#25D366] bg-[#DCF8C6]/20 text-[#25D366]"
-                : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+                ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-primary)]"
+                : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface-variant)] hover:border-[var(--md-sys-color-outline)]"
               }
             `}
           >
@@ -571,7 +557,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <FormInput
             label="Street Address"
@@ -606,32 +592,30 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
           icon="fa-mail-bulk"
           placeholder="00100"
         />
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-[#475569] uppercase tracking-wider">Country</label>
-          <div className="relative">
-            <select
-              name="country"
-              value={data.country}
-              onChange={handleChange}
-              className="w-full appearance-none pl-4 pr-10 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] bg-white text-sm font-medium focus:border-[#25D366] focus:outline-none cursor-pointer"
-            >
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.flag} {c.name}
-                </option>
-              ))}
-            </select>
-            <i className="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#94a3b8] pointer-events-none" />
-          </div>
+        <div className="md3-input-outlined">
+          <select
+            name="country"
+            value={data.country}
+            onChange={handleChange}
+            className="pl-4 pr-10 appearance-none cursor-pointer"
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+          </select>
+          <label>Country</label>
+          <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--md-sys-color-on-surface-variant)] pointer-events-none" />
         </div>
       </div>
     </div>
   );
 
   const renderStep5 = () => (
-    <div className="space-y-4 md:space-y-5 animate-fadeIn">
+    <div className="space-y-4">
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-[#475569] uppercase tracking-wider">Customer Segment</label>
+        <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">Customer Segment</label>
         <div className="flex flex-wrap gap-2">
           {SEGMENTS.map((seg) => (
             <button
@@ -639,10 +623,10 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
               type="button"
               onClick={() => updateField("segment", data.segment === seg.id ? "" : seg.id)}
               className={`
-                px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all duration-200
+                px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
                 ${data.segment === seg.id
                   ? `${seg.color} border-current`
-                  : "bg-white border-[#e2e8f0] text-[#64748b] hover:border-[#cbd5e1]"
+                  : "bg-[var(--md-sys-color-surface)] border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] hover:border-[var(--md-sys-color-outline)]"
                 }
               `}
             >
@@ -653,12 +637,12 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
       </div>
 
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-[#475569] uppercase tracking-wider">Tags</label>
+        <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wider">Tags</label>
         <div className="flex flex-wrap gap-2 min-h-[32px]">
           {data.tags.map((tag, i) => (
             <span
               key={`${tag}-${i}`}
-              className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-semibold shadow-sm hover:shadow-md transition-all"
+              className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-medium shadow-sm hover:shadow-md transition-all"
             >
               {tag}
               <button
@@ -682,14 +666,14 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
                 addTag();
               }
             }}
-            className="flex-1 px-3 py-2.5 rounded-xl border-2 border-[#e2e8f0] text-sm font-medium focus:border-[#25D366] focus:outline-none placeholder:text-[#94a3b8]"
+            className="flex-1 px-4 py-3 rounded-lg border border-[var(--md-sys-color-outline)] text-sm font-medium focus:border-[var(--md-sys-color-primary)] focus:outline-none placeholder:text-[var(--md-sys-color-on-surface-variant)]"
             placeholder="Add tags (VIP, Bulk Buyer...)"
           />
           <button
             type="button"
             onClick={addTag}
             disabled={!newCustomerTag.trim()}
-            className="px-4 py-2.5 bg-[#25D366] text-white rounded-xl text-sm font-bold hover:bg-[#128C7E] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="px-4 py-3 bg-[var(--md-sys-color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--md-sys-color-primary-dark)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           >
             <i className="fas fa-plus" />
           </button>
@@ -699,7 +683,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
   );
 
   const renderStep6 = () => (
-    <div className="space-y-4 md:space-y-5 animate-fadeIn">
+    <div className="space-y-4">
       <div className="space-y-3">
         <ToggleSwitch
           label="Order Updates via WhatsApp"
@@ -721,16 +705,15 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
         />
       </div>
 
-      <div className="space-y-1.5">
-        <label className="block text-xs font-bold text-[#475569] uppercase tracking-wider">Additional Notes</label>
+      <div className="md3-input-outlined">
         <textarea
           name="notes"
           value={data.notes}
           onChange={handleChange}
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm font-medium focus:border-[#25D366] focus:outline-none resize-none placeholder:text-[#94a3b8]"
-          placeholder="Add any notes about this customer..."
+          className="pl-4 pr-4 resize-none"
         />
+        <label>Additional Notes</label>
       </div>
     </div>
   );
@@ -742,29 +725,29 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
 
   return (
     <div
-      className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] flex items-start justify-center p-3 md:p-4 overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 md3-dialog-backdrop z-[2500] flex items-start justify-center p-3 md:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-sm md:max-w-2xl max-h-[90vh] shadow-2xl overflow-hidden my-2 md:my-8 animate-scaleIn flex flex-col"
+        className="md3-dialog w-full max-w-sm md:max-w-2xl my-2 md:my-8 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white">
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#e2e8f0]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md">
-                <i className="fas fa-user-plus" />
+        {/* Header - MD3 Dialog Header */}
+        <div className="sticky top-0 z-10 bg-[var(--md-sys-color-surface)]">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)]">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
+                <i className="fas fa-user-plus text-lg" />
               </div>
               <div>
-                <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Add New Customer</h2>
-                <p className="text-xs text-[#94a3b8]">Step {currentStep} of {WIZARD_STEPS.length}</p>
+                <h2 className="text-xl font-normal text-[var(--md-sys-color-on-surface)] leading-tight">Add New Customer</h2>
+                <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
               </div>
             </div>
             <button
               onClick={onClose}
               disabled={saving}
-              className="w-9 h-9 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all duration-200 active:scale-90"
+              className="w-10 h-10 rounded-full bg-transparent text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center hover:bg-[var(--md-sys-color-surface-variant)] transition-all duration-200 active:scale-95"
             >
               <i className="fas fa-times" />
             </button>
@@ -773,8 +756,8 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
           <StepIndicator currentStep={currentStep} data={data} />
         </div>
 
-        {/* Body */}
-        <div className="p-4 md:p-6 max-h-[50vh] md:max-h-[45vh] overflow-y-auto scrollbar-hide">
+        {/* Body - MD3 Dialog Content */}
+        <div className="md3-dialog-content">
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
@@ -783,66 +766,50 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
           {currentStep === 6 && renderStep6()}
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 z-10 bg-white border-t border-[#e2e8f0] p-4 md:p-6">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] md:text-xs text-[#94a3b8] font-medium">
-              <span className="text-[#ef4444]">*</span> Required fields
-            </span>
+        {/* Footer - MD3 Dialog Actions */}
+        <div className="md3-dialog-actions">
+          <span className="flex-1 text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium">
+            <span className="text-[var(--md-sys-color-error)]">*</span> Required fields
+          </span>
 
-            <div className="flex items-center gap-2 md:gap-3">
-              {currentStep > 1 && (
-                <button
-                  onClick={prevStep}
-                  disabled={saving}
-                  className="px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] text-sm font-bold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
-                >
-                  <i className="fas fa-chevron-left mr-1 text-xs" />
-                  Back
-                </button>
-              )}
+          <div className="flex items-center gap-2">
+            {currentStep > 1 && (
+              <button
+                onClick={prevStep}
+                disabled={saving}
+                className="md3-btn-text"
+              >
+                Back
+              </button>
+            )}
 
-              {!isLastStep ? (
-                <button
-                  onClick={nextStep}
-                  disabled={!canProceed || saving}
-                  className={`
-                    px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95
-                    ${canProceed
-                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 hover:shadow-lg"
-                      : "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-                    }
-                  `}
-                >
-                  Next
-                  <i className="fas fa-chevron-right ml-1 text-xs" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={`
-                    px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 flex items-center gap-2
-                    ${saving
-                      ? "bg-[#e2e8f0] text-[#94a3b8] cursor-wait"
-                      : "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 hover:shadow-lg"
-                    }
-                  `}
-                >
-                  {saving ? (
-                    <>
-                      <i className="fas fa-circle-notch fa-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-save" />
-                      Save Customer
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+            {!isLastStep ? (
+              <button
+                onClick={nextStep}
+                disabled={!canProceed || saving}
+                className={`md3-btn-filled ${!canProceed ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className={`md3-btn-filled ${saving ? 'opacity-50 cursor-wait' : ''} flex items-center gap-2`}
+              >
+                {saving ? (
+                  <>
+                    <i className="fas fa-circle-notch fa-spin text-sm" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save text-sm" />
+                    Save Customer
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
