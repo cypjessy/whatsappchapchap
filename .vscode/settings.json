@@ -1,0 +1,4 @@
+{
+    "remote.SSH.forceProxyDownload": true,
+    "remote.SSH.alwaysUseProxy": true
+}

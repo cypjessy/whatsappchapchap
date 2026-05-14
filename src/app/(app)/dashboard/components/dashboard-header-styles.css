@@ -1,0 +1,10 @@
+/* Tabular numbers for clock */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

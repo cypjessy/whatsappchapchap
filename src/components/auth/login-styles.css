@@ -1,0 +1,43 @@
+/* ============================================
+   LOGIN FORM PASSWORD FIELD STYLES
+   Override global button min-width/height rules
+   ============================================ */
+
+/* Password toggle button - explicit sizing to override global 44px rule */
+.password-toggle-btn {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  position: absolute !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  color: #6b7280 !important;
+  z-index: 10 !important;
+  flex-shrink: 0 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.password-toggle-btn:hover {
+  color: #1a1a2e !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.95) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Ensure input has enough right padding for the toggle button */
+.password-input-with-toggle {
+  padding-right: 52px !important;
+}

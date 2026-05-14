@@ -1,0 +1,5 @@
+{
+  "version": "1.0.2",
+  "apkUrl": "https://histoview.b-cdn.net/app-debug-v1.0.2.apk",
+  "releaseNotes": "Dashboard-triggered OTA update check"
+}
