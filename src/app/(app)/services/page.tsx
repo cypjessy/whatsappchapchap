@@ -745,6 +745,15 @@ export default function ServicesPage() {
 
       {/* Add Service Modal - rendered at root level */}
       <AddServiceButton ref={addServiceRef} />
+
+      {/* MD3 Floating Action Button - Mobile Only */}
+      <button
+        onClick={() => addServiceRef.current?.open()}
+        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/40 flex items-center justify-center active:scale-90 transition-all duration-200"
+        aria-label="Add Service"
+      >
+        <i className="fas fa-plus text-xl" />
+      </button>
     </div>
   );
 }

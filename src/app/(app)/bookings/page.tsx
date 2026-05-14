@@ -907,6 +907,15 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+
+      {/* MD3 Floating Action Button - Mobile Only */}
+      <button
+        onClick={() => setModalOpen(true)}
+        className="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1e293b] to-[#334155] text-white shadow-lg shadow-[#1e293b]/40 flex items-center justify-center active:scale-90 transition-all duration-200"
+        aria-label="New Booking"
+      >
+        <i className="fas fa-plus text-xl" />
+      </button>
     </div>
   );
 }
