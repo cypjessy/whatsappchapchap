@@ -407,6 +407,32 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [fabOpen]);
 
+  // Fix: Force re-render on app resume to prevent black/invisible state
+  useEffect(() => {
+    const handleAppResume = () => {
+      console.log('[BottomNav] App resumed - forcing re-render');
+      // Force immediate state reset
+      setFabOpen(false);
+      setFabPressed(false);
+      
+      // Force React to re-render by triggering a micro-state change
+      setTimeout(() => {
+        setFabOpen(prev => prev);
+      }, 50);
+    };
+
+    // Listen for app resume event
+    window.addEventListener('appresumed', handleAppResume);
+    window.addEventListener('focus', handleAppResume);
+    window.addEventListener('pageshow', handleAppResume);
+
+    return () => {
+      window.removeEventListener('appresumed', handleAppResume);
+      window.removeEventListener('focus', handleAppResume);
+      window.removeEventListener('pageshow', handleAppResume);
+    };
+  }, []);
+
   return (
     <>
       {/* Menu Sheet */}

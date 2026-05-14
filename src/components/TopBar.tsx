@@ -173,6 +173,32 @@ export default function AndroidTopBar({
     lastScrollY.current = 0;
   }, [pathname]);
 
+  // Fix: Force re-render on app resume to prevent black/invisible state
+  useEffect(() => {
+    const handleAppResume = () => {
+      console.log('[TopBar] App resumed - forcing re-render');
+      // Force immediate state reset to ensure correct rendering
+      setIsScrolled(window.scrollY > scrollThreshold);
+      setIsVisible(true);
+      
+      // Force React to re-render by triggering a micro-state change
+      setTimeout(() => {
+        setIsVisible(prev => prev);
+      }, 50);
+    };
+
+    // Listen for app resume event
+    window.addEventListener('appresumed', handleAppResume);
+    window.addEventListener('focus', handleAppResume);
+    window.addEventListener('pageshow', handleAppResume);
+
+    return () => {
+      window.removeEventListener('appresumed', handleAppResume);
+      window.removeEventListener('focus', handleAppResume);
+      window.removeEventListener('pageshow', handleAppResume);
+    };
+  }, [scrollThreshold]);
+
   const leftActions: ActionButton[] = [];
 
   const rightActions: ActionButton[] = [];
