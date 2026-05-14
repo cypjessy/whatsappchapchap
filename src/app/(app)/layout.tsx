@@ -57,6 +57,24 @@ export default function DashboardLayout({
   // Apply premium mobile optimizations
   useMobileOptimizations();
 
+  // Force status bar color on initial mount - runs immediately before any other effects
+  useEffect(() => {
+    const setInitialStatusBar = async () => {
+      try {
+        const [{ StatusBar, Style }] = await Promise.all([
+          import('@capacitor/status-bar'),
+        ]);
+        // Set green status bar immediately on mount
+        await StatusBar.setBackgroundColor({ color: '#25D366' });
+        await StatusBar.setStyle({ style: Style.Light });
+        console.log('[AppLayout] Initial status bar set to green');
+      } catch (err) {
+        console.log('[AppLayout] Not in Capacitor environment or StatusBar failed:', err);
+      }
+    };
+    setInitialStatusBar();
+  }, []);
+
   // Default status bar color - matches TopBar's default green state
   // Will be updated dynamically when scrolling
   useStatusBar({ color: '#25D366', style: 'light' });
