@@ -244,7 +244,7 @@ export default function OrderCard({
   return (
     <div
       ref={cardRef}
-      className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 animate-fadeIn"
+      className="group relative md3-card-elevated overflow-hidden animate-fadeIn"
       onClick={() => onOpenModal(order)}
     >
       {/* Left accent border - MD3 style */}
@@ -255,16 +255,16 @@ export default function OrderCard({
         <div className="flex items-start justify-between mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-sm text-[#25D366]">
+              <span className="font-medium text-sm text-[var(--md-sys-color-primary)]">
                 #{order.orderNumber || order.id.substring(0, 8)}
               </span>
               {itemCount > 0 && (
-                <span className="text-[11px] px-2 py-0.5 bg-[#F1F5F9] text-[#64748B] rounded-full font-medium">
+                <span className="text-[11px] px-2 py-0.5 bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] rounded-full font-medium">
                   {itemCount} {itemCount === 1 ? "item" : "items"}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#94A3B8]">
+            <div className="flex items-center gap-1.5 text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
               <i className="far fa-calendar-alt text-[10px]" />
               <span>{formatDate(order.createdAt)}</span>
             </div>
@@ -272,7 +272,7 @@ export default function OrderCard({
           
           {/* Status Badge - MD3 chip styling */}
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusStyle.bg} ${statusStyle.color}`}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium ${statusStyle.bg} ${statusStyle.color}`}
           >
             <i className={`fas ${statusIcon} text-[9px]`} />
             <span className="hidden sm:inline">{statusStyle.label}</span>
@@ -282,16 +282,16 @@ export default function OrderCard({
         {/* Customer Section - MD3 avatar */}
         <div className="flex items-center gap-3 mb-3">
           {/* Customer Avatar */}
-          <div className="w-10 h-10 rounded-xl bg-[#E8F5E9] flex items-center justify-center font-semibold text-sm text-[#2E7D32] flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-primary-container)] flex items-center justify-center font-medium text-sm text-[var(--md-sys-color-on-primary-container)] flex-shrink-0">
             {order.customerName?.charAt(0)?.toUpperCase() || "C"}
           </div>
           
           {/* Customer Details */}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm text-[#1E293B] truncate">
+            <div className="font-medium text-sm text-[var(--md-sys-color-on-surface)] truncate">
               {order.customerName || "Customer"}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#94A3B8]">
+            <div className="flex items-center gap-1.5 text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
               <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
               <span className="truncate">{order.customerPhone || "N/A"}</span>
             </div>
@@ -302,21 +302,21 @@ export default function OrderCard({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {/* Payment Method */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F8FAFC] rounded-lg">
-              <i className="fas fa-wallet text-[#94A3B8] text-[11px]" />
-              <span className="text-[11px] text-[#64748B] font-medium truncate max-w-[100px]">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--md-sys-color-surface-variant)] rounded-lg">
+              <i className="fas fa-wallet text-[var(--md-sys-color-on-surface-variant)] text-[11px]" />
+              <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] font-medium truncate max-w-[100px]">
                 {order.paymentMethod || "N/A"}
               </span>
             </div>
             
             {/* Payment Status - MD3 tonal badges */}
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                 order.status === "delivered"
-                  ? "bg-[#D1FAE5] text-[#059669]"
+                  ? "bg-[var(--md-sys-color-success-container)] text-[var(--md-sys-color-on-success-container)]"
                   : order.status === "cancelled"
-                  ? "bg-[#FEE2E2] text-[#DC2626]"
-                  : "bg-[#FEF3C7] text-[#D97706]"
+                  ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)]"
+                  : "bg-[var(--md-sys-color-warning-container)] text-[var(--md-sys-color-on-warning-container)]"
               }`}
             >
               {order.status === "delivered" ? "Paid" : order.status === "cancelled" ? "Cancelled" : "Pending"}
@@ -324,7 +324,7 @@ export default function OrderCard({
           </div>
           
           {/* Total Amount - MD3 typography */}
-          <span className="text-lg font-bold text-[#1E293B]">
+          <span className="text-lg font-semibold text-[var(--md-sys-color-on-surface)]">
             {formatCurrency(order.total || 0)}
           </span>
         </div>
@@ -332,18 +332,18 @@ export default function OrderCard({
         {/* Progress Indicator - MD3 styling */}
         {!isCancelled && !isDelivered && (
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-[#25D366]" />
-            <span className="text-[11px] text-[#64748B] font-medium">{progressPercent}% complete</span>
+            <div className="w-2 h-2 rounded-full bg-[var(--md-sys-color-primary)]" />
+            <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] font-medium">{progressPercent}% complete</span>
           </div>
         )}
 
         {/* Action Buttons - MD3 tonal buttons */}
-        <div className="flex gap-2 pt-3 border-t border-[#E2E8F0]">
+        <div className="flex gap-2 pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
           {/* Print Button */}
           <button
             onClick={handlePrint}
             disabled={loadingAction === "print"}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#2563EB] rounded-xl font-semibold text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-primary-container)] hover:bg-[var(--md-sys-color-primary-container)]/80 text-[var(--md-sys-color-on-primary-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
           >
             <i className="fas fa-print text-xs" />
             <span className="hidden sm:inline">Print</span>
@@ -353,7 +353,7 @@ export default function OrderCard({
           <button
             onClick={handleDuplicate}
             disabled={loadingAction === "duplicate"}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] rounded-xl font-semibold text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-secondary-container)] hover:bg-[var(--md-sys-color-secondary-container)]/80 text-[var(--md-sys-color-on-secondary-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
           >
             <i className="fas fa-copy text-xs" />
             <span className="hidden sm:inline">Duplicate</span>
@@ -363,7 +363,7 @@ export default function OrderCard({
           <button
             onClick={handleWhatsApp}
             disabled={loadingAction === "whatsapp"}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#128C7E] rounded-xl font-semibold text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-success-container)] hover:bg-[var(--md-sys-color-success-container)]/80 text-[var(--md-sys-color-on-success-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
           >
             <i className="fab fa-whatsapp text-xs" />
             <span className="hidden sm:inline">Notify</span>
@@ -375,7 +375,7 @@ export default function OrderCard({
       <div className="hidden md:block absolute top-3 right-3">
         <div className="relative">
           <button
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:bg-[#F1F5F9] transition-colors duration-200"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-colors duration-200"
             onClick={(e) => {
               e.stopPropagation();
               setShowDropdown(!showDropdown);
@@ -385,10 +385,10 @@ export default function OrderCard({
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 top-full mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 top-full mt-1 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn">
               {onEditOrder && (
                 <button
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#2563EB] hover:bg-[#F8FAFC]"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-variant)]"
                   onClick={() => { handleEdit(); setShowDropdown(false); }}
                 >
                   <i className="fas fa-edit w-4 text-center" />
@@ -396,21 +396,21 @@ export default function OrderCard({
                 </button>
               )}
               <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]"
                 onClick={() => { handleCopyOrderId(); setShowDropdown(false); }}
               >
                 <i className="fas fa-copy w-4 text-center" />
                 Copy Order ID
               </button>
               <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]"
                 onClick={() => { handleShareOrder(); setShowDropdown(false); }}
               >
                 <i className="fas fa-share-alt w-4 text-center" />
                 Share Order
               </button>
               <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]"
                 onClick={() => { handleAction("print", () => onPrintInvoice(order)); setShowDropdown(false); }}
                 disabled={loadingAction === "print"}
               >
@@ -418,7 +418,7 @@ export default function OrderCard({
                 Print Invoice
               </button>
               <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]"
                 onClick={() => { handleAction("duplicate", () => onDuplicateOrder(order)); setShowDropdown(false); }}
                 disabled={loadingAction === "duplicate"}
               >
@@ -426,17 +426,17 @@ export default function OrderCard({
                 Duplicate
               </button>
               <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#25D366] hover:bg-[#F8FAFC]"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-success)] hover:bg-[var(--md-sys-color-surface-variant)]"
                 onClick={() => { handleAction("whatsapp", () => onSendWhatsApp(order, order.status as OrderStatus)); setShowDropdown(false); }}
                 disabled={loadingAction === "whatsapp"}
               >
                 <i className="fab fa-whatsapp w-4 text-center" />
                 Send WhatsApp
               </button>
-              <div className="border-t border-[#E2E8F0]" />
+              <div className="border-t border-[var(--md-sys-color-outline-variant)]" />
               {onCancelOrder && !isCancelled && (
                 <button
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#EF4444] hover:bg-[#F8FAFC]"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-surface-variant)]"
                   onClick={() => { handleCancel(); setShowDropdown(false); }}
                   disabled={loadingAction === "cancel" || isDelivered}
                 >
