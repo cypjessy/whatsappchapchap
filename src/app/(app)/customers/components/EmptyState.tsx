@@ -76,15 +76,15 @@ export default function EmptyState({
   return (
     <div
       className={`
-        relative overflow-hidden bg-white rounded-2xl border border-[#e2e8f0] 
+        relative overflow-hidden md3-card-elevated
         shadow-sm transition-all duration-500 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
       `}
     >
       {/* Subtle background decoration */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#8b5cf6] to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#25D366] to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[var(--md-sys-color-primary)] to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[var(--md-sys-color-secondary)] to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
       </div>
 
       <div className="relative p-8 md:p-12 lg:p-16 text-center">
@@ -97,17 +97,17 @@ export default function EmptyState({
           `}
         >
           {/* Glow ring */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#8b5cf6]/10 to-[#25D366]/10 animate-pulse" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--md-sys-color-primary)]/10 to-[var(--md-sys-color-secondary)]/10 animate-pulse" />
           
-          <div className="relative w-full h-full bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-2xl flex items-center justify-center border border-[#e2e8f0] shadow-inner">
-            <i className={`fas ${config.icon} text-2xl md:text-3xl text-[#94a3b8]`} />
+          <div className="relative w-full h-full bg-[var(--md-sys-color-surface-variant)] rounded-2xl flex items-center justify-center border border-[var(--md-sys-color-outline-variant)]">
+            <i className={`fas ${config.icon} text-2xl md:text-3xl text-[var(--md-sys-color-on-surface-variant)]`} />
           </div>
         </div>
 
         {/* Title */}
         <h3
           className={`
-            font-extrabold text-lg md:text-xl text-[#1e293b] mb-2
+            font-medium text-lg md:text-xl text-[var(--md-sys-color-on-surface)] mb-2
             transition-all duration-500 delay-200
             ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
           `}
@@ -118,7 +118,7 @@ export default function EmptyState({
         {/* Subtitle */}
         <p
           className={`
-            text-sm text-[#64748b] max-w-sm mx-auto leading-relaxed mb-5
+            text-sm text-[var(--md-sys-color-on-surface-variant)] max-w-sm mx-auto leading-relaxed mb-5
             transition-all duration-500 delay-300
             ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
           `}
@@ -138,10 +138,10 @@ export default function EmptyState({
               onClick={onClearFilters}
               className={`
                 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                bg-[#f5f3ff] text-[#8b5cf6] font-semibold text-sm
-                border-2 border-[#ede9fe]
-                hover:bg-[#8b5cf6] hover:text-white hover:border-[#8b5cf6]
-                hover:shadow-lg hover:shadow-[#8b5cf6]/20 hover:-translate-y-0.5
+                bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-medium text-sm
+                border-2 border-[var(--md-sys-color-primary-container)]
+                hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:border-[var(--md-sys-color-primary)]
+                hover:shadow-lg hover:shadow-[var(--md-sys-color-primary)]/20 hover:-translate-y-0.5
                 transition-all duration-200 active:scale-95
               `}
             >
@@ -153,9 +153,9 @@ export default function EmptyState({
               onClick={onClearFilters}
               className={`
                 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                bg-[#f1f5f9] text-[#64748b] font-semibold text-sm
-                border-2 border-[#e2e8f0]
-                hover:border-[#64748b] hover:text-[#1e293b]
+                bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] font-medium text-sm
+                border-2 border-[var(--md-sys-color-outline-variant)]
+                hover:border-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)]
                 transition-all duration-200 active:scale-95
               `}
             >
@@ -163,8 +163,8 @@ export default function EmptyState({
               Clear search
             </button>
           ) : (
-            <div className="flex items-center justify-center gap-2 text-xs text-[#94a3b8]">
-              <i className="fas fa-lightbulb text-[#f59e0b]" />
+            <div className="flex items-center justify-center gap-2 text-xs text-[var(--md-sys-color-on-surface-variant)]">
+              <i className="fas fa-lightbulb text-[var(--md-sys-color-warning)]" />
               <span>Tip: Use the button above to add your first item</span>
             </div>
           )}

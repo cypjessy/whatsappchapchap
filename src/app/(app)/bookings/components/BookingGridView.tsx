@@ -291,12 +291,12 @@ function BookingCard({
 
 function EmptyState() {
   return (
-    <div className="col-span-full flex flex-col items-center justify-center py-16 md:py-24 text-[#64748B] animate-fadeIn">
-      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mb-4">
-        <i className="fas fa-th-large text-3xl md:text-4xl text-[#CBD5E1]" />
+    <div className="col-span-full flex flex-col items-center justify-center py-16 md:py-24 text-[var(--md-sys-color-on-surface-variant)] animate-fadeIn">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center mb-4">
+        <i className="fas fa-th-large text-3xl md:text-4xl text-[var(--md-sys-color-on-surface-variant)]/50" />
       </div>
-      <p className="text-base md:text-lg font-semibold text-[#475569] mb-1">No bookings found</p>
-      <p className="text-xs md:text-sm text-[#94A3B8] max-w-xs text-center">
+      <p className="text-base md:text-lg font-medium text-[var(--md-sys-color-on-surface)] mb-1">No bookings found</p>
+      <p className="text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)] max-w-xs text-center">
         Try adjusting your filters or search criteria to find what you're looking for.
       </p>
     </div>
