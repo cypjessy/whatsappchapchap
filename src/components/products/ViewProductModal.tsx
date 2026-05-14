@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Product, defaultProductCategories } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 
@@ -234,15 +234,14 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
   if (!isOpen || !product) return null;
 
-  const stockConfig = getStockConfig(product.stock || 0, product.lowStockAlert);
-  const hasDiscount = product.salePrice && product.salePrice > 0 && product.salePrice < product.price;
-  const discountPercent = hasDiscount ? Math.round(((product.price - (product.salePrice || 0)) / product.price) * 100) : 0;
-
-  const allImages = [product.image, ...(product.images || [])].filter(Boolean) as string[];
-  const currentImage = allImages[selectedImage] || null;
-
-  const profit = product.costPrice ? product.price - product.costPrice : 0;
-  const profitMargin = product.costPrice && product.costPrice > 0 ? Math.round((profit / product.price) * 100) : 0;
+  // Memoize derived values to prevent unnecessary recalculations on every render
+  const stockConfig = useMemo(() => getStockConfig(product.stock || 0, product.lowStockAlert), [product.stock, product.lowStockAlert]);
+  const hasDiscount = useMemo(() => product.salePrice && product.salePrice > 0 && product.salePrice < product.price, [product.salePrice, product.price]);
+  const discountPercent = useMemo(() => hasDiscount ? Math.round(((product.price - (product.salePrice || 0)) / product.price) * 100) : 0, [hasDiscount, product.price, product.salePrice]);
+  const allImages = useMemo(() => [product.image, ...(product.images || [])].filter(Boolean) as string[], [product.image, product.images]);
+  const currentImage = useMemo(() => allImages[selectedImage] || null, [allImages, selectedImage]);
+  const profit = useMemo(() => product.costPrice ? product.price - product.costPrice : 0, [product.costPrice, product.price]);
+  const profitMargin = useMemo(() => product.costPrice && product.costPrice > 0 ? Math.round((profit / product.price) * 100) : 0, [product.costPrice, profit, product.price]);
 
   // ─── Tab Content Renderers ────────────────────────────────────────────────
 

@@ -410,7 +410,11 @@ const ProductCard = memo(({
           : ""
         }
       `}
-      style={{ contain: 'layout style paint' }}
+      style={{ 
+        contain: 'layout style paint',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+      }}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       role={!bulkMode ? "button" : "article"}
@@ -720,13 +724,7 @@ export default function ProductGridView({
   getCategoryColor,
   getStockStyle,
   getBadgeStyle,
-  virtualScroll = true,
-  itemsPerPage = 12,
 }: ProductGridViewProps) {
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
-  const [page, setPage] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
   // Memoize handlers to prevent unnecessary re-renders
   const handleAction = useCallback(
     (handler: string, product: Product): Promise<void> => {
@@ -747,44 +745,8 @@ export default function ProductGridView({
     [handleToggleStatus, handleDuplicateProduct, handleShareProduct, shareProductWhatsApp, printProductCatalog]
   );
 
-  // Pagination or virtual scroll logic
-  useEffect(() => {
-    if (virtualScroll) {
-      // For virtual scroll, we'll implement intersection observer
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && products.length > displayedProducts.length) {
-            loadMoreProducts();
-          }
-        },
-        { threshold: 0.1 }
-      );
-
-      const sentinel = document.getElementById('product-grid-sentinel');
-      if (sentinel) observer.observe(sentinel);
-
-      return () => observer.disconnect();
-    } else {
-      // Simple pagination - always use paginated display
-      setDisplayedProducts(products.slice(0, page * itemsPerPage));
-    }
-  }, [products, virtualScroll, page, itemsPerPage]);
-
-  const loadMoreProducts = useCallback(() => {
-    if (isLoadingMore) return;
-    setIsLoadingMore(true);
-    
-    setTimeout(() => {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      setDisplayedProducts(products.slice(0, nextPage * itemsPerPage));
-      setIsLoadingMore(false);
-    }, 100);
-  }, [page, products, itemsPerPage, isLoadingMore]);
-
+  // ProductGridView just renders what it receives - parent page handles pagination
   if (products.length === 0) return null;
-
-  const productsToRender = displayedProducts;
 
   return (
     <div 
@@ -809,7 +771,7 @@ export default function ProductGridView({
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
           style={{ contain: 'layout' }}
         >
-          {productsToRender.map((product) => (
+          {products.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -825,30 +787,6 @@ export default function ProductGridView({
             />
           ))}
         </div>
-
-        {/* Loading sentinel for virtual scroll */}
-        {virtualScroll && productsToRender.length < products.length && (
-          <div id="product-grid-sentinel" className="py-4 flex justify-center">
-            <Loader2 className="w-6 h-6 text-[#25D366] animate-spin" />
-          </div>
-        )}
-
-        {/* Show more button for pagination */}
-        {!virtualScroll && productsToRender.length < products.length && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={loadMoreProducts}
-              disabled={isLoadingMore}
-              className="px-6 py-2.5 bg-white border border-[#e2e8f0] rounded-xl text-sm font-semibold text-[#64748b] hover:text-[#25D366] hover:border-[#25D366] transition-all active:scale-95 disabled:opacity-50"
-            >
-              {isLoadingMore ? (
-                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-              ) : (
-                `Load More (${products.length - productsToRender.length} remaining)`
-              )}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
