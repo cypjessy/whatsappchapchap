@@ -57,8 +57,9 @@ export default function DashboardLayout({
   // Apply premium mobile optimizations
   useMobileOptimizations();
 
-  // Default status bar color for dashboard (white with dark icons)
-  useStatusBar({ color: '#ffffff', style: 'dark' });
+  // Default status bar color - matches TopBar's default green state
+  // Will be updated dynamically when scrolling
+  useStatusBar({ color: '#25D366', style: 'light' });
 
   // Show offline banner when connection is lost
   useEffect(() => {

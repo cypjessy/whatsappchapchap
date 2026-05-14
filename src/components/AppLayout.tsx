@@ -74,6 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onMenuClick={() => setSidebarOpen(true)}
             title="ChapChap"
             notificationCount={3}
+            onScrollChange={(scrolled) => setIsScrolled(scrolled)}
           />
         </div>
         

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { orderService, bookingService } from "@/lib/db";
 import { useHaptics } from "@/hooks/useNativeAndroid";
+import { useStatusBar } from "@/hooks/useStatusBar";
 import "./topbar-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -207,6 +208,12 @@ export default function AndroidTopBar({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [scrollThreshold, onScrollChange]);
+
+  // Dynamic status bar color - matches TopBar background
+  useStatusBar({ 
+    color: isScrolled ? '#ffffff' : '#25D366',
+    style: isScrolled ? 'dark' : 'light'
+  });
 
   // Reset on route change
   useEffect(() => {
