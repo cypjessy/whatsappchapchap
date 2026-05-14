@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
 import { useStatusBar } from "@/hooks/useStatusBar";
+import { useAppLifecycle } from "@/hooks/useAppLifecycle";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
 import MobileLogo from "@/components/auth/MobileLogo";
@@ -63,6 +64,9 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps) {
+  // Initialize Capacitor lifecycle management to prevent idle freeze
+  useAppLifecycle();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading only during sign-in
   const [showSplash, setShowSplash] = useState(true);

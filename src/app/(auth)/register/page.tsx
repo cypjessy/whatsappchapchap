@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
 import { useStatusBar } from "@/hooks/useStatusBar";
+import { useAppLifecycle } from "@/hooks/useAppLifecycle";
 import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
 import FloatingShapes from "@/components/auth/FloatingShapes";
@@ -13,6 +14,9 @@ import RegisterSidebar from "@/components/auth/RegisterSidebar";
 import { Step1Account, Step2Business, Step3Plan, Step4Verify, SuccessStep } from "@/components/auth/steps";
 
 export default function RegisterPage() {
+  // Initialize Capacitor lifecycle management to prevent idle freeze
+  useAppLifecycle();
+  
   // Set status bar to white with dark icons
   useStatusBar({ color: '#ffffff', style: 'dark' });
   const [currentStep, setCurrentStep] = useState(1);

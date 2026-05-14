@@ -3,9 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useStatusBar } from "@/hooks/useStatusBar";
+import { useAppLifecycle } from "@/hooks/useAppLifecycle";
 import { Hero, Features, HowItWorks, CTA, Footer, Navbar } from "@/components/landing";
 
 export default function LandingPage() {
+  // Initialize Capacitor lifecycle management to prevent idle freeze
+  useAppLifecycle();
+  
   // Set status bar to match purple gradient background with white icons
   useStatusBar({ color: '#667eea', style: 'light' });
 

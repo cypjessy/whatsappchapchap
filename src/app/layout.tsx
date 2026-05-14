@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
+import ClientLayout from "@/components/ClientLayout";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -38,7 +38,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="font-sans">
-        <AuthProvider>{children}</AuthProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
