@@ -21,6 +21,7 @@ import {
   ArrowUp,
 } from "lucide-react";
 import ViewProductModal from "@/components/products/ViewProductModal";
+import ViewProductModalDesktop from "@/components/products/ViewProductModalDesktop";
 import AddProductModal from "@/components/products/AddProductModal";
 import {
   ProductStats,
@@ -790,8 +791,8 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* Mobile Add Button - Visible at top of page */}
-      <div className="md:hidden px-3 mb-3">
+      {/* Mobile Add Button - Visible at top of page with spacing from top bar */}
+      <div className="md:hidden px-3 mt-3 mb-3">
         <button
           onClick={() => setAddProductModalOpen(true)}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
@@ -939,16 +940,33 @@ export default function ProductsPage() {
       </main>
 
       {/* Modals */}
-      <ViewProductModal
-        isOpen={productModalOpen}
-        onClose={() => setProductModalOpen(false)}
-        product={selectedProduct}
-        onEdit={async () => {
-          await impactLight();
-          setAddProductModalOpen(true);
-          setProductModalOpen(false);
-        }}
-      />
+      {/* Mobile ViewProductModal */}
+      <div className="md:hidden">
+        <ViewProductModal
+          isOpen={productModalOpen}
+          onClose={() => setProductModalOpen(false)}
+          product={selectedProduct}
+          onEdit={async () => {
+            await impactLight();
+            setAddProductModalOpen(true);
+            setProductModalOpen(false);
+          }}
+        />
+      </div>
+      
+      {/* Desktop ViewProductModal */}
+      <div className="hidden md:block">
+        <ViewProductModalDesktop
+          isOpen={productModalOpen}
+          onClose={() => setProductModalOpen(false)}
+          product={selectedProduct}
+          onEdit={async () => {
+            await impactLight();
+            setAddProductModalOpen(true);
+            setProductModalOpen(false);
+          }}
+        />
+      </div>
       <AddProductModal
         isOpen={addProductModalOpen}
         onClose={() => setAddProductModalOpen(false)}
