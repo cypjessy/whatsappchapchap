@@ -189,6 +189,17 @@ function ImageLightbox({
         alt={alt}
         className="max-w-full max-h-[85vh] object-contain rounded-lg animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
+        onError={(e) => {
+          // Show placeholder for broken images in lightbox
+          (e.target as HTMLImageElement).style.display = 'none';
+          const parent = (e.target as HTMLImageElement).parentElement;
+          if (parent) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'text-white text-center';
+            placeholder.innerHTML = '<i class="fas fa-image text-6xl opacity-50"></i><p class="mt-4 text-sm">Image not available</p>';
+            parent.appendChild(placeholder);
+          }
+        }}
       />
     </div>
   );
@@ -260,6 +271,17 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                 src={currentImage}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  // Hide broken image and show fallback emoji
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'w-full h-full flex items-center justify-center';
+                    fallback.innerHTML = `<span class="text-6xl md:text-8xl opacity-30 select-none">${getCategoryEmoji(product.category || "other")}</span>`;
+                    parent.appendChild(fallback);
+                  }
+                }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
                 <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
@@ -299,7 +321,14 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   }
                 `}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img 
+                  src={img} 
+                  alt="" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
               </button>
             ))}
           </div>
