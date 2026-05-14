@@ -268,7 +268,6 @@ export default function AndroidTopBar({
         `}
         style={{
           top: 0,
-          paddingTop: 'env(safe-area-inset-top, 0px)',
           minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
           willChange: 'transform',
           backgroundColor: isScrolled ? '#ffffff' : '#25D366',
@@ -281,7 +280,8 @@ export default function AndroidTopBar({
             relative transition-all duration-300 flex-shrink-0 w-full
           `}
           style={{ 
-            minHeight: '64px'
+            minHeight: '64px',
+            paddingTop: 'env(safe-area-inset-top, 0px)'
           }}
         >
           {/* Content Container */}
