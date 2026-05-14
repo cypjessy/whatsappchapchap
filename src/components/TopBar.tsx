@@ -199,6 +199,25 @@ export default function AndroidTopBar({
     };
   }, [scrollThreshold]);
 
+  // Fix: Force safe area re-paint on visibility change (app resume)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[TopBar] Visibility changed to visible - forcing safe area re-paint');
+        // Force re-paint of safe area when app resumes
+        document.documentElement.style.setProperty(
+          '--sat', 
+          'env(safe-area-inset-top, 0px)'
+        );
+        // Force browser to recalculate layout
+        window.dispatchEvent(new Event('resize'));
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const leftActions: ActionButton[] = [];
 
   const rightActions: ActionButton[] = [];
