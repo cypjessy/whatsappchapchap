@@ -192,13 +192,10 @@ export default function CustomerCard({
   return (
     <div
       className={`
-        group relative bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-4 md:p-5
+        group relative md3-card-elevated p-4 md:p-5
         transition-all duration-300 ease-out cursor-pointer overflow-hidden
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}
-        ${!bulkMode && isHovered
-          ? "shadow-xl shadow-[#8b5cf6]/5 -translate-y-1 border-[#8b5cf6]/20"
-          : "shadow-sm hover:shadow-md"
-        }
+        ${!bulkMode && isHovered ? "shadow-xl -translate-y-1" : "shadow-sm hover:shadow-md"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -232,8 +229,8 @@ export default function CustomerCard({
                   w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer
                   transition-all duration-200
                   ${isSelected
-                    ? "bg-[#25D366] border-[#25D366] shadow-sm shadow-[#25D366]/20"
-                    : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                    ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] shadow-sm text-[var(--md-sys-color-on-primary)]"
+                    : "border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-primary)]"
                   }
                 `}
               >
@@ -245,7 +242,7 @@ export default function CustomerCard({
           {/* Avatar */}
           <div className={`
             w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)}
-            flex items-center justify-center font-bold text-base md:text-lg text-white
+            flex items-center justify-center font-medium text-base md:text-lg text-white
             shrink-0 relative transition-transform duration-300
             ${isHovered && !bulkMode ? "scale-110" : "scale-100"}
           `}>
@@ -262,22 +259,22 @@ export default function CustomerCard({
 
           {/* Name & Status */}
           <div className="min-w-0">
-            <div className="font-bold text-sm md:text-base text-[#1e293b] truncate flex items-center gap-1.5">
+            <div className="font-medium text-sm md:text-base text-[var(--md-sys-color-on-surface)] truncate flex items-center gap-1.5">
               {customer.name}
               {customer.status === "vip" && (
-                <i className="fas fa-crown text-[#f59e0b] text-xs shrink-0" title="VIP Customer" />
+                <i className="fas fa-crown text-[var(--md-sys-color-warning)] text-xs shrink-0" title="VIP Customer" />
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`
-                inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border
-                ${statusConfig.bg} ${statusConfig.dot.replace("bg-", "text-").replace("[", "").replace("]", "")} border-current/20
+                inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wider
+                ${statusConfig.bg} ${statusConfig.dot.replace("bg-", "text-").replace("[", "").replace("]", "")}
               `}>
                 <span className={`w-1 h-1 rounded-full ${statusConfig.dot}`} />
                 {statusConfig.label}
               </span>
               {customer.services && customer.services.length > 0 && (
-                <span className="text-[9px] text-[#94a3b8] font-medium">
+                <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)] font-medium">
                   {customer.services.length} service{customer.services.length !== 1 ? "s" : ""}
                 </span>
               )}
@@ -298,7 +295,7 @@ export default function CustomerCard({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-3 md:mb-4 p-2.5 md:p-3 bg-white rounded-xl border border-[#e2e8f0]/50">
+      <div className="grid grid-cols-3 gap-2 mb-3 md:mb-4 p-2.5 md:p-3 bg-[var(--md-sys-color-surface)] rounded-lg border border-[var(--md-sys-color-outline-variant)]">
         <StatCard
           value={formatCurrency(customer.totalSpent || 0)}
           label="Spent"
@@ -324,24 +321,24 @@ export default function CustomerCard({
 
       {/* Contact Info */}
       <div className="space-y-1.5 md:space-y-2 mb-3 md:mb-4">
-        <div className="flex items-center gap-2 text-xs md:text-sm text-[#64748b]">
-          <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-2 text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)]">
+          <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shrink-0">
             <i className="fab fa-whatsapp text-[#25D366] text-xs" />
           </div>
           <span className="truncate font-medium">{customer.phone}</span>
         </div>
         {customer.email && (
-          <div className="flex items-center gap-2 text-xs md:text-sm text-[#64748b]">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
-              <i className="fas fa-envelope text-[#8b5cf6] text-xs" />
+          <div className="flex items-center gap-2 text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)]">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shrink-0">
+              <i className="fas fa-envelope text-[var(--md-sys-color-primary)] text-xs" />
             </div>
             <span className="truncate">{customer.email}</span>
           </div>
         )}
         {customer.location && (
-          <div className="flex items-center gap-2 text-xs md:text-sm text-[#64748b]">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
-              <i className="fas fa-map-marker-alt text-[#f59e0b] text-xs" />
+          <div className="flex items-center gap-2 text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)]">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shrink-0">
+              <i className="fas fa-map-marker-alt text-[var(--md-sys-color-warning)] text-xs" />
             </div>
             <span className="truncate">{customer.location}</span>
           </div>
