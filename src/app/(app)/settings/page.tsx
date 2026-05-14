@@ -868,14 +868,14 @@ export default function SettingsPage() {
 
           <div className="space-y-6 px-4 md:px-6 pb-6">
             <div>
-              <label className="flex items-center gap-2 cursor-pointer mb-4">
+              <label className="flex items-center gap-3 cursor-pointer mb-4">
                 <input
                   type="checkbox"
                   checked={productSettings.enabled}
                   onChange={(e) => setProductSettings(prev => ({ ...prev, enabled: e.target.checked }))}
-                  className="w-5 h-5 rounded border-[#e2e8f0] text-blue-500 focus:ring-blue-500"
+                  className="w-5 h-5 rounded border-2 border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 focus:outline-none transition-all duration-200"
                 />
-                <span className="text-sm font-semibold text-[#64748b]">Enable Product Store</span>
+                <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">Enable Product Store</span>
               </label>
             </div>
 
@@ -963,14 +963,14 @@ export default function SettingsPage() {
 
           <div className="space-y-6 px-4 md:px-6 pb-6">
             <div>
-              <label className="flex items-center gap-2 cursor-pointer mb-4">
+              <label className="flex items-center gap-3 cursor-pointer mb-4">
                 <input
                   type="checkbox"
                   checked={serviceSettings.enabled}
                   onChange={(e) => setServiceSettings(prev => ({ ...prev, enabled: e.target.checked }))}
-                  className="w-5 h-5 rounded border-[#e2e8f0] text-purple-500 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-2 border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 focus:outline-none transition-all duration-200"
                 />
-                <span className="text-sm font-semibold text-[#64748b]">Enable Services</span>
+                <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">Enable Services</span>
               </label>
             </div>
 
@@ -1305,14 +1305,14 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newPickupStation.isActive}
                     onChange={(e) => setNewPickupStation(prev => ({ ...prev, isActive: e.target.checked }))}
-                    className="w-5 h-5 rounded border-[#e2e8f0] text-blue-500 focus:ring-blue-500"
+                    className="w-5 h-5 rounded border-2 border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 focus:outline-none transition-all duration-200"
                   />
-                  <span className="text-sm font-semibold text-[#64748b]">Active (Show to customers)</span>
+                  <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">Active (Show to customers)</span>
                 </label>
               </div>
             </div>
@@ -1448,14 +1448,14 @@ export default function SettingsPage() {
                 <i className="fas fa-hand-sparkles text-[#8b5cf6]"></i>
                 Welcome Message
               </h3>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={whatsappSettings.welcomeMessageEnabled}
                   onChange={(e) => handleWhatsAppChange("welcomeMessageEnabled", e.target.checked)}
-                  className="w-5 h-5 rounded border-[#e2e8f0] text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                  className="w-5 h-5 rounded border-2 border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 focus:outline-none transition-all duration-200"
                 />
-                <span className="text-sm font-semibold text-[#64748b]">Enable</span>
+                <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">Enable</span>
               </label>
             </div>
 
@@ -1626,14 +1626,14 @@ export default function SettingsPage() {
                 <i className="fas fa-reply text-[#8b5cf6]"></i>
                 Auto Reply
               </h3>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={whatsappSettings.autoReplyEnabled}
                   onChange={(e) => handleWhatsAppChange("autoReplyEnabled", e.target.checked)}
-                  className="w-5 h-5 rounded border-[#e2e8f0] text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                  className="w-5 h-5 rounded border-2 border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 focus:outline-none transition-all duration-200"
                 />
-                <span className="text-sm font-semibold text-[#64748b]">Enable</span>
+                <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">Enable</span>
               </label>
             </div>
 
@@ -1658,14 +1658,14 @@ export default function SettingsPage() {
                 <i className="fas fa-moon text-[#8b5cf6]"></i>
                 Away Message
               </h3>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={whatsappSettings.awayMessageEnabled}
                   onChange={(e) => handleWhatsAppChange("awayMessageEnabled", e.target.checked)}
-                  className="w-5 h-5 rounded border-[#e2e8f0] text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                  className="w-5 h-5 rounded border-2 border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 focus:outline-none transition-all duration-200"
                 />
-                <span className="text-sm font-semibold text-[#64748b]">Enable</span>
+                <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">Enable</span>
               </label>
             </div>
 
