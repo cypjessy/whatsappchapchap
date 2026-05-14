@@ -662,6 +662,17 @@ export default function CustomersPage() {
         onBroadcast={() => setShowBroadcastModal(true)}
       />
 
+      {/* Mobile Add Button - Visible at top of page */}
+      <div className="md:hidden mb-3">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+        >
+          <i className="fas fa-plus" />
+          <span>Add Customer</span>
+        </button>
+      </div>
+
       
 
       {loading ? (

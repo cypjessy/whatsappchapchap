@@ -56,7 +56,6 @@ function ToastContainer({ toasts }: { toasts: { id: number; type: string; messag
           key={toast.id}
           className={`
             pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 min-w-[300px]
-            animate-[slideInRight_0.3s_ease]
             ${toast.type === "success" ? "bg-[#10b981] text-white" : "bg-[#ef4444] text-white"}
           `}
         >
@@ -81,13 +80,6 @@ function StatCard({
   color?: "default" | "success" | "warning" | "danger";
   delay?: number;
 }) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), delay);
-    return () => clearTimeout(timer);
-  }, [delay]);
-
   const colorClasses = {
     default: "from-[#f8fafc] to-[#f1f5f9] border-[#e2e8f0]",
     success: "from-[#10b981]/10 to-[#10b981]/5 border-[#10b981]/20",
@@ -99,10 +91,7 @@ function StatCard({
     <div
       className={`
         bg-gradient-to-br ${colorClasses[color]} rounded-xl md:rounded-2xl p-3 md:p-5 border
-        transition-all duration-300
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
       `}
-      style={{ transitionDelay: `${delay}ms` }}
     >
       <div className="text-[10px] md:text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1">{label}</div>
       <div className="text-xl md:text-2xl font-extrabold text-[#1e293b]">{value}</div>
@@ -212,14 +201,12 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   const [toasts, setToasts] = useState<{ id: number; type: string; message: string }[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setActiveTab("overview");
       setSelectedImage(0);
-      setIsClosing(false);
     }
   }, [isOpen, product?.id]);
 
@@ -230,11 +217,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   }, []);
 
   const handleClose = useCallback(() => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-    }, 200);
+    onClose();
   }, [onClose]);
 
   const copyToClipboard = useCallback(
@@ -264,7 +247,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   // ─── Tab Content Renderers ────────────────────────────────────────────────
 
   const renderOverview = () => (
-    <div className="grid grid-cols-1 md:grid-cols-[1fr_1.3fr] gap-4 md:gap-8 animate-fadeIn">
+    <div className="grid grid-cols-1 md:grid-cols-[1fr_1.3fr] gap-4 md:gap-8">
       {/* Left: Image Gallery */}
       <div className="flex flex-col gap-3">
         {/* Main Image */}
@@ -451,7 +434,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderDetails = () => (
-    <div className="space-y-4 md:space-y-6 animate-fadeIn">
+    <div className="space-y-4 md:space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SectionCard title="Basic Info" icon="fa-info-circle">
           <InfoRow label="Product Name" value={product.name} />
@@ -518,7 +501,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderInventory = () => (
-    <div className="space-y-4 md:space-y-6 animate-fadeIn">
+    <div className="space-y-4 md:space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <StatCard label="Stock" value={product.stock || 0} subtext="units available" color={stockConfig.color === "#ef4444" ? "danger" : stockConfig.color === "#f59e0b" ? "warning" : "success"} delay={0} />
         <StatCard label="Low Alert" value={product.lowStockAlert || 5} subtext="threshold" delay={100} />
@@ -568,7 +551,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderSpecs = () => (
-    <div className="space-y-4 md:space-y-6 animate-fadeIn">
+    <div className="space-y-4 md:space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         {product.brand && (
           <StatCard label="Brand" value={product.brand} delay={0} />
@@ -587,8 +570,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             {Object.entries(product.filters).map(([key, value], idx) => (
               <div
                 key={key}
-                className="bg-white rounded-xl p-3 md:p-4 border border-[#e2e8f0] transition-all duration-200 hover:shadow-sm hover:border-[#cbd5e1]"
-                style={{ animationDelay: `${idx * 50}ms` }}
+                className="bg-white rounded-xl p-3 md:p-4 border border-[#e2e8f0] hover:shadow-sm hover:border-[#cbd5e1]"
               >
                 <div className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider mb-1">{key.replace(/_/g, " ")}</div>
                 <div className="font-bold text-sm text-[#1e293b]">
@@ -627,7 +609,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     })();
 
     return (
-      <div className="space-y-4 md:space-y-6 animate-fadeIn">
+      <div className="space-y-4 md:space-y-6">
         {/* AI Header */}
         <div className="bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] rounded-xl md:rounded-2xl p-4 md:p-6 border border-[#8b5cf6]/20">
           <div className="flex items-center gap-3 md:gap-4">
@@ -763,8 +745,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
       <div
         className={`
           fixed inset-0 z-50 flex items-end md:items-center justify-center overflow-y-auto
-          transition-opacity duration-200
-          ${isClosing ? "opacity-0" : "opacity-100"}
         `}
       >
         {/* Backdrop */}
@@ -775,8 +755,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           className={`
             relative bg-white w-full max-w-sm md:max-w-2xl lg:max-w-[1100px] max-h-[90vh] md:max-h-[90vh]
             rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden
-            transition-all duration-300
-            ${isClosing ? "translate-y-8 opacity-0" : "translate-y-0 opacity-100"}
           `}
           onClick={(e) => e.stopPropagation()}
         >

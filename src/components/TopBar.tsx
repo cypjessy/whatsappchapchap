@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { orderService, bookingService } from "@/lib/db";
+import { useHaptics } from "@/hooks/useNativeAndroid";
 import "./topbar-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -40,36 +41,65 @@ function ActionIcon({
   isScrolled: boolean;
 }) {
   const [isPressed, setIsPressed] = useState(false);
+  const [showRipple, setShowRipple] = useState(false);
+  const rippleRef = useRef<HTMLSpanElement>(null);
+  const { impactLight } = useHaptics();
+
+  const handlePress = () => {
+    setIsPressed(true);
+    setShowRipple(true);
+    impactLight();
+    
+    // Remove ripple after animation
+    setTimeout(() => {
+      setShowRipple(false);
+      setIsPressed(false);
+    }, 600);
+  };
 
   const content = (
     <button
       onClick={action.onClick}
       onTouchStart={() => setIsPressed(true)}
-      onTouchEnd={() => setIsPressed(false)}
+      onTouchEnd={handlePress}
       onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
+      onMouseUp={handlePress}
       className={`
-        relative w-10 h-10 rounded-xl flex items-center justify-center
+        relative w-11 h-11 rounded-full flex items-center justify-center
+        overflow-hidden
         transition-all duration-200 ease-out
         ${isPressed ? "scale-90" : "scale-100"}
         ${isScrolled 
           ? "hover:bg-gray-100 active:bg-gray-200 text-gray-700" 
-          : "hover:bg-white/15 active:bg-white/25 text-white"
+          : "hover:bg-white/20 active:bg-white/30 text-white"
         }
       `}
       aria-label={action.label}
     >
-      <i className={`fas ${action.icon} text-lg`} />
+      {/* Ripple effect */}
+      {showRipple && (
+        <span
+          ref={rippleRef}
+          className={`
+            absolute inset-0 rounded-full
+            ${isScrolled ? 'bg-gray-400/30' : 'bg-white/30'}
+            animate-md3Ripple
+          `}
+        />
+      )}
+      
+      <i className={`fas ${action.icon} text-lg relative z-10`} />
       
       {action.badge && action.badge > 0 && (
         <span className={`
-          absolute top-0.5 right-0.5
-          min-w-[18px] h-[18px] px-1
-          bg-red-500 text-white text-[10px] font-bold
+          absolute -top-0.5 -right-0.5
+          min-w-[20px] h-[20px] px-1
+          bg-red-500 text-white text-[11px] font-bold
           rounded-full flex items-center justify-center
           border-2 ${isScrolled ? 'border-white' : 'border-[#25D366]'} shadow-sm animate-badgePop
+          z-20
         `}>
-          {action.badge > 9 ? "9+" : action.badge}
+          {action.badge > 99 ? "99+" : action.badge}
         </span>
       )}
     </button>
@@ -214,17 +244,17 @@ export default function AndroidTopBar({
 
   return (
     <>
-      {/* Spacer for fixed header - now accounts for safe area */}
+      {/* Spacer for fixed header - accounts for safe area on modern Android */}
       <div 
         className="lg:hidden flex-shrink-0" 
         style={{ height: 'calc(64px + env(safe-area-inset-top, 0px))' }} 
       />
 
-      {/* Premium Android Top Bar - Material Design 3 */}
+      {/* Premium MD3 Android Top Bar - Material Design 3 */}
       <header
         className={`
           fixed top-0 left-0 right-0 z-50 lg:hidden
-          transition-all duration-300 ease-in-out
+          transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)
           ${isVisible ? "translate-y-0" : "-translate-y-full"}
         `}
         style={{
@@ -232,35 +262,38 @@ export default function AndroidTopBar({
           minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
           willChange: 'transform',
           backgroundColor: isScrolled ? '#ffffff' : '#25D366',
-          overflow: 'visible',
+          boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
         }}
       >
-        {/* App Bar Container - MD3 Style with flex-shrink-0 to prevent compression */}
+        {/* App Bar Container - MD3 Elevated Surface */}
         <div
           className={`
-            relative transition-all duration-300 shadow-sm flex-shrink-0 w-full
+            relative transition-all duration-300 flex-shrink-0 w-full
             ${isScrolled 
-              ? "bg-white shadow-md border-b border-gray-200/50" 
-              : "bg-[#25D366] shadow-sm"
+              ? "bg-white shadow-md" 
+              : "bg-gradient-to-br from-[#25D366] to-[#128C7E]"
             }
           `}
-          style={{ minHeight: '64px', overflow: 'visible' }}
+          style={{ minHeight: '64px' }}
         >
-          {/* Content Container - fixed height with min to prevent collapse */}
-          <div className="flex items-center justify-between px-4 h-16 min-h-[64px] w-full" style={{ overflow: 'visible' }}>
+          {/* Content Container */}
+          <div className="flex items-center justify-between px-3 h-16 min-h-[64px] w-full">
             {/* Left Actions */}
-            <div className="flex items-center gap-1 z-10 min-w-[48px]">
+            <div className="flex items-center gap-0.5 z-10 min-w-[48px]">
               {leftActions.map((action) => (
                 <ActionIcon key={action.label} action={action} isScrolled={isScrolled} />
               ))}
             </div>
 
-            {/* Search Bar (when active) */}
+            {/* Search Bar (when active) - MD3 Full Width Expansion */}
             {showSearch && (
-              <div className="absolute inset-0 bg-white flex items-center px-3 animate-fadeIn">
+              <div className="absolute inset-0 bg-white flex items-center px-3 animate-md3SlideIn">
                 <button
-                  onClick={() => setShowSearch(false)}
-                  className="mr-2 p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
+                  onClick={() => {
+                    setShowSearch(false);
+                    setSearchQuery("");
+                  }}
+                  className="mr-2 p-2.5 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors text-gray-700"
                   aria-label="Go back"
                 >
                   <i className="fas fa-arrow-left text-lg"></i>
@@ -270,13 +303,13 @@ export default function AndroidTopBar({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search orders, products..."
-                  className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#25D366]/50 transition-all"
+                  className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#25D366]/50 transition-all"
                   autoFocus
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="ml-2 p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors text-gray-600"
+                    className="ml-2 p-2.5 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors text-gray-700"
                     aria-label="Clear search"
                   >
                     <i className="fas fa-times text-lg"></i>
@@ -285,16 +318,16 @@ export default function AndroidTopBar({
               </div>
             )}
 
-            {/* Center Title Area */}
+            {/* Center Title Area - MD3 Typography */}
             {!showSearch && (
               <div className="absolute left-1/2 -translate-x-1/2 text-center max-w-[60%]">
-                <h1 className={`font-semibold text-base truncate transition-colors duration-300 ${
+                <h1 className={`font-semibold text-lg tracking-tight truncate transition-colors duration-300 ${
                   isScrolled ? "text-gray-900" : "text-white"
                 }`}>
                   {title || "ChapChap"}
                 </h1>
                 {subtitle && !isScrolled && (
-                  <p className="text-white/80 text-xs font-medium truncate mt-0.5">
+                  <p className="text-white/90 text-xs font-medium truncate mt-0.5 opacity-90">
                     {subtitle}
                   </p>
                 )}
@@ -302,16 +335,16 @@ export default function AndroidTopBar({
             )}
 
             {/* Right Actions */}
-            <div className="flex items-center gap-1 z-10 min-w-[48px] justify-end">
+            <div className="flex items-center gap-0.5 z-10 min-w-[48px] justify-end">
               {rightActions.map((action) => (
                 <ActionIcon key={action.label} action={action} isScrolled={isScrolled} />
               ))}
             </div>
           </div>
 
-          {/* Subtle bottom divider line */}
+          {/* MD3 State Layer Overlay (subtle) */}
           {!isScrolled && (
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
+            <div className="absolute inset-0 bg-white/5 pointer-events-none" />
           )}
         </div>
       </header>
