@@ -330,22 +330,22 @@ function ToggleSwitch({ label, checked, onChange }: {
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2">
-      <span className="text-sm font-medium text-[#475569]">{label}</span>
+    <div className="flex items-center justify-between py-3">
+      <span className="text-sm font-medium text-[var(--md-sys-color-on-surface)]">{label}</span>
       <button
         onClick={() => onChange(!checked)}
         className={`
-          relative w-11 h-6 rounded-full transition-colors duration-200
-          ${checked ? "bg-[#8b5cf6]" : "bg-[#e2e8f0]"}
+          relative w-14 h-8 rounded-full transition-colors duration-200
+          ${checked ? "bg-[var(--md-sys-color-primary)]" : "bg-[var(--md-sys-color-outline)]"}
         `}
         aria-checked={checked}
         role="switch"
       >
         <div
           className={`
-            absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm
+            absolute top-1 w-6 h-6 bg-white rounded-full shadow-md
             transition-transform duration-200
-            ${checked ? "translate-x-5" : "translate-x-0"}
+            ${checked ? "translate-x-7" : "translate-x-1"}
           `}
         />
       </button>
@@ -1174,27 +1174,27 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm p-2 md:p-4 overflow-y-auto animate-fadeIn">
+        <div className="fixed inset-0 md3-dialog-backdrop z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto">
           <div
-            className="relative w-full max-w-3xl bg-white rounded-xl md:rounded-2xl shadow-2xl overflow-hidden my-2 md:my-8"
+            className="md3-dialog w-full max-w-3xl my-2 md:my-8"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-white">
-              <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#e2e8f0]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-md">
-                    <i className="fas fa-plus" />
+            {/* Header - MD3 Dialog Header */}
+            <div className="sticky top-0 z-10 bg-[var(--md-sys-color-surface)]">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)]">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg">
+                    <i className="fas fa-plus text-lg" />
                   </div>
                   <div>
-                    <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Add New Service</h2>
-                    <p className="text-xs text-[#94a3b8]">Step {currentStep} of {WIZARD_STEPS.length}</p>
+                    <h2 className="text-xl font-normal text-[var(--md-sys-color-on-surface)] leading-tight">Add New Service</h2>
+                    <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
                   disabled={isSaving || isUploading}
-                  className="w-9 h-9 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all duration-200 active:scale-90"
+                  className="w-10 h-10 rounded-full bg-transparent text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center hover:bg-[var(--md-sys-color-surface-variant)] transition-all duration-200 active:scale-95"
                 >
                   <i className="fas fa-times" />
                 </button>
@@ -1203,8 +1203,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               <StepIndicator currentStep={currentStep} totalSteps={WIZARD_STEPS.length} />
             </div>
 
-            {/* Body */}
-            <div className="p-4 md:p-6 max-h-[60vh] md:max-h-[50vh] overflow-y-auto">
+            {/* Body - MD3 Dialog Content */}
+            <div className="md3-dialog-content">
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
@@ -1214,59 +1214,34 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               {currentStep === 7 && renderStep7()}
             </div>
 
-            {/* Footer */}
-            <div className="sticky bottom-0 z-10 bg-white border-t border-[#e2e8f0] p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={prevStep}
-                  disabled={currentStep === 1 || isSaving || isUploading}
-                  className={`
-                    flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                    transition-all duration-200
-                    ${currentStep === 1
-                      ? "opacity-0 pointer-events-none"
-                      : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0] active:scale-95"
-                    }
-                  `}
-                >
-                  <i className="fas fa-chevron-left text-xs" />
-                  Back
-                </button>
+            {/* Footer - MD3 Dialog Actions */}
+            <div className="md3-dialog-actions">
+              <button
+                onClick={prevStep}
+                disabled={currentStep === 1 || isSaving || isUploading}
+                className={`md3-btn-text ${currentStep === 1 ? 'invisible' : ''}`}
+              >
+                Back
+              </button>
 
-                {currentStep < WIZARD_STEPS.length ? (
-                  <button
-                    onClick={nextStep}
-                    disabled={!canProceed || isSaving || isUploading}
-                    className={`
-                      flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold
-                      transition-all duration-200 active:scale-95
-                      ${canProceed
-                        ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md shadow-[#8b5cf6]/25 hover:shadow-lg"
-                        : "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-                      }
-                    `}
-                  >
-                    Next
-                    <i className="fas fa-chevron-right text-xs" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={saveService}
-                    disabled={isSaving || isUploading}
-                    className={`
-                      flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold
-                      transition-all duration-200 active:scale-95
-                      ${isSaving || isUploading
-                        ? "bg-[#e2e8f0] text-[#94a3b8] cursor-wait"
-                        : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-md shadow-[#10b981]/25 hover:shadow-lg"
-                      }
-                    `}
-                  >
-                    <i className={`fas ${isUploading ? "fa-spinner fa-spin" : isSaving ? "fa-spinner fa-spin" : "fa-save"}`} />
-                    {isUploading ? "Uploading..." : isSaving ? "Saving..." : "Save Service"}
-                  </button>
-                )}
-              </div>
+              {currentStep < WIZARD_STEPS.length ? (
+                <button
+                  onClick={nextStep}
+                  disabled={!canProceed || isSaving || isUploading}
+                  className={`md3-btn-filled ${!canProceed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={saveService}
+                  disabled={isSaving || isUploading}
+                  className={`md3-btn-filled ${(isSaving || isUploading) ? 'opacity-50 cursor-wait' : ''} flex items-center gap-2`}
+                >
+                  <i className={`fas ${isUploading ? "fa-spinner fa-spin text-sm" : isSaving ? "fa-spinner fa-spin text-sm" : "fa-save text-sm"}`} />
+                  {isUploading ? "Uploading..." : isSaving ? "Saving..." : "Save Service"}
+                </button>
+              )}
             </div>
           </div>
         </div>
