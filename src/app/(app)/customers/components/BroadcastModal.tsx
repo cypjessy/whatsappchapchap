@@ -188,22 +188,22 @@ export default function BroadcastModal({
 
   return (
     <div
-      className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-50 flex items-start justify-center p-3 md:p-4 overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 md3-dialog-backdrop z-50 flex items-start justify-center p-3 md:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl my-4 md:my-8 overflow-hidden animate-scaleIn"
+        className="md3-dialog w-full max-w-lg my-4 md:my-8 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex items-center justify-between bg-gradient-to-br from-[#f8fafc] to-white">
+        {/* Header - MD3 Dialog Header */}
+        <div className="px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md">
               <i className="fas fa-broadcast-tower" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Broadcast Message</h2>
-              <p className="text-xs text-[#94a3b8] font-medium">
+              <h2 className="text-lg md:text-xl font-normal text-[var(--md-sys-color-on-surface)]">Broadcast Message</h2>
+              <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium">
                 Reach {customerCount} customer{customerCount !== 1 ? "s" : ""} instantly
               </p>
             </div>
@@ -211,14 +211,14 @@ export default function BroadcastModal({
           <button
             onClick={onClose}
             disabled={sending}
-            className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-xl transition-all duration-200 active:scale-90"
+            className="w-10 h-10 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-all duration-200 active:scale-95"
           >
             <i className="fas fa-times" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-4 md:p-6 space-y-4 md:space-y-5 max-h-[60vh] overflow-y-auto scrollbar-hide">
+        {/* Body - MD3 Dialog Content */}
+        <div className="md3-dialog-content space-y-4 md:space-y-5">
           {/* Success State */}
           {showSuccess && (
             <div className="bg-[#10b981]/10 border border-[#10b981]/20 rounded-xl p-3 flex items-center gap-3 animate-fadeIn">
@@ -301,12 +301,12 @@ export default function BroadcastModal({
           <DeliveryPreview customerCount={customerCount} message={message} />
         </div>
 
-        {/* Footer */}
-        <div className="p-4 md:p-6 border-t border-[#e2e8f0] bg-gradient-to-br from-[#f8fafc] to-white flex items-center justify-between gap-3">
+        {/* Footer - MD3 Dialog Actions */}
+        <div className="md3-dialog-actions">
           <button
             onClick={onClose}
             disabled={sending}
-            className="px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+            className="md3-btn-text disabled:opacity-50"
           >
             Cancel
           </button>
@@ -315,22 +315,18 @@ export default function BroadcastModal({
             onClick={handleSend}
             disabled={!canSend}
             className={`
-              flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
-              transition-all duration-200 active:scale-95
-              ${canSend
-                ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 hover:shadow-lg"
-                : "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-              }
+              md3-btn-filled disabled:opacity-50 flex items-center gap-2
+              ${!canSend ? 'cursor-not-allowed' : ''}
             `}
           >
             {sending ? (
               <>
-                <i className="fas fa-circle-notch fa-spin" />
+                <i className="fas fa-circle-notch fa-spin text-sm" />
                 <span>Sending {sentCount}/{customerCount}...</span>
               </>
             ) : (
               <>
-                <i className="fas fa-paper-plane" />
+                <i className="fas fa-paper-plane text-sm" />
                 <span>Send to {customerCount}</span>
               </>
             )}
