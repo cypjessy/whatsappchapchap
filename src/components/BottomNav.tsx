@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import "./bottomnav-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -185,9 +186,11 @@ function BottomNavItem({
 function MenuSheet({
   isOpen,
   onClose,
+  onLogout,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onLogout: () => void;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -329,6 +332,31 @@ function MenuSheet({
               </div>
             </div>
           ))}
+
+          {/* Logout Section */}
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="px-2 mb-3">
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                Account
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              <button
+                onClick={() => {
+                  handleClose();
+                  onLogout();
+                }}
+                className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-150"
+              >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-50 text-red-500 text-lg shadow-sm">
+                  <i className="fas fa-sign-out-alt" />
+                </div>
+                <span className="text-[11px] font-medium text-red-600 text-center leading-tight">
+                  Logout
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>
@@ -339,8 +367,19 @@ function MenuSheet({
 
 export default function BottomNav({ onFABClick }: BottomNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
   const [fabOpen, setFabOpen] = useState(false);
   const [fabPressed, setFabPressed] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   const isActive = useCallback((href: string) => {
     const cleanHref = href.split("?")[0];
@@ -371,7 +410,7 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
   return (
     <>
       {/* Menu Sheet */}
-      <MenuSheet isOpen={fabOpen} onClose={() => setFabOpen(false)} />
+      <MenuSheet isOpen={fabOpen} onClose={() => setFabOpen(false)} onLogout={handleLogout} />
 
       {/* Bottom Navigation Bar - Material Design 3 */}
       <nav
