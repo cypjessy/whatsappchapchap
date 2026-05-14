@@ -347,40 +347,38 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - MD3 Dialog */}
       <div
-        className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] animate-fadeIn"
+        className="fixed inset-0 md3-dialog-backdrop z-[2500]"
         onClick={handleCloseAttempt}
       />
 
-      {/* Modal */}
+      {/* Modal - MD3 Dialog */}
       <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 pointer-events-none">
         <div
           ref={modalRef}
-          className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl pointer-events-auto animate-slideUp max-h-[90vh] flex flex-col"
+          className="md3-dialog w-full max-w-lg pointer-events-auto max-h-[90vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex-shrink-0 p-4 sm:p-5 border-b border-[#e2e8f0] bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
+          {/* Header - MD3 Dialog Header */}
+          <div className="flex-shrink-0 px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0 animate-slideUp">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
                   <i className="fas fa-edit" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-[#1e293b] truncate">
+                  <h2 className="text-xl font-normal text-[var(--md-sys-color-on-surface)] leading-tight truncate">
                     Edit Order
                   </h2>
-                  <div className="flex items-center gap-2 text-sm text-[#64748b]">
-                    <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-                      #{orderNumber}
-                    </span>
+                  <div className="flex items-center gap-2 text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+                    <span className="font-mono bg-[var(--md-sys-color-surface-variant)] px-1.5 py-0.5 rounded">#{orderNumber}</span>
                     <StatusBadge status={editForm.status} />
                   </div>
                 </div>
               </div>
               <button
-                className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95 flex-shrink-0"
+                className="w-10 h-10 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] rounded-full transition-all active:scale-95 flex-shrink-0"
                 onClick={handleCloseAttempt}
                 title="Close (Esc)"
               >
@@ -389,10 +387,10 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
             </div>
           </div>
 
-          {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
+          {/* Body - MD3 Dialog Content */}
+          <div className="md3-dialog-content space-y-4">
             {/* Customer Name */}
-            <div className="animate-fadeIn" style={{ animationDelay: '0.05s' }}>
+            <div>
             <FormInput
               label="Customer Name"
               name="customerName"
@@ -406,7 +404,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
             </div>
 
             {/* Phone & Email Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormInput
                 label="Phone Number"
                 name="customerPhone"
@@ -431,7 +429,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
             </div>
 
             {/* Address */}
-            <div className="animate-fadeIn" style={{ animationDelay: '0.15s' }}>
+            <div>
             <FormTextarea
               label="Delivery Address"
               name="customerAddress"
@@ -446,7 +444,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
             </div>
 
             {/* Payment Method */}
-            <div className="animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+            <div>
             <FormSelect
               label="Payment Method"
               name="paymentMethod"
@@ -460,7 +458,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
             </div>
 
             {/* Status */}
-            <div className="animate-fadeIn" style={{ animationDelay: '0.25s' }}>
+            <div>
             <FormSelect
               label="Order Status"
               name="status"
@@ -474,13 +472,13 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
 
             {/* Change Summary */}
             {hasChanges && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700 animate-slideUp">
+              <div className="p-4 bg-[var(--md-sys-color-primary-container)] border border-[var(--md-sys-color-primary)]/20 rounded-lg text-sm text-[var(--md-sys-color-on-primary-container)]">
                 <div className="flex items-start gap-2">
                   <i className="fas fa-info-circle mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-semibold">Unsaved Changes</p>
-                    <p className="text-blue-600/80 text-xs mt-0.5">
-                      Press <kbd className="px-1.5 py-0.5 bg-white rounded text-xs font-mono border border-blue-200">Ctrl+S</kbd> to save
+                    <p className="text-xs mt-0.5 opacity-80">
+                      Press <kbd className="px-1.5 py-0.5 bg-[var(--md-sys-color-surface)] rounded text-xs font-mono border border-[var(--md-sys-color-outline)]">Ctrl+S</kbd> to save
                     </p>
                   </div>
                 </div>
@@ -488,28 +486,28 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
             )}
           </div>
 
-          {/* Footer */}
-          <div className="flex-shrink-0 p-4 border-t border-[#e2e8f0] bg-white flex gap-3 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+          {/* Footer - MD3 Dialog Actions */}
+          <div className="md3-dialog-actions">
             <button
-              className="flex-1 px-4 py-3 bg-white border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-semibold text-sm hover:border-gray-400 hover:text-gray-700 transition-all active:scale-95 touch-manipulation"
+              className="md3-btn-text"
               onClick={handleCloseAttempt}
               disabled={isSaving}
             >
               Cancel
             </button>
             <button
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:from-[#22c55e] hover:to-[#0d9488] transition-all active:scale-95 touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="md3-btn-filled disabled:opacity-50 flex items-center justify-center gap-2"
               onClick={handleSave}
               disabled={isSaving || !hasChanges}
             >
               {isSaving ? (
                 <>
-                  <i className="fas fa-circle-notch fa-spin" />
+                  <i className="fas fa-circle-notch fa-spin text-sm" />
                   <span>Saving...</span>
                 </>
               ) : (
                 <>
-                  <i className="fas fa-save" />
+                  <i className="fas fa-save text-sm" />
                   <span>Save Changes</span>
                 </>
               )}
@@ -518,32 +516,32 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
         </div>
       </div>
 
-      {/* Unsaved Changes Warning Modal */}
+      {/* Unsaved Changes Warning Modal - MD3 Dialog */}
       {showUnsavedWarning && (
-        <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 md3-dialog-backdrop"
             onClick={() => setShowUnsavedWarning(false)}
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slideUp">
-            <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-exclamation-triangle text-2xl text-amber-500" />
+          <div className="relative md3-dialog w-full max-w-sm p-6">
+            <div className="w-14 h-14 rounded-full bg-[var(--md-sys-color-warning-container)] flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-exclamation-triangle text-2xl text-[var(--md-sys-color-warning)]" />
             </div>
-            <h3 className="text-xl font-bold text-[#1e293b] text-center mb-2">
+            <h3 className="text-xl font-normal text-[var(--md-sys-color-on-surface)] text-center mb-2">
               Unsaved Changes
             </h3>
-            <p className="text-[#64748b] text-center mb-6">
+            <p className="text-[var(--md-sys-color-on-surface-variant)] text-center mb-6">
               You have unsaved changes. Are you sure you want to discard them?
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
-                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all active:scale-95"
+                className="md3-btn-tonal flex-1"
                 onClick={() => setShowUnsavedWarning(false)}
               >
                 Keep Editing
               </button>
               <button
-                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all active:scale-95 shadow-lg"
+                className="md3-btn-filled flex-1 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] hover:bg-[var(--md-sys-color-error-dark)]"
                 onClick={() => {
                   setShowUnsavedWarning(false);
                   onClose();
