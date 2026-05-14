@@ -3686,3 +3686,79 @@ body:has(.landing-page-wrapper)::after {
 .md3-duration-extra-long { 
   transition-duration: 300ms; 
 }
+
+/* Material Design 3 Utility Classes */
+@layer utilities {
+  /* Background colors */
+  .bg-primary { background-color: var(--md-sys-color-primary); }
+  .bg-on-primary { background-color: var(--md-sys-color-on-primary); }
+  .bg-primary-container { background-color: var(--md-sys-color-primary-container); }
+  .bg-on-primary-container { background-color: var(--md-sys-color-on-primary-container); }
+  
+  .bg-secondary { background-color: var(--md-sys-color-secondary); }
+  .bg-on-secondary { background-color: var(--md-sys-color-on-secondary); }
+  .bg-secondary-container { background-color: var(--md-sys-color-secondary-container); }
+  .bg-on-secondary-container { background-color: var(--md-sys-color-on-secondary-container); }
+  
+  .bg-tertiary { background-color: var(--md-sys-color-tertiary); }
+  .bg-on-tertiary { background-color: var(--md-sys-color-on-tertiary); }
+  .bg-tertiary-container { background-color: var(--md-sys-color-tertiary-container); }
+  .bg-on-tertiary-container { background-color: var(--md-sys-color-on-tertiary-container); }
+  
+  .bg-error { background-color: var(--md-sys-color-error); }
+  .bg-on-error { background-color: var(--md-sys-color-on-error); }
+  .bg-error-container { background-color: var(--md-sys-color-error-container); }
+  .bg-on-error-container { background-color: var(--md-sys-color-on-error-container); }
+  
+  .bg-surface { background-color: var(--md-sys-color-surface); }
+  .bg-surface-variant { background-color: var(--md-sys-color-surface-variant); }
+  .bg-on-surface { background-color: var(--md-sys-color-on-surface); }
+  .bg-on-surface-variant { background-color: var(--md-sys-color-on-surface-variant); }
+  
+  .bg-outline { background-color: var(--md-sys-color-outline); }
+  .bg-outline-variant { background-color: var(--md-sys-color-outline-variant); }
+  
+  .bg-background { background-color: var(--md-sys-color-background); }
+  .bg-on-background { background-color: var(--md-sys-color-on-background); }
+  
+  /* Text colors */
+  .text-primary { color: var(--md-sys-color-primary); }
+  .text-on-primary { color: var(--md-sys-color-on-primary); }
+  .text-primary-container { color: var(--md-sys-color-primary-container); }
+  .text-on-primary-container { color: var(--md-sys-color-on-primary-container); }
+  
+  .text-secondary { color: var(--md-sys-color-secondary); }
+  .text-on-secondary { color: var(--md-sys-color-on-secondary); }
+  .text-secondary-container { color: var(--md-sys-color-secondary-container); }
+  .text-on-secondary-container { color: var(--md-sys-color-on-secondary-container); }
+  
+  .text-tertiary { color: var(--md-sys-color-tertiary); }
+  .text-on-tertiary { color: var(--md-sys-color-on-tertiary); }
+  .text-tertiary-container { color: var(--md-sys-color-tertiary-container); }
+  .text-on-tertiary-container { color: var(--md-sys-color-on-tertiary-container); }
+  
+  .text-error { color: var(--md-sys-color-error); }
+  .text-on-error { color: var(--md-sys-color-on-error); }
+  .text-error-container { color: var(--md-sys-color-error-container); }
+  .text-on-error-container { color: var(--md-sys-color-on-error-container); }
+  
+  .text-surface { color: var(--md-sys-color-surface); }
+  .text-surface-variant { color: var(--md-sys-color-surface-variant); }
+  .text-on-surface { color: var(--md-sys-color-on-surface); }
+  .text-on-surface-variant { color: var(--md-sys-color-on-surface-variant); }
+  
+  .text-outline { color: var(--md-sys-color-outline); }
+  .text-outline-variant { color: var(--md-sys-color-outline-variant); }
+  
+  .text-background { color: var(--md-sys-color-background); }
+  .text-on-background { color: var(--md-sys-color-on-background); }
+  
+  /* Border colors */
+  .border-primary { border-color: var(--md-sys-color-primary); }
+  .border-secondary { border-color: var(--md-sys-color-secondary); }
+  .border-error { border-color: var(--md-sys-color-error); }
+  .border-surface { border-color: var(--md-sys-color-surface); }
+  .border-surface-variant { border-color: var(--md-sys-color-surface-variant); }
+  .border-outline { border-color: var(--md-sys-color-outline); }
+  .border-outline-variant { border-color: var(--md-sys-color-outline-variant); }
+}
