@@ -28,11 +28,12 @@ const config: CapacitorConfig = {
       launchFadeOutDuration: 300,
     },
     StatusBar: {
-      style: 'light',
+      style: 'dark',
       backgroundColor: '#25D366',
-      overlaysWebView: false,
+      overlaysWebView: true,
     },
     EdgeToEdge: {
+      enabled: false,
       backgroundColor: '#ffffff',
     }
   }

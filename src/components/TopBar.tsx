@@ -244,22 +244,24 @@ export default function AndroidTopBar({
 
   return (
     <>
-      {/* Spacer for fixed header - accounts for safe area on modern Android */}
+      {/* Spacer for fixed header - matches TopBar height including safe area */}
       <div 
         className="lg:hidden flex-shrink-0" 
-        style={{ height: 'calc(64px + env(safe-area-inset-top, 0px))' }} 
+        style={{ 
+          height: 'calc(64px + env(safe-area-inset-top, 0px))'
+        }} 
       />
 
       {/* Premium MD3 Android Top Bar - Material Design 3 */}
       <header
         className={`
-          fixed top-0 left-0 right-0 z-50 lg:hidden
+          fixed left-0 right-0 z-50 lg:hidden
           transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)
           ${isVisible ? "translate-y-0" : "-translate-y-full"}
         `}
         style={{
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
+          top: 0,
+          minHeight: '64px',
           willChange: 'transform',
           backgroundColor: isScrolled ? '#ffffff' : '#25D366',
           boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
@@ -274,7 +276,10 @@ export default function AndroidTopBar({
               : "bg-gradient-to-br from-[#25D366] to-[#128C7E]"
             }
           `}
-          style={{ minHeight: '64px' }}
+          style={{ 
+            minHeight: '64px',
+            paddingTop: 'env(safe-area-inset-top, 0px)'
+          }}
         >
           {/* Content Container */}
           <div className="flex items-center justify-between px-3 h-16 min-h-[64px] w-full">
