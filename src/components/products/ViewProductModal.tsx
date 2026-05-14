@@ -34,9 +34,9 @@ const STOCK_CONFIG = {
 
 // ─── Helper Functions ───────────────────────────────────────────────────────
 
-function getStockConfig(stock: number, lowAlert?: number) {
+function getStockConfig(stock: number) {
   if (stock === 0) return STOCK_CONFIG.out;
-  if (stock <= (lowAlert || 5)) return STOCK_CONFIG.low;
+  if (stock <= 5) return STOCK_CONFIG.low;
   if (stock <= 20) return STOCK_CONFIG.medium;
   return STOCK_CONFIG.good;
 }
@@ -166,18 +166,8 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
   // ✅ ALL useMemo hooks must be HERE, before any early return
   const stockConfig = useMemo(
-    () => getStockConfig(product?.stock || 0, product?.lowStockAlert),
-    [product?.stock, product?.lowStockAlert]
-  );
-  
-  const hasDiscount = useMemo(
-    () => !!(product?.salePrice && product.salePrice > 0 && product.salePrice < product?.price),
-    [product?.salePrice, product?.price]
-  );
-  
-  const discountPercent = useMemo(
-    () => hasDiscount ? Math.round((((product?.price || 0) - (product?.salePrice || 0)) / (product?.price || 1)) * 100) : 0,
-    [hasDiscount, product?.price, product?.salePrice]
+    () => getStockConfig(product?.stock || 0),
+    [product?.stock]
   );
   
   const allImages = useMemo(
@@ -189,16 +179,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     () => allImages[selectedImage] || null, 
     [allImages, selectedImage]
   );
-  
-  const profit = useMemo(
-    () => (product?.costPrice ? (product?.price || 0) - product.costPrice : 0),
-    [product?.costPrice, product?.price]
-  );
-  
-  const profitMargin = useMemo(
-    () => product?.costPrice && product.costPrice > 0 ? Math.round((profit / (product?.price || 1)) * 100) : 0,
-    [product?.costPrice, profit, product?.price]
-  );
 
   // ✅ Early return AFTER all hooks
   if (!isOpen || !product) return null;
@@ -206,19 +186,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   // ─── Tab Content Renderers ────────────────────────────────────────────────
 
   const renderOverview = () => (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Product Header */}
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-variant/30 rounded-full">
-          <span className="text-2xl">{getCategoryEmoji(product.category || "other")}</span>
-          <span className="text-sm font-medium text-on-surface-variant">{product.categoryName || product.category || "Uncategorized"}</span>
-        </div>
-        <h2 className="text-2xl font-bold text-on-surface">{product.name}</h2>
-        {product.description && (
-          <p className="text-sm text-on-surface-variant max-w-md mx-auto line-clamp-3">{product.description}</p>
-        )}
-      </div>
-
+    <div className="space-y-5 animate-fadeIn">
       {/* Image Gallery */}
       {allImages.length > 0 && (
         <div className="space-y-3">
@@ -285,63 +253,76 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
         </div>
       )}
 
-      {/* Price Section */}
-      <div className="bg-surface-variant/20 rounded-2xl p-6 text-center space-y-2">
-        {hasDiscount ? (
-          <>
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl font-bold text-success">{formatCurrency(product.salePrice || 0)}</span>
-              <span className="text-lg text-on-surface-variant/60 line-through">{formatCurrency(product.price)}</span>
-            </div>
-            <div className="inline-flex items-center px-3 py-1 bg-success/10 rounded-full">
-              <span className="text-xs font-bold text-success">-{discountPercent}% OFF</span>
-            </div>
-          </>
-        ) : (
-          <span className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</span>
+      {/* Product Name */}
+      <div>
+        <h2 className="text-xl font-bold text-on-surface">{product.name}</h2>
+        {product.description && (
+          <p className="text-sm text-on-surface-variant mt-2">{product.description}</p>
         )}
       </div>
 
-      {/* Quick Stats */}
+      {/* Category */}
+      {product.categoryName && (
+        <div className="flex items-center gap-2">
+          <span className="text-xl">{getCategoryEmoji(product.category || "other")}</span>
+          <span className="text-sm text-on-surface-variant">{product.categoryName}</span>
+        </div>
+      )}
+
+      {/* Price */}
+      <div className="text-2xl font-bold text-primary">{formatCurrency(product.price)}</div>
+
+      {/* Stock & Status */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-1">
-          <div className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Stock Level</div>
-          <div className="flex items-center justify-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${stockConfig.dot}`} />
+        <div className="bg-surface-variant/20 rounded-xl p-3">
+          <div className="text-xs text-on-surface-variant mb-1">Stock</div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${stockConfig.dot}`} />
             <span className="text-lg font-bold text-on-surface">{product.stock || 0}</span>
           </div>
-          <div className="text-xs" style={{ color: stockConfig.color }}>{stockConfig.text}</div>
         </div>
-        
-        <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-1">
-          <div className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Status</div>
-          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-            product.status === "active" ? "bg-success/10 text-success" : "bg-error/10 text-error"
-          }`}>
-            {product.status === "active" ? "✓ Active" : "✗ Inactive"}
-          </div>
+        <div className="bg-surface-variant/20 rounded-xl p-3">
+          <div className="text-xs text-on-surface-variant mb-1">Status</div>
+          <span className={`text-sm font-semibold ${product.status === "active" ? "text-success" : "text-error"}`}>
+            {product.status === "active" ? "Active" : "Inactive"}
+          </span>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => onEdit(product)}
-          className="flex-1 md3-button-filled px-4 py-3 text-sm font-semibold"
-        >
-          <i className="fas fa-edit mr-2" />
-          Edit Product
-        </button>
-        {product.orderLink && (
-          <button
-            onClick={() => copyToClipboard(product.orderLink!, "Order link copied!")}
-            className="flex-1 md3-button-outlined px-4 py-3 text-sm font-semibold"
-          >
-            <i className="fas fa-copy mr-2" />
-            Copy Link
-          </button>
-        )}
-      </div>
+      {/* Variants */}
+      {product.variants && product.variants.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-semibold text-on-surface">Variants</div>
+          {product.variants.map((variant, idx) => (
+            <div key={idx} className="bg-surface-variant/20 rounded-xl p-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-on-surface">{Object.values(variant.specs).join(" / ")}</span>
+                <span className="text-sm font-bold text-primary">{formatCurrency(variant.price)}</span>
+              </div>
+              <div className="text-xs text-on-surface-variant mt-1">{variant.stock} in stock</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Filters/Options */}
+      {product.filters && Object.keys(product.filters).length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-semibold text-on-surface">Options</div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(product.filters).map(([key, values]) => {
+              if (Array.isArray(values) && values.length > 0) {
+                return values.map((value, idx) => (
+                  <span key={`${key}-${idx}`} className="px-3 py-1 bg-surface-variant/30 rounded-full text-xs text-on-surface-variant">
+                    {value}
+                  </span>
+                ));
+              }
+              return null;
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -364,13 +345,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             </div>
           )}
           
-          {product.sku && (
-            <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-              <span className="text-sm text-on-surface-variant">SKU</span>
-              <span className="text-sm font-medium text-on-surface">{product.sku}</span>
-            </div>
-          )}
-          
           <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
             <span className="text-sm text-on-surface-variant">Created</span>
             <span className="text-sm font-medium text-on-surface">
@@ -386,29 +360,9 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
         
         <div className="space-y-3">
           <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-            <span className="text-sm text-on-surface-variant">Regular Price</span>
+            <span className="text-sm text-on-surface-variant">Price</span>
             <span className="text-sm font-semibold text-on-surface">{formatCurrency(product.price)}</span>
           </div>
-          
-          {product.salePrice && (
-            <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-              <span className="text-sm text-on-surface-variant">Sale Price</span>
-              <span className="text-sm font-semibold text-success">{formatCurrency(product.salePrice)}</span>
-            </div>
-          )}
-          
-          {product.costPrice && (
-            <>
-              <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-                <span className="text-sm text-on-surface-variant">Cost Price</span>
-                <span className="text-sm font-medium text-on-surface">{formatCurrency(product.costPrice)}</span>
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-                <span className="text-sm text-on-surface-variant">Profit Margin</span>
-                <span className="text-sm font-bold text-success">{profitMargin}%</span>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>
@@ -430,28 +384,8 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           <span className="text-5xl font-bold text-on-surface">{product.stock || 0}</span>
           <div className="text-sm text-on-surface-variant mt-1">units available</div>
         </div>
-
-        {product.lowStockAlert && (
-          <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-            <i className="fas fa-bell text-warning" />
-            <span>Alert when stock drops below {product.lowStockAlert} units</span>
-          </div>
-        )}
       </div>
 
-      {/* Stock Value */}
-      {product.costPrice && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-2">
-            <div className="text-xs font-semibold text-on-surface-variant uppercase">Unit Cost</div>
-            <div className="text-xl font-bold text-on-surface">{formatCurrency(product.costPrice)}</div>
-          </div>
-          <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-2">
-            <div className="text-xs font-semibold text-on-surface-variant uppercase">Total Value</div>
-            <div className="text-xl font-bold text-on-surface">{formatCurrency((product.costPrice || 0) * (product.stock || 0))}</div>
-          </div>
-        </div>
-      )}
 
       {/* Variants */}
       {product.variants && product.variants.length > 0 && (
@@ -467,7 +401,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                 <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                   <i className="fas fa-box" />
                   <span>{variant.stock} in stock</span>
-                  {variant.sku && <span className="ml-auto">SKU: {variant.sku}</span>}
                 </div>
               </div>
             ))}
@@ -478,30 +411,12 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderSpecs = () => {
-    // Build specs from specifications field or available product fields
+    // Build specs from filters or product fields
     const specs: { label: string; value: string }[] = [];
     
-    // Use specifications field if available
-    if (product.specifications && Object.keys(product.specifications).length > 0) {
-      Object.entries(product.specifications).forEach(([key, value]) => {
-        specs.push({ label: key, value: String(value) });
-      });
-    } else {
-      // Fallback to building specs from product fields
-      if (product.brand) specs.push({ label: "Brand", value: product.brand });
-      if (product.sku) specs.push({ label: "SKU", value: product.sku });
-      if (product.barcode) specs.push({ label: "Barcode", value: product.barcode });
-      if (product.weight) specs.push({ label: "Weight", value: `${product.weight} ${product.weightUnit || "kg"}` });
-      if (product.warranty) specs.push({ label: "Warranty", value: product.warranty });
-      if (product.dimensions) {
-        const dims = [];
-        if (product.dimensions.length) dims.push(`L: ${product.dimensions.length}`);
-        if (product.dimensions.width) dims.push(`W: ${product.dimensions.width}`);
-        if (product.dimensions.height) dims.push(`H: ${product.dimensions.height}`);
-        if (dims.length > 0) specs.push({ label: "Dimensions", value: dims.join(" × ") });
-      }
-      if (product.taxEnabled) specs.push({ label: "Tax Rate", value: `${product.taxRate || 0}%` });
-    }
+    if (product.brand) specs.push({ label: "Brand", value: product.brand });
+    if (product.categoryName) specs.push({ label: "Category", value: product.categoryName });
+    if (product.subcategory) specs.push({ label: "Subcategory", value: product.subcategory });
     
     return (
       <div className="space-y-6 animate-fadeIn">
@@ -542,11 +457,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           <p className="text-on-primary-container">
             💡 <strong>Recommendation:</strong> Your pricing is competitive. Consider offering bundle deals to increase average order value.
           </p>
-          {hasDiscount && (
-            <p className="text-on-primary-container">
-              🎯 <strong>Sale Active:</strong> {discountPercent}% discount may boost conversion by 15-20%
-            </p>
-          )}
         </div>
       </div>
 
@@ -572,9 +482,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           {product.stock && product.stock > 20 && (
             <p>✅ <strong>Good Level:</strong> Stock level is healthy. No immediate action needed.</p>
           )}
-          {profitMargin > 30 && (
-            <p>💰 <strong>High Margin:</strong> {profitMargin}% profit margin is excellent. Consider increasing marketing spend.</p>
-          )}
         </div>
       </div>
 
@@ -585,8 +492,8 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           <div className="text-xs text-on-surface-variant">Units in Stock</div>
         </div>
         <div className="bg-surface-variant/20 rounded-xl p-4 text-center space-y-2">
-          <div className="text-2xl font-bold text-success">{profitMargin}%</div>
-          <div className="text-xs text-on-surface-variant">Profit Margin</div>
+          <div className="text-2xl font-bold text-success">{formatCurrency(product.price)}</div>
+          <div className="text-xs text-on-surface-variant">Price</div>
         </div>
       </div>
     </div>
@@ -633,14 +540,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
               </div>
               <div className="min-w-0">
                 <h3 className="text-lg font-bold text-on-surface truncate">{product.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-sm text-on-surface-variant">{formatCurrency(product.price)}</p>
-                  {hasDiscount && (
-                    <span className="px-2 py-0.5 bg-error/10 text-error text-xs font-semibold rounded-full">
-                      -{discountPercent}%
-                    </span>
-                  )}
-                </div>
+                <p className="text-sm text-on-surface-variant mt-1">{formatCurrency(product.price)}</p>
               </div>
             </div>
             
