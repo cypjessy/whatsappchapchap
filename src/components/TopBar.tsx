@@ -270,6 +270,9 @@ export default function AndroidTopBar({
           ${isVisible ? "translate-y-0" : "-translate-y-full"}
           pt-[env(safe-area-inset-top)]
         `}
+        style={{
+          minHeight: 'calc(60px + env(safe-area-inset-top, 0px))',
+        }}
       >
         {/* App Bar - Full height, no separate status bar */}
         <div
