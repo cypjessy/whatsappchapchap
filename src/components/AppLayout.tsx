@@ -68,15 +68,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Header onMenuClick={() => setSidebarOpen(true)} scrolled={isScrolled} />
         </div>
         
-        {/* Mobile TopBar - Only visible on mobile */}
-        <div className="md:hidden">
-          <TopBar 
-            onMenuClick={() => setSidebarOpen(true)}
-            title="ChapChap"
-            notificationCount={3}
-            onScrollChange={(scrolled) => setIsScrolled(scrolled)}
-          />
-        </div>
+        {/* Mobile TopBar - Only visible on mobile (rendered directly, no wrapper) */}
+        <TopBar 
+          onMenuClick={() => setSidebarOpen(true)}
+          title="ChapChap"
+          notificationCount={3}
+          onScrollChange={(scrolled) => setIsScrolled(scrolled)}
+        />
         
         <main className="flex-1 w-full p-0 overflow-y-auto" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           {children}
