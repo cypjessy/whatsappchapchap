@@ -200,45 +200,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     [product?.costPrice, profit, product?.price]
   );
 
-  // Keyboard shortcuts for desktop
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Close on Escape
-      if (e.key === "Escape") {
-        if (lightboxOpen) {
-          setLightboxOpen(false);
-        } else {
-          handleClose();
-        }
-      }
-      
-      // Navigate images with arrow keys
-      if (lightboxOpen || activeTab === "overview") {
-        if (e.key === "ArrowLeft" && selectedImage > 0) {
-          setSelectedImage((prev) => prev - 1);
-          setMainImageError(false);
-        }
-        if (e.key === "ArrowRight" && selectedImage < allImages.length - 1) {
-          setSelectedImage((prev) => prev + 1);
-          setMainImageError(false);
-        }
-      }
-      
-      // Switch tabs with number keys
-      if (!lightboxOpen) {
-        const tabNum = parseInt(e.key);
-        if (tabNum >= 1 && tabNum <= TABS.length) {
-          setActiveTab(TABS[tabNum - 1].id);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, lightboxOpen, selectedImage, allImages.length, activeTab, handleClose]);
-
   // ✅ Early return AFTER all hooks
   if (!isOpen || !product) return null;
 
@@ -252,18 +213,84 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           <span className="text-2xl">{getCategoryEmoji(product.category || "other")}</span>
           <span className="text-sm font-medium text-on-surface-variant">{product.categoryName || product.category || "Uncategorized"}</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-on-surface">{product.name}</h2>
+        <h2 className="text-2xl font-bold text-on-surface">{product.name}</h2>
         {product.description && (
           <p className="text-sm text-on-surface-variant max-w-md mx-auto line-clamp-3">{product.description}</p>
         )}
       </div>
+
+      {/* Image Gallery */}
+      {allImages.length > 0 && (
+        <div className="space-y-3">
+          <div className="relative group">
+            <div className="aspect-video rounded-2xl overflow-hidden bg-surface-variant cursor-pointer" onClick={() => setLightboxOpen(true)}>
+              {!mainImageError && currentImage ? (
+                <img
+                  src={currentImage}
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={() => setMainImageError(true)}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-6xl opacity-30 select-none">{getCategoryEmoji(product.category || "other")}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
+              </div>
+            </div>
+            
+            {/* Image Counter */}
+            {allImages.length > 1 && (
+              <div className="absolute bottom-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white">
+                {selectedImage + 1} / {allImages.length}
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {allImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {allImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSelectedImage(idx);
+                    setMainImageError(false);
+                  }}
+                  className={`
+                    flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all
+                    ${selectedImage === idx ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}
+                  `}
+                >
+                  {!thumbnailErrors.has(idx) ? (
+                    <img 
+                      src={img} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        setThumbnailErrors(prev => new Set(prev).add(idx));
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-surface-variant flex items-center justify-center">
+                      <i className="fas fa-image text-on-surface-variant/30" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Price Section */}
       <div className="bg-surface-variant/20 rounded-2xl p-6 text-center space-y-2">
         {hasDiscount ? (
           <>
             <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl md:text-4xl font-bold text-success">{formatCurrency(product.salePrice || 0)}</span>
+              <span className="text-3xl font-bold text-success">{formatCurrency(product.salePrice || 0)}</span>
               <span className="text-lg text-on-surface-variant/60 line-through">{formatCurrency(product.price)}</span>
             </div>
             <div className="inline-flex items-center px-3 py-1 bg-success/10 rounded-full">
@@ -271,7 +298,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             </div>
           </>
         ) : (
-          <span className="text-3xl md:text-4xl font-bold text-primary">{formatCurrency(product.price)}</span>
+          <span className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</span>
         )}
       </div>
 
@@ -583,14 +610,14 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
         onClick={handleClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-[2100] flex items-end md:items-center justify-center pointer-events-none p-0 md:p-4">
-        <div className="w-full max-w-2xl md:max-w-6xl max-h-[90vh] md:max-h-[85vh] bg-surface rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col pointer-events-auto animate-slideUp">
+      {/* Modal - Mobile Bottom Sheet Only */}
+      <div className="fixed inset-0 z-[2100] flex items-end justify-center pointer-events-none">
+        <div className="w-full max-h-[90vh] bg-surface rounded-t-3xl shadow-2xl flex flex-col pointer-events-auto animate-slideUp">
           
           {/* Header */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-outline-variant/30">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden bg-surface-variant flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-outline-variant/30">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-variant flex-shrink-0">
                 {!mainImageError && currentImage ? (
                   <img
                     src={currentImage}
@@ -600,14 +627,14 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-3xl md:text-4xl">{getCategoryEmoji(product.category || "other")}</span>
+                    <span className="text-3xl">{getCategoryEmoji(product.category || "other")}</span>
                   </div>
                 )}
               </div>
               <div className="min-w-0">
-                <h3 className="text-lg md:text-2xl font-bold text-on-surface truncate">{product.name}</h3>
+                <h3 className="text-lg font-bold text-on-surface truncate">{product.name}</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-sm md:text-base text-on-surface-variant">{formatCurrency(product.price)}</p>
+                  <p className="text-sm text-on-surface-variant">{formatCurrency(product.price)}</p>
                   {hasDiscount && (
                     <span className="px-2 py-0.5 bg-error/10 text-error text-xs font-semibold rounded-full">
                       -{discountPercent}%
@@ -618,13 +645,6 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Desktop keyboard shortcut hints */}
-              <div className="hidden lg:flex items-center gap-2 mr-2 text-xs text-on-surface-variant/60">
-                <kbd className="px-2 py-1 bg-surface-variant rounded border border-outline-variant">Esc</kbd>
-                <span>Close</span>
-                <kbd className="px-2 py-1 bg-surface-variant rounded border border-outline-variant ml-2">← →</kbd>
-                <span>Navigate</span>
-              </div>
               
               <button
                 onClick={() => onEdit(product)}
@@ -643,75 +663,9 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             </div>
           </div>
 
-          {/* Image Gallery */}
-          {allImages.length > 0 && (
-            <div className="px-4 md:px-6 pt-4">
-              <div className="relative group">
-                <div className="aspect-video rounded-2xl overflow-hidden bg-surface-variant cursor-pointer" onClick={() => setLightboxOpen(true)}>
-                  {!mainImageError && currentImage ? (
-                    <img
-                      src={currentImage}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={() => setMainImageError(true)}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-6xl md:text-8xl opacity-30 select-none">{getCategoryEmoji(product.category || "other")}</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                    <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
-                  </div>
-                </div>
-                
-                {/* Image Counter */}
-                {allImages.length > 1 && (
-                  <div className="absolute bottom-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white">
-                    {selectedImage + 1} / {allImages.length}
-                  </div>
-                )}
-              </div>
-
-              {/* Thumbnails */}
-              {allImages.length > 1 && (
-                <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {allImages.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setSelectedImage(idx);
-                        setMainImageError(false);
-                      }}
-                      className={`
-                        flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all
-                        ${selectedImage === idx ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}
-                      `}
-                    >
-                      {!thumbnailErrors.has(idx) ? (
-                        <img 
-                          src={img} 
-                          alt="" 
-                          className="w-full h-full object-cover"
-                          onError={() => {
-                            setThumbnailErrors(prev => new Set(prev).add(idx));
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-surface-variant flex items-center justify-center">
-                          <i className="fas fa-image text-on-surface-variant/30" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Tabs */}
           <div className="border-b border-outline-variant/30">
-            <div className="flex overflow-x-auto scrollbar-hide px-4 md:px-6">
+            <div className="flex overflow-x-auto scrollbar-hide px-4">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
@@ -731,185 +685,9 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             </div>
           </div>
 
-          {/* Content - Desktop Two Column Layout */}
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full flex flex-col md:flex-row">
-              {/* Left Column - Image Gallery (Desktop) */}
-              {allImages.length > 0 && (
-                <div className="hidden md:block w-1/2 lg:w-2/5 border-r border-outline-variant/30 overflow-y-auto">
-                  <div className="p-6 space-y-4">
-                    <div className="relative group">
-                      <div className="aspect-square rounded-2xl overflow-hidden bg-surface-variant cursor-pointer" onClick={() => setLightboxOpen(true)}>
-                        {!mainImageError && currentImage ? (
-                          <img
-                            src={currentImage}
-                            alt={product.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={() => setMainImageError(true)}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-8xl opacity-30 select-none">{getCategoryEmoji(product.category || "other")}</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                          <i className="fas fa-expand text-white text-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
-                        </div>
-                      </div>
-                      
-                      {/* Image Counter */}
-                      {allImages.length > 1 && (
-                        <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-full text-sm text-white font-medium">
-                          {selectedImage + 1} / {allImages.length}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Thumbnails Grid */}
-                    {allImages.length > 1 && (
-                      <div className="grid grid-cols-4 gap-2">
-                        {allImages.map((img, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setSelectedImage(idx);
-                              setMainImageError(false);
-                            }}
-                            className={`
-                              aspect-square rounded-xl overflow-hidden border-2 transition-all
-                              ${selectedImage === idx ? "border-primary shadow-md scale-105" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"}
-                            `}
-                          >
-                            {!thumbnailErrors.has(idx) ? (
-                              <img 
-                                src={img} 
-                                alt="" 
-                                className="w-full h-full object-cover"
-                                onError={() => {
-                                  setThumbnailErrors(prev => new Set(prev).add(idx));
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-surface-variant flex items-center justify-center">
-                                <i className="fas fa-image text-on-surface-variant/30" />
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Quick Actions */}
-                    <div className="pt-4 border-t border-outline-variant/30 space-y-2">
-                      <button
-                        onClick={() => copyToClipboard(window.location.href, "Link copied!")}
-                        className="w-full px-4 py-2.5 bg-surface-variant/30 hover:bg-surface-variant/50 rounded-xl text-sm font-medium text-on-surface transition-colors flex items-center justify-center gap-2"
-                      >
-                        <i className="fas fa-link" />
-                        Copy Link
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Right Column - Tabs & Content */}
-              <div className="flex-1 flex flex-col min-w-0">
-                {/* Mobile Image Gallery (shown only on mobile) */}
-                {allImages.length > 0 && (
-                  <div className="md:hidden px-4 pt-4">
-                    <div className="relative group">
-                      <div className="aspect-video rounded-2xl overflow-hidden bg-surface-variant cursor-pointer" onClick={() => setLightboxOpen(true)}>
-                        {!mainImageError && currentImage ? (
-                          <img
-                            src={currentImage}
-                            alt={product.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={() => setMainImageError(true)}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-6xl md:text-8xl opacity-30 select-none">{getCategoryEmoji(product.category || "other")}</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                          <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
-                        </div>
-                      </div>
-                      
-                      {/* Image Counter */}
-                      {allImages.length > 1 && (
-                        <div className="absolute bottom-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white">
-                          {selectedImage + 1} / {allImages.length}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Thumbnails */}
-                    {allImages.length > 1 && (
-                      <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
-                        {allImages.map((img, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setSelectedImage(idx);
-                              setMainImageError(false);
-                            }}
-                            className={`
-                              flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all
-                              ${selectedImage === idx ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}
-                            `}
-                          >
-                            {!thumbnailErrors.has(idx) ? (
-                              <img 
-                                src={img} 
-                                alt="" 
-                                className="w-full h-full object-cover"
-                                onError={() => {
-                                  setThumbnailErrors(prev => new Set(prev).add(idx));
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-surface-variant flex items-center justify-center">
-                                <i className="fas fa-image text-on-surface-variant/30" />
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Tabs */}
-                <div className="border-b border-outline-variant/30">
-                  <div className="flex overflow-x-auto scrollbar-hide px-4 md:px-6">
-                    {TABS.map((tab, idx) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`
-                          flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors
-                          ${activeTab === tab.id
-                            ? "border-primary text-primary"
-                            : "border-transparent text-on-surface-variant hover:text-on-surface hover:border-on-surface-variant/30"
-                          }
-                        `}
-                        title={`Press ${idx + 1}`}
-                      >
-                        <i className={`fas ${tab.icon}`} />
-                        <span>{tab.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tab Content */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                  {tabContent[activeTab]()}
-                </div>
-              </div>
-            </div>
+          {/* Content - Mobile Only */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {tabContent[activeTab]()}
           </div>
         </div>
       </div>
