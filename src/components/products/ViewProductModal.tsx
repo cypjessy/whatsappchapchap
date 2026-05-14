@@ -709,9 +709,9 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
               <button
                 onClick={() => product.orderLink && copyToClipboard(product.orderLink, "Link copied!")}
                 disabled={!product.orderLink}
-                className="px-4 py-3 bg-[#8b5cf6] text-white rounded-xl font-semibold text-sm hover:bg-[#7c3aed] transition-all disabled:opacity-50 active:scale-95 flex items-center gap-2"
+                className="md3-btn-filled disabled:opacity-50 flex items-center gap-2"
               >
-                <i className="fas fa-copy text-xs" />
+                <i className="fas fa-copy text-sm" />
                 Copy
               </button>
               {product.orderLink && (
@@ -719,9 +719,9 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   href={product.orderLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-3 bg-[#1e293b] text-white rounded-xl font-semibold text-sm hover:bg-[#0f172a] transition-all active:scale-95 flex items-center gap-2"
+                  className="md3-btn-tonal flex items-center gap-2"
                 >
-                  <i className="fas fa-external-link-alt text-xs" />
+                  <i className="fas fa-external-link-alt text-sm" />
                   Open
                 </a>
               )}
@@ -747,73 +747,73 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           fixed inset-0 z-50 flex items-end md:items-center justify-center overflow-y-auto
         `}
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-[#0f172a]/60 backdrop-blur-sm" onClick={handleClose} />
+        {/* Backdrop - MD3 Dialog */}
+        <div className="absolute inset-0 md3-dialog-backdrop" onClick={handleClose} />
 
-        {/* Modal */}
+        {/* Modal - MD3 Dialog */}
         <div
           className={`
-            relative bg-white w-full max-w-sm md:max-w-2xl lg:max-w-[1100px] max-h-[90vh] md:max-h-[90vh]
-            rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden
+            relative md3-dialog w-full max-w-sm md:max-w-2xl lg:max-w-[1100px] max-h-[90vh] md:max-h-[90vh]
+            flex flex-col overflow-hidden
           `}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Mobile drag handle */}
           <div className="md:hidden w-10 h-1 bg-[#e2e8f0] rounded-full mx-auto mt-3 mb-1 shrink-0" />
 
-          {/* Header */}
-          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-[#e2e8f0] bg-gradient-to-r from-[#f8fafc] to-[#f5f3ff] shrink-0">
+          {/* Header - MD3 Dialog Header */}
+          <div className="px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] shrink-0">
             <div className="flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
                 {/* Breadcrumb */}
-                <div className="hidden md:flex items-center gap-1.5 text-xs text-[#94a3b8] mb-1">
+                <div className="hidden md:flex items-center gap-1.5 text-xs text-[var(--md-sys-color-on-surface-variant)] mb-1">
                   <span className="font-medium">Products</span>
                   <i className="fas fa-chevron-right text-[8px]" />
                   <span className="font-medium capitalize">{product.category || "Uncategorized"}</span>
                   <i className="fas fa-chevron-right text-[8px]" />
                   <span className="truncate">{product.name}</span>
                 </div>
-                <h1 className="text-base md:text-xl font-extrabold text-[#1e293b] flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-normal text-[var(--md-sys-color-on-surface)] flex items-center gap-2 flex-wrap leading-tight">
                   <span className="truncate">{product.name}</span>
                   <span className={`
-                    px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border shrink-0
+                    px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase border shrink-0
                     ${stockConfig.bg} border-current/20
                   `} style={{ color: stockConfig.color }}>
                     {stockConfig.text}
                   </span>
                   {product.status === "draft" && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] shrink-0">
+                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] border border-[var(--md-sys-color-outline-variant)] shrink-0">
                       Draft
                     </span>
                   )}
                 </h1>
               </div>
 
-              <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => copyToClipboard(window.location.href, "Share link copied!")}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#8b5cf6] transition-all"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-all"
                   title="Share"
                 >
                   <i className="fas fa-share-alt text-sm" />
                 </button>
                 <button
                   onClick={() => showToast("success", "Product duplicated")}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#8b5cf6] transition-all"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-all"
                   title="Duplicate"
                 >
                   <i className="fas fa-copy text-sm" />
                 </button>
                 <button
                   onClick={() => onEdit(product)}
-                  className="px-3 md:px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 active:scale-95"
+                  className="md3-btn-filled flex items-center gap-2"
                 >
-                  <i className="fas fa-edit text-xs" />
+                  <i className="fas fa-edit text-sm" />
                   <span className="hidden sm:inline">Edit</span>
                 </button>
                 <button
                   onClick={handleClose}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white transition-all"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-error)] transition-all"
                 >
                   <i className="fas fa-times text-sm" />
                 </button>
@@ -833,8 +833,8 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             ))}
           </div>
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-white/50">
+          {/* Body - MD3 Dialog Content */}
+          <div className="md3-dialog-content">
             {tabContent[activeTab]()}
           </div>
         </div>
