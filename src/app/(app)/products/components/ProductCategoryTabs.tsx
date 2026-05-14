@@ -40,9 +40,9 @@ function ScrollButton({
       onClick={onClick}
       className={`
         absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-10 md:h-10
-        rounded-full bg-white/95 backdrop-blur-md shadow-lg border border-[#e2e8f0]/80
+        rounded-full bg-[var(--md-sys-color-surface)]/95 backdrop-blur-md shadow-lg border border-[var(--md-sys-color-outline-variant)]/80
         flex items-center justify-center transition-all duration-300
-        hover:shadow-xl hover:border-[#25D366]/30 hover:text-[#128C7E]
+        hover:shadow-xl hover:border-[var(--md-sys-color-primary)]/30 hover:text-[var(--md-sys-color-primary)]
         active:scale-90
         ${direction === "left" ? "left-0" : "right-0"}
         ${visible ? "opacity-100 translate-x-0" : "opacity-0 pointer-events-none"}
@@ -108,15 +108,15 @@ function CategoryTab({
       tabIndex={tabIndex}
       className={`
         relative flex items-center gap-1.5 md:gap-2.5 px-3 md:px-5 py-2 md:py-2.5 
-        rounded-full font-semibold text-sm whitespace-nowrap
+        rounded-full font-medium text-sm whitespace-nowrap
         transition-all duration-300 ease-out select-none
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40 focus-visible:ring-offset-2
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]/40 focus-visible:ring-offset-2
         ${isActive
-          ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/20 z-10"
-          : "bg-white border-2 border-[#e2e8f0] text-[#64748b] z-0"
+          ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/20 z-10"
+          : "bg-[var(--md-sys-color-surface)] border-2 border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] z-0"
         }
         ${!isActive && isHovered
-          ? "border-[#25D366] text-[#128C7E] shadow-md -translate-y-0.5"
+          ? "border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)] shadow-sm -translate-y-0.5"
           : ""
         }
         ${isPressed ? "scale-95" : "scale-100"}
@@ -143,12 +143,12 @@ function CategoryTab({
       <span
         className={`
           inline-flex items-center justify-center min-w-[1.25rem] px-1.5 md:px-2 py-0.5 rounded-full 
-          text-[10px] md:text-[11px] font-bold transition-all duration-300
+          text-[10px] md:text-[11px] font-medium transition-all duration-300
           ${isActive
-            ? "bg-white/20 text-white backdrop-blur-sm"
-            : "bg-[#f1f5f9] text-[#64748b]"
+            ? "bg-[var(--md-sys-color-on-primary)]/20 text-[var(--md-sys-color-on-primary)] backdrop-blur-sm"
+            : "bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]"
           }
-          ${!isActive && isHovered ? "bg-[#25D366]/10 text-[#128C7E]" : ""}
+          ${!isActive && isHovered ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" : ""}
         `}
       >
         <span
@@ -163,7 +163,7 @@ function CategoryTab({
 
       {/* Active glow effect */}
       {isActive && (
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#25D366]/20 to-[#128C7E]/20 blur-md -z-10 scale-110" />
+        <div className="absolute inset-0 rounded-full bg-[var(--md-sys-color-primary)]/20 blur-md -z-10 scale-110" />
       )}
     </button>
   );
