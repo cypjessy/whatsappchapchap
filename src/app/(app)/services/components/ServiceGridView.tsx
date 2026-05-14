@@ -156,12 +156,12 @@ function ServiceCard({
   return (
     <div
       className={`
-        group relative bg-white rounded-xl md:rounded-2xl border-2 overflow-hidden cursor-pointer
+        group relative md3-card-elevated overflow-hidden cursor-pointer
         transition-all duration-300 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
         ${isSelected
-          ? "border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/10"
-          : "border-[#e2e8f0] hover:border-[#cbd5e1] hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1"
+          ? "ring-2 ring-[var(--md-sys-color-primary)] shadow-lg"
+          : "hover:shadow-xl hover:-translate-y-1"
         }
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
@@ -178,8 +178,8 @@ function ServiceCard({
           <div className={`
             w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200
             ${isSelected
-              ? "bg-[#8b5cf6] border-[#8b5cf6]"
-              : "bg-white/90 border-[#e2e8f0] hover:border-[#8b5cf6]"
+              ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]"
+              : "bg-[var(--md-sys-color-surface)] border-[var(--md-sys-color-outline)] hover:border-[var(--md-sys-color-primary)]"
             }
           `}>
             {isSelected && <i className="fas fa-check text-white text-xs" />}
@@ -232,8 +232,8 @@ function ServiceCard({
                 setShowActions(!showActions);
               }}
               className={`
-                w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center
-                text-[#64748b] hover:bg-white hover:text-[#8b5cf6] transition-all duration-200 shadow-sm
+                w-9 h-9 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center
+                text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:text-[var(--md-sys-color-primary)] transition-all duration-200 shadow-sm
                 ${isHovered || showActions ? "opacity-100" : "opacity-0"}
               `}
             >
@@ -245,7 +245,7 @@ function ServiceCard({
         {/* Status Badge */}
         <div className="absolute top-3 right-3 z-10">
           <span className={`
-            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide text-white shadow-md
+            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide shadow-md
             ${statusConfig.bg}
           `}>
             <span className={`w-1.5 h-1.5 rounded-full bg-white/80`} />
@@ -264,7 +264,7 @@ function ServiceCard({
               e.stopPropagation();
               onShareService(service);
             }}
-            className="px-3 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm text-[#3b82f6] text-xs font-bold hover:bg-white transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-3 py-1.5 rounded-lg bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-primary)] text-xs font-medium hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex items-center gap-1.5 shadow-sm"
           >
             <Link className="w-3 h-3" />
             Copy Link
@@ -274,7 +274,7 @@ function ServiceCard({
               e.stopPropagation();
               onToggleStatus(service);
             }}
-            className="px-3 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm text-[#10b981] text-xs font-bold hover:bg-white transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-3 py-1.5 rounded-lg bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-success)] text-xs font-medium hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex items-center gap-1.5 shadow-sm"
           >
             {service.status === "active" ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             {service.status === "active" ? "Pause" : "Activate"}
@@ -282,15 +282,15 @@ function ServiceCard({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - MD3 Card Content */}
       <div className="p-3.5 md:p-4">
         {/* Title */}
         <div className="flex items-start gap-2 mb-2">
-          <h3 className="font-bold text-sm md:text-base line-clamp-2 flex-1 min-w-0">
+          <h3 className="font-medium text-sm md:text-base line-clamp-2 flex-1 min-w-0 text-[var(--md-sys-color-on-surface)]">
             {service.name}
           </h3>
           {service.bookings && service.bookings > 10 && (
-            <span className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-red-500 text-white text-[9px] font-bold rounded-full flex items-center gap-0.5">
+            <span className="shrink-0 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-red-500 text-white text-[9px] font-medium rounded-full flex items-center gap-0.5">
               <i className="fas fa-fire text-[8px]" />
               Popular
             </span>
@@ -298,16 +298,16 @@ function ServiceCard({
         </div>
 
         {/* Duration & Location */}
-        <div className="flex flex-wrap gap-2 md:gap-3 text-[11px] md:text-xs text-[#64748b] mb-2.5 md:mb-3">
+        <div className="flex flex-wrap gap-2 md:gap-3 text-[11px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] mb-2.5 md:mb-3">
           <span className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded bg-white flex items-center justify-center">
-              <i className="fas fa-clock text-[#8b5cf6] text-[9px]" />
+            <div className="w-4 h-4 rounded bg-[var(--md-sys-color-surface)] flex items-center justify-center">
+              <i className="fas fa-clock text-[var(--md-sys-color-primary)] text-[9px]" />
             </div>
             {service.duration || "TBD"}
           </span>
           <span className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded bg-white flex items-center justify-center">
-              <i className={`fas ${getLocationIcon(service.location || "")} text-[#8b5cf6] text-[9px]`} />
+            <div className="w-4 h-4 rounded bg-[var(--md-sys-color-surface)] flex items-center justify-center">
+              <i className={`fas ${getLocationIcon(service.location || "")} text-[var(--md-sys-color-primary)] text-[9px]`} />
             </div>
             <span className="truncate max-w-[100px] md:max-w-[120px]">{service.location || "TBD"}</span>
           </span>
@@ -318,13 +318,13 @@ function ServiceCard({
           {service.tags?.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="px-2 py-0.5 bg-white border border-[#e2e8f0]/60 rounded-md text-[10px] md:text-xs text-[#64748b] font-medium"
+              className="px-2 py-0.5 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-md text-[10px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium"
             >
               {tag}
             </span>
           ))}
           {service.tags && service.tags.length > 3 && (
-            <span className="px-2 py-0.5 text-[10px] text-[#94a3b8] font-medium">
+            <span className="px-2 py-0.5 text-[10px] text-[var(--md-sys-color-on-surface-variant)] font-medium">
               +{service.tags.length - 3}
             </span>
           )}
@@ -332,20 +332,20 @@ function ServiceCard({
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mb-3 md:mb-4">
-          <span className="text-[10px] md:text-xs text-[#94a3b8] font-semibold uppercase tracking-wider">From</span>
-          <span className="text-lg md:text-xl font-extrabold text-[#8b5cf6]">
+          <span className="text-[10px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium uppercase tracking-wider">From</span>
+          <span className="text-lg md:text-xl font-semibold text-[var(--md-sys-color-primary)]">
             {formatCurrency(service.priceMin ?? 0)}
           </span>
           {service.priceMax != null && service.priceMin != null && service.priceMax > service.priceMin && (
-            <span className="text-xs md:text-sm text-[#94a3b8]">
+            <span className="text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)]">
               – {formatCurrency(service.priceMax)}
             </span>
           )}
         </div>
 
         {/* Footer Stats & Actions */}
-        <div className="flex justify-between items-center pt-2.5 md:pt-3 border-t border-[#e2e8f0]">
-          <div className="flex gap-2.5 md:gap-3 text-[10px] md:text-xs text-[#64748b] font-medium">
+        <div className="flex justify-between items-center pt-2.5 md:pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
+          <div className="flex gap-2.5 md:gap-3 text-[10px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium">
             <span className="flex items-center gap-1" title={`${service.bookings || 0} bookings`}>
               <CalendarCheck className="w-3 h-3 text-[#8b5cf6]" />
               {service.bookings || 0}
