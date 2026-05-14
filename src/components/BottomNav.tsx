@@ -433,6 +433,23 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
     };
   }, []);
 
+  // Fix: Force bottom nav safe area re-paint on visibility change (app resume)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[BottomNav] Visibility changed to visible - forcing safe area re-paint');
+        // Force bottom nav safe area re-paint on resume
+        document.documentElement.style.setProperty(
+          '--sab',
+          'env(safe-area-inset-bottom, 0px)'
+        );
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   return (
     <>
       {/* Menu Sheet */}
@@ -446,7 +463,10 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
         `}
         style={{ 
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          // Force GPU compositing layer — prevents black flash on resume
+          transform: 'translateZ(0)',
+          willChange: 'transform',
         }}
       >
         <div className="flex items-end justify-between h-16 max-w-lg mx-auto px-1 relative">
