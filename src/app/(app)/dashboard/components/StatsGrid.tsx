@@ -143,10 +143,10 @@ function getTrendIcon(value: number): string {
 function ShimmerCard({ isMobile = false }: { isMobile?: boolean }) {
   return (
     <div className={`
-      relative overflow-hidden bg-white rounded-2xl border border-[#E2E8F0] shadow-sm
+      relative overflow-hidden md3-card-elevated
       ${isMobile ? "p-3 min-w-[140px] flex-shrink-0" : "p-4 md:p-6"}
     `}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
       <div className={isMobile ? "space-y-2" : "flex justify-between items-start"}>
         {!isMobile && (
           <div className="space-y-3 flex-1">
@@ -236,7 +236,7 @@ function StatCard({
     return (
       <div
         className={`
-          bg-white rounded-2xl p-3 border border-[#E2E8F0] shadow-sm
+          md3-card-elevated p-3
           transition-all duration-300
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
         `}
@@ -253,16 +253,16 @@ function StatCard({
             <CircularProgress percentage={rawValue} color={config.iconColor} />
           )}
         </div>
-        <div className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wide">{config.label}</div>
-        <div className="text-lg font-bold text-[#1E293B] mt-0.5">{displayValue}</div>
+        <div className="text-[10px] font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wide">{config.label}</div>
+        <div className="text-lg font-semibold text-[var(--md-sys-color-on-surface)] mt-0.5">{displayValue}</div>
         {config.showTrend && (
-          <div className={`text-[10px] font-semibold mt-1 ${getTrendColor(trendValue)}`}>
+          <div className={`text-[10px] font-medium mt-1 ${getTrendColor(trendValue)}`}>
             <i className={`fas ${getTrendIcon(trendValue)} text-[8px] mr-0.5`} />
             {trendValue > 0 ? "+" : ""}{trendValue}{config.trendLabel}
           </div>
         )}
         {!config.showTrend && !config.isPercentage && (
-          <div className="text-[10px] text-[#94A3B8] mt-1">{config.sublabel}</div>
+          <div className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] mt-1">{config.sublabel}</div>
         )}
       </div>
     );
@@ -271,12 +271,12 @@ function StatCard({
   return (
     <div
       className={`
-        group relative bg-white rounded-2xl p-4 md:p-6 
-        border border-[#E2E8F0] overflow-hidden cursor-default
+        group relative md3-card-elevated p-4 md:p-6 
+        overflow-hidden cursor-default
         transition-all duration-200 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isHovered
-          ? "border-[#CBD5E1] shadow-md shadow-[#E2E8F0]/40 -translate-y-0.5"
+          ? "shadow-md -translate-y-0.5"
           : "shadow-sm hover:shadow-md"
         }
       `}
@@ -297,12 +297,12 @@ function StatCard({
 
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] md:text-xs font-semibold text-[#94A3B8] uppercase tracking-wide mb-1.5 md:mb-2">
+          <div className="text-[10px] md:text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-wide mb-1.5 md:mb-2">
             {config.label}
           </div>
           <div
             className={`
-              text-2xl md:text-3xl font-bold text-[#1E293B] tracking-tight
+              text-2xl md:text-3xl font-semibold text-[var(--md-sys-color-on-surface)] tracking-tight
               transition-transform duration-200
               ${isHovered ? "scale-[1.02]" : "scale-100"}
             `}
@@ -314,28 +314,28 @@ function StatCard({
           {config.showTrend ? (
             <div className="flex items-center gap-1.5 mt-1.5 md:mt-2">
               <span className={`
-                inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold
+                inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium
                 ${getTrendColor(trendValue)}
-                ${trendValue !== 0 ? "bg-current/10" : "bg-[#F1F5F9]"}
+                ${trendValue !== 0 ? "bg-current/10" : "bg-[var(--md-sys-color-surface-variant)]"}
               `}>
                 <i className={`fas ${getTrendIcon(trendValue)} text-[8px]`} />
                 {trendValue > 0 ? "+" : ""}{trendValue}{config.trendLabel}
               </span>
-              <span className="text-[10px] md:text-xs text-[#94A3B8] font-medium">{config.sublabel}</span>
+              <span className="text-[10px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium">{config.sublabel}</span>
             </div>
           ) : config.isPercentage ? (
             <div className="flex items-center gap-1.5 mt-1.5 md:mt-2">
               <span className={`
-                inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold
-                ${rawValue >= 90 ? "text-[#10B981] bg-[#10B981]/10" : "text-[#F59E0B] bg-[#F59E0B]/10"}
+                inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium
+                ${rawValue >= 90 ? "text-[var(--md-sys-color-success)] bg-[var(--md-sys-color-success-container)]" : "text-[var(--md-sys-color-warning)] bg-[var(--md-sys-color-warning-container)]"}
               `}>
                 <i className={`fas ${rawValue >= 90 ? "fa-check" : "fa-exclamation"} text-[8px]`} />
                 {rawValue >= 90 ? "Excellent" : "Good"}
               </span>
-              <span className="text-[10px] md:text-xs text-[#94A3B8] font-medium">{config.sublabel}</span>
+              <span className="text-[10px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium">{config.sublabel}</span>
             </div>
           ) : (
-            <div className="text-[10px] md:text-xs text-[#94A3B8] mt-1.5 md:mt-2 font-medium">
+            <div className="text-[10px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] mt-1.5 md:mt-2 font-medium">
               {config.sublabel}
             </div>
           )}
