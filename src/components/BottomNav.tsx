@@ -121,10 +121,21 @@ function BottomNavItem({
 }) {
   const [isPressed, setIsPressed] = useState(false);
 
+  const handleNavigation = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    // Ensure app is awake and responsive
+    sessionStorage.setItem('lastActiveTime', Date.now().toString());
+    
+    // Dispatch focus event to wake up any suspended listeners
+    window.dispatchEvent(new Event('focus'));
+    
+    // Call parent onClick if provided
+    onClick?.();
+  }, [onClick]);
+
   return (
     <Link
       href={item.href}
-      onClick={onClick}
+      onClick={handleNavigation}
       onTouchStart={() => setIsPressed(true)}
       onTouchEnd={() => setIsPressed(false)}
       onMouseDown={() => setIsPressed(true)}

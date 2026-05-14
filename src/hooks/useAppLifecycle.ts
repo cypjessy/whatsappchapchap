@@ -52,7 +52,7 @@ export function useAppLifecycle() {
       console.warn('[AppLifecycle] Could not load Capacitor App plugin:', err);
     });
 
-    // Fix 2: Keep-alive ping every 4 minutes to prevent WebView sleep
+    // Fix 2: Keep-alive ping every 2 minutes to prevent WebView sleep (reduced from 4 min)
     const keepAliveInterval = setInterval(() => {
       // Ping a lightweight endpoint to keep JS context alive
       fetch('/api/ping')
@@ -61,12 +61,24 @@ export function useAppLifecycle() {
           // Silent fail - endpoint might not exist yet
           console.debug('[AppLifecycle] Keep-alive ping failed (expected if API route missing)');
         });
-    }, 4 * 60 * 1000); // 4 minutes
+    }, 2 * 60 * 1000); // 2 minutes (more frequent to prevent sleep)
 
     // Fix 3: Visibility change handler (most reliable)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('[AppLifecycle] Page became visible - reinitializing');
+        
+        // Check if we were away for a while
+        const lastActive = sessionStorage.getItem('lastActiveTime');
+        if (lastActive) {
+          const timeAway = Date.now() - parseInt(lastActive);
+          if (timeAway > 30 * 1000) { // 30 seconds
+            console.log('[AppLifecycle] Returning from idle state, waking up listeners');
+            // Force re-initialization of event system
+            window.dispatchEvent(new Event('pageshow'));
+          }
+        }
+        
         // Re-initialize any broken event listeners
         window.dispatchEvent(new Event('focus'));
         
@@ -80,6 +92,16 @@ export function useAppLifecycle() {
 
     // Track user activity
     const trackActivity = () => {
+      const lastActive = sessionStorage.getItem('lastActiveTime');
+      if (lastActive) {
+        const timeSinceActive = Date.now() - parseInt(lastActive);
+        // If idle for more than 30 seconds, wake up the app
+        if (timeSinceActive > 30 * 1000) {
+          console.log('[AppLifecycle] User interaction after idle - waking up app');
+          window.dispatchEvent(new Event('focus'));
+          window.dispatchEvent(new Event('pageshow'));
+        }
+      }
       sessionStorage.setItem('lastActiveTime', Date.now().toString());
     };
 
