@@ -17,42 +17,53 @@ export function useAppLifecycle() {
 
     console.log('[AppLifecycle] Initializing Capacitor lifecycle management');
 
-    // Fix 1: App State listener - Handle native app state changes
+    // Fix 1: App State listener - Handle native app state changes (ALWAYS ACTIVE)
     import('@capacitor/app').then(({ App }) => {
       console.log('[AppLifecycle] Capacitor App plugin loaded');
       
-      // When app comes back from background, dispatch focus event
+      // Native listener that stays active even when WebView is idle
       App.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
-          console.log('[AppLifecycle] App resumed from background');
+          console.log('[AppLifecycle] App resumed from background - waking up');
+          // Update timestamp immediately
+          sessionStorage.setItem('lastActiveTime', Date.now().toString());
+          // Wake up all web listeners
           window.dispatchEvent(new Event('focus'));
+          window.dispatchEvent(new Event('pageshow'));
+        } else {
+          console.log('[AppLifecycle] App going to background');
+          sessionStorage.setItem('lastActiveTime', Date.now().toString());
         }
       });
 
-      // On resume, check if page needs refresh
+      // Native resume event - fires when app returns from background
       App.addListener('resume', () => {
-        console.log('[AppLifecycle] Resume event triggered');
-        // Only reload if we've been gone for a long time
+        console.log('[AppLifecycle] Native resume event - ensuring responsiveness');
         const lastActive = sessionStorage.getItem('lastActiveTime');
         if (lastActive) {
           const timeAway = Date.now() - parseInt(lastActive);
-          if (timeAway > 10 * 60 * 1000) { // 10 minutes
-            console.log('[AppLifecycle] Long absence detected, reloading...');
+          if (timeAway > 5 * 60 * 1000) { // 5 minutes
+            console.log('[AppLifecycle] Long absence detected, reloading for fresh state...');
             window.location.reload();
+          } else {
+            // Just wake up without reload
+            window.dispatchEvent(new Event('focus'));
           }
         }
       });
 
-      // Save timestamp when going to background
+      // Native pause event - fires when app goes to background
       App.addListener('pause', () => {
-        console.log('[AppLifecycle] App paused (background)');
+        console.log('[AppLifecycle] Native pause event - saving state');
         sessionStorage.setItem('lastActiveTime', Date.now().toString());
       });
+
+      console.log('[AppLifecycle] Native app listeners registered - ALWAYS ACTIVE');
     }).catch(err => {
       console.warn('[AppLifecycle] Could not load Capacitor App plugin:', err);
     });
 
-    // Fix 2: Keep-alive ping every 2 minutes to prevent WebView sleep (reduced from 4 min)
+    // Fix 2: Keep-alive ping every 2 minutes to prevent WebView sleep
     const keepAliveInterval = setInterval(() => {
       // Ping a lightweight endpoint to keep JS context alive
       fetch('/api/ping')
@@ -61,24 +72,32 @@ export function useAppLifecycle() {
           // Silent fail - endpoint might not exist yet
           console.debug('[AppLifecycle] Keep-alive ping failed (expected if API route missing)');
         });
-    }, 2 * 60 * 1000); // 2 minutes (more frequent to prevent sleep)
+    }, 2 * 60 * 1000); // 2 minutes
+
+    // Fix 2.5: Persistent global touch handler - ALWAYS ACTIVE
+    // Uses capture phase to intercept ALL touches before they reach components
+    const handleGlobalTouch = () => {
+      const lastActive = sessionStorage.getItem('lastActiveTime');
+      if (lastActive) {
+        const timeSinceActive = Date.now() - parseInt(lastActive);
+        // If idle for more than 10 seconds, immediately wake up
+        if (timeSinceActive > 10 * 1000) {
+          console.log('[AppLifecycle] Global touch after idle - waking up instantly');
+          window.dispatchEvent(new Event('focus'));
+          window.dispatchEvent(new Event('pageshow'));
+        }
+      }
+      sessionStorage.setItem('lastActiveTime', Date.now().toString());
+    };
+
+    // Register persistent listeners with capture=true (fires before component listeners)
+    document.addEventListener('touchstart', handleGlobalTouch, { passive: true, capture: true });
+    document.addEventListener('click', handleGlobalTouch, { passive: true, capture: true });
 
     // Fix 3: Visibility change handler (most reliable)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('[AppLifecycle] Page became visible - reinitializing');
-        
-        // Check if we were away for a while
-        const lastActive = sessionStorage.getItem('lastActiveTime');
-        if (lastActive) {
-          const timeAway = Date.now() - parseInt(lastActive);
-          if (timeAway > 30 * 1000) { // 30 seconds
-            console.log('[AppLifecycle] Returning from idle state, waking up listeners');
-            // Force re-initialization of event system
-            window.dispatchEvent(new Event('pageshow'));
-          }
-        }
-        
         // Re-initialize any broken event listeners
         window.dispatchEvent(new Event('focus'));
         
@@ -92,16 +111,6 @@ export function useAppLifecycle() {
 
     // Track user activity
     const trackActivity = () => {
-      const lastActive = sessionStorage.getItem('lastActiveTime');
-      if (lastActive) {
-        const timeSinceActive = Date.now() - parseInt(lastActive);
-        // If idle for more than 30 seconds, wake up the app
-        if (timeSinceActive > 30 * 1000) {
-          console.log('[AppLifecycle] User interaction after idle - waking up app');
-          window.dispatchEvent(new Event('focus'));
-          window.dispatchEvent(new Event('pageshow'));
-        }
-      }
       sessionStorage.setItem('lastActiveTime', Date.now().toString());
     };
 
@@ -117,12 +126,17 @@ export function useAppLifecycle() {
     sessionStorage.setItem('lastActiveTime', Date.now().toString());
 
     return () => {
+      // Clean up intervals and non-persistent listeners
       clearInterval(keepAliveInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('click', trackActivity);
       window.removeEventListener('touchstart', trackActivity);
       window.removeEventListener('keydown', trackActivity);
       window.removeEventListener('scroll', trackActivity);
+      
+      // NOTE: Global touch handlers (handleGlobalTouch) are NOT removed
+      // They remain active to ensure app responsiveness even after component unmount
+      console.log('[AppLifecycle] Cleanup complete - persistent listeners remain active');
     };
   }, []);
 }
