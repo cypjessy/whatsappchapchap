@@ -96,28 +96,28 @@ function DeleteConfirmDialog({
   return (
     <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white rounded-2xl w-full max-w-md p-6 animate-scaleIn">
+      <div className="relative md3-card-elevated w-full max-w-md p-6 animate-scaleIn">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-[#fef2f2] rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-exclamation-triangle text-2xl text-[#ef4444]" />
+          <div className="w-16 h-16 bg-[var(--md-sys-color-error-container)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-exclamation-triangle text-2xl text-[var(--md-sys-color-on-error-container)]" />
           </div>
-          <h3 className="text-lg font-bold text-[#1e293b] mb-2">
+          <h3 className="text-lg font-bold text-[var(--md-sys-color-on-surface)] mb-2">
             Delete {count > 1 ? `${count} Bookings` : "Booking"}?
           </h3>
-          <p className="text-sm text-[#64748b]">
+          <p className="text-sm text-[var(--md-sys-color-on-surface-variant)]">
             This action cannot be undone. {count > 1 ? "All selected bookings will be permanently removed." : "This booking will be permanently removed."}
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#3b82f6] hover:text-[#3b82f6] transition-all active:scale-95"
+            className="flex-1 px-4 py-3 md3-button-outlined rounded-xl font-medium text-sm transition-all active:scale-95"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-3 bg-[#ef4444] text-white rounded-xl font-bold text-sm hover:bg-[#dc2626] transition-all active:scale-95 shadow-lg shadow-[#ef4444]/20"
+            className="flex-1 px-4 py-3 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-xl font-medium text-sm hover:bg-[var(--md-sys-color-error)]/90 transition-all active:scale-95 shadow-lg shadow-[var(--md-sys-color-error)]/20"
           >
             Delete
           </button>
@@ -801,17 +801,17 @@ export default function BookingsPage() {
       {editModalOpen && editingBooking && (
         <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setEditModalOpen(false); setEditingBooking(null); }} />
-          <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
-            <div className="px-5 py-4 border-b border-[#e2e8f0] flex justify-between items-center bg-white">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-[#1e293b]">
-                <div className="w-8 h-8 rounded-lg bg-[#f1f5f9] flex items-center justify-center">
-                  <i className="fas fa-edit text-[#1e293b] text-sm" />
+          <div className="relative md3-card-elevated w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
+            <div className="px-5 py-4 border-b border-[var(--md-sys-color-outline-variant)] flex justify-between items-center">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
+                <div className="w-8 h-8 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center">
+                  <i className="fas fa-edit text-[var(--md-sys-color-on-surface-variant)] text-sm" />
                 </div>
                 Edit Booking
               </h2>
               <button
                 onClick={() => { setEditModalOpen(false); setEditingBooking(null); }}
-                className="w-9 h-9 rounded-full border-2 border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95"
+                className="w-9 h-9 rounded-full border-2 border-[var(--md-sys-color-outline-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:border-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-primary)] transition-all active:scale-95"
               >
                 <i className="fas fa-times text-sm" />
               </button>
@@ -863,22 +863,22 @@ export default function BookingsPage() {
                     { name: "deposit", label: "Deposit (KES)", type: "number", defaultValue: String(editingBooking.deposit || 0) },
                   ].map((field) => (
                     <div key={field.name}>
-                      <label className="block text-xs font-semibold text-[#475569] mb-1.5">{field.label}</label>
+                      <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] mb-1.5">{field.label}</label>
                       <input
                         name={field.name}
                         type={field.type}
                         defaultValue={field.defaultValue}
-                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#1e293b] focus:shadow-md focus:outline-none text-sm transition-all"
+                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md focus:outline-none text-sm transition-all md3-input-outlined"
                         required={field.name !== "deposit"}
                       />
                     </div>
                   ))}
                   <div>
-                    <label className="block text-xs font-semibold text-[#475569] mb-1.5">Payment Method</label>
+                    <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] mb-1.5">Payment Method</label>
                     <select
                       name="paymentMethod"
                       defaultValue={editingBooking.paymentMethod || ""}
-                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#1e293b] focus:shadow-md focus:outline-none text-sm transition-all"
+                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md focus:outline-none text-sm transition-all md3-input-outlined"
                     >
                       <option value="">Select method</option>
                       <option value="cash">Cash</option>
@@ -889,25 +889,25 @@ export default function BookingsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#475569] mb-1.5">Notes</label>
+                  <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] mb-1.5">Notes</label>
                   <textarea
                     name="notes"
                     defaultValue={editingBooking.notes || ""}
                     rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] focus:border-[#1e293b] focus:shadow-md focus:outline-none text-sm resize-none transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md focus:outline-none text-sm resize-none transition-all md3-input-outlined"
                   />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => { setEditModalOpen(false); setEditingBooking(null); }}
-                    className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-sm text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95"
+                    className="flex-1 px-4 py-3 md3-button-outlined rounded-xl font-medium text-sm transition-all active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all active:scale-95 shadow-lg"
+                    className="flex-1 px-4 py-3 md3-button-filled rounded-xl font-medium text-sm transition-all active:scale-95 shadow-lg"
                   >
                     <i className="fas fa-save mr-2 text-xs" />
                     Save Changes

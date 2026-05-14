@@ -79,13 +79,13 @@ export default function HelpPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {categories.map((cat, idx) => (
-            <div key={idx} className="bg-white rounded-2xl p-6 shadow-md border border-[#e2e8f0] hover:border-[#25D366] hover:translate-y-[-5px] hover:shadow-lg transition-all cursor-pointer group">
+            <div key={idx} className="md3-card-elevated p-6 hover:border-[#25D366] hover:translate-y-[-5px] hover:shadow-lg transition-all cursor-pointer group">
               <div className={`w-14 h-14 rounded-xl ${cat.bg} flex items-center justify-center text-2xl mb-4 ${cat.color}`}>
                 <i className={`fas ${cat.icon}`}></i>
               </div>
               <h3 className="text-xl font-bold mb-2">{cat.title}</h3>
-              <p className="text-[#64748b] mb-4">{cat.desc}</p>
-              <div className="text-sm font-semibold text-[#64748b] flex items-center gap-2">
+              <p className="text-[var(--md-sys-color-on-surface-variant)] mb-4">{cat.desc}</p>
+              <div className="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-2">
                 <i className="fas fa-file-alt text-[#25D366]"></i>
                 {cat.count} Articles
               </div>
@@ -100,14 +100,14 @@ export default function HelpPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {popularArticles.map((article, idx) => (
-              <div key={idx} className="bg-white rounded-xl p-5 border border-[#e2e8f0] flex items-start gap-4 hover:border-[#25D366] hover:shadow-md transition-all cursor-pointer">
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-xl text-[#25D366] shrink-0">
+              <div key={idx} className="md3-card-elevated p-5 flex items-start gap-4 hover:border-[#25D366] hover:shadow-md transition-all cursor-pointer">
+                <div className="w-12 h-12 bg-[var(--md-sys-color-surface)] rounded-lg flex items-center justify-center text-xl text-[#25D366] shrink-0">
                   <i className={`fas ${article.icon}`}></i>
                 </div>
                 <div className="flex-1">
                   <h4 className="font-bold mb-2">{article.title}</h4>
-                  <p className="text-sm text-[#64748b] mb-2">{article.desc}</p>
-                  <div className="flex gap-4 text-xs text-[#64748b]">
+                  <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] mb-2">{article.desc}</p>
+                  <div className="flex gap-4 text-xs text-[var(--md-sys-color-on-surface-variant)]">
                     <span><i className="fas fa-eye mr-1"></i>{article.views} views</span>
                     <span><i className="fas fa-clock mr-1"></i>{article.read} read</span>
                   </div>
@@ -119,13 +119,13 @@ export default function HelpPage() {
 
         {/* Support Options */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-[#e2e8f0] hover:translate-y-[-5px] hover:shadow-lg transition-all">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4 text-[#25D366]">
+          <div className="md3-card-elevated p-6 text-center hover:translate-y-[-5px] hover:shadow-lg transition-all">
+            <div className="w-20 h-20 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center text-3xl mx-auto mb-4 text-[var(--md-sys-color-on-primary-container)]">
               <i className="fas fa-comments"></i>
             </div>
             <h3 className="text-xl font-bold mb-2">Live Chat Support</h3>
-            <p className="text-[#64748b] mb-4">Chat with our support team in real-time. Average response time: 2 minutes.</p>
-            <button className="px-6 py-3 bg-white rounded-xl font-semibold hover:bg-[#25D366] hover:text-white transition-all">
+            <p className="text-[var(--md-sys-color-on-surface-variant)] mb-4">Chat with our support team in real-time. Average response time: 2 minutes.</p>
+            <button className="px-6 py-3 md3-button-filled rounded-xl font-semibold transition-all">
               <i className="fas fa-comment-dots mr-2"></i>Start Chat
             </button>
           </div>
@@ -141,13 +141,13 @@ export default function HelpPage() {
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-[#e2e8f0] hover:translate-y-[-5px] hover:shadow-lg transition-all">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4 text-[#25D366]">
+          <div className="md3-card-elevated p-6 text-center hover:translate-y-[-5px] hover:shadow-lg transition-all">
+            <div className="w-20 h-20 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center text-3xl mx-auto mb-4 text-[var(--md-sys-color-on-primary-container)]">
               <i className="fas fa-envelope"></i>
             </div>
             <h3 className="text-xl font-bold mb-2">Email Support</h3>
-            <p className="text-[#64748b] mb-4">Send us a detailed inquiry. We typically respond within 24 hours.</p>
-            <button className="px-6 py-3 bg-white rounded-xl font-semibold hover:bg-[#25D366] hover:text-white transition-all">
+            <p className="text-[var(--md-sys-color-on-surface-variant)] mb-4">Send us a detailed inquiry. We typically respond within 24 hours.</p>
+            <button className="px-6 py-3 md3-button-filled rounded-xl font-semibold transition-all">
               <i className="fas fa-paper-plane mr-2"></i>Send Email
             </button>
           </div>
