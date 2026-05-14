@@ -33,7 +33,7 @@ const config: CapacitorConfig = {
       overlaysWebView: true,
     },
     EdgeToEdge: {
-      enabled: false,
+      enabled: true,
       backgroundColor: '#ffffff',
     }
   }

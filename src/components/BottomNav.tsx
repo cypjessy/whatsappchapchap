@@ -252,6 +252,7 @@ function MenuSheet({
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           borderTopLeftRadius: '28px',
           borderTopRightRadius: '28px',
+          backgroundColor: '#ffffff'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -367,7 +368,10 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
           fixed bottom-0 left-0 right-0 bg-white z-40 lg:hidden
           shadow-[0_-2px_16px_rgba(0,0,0,0.08)]
         `}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
+        style={{ 
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          backgroundColor: '#ffffff'
+        }}
       >
         <div className="flex items-end justify-between h-16 max-w-lg mx-auto px-1 relative">
           
