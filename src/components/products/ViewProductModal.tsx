@@ -218,6 +218,19 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [mainImageError, setMainImageError] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Set<number>>(new Set());
+  const [error, setError] = useState<string | null>(null);
+
+  // Debug logging
+  useEffect(() => {
+    if (isOpen && product) {
+      console.log('[ViewProductModal] Opening modal with product:', {
+        id: product.id,
+        name: product.name,
+        hasImage: !!product.image,
+        imageCount: product.images?.length || 0
+      });
+    }
+  }, [isOpen, product]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -226,6 +239,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
       setSelectedImage(0);
       setMainImageError(false);
       setThumbnailErrors(new Set());
+      setError(null);
     }
   }, [isOpen, product?.id]);
 
