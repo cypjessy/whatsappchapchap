@@ -214,8 +214,11 @@ export default function AndroidTopBar({
 
   return (
     <>
-      {/* Spacer for fixed header */}
-      <div className="h-[64px] lg:hidden" />
+      {/* Spacer for fixed header - now accounts for safe area */}
+      <div 
+        className="lg:hidden flex-shrink-0" 
+        style={{ height: 'calc(64px + env(safe-area-inset-top, 0px))' }} 
+      />
 
       {/* Premium Android Top Bar - Material Design 3 */}
       <header
@@ -223,24 +226,25 @@ export default function AndroidTopBar({
           fixed top-0 left-0 right-0 z-50 lg:hidden
           transition-all duration-300 ease-in-out
           ${isVisible ? "translate-y-0" : "-translate-y-full"}
-          pt-[env(safe-area-inset-top)]
         `}
         style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
           minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
+          willChange: 'transform',
         }}
       >
-        {/* App Bar Container - MD3 Style */}
+        {/* App Bar Container - MD3 Style with flex-shrink-0 to prevent compression */}
         <div
           className={`
-            relative transition-all duration-300 shadow-sm
+            relative transition-all duration-300 shadow-sm flex-shrink-0
             ${isScrolled 
               ? "bg-white shadow-md border-b border-gray-200/50" 
               : "bg-[#25D366] shadow-sm"
             }
           `}
         >
-          {/* Content Container */}
-          <div className="flex items-center justify-between px-4 py-3 h-16">
+          {/* Content Container - fixed height with min to prevent collapse */}
+          <div className="flex items-center justify-between px-4 h-16 min-h-[64px]">
             {/* Left Actions */}
             <div className="flex items-center gap-1 z-10 min-w-[48px]">
               {leftActions.map((action) => (
