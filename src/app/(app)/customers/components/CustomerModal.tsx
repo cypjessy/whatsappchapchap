@@ -279,39 +279,39 @@ export default function CustomerModal({
     <div
       className={`
         fixed inset-0 z-50 flex items-start justify-center p-4 md:p-8 overflow-y-auto
-        bg-black/40 backdrop-blur-sm transition-opacity duration-200
+        md3-dialog-backdrop transition-opacity duration-200
         ${isVisible && !isClosing ? "opacity-100" : "opacity-0"}
       `}
       onClick={handleClose}
     >
       <div
         className={`
-          bg-white rounded-2xl w-full max-w-4xl my-4 md:my-8 shadow-2xl
+          md3-dialog w-full max-w-4xl my-4 md:my-8
           transition-all duration-300 ease-out
           ${isVisible && !isClosing ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"}
         `}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-4 md:p-6 border-b border-[#e2e8f0] flex justify-between items-center bg-gradient-to-r from-[#f8fafc] to-white rounded-t-2xl">
+        {/* Header - MD3 Dialog Header */}
+        <div className="px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex justify-between items-center">
           <div className="flex items-center gap-3 md:gap-4">
             <div className={`
               w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} 
-              flex items-center justify-center text-xl md:text-3xl font-bold text-white shrink-0
+              flex items-center justify-center text-xl md:text-3xl font-medium text-white shrink-0
               shadow-lg shadow-current/20
             `}>
               {getInitials(customer.name)}
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg md:text-2xl font-extrabold truncate">{customer.name}</h2>
-              <div className="flex items-center gap-2 mt-1 text-xs md:text-sm text-[#64748b]">
+              <h2 className="text-lg md:text-2xl font-normal truncate text-[var(--md-sys-color-on-surface)]">{customer.name}</h2>
+              <div className="flex items-center gap-2 mt-1 text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)]">
                 <span className="flex items-center gap-1">
                   <i className="fab fa-whatsapp text-[#25D366]" />
                   {customer.phone}
                 </span>
                 {customer.email && (
                   <>
-                    <span className="text-[#e2e8f0]">•</span>
+                    <span className="text-[var(--md-sys-color-outline)]">•</span>
                     <span className="hidden sm:inline truncate">{customer.email}</span>
                   </>
                 )}
@@ -402,14 +402,14 @@ export default function CustomerModal({
 
                 <button
                   onClick={handleDelete}
-                  className={`
-                    w-full py-2.5 md:py-3 rounded-xl font-bold flex items-center justify-center gap-2
-                    border-2 border-[#ef4444]/30 text-[#ef4444] 
-                    hover:bg-[#ef4444] hover:text-white hover:border-[#ef4444]
+                  className="
+                    w-full py-2.5 md:py-3 rounded-lg font-medium flex items-center justify-center gap-2
+                    md3-btn-outlined text-[var(--md-sys-color-error)] border-[var(--md-sys-color-error)]
+                    hover:bg-[var(--md-sys-color-error-container)]
                     transition-all duration-200 active:scale-95
-                  `}
+                  "
                 >
-                  <i className="fas fa-trash" />
+                  <i className="fas fa-trash text-sm" />
                   Delete Customer
                 </button>
               </div>
