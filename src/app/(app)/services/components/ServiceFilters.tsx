@@ -95,14 +95,14 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border-2 transition-all duration-200
           ${isFocused
-            ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10 bg-white"
-            : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+            ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+            : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
           }
         `}
       >
         <Search className={`
           absolute left-3.5 w-5 h-5 transition-colors duration-200
-          ${isFocused ? "text-[#8b5cf6]" : "text-[#94a3b8]"}
+          ${isFocused ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
         `} />
         <input
           ref={inputRef}
@@ -112,7 +112,7 @@ function SearchInput({
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="w-full pl-11 pr-10 py-3 bg-transparent text-sm font-medium placeholder:text-[#94a3b8] focus:outline-none rounded-xl text-[#1e293b]"
+          className="w-full pl-11 pr-10 py-3 bg-transparent text-sm font-medium placeholder:text-[var(--md-sys-color-on-surface-variant)] focus:outline-none rounded-xl text-[var(--md-sys-color-on-surface)]"
         />
         {value ? (
           <button
@@ -151,13 +151,13 @@ function PriceRangeInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 flex-1
         ${minFocused
-          ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10 bg-white"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+          ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+          : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
         }
       `}>
         <span className={`
-          absolute left-3 text-sm font-bold transition-colors
-          ${minFocused ? "text-[#8b5cf6]" : "text-[#94a3b8]"}
+          absolute left-3 text-sm font-medium transition-colors
+          ${minFocused ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
         `}>KES</span>
         <input
           type="number"
@@ -166,24 +166,24 @@ function PriceRangeInput({
           onFocus={() => setMinFocused(true)}
           onBlur={() => setMinFocused(false)}
           placeholder="Min"
-          className="w-full pl-10 pr-3 py-2.5 bg-transparent text-sm font-medium focus:outline-none rounded-xl"
+          className="w-full pl-10 pr-3 py-2.5 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-[var(--md-sys-color-on-surface)]"
         />
       </div>
 
       <div className="flex items-center justify-center w-6 shrink-0">
-        <div className="w-3 h-[2px] bg-[#cbd5e1] rounded-full" />
+        <div className="w-3 h-[2px] bg-[var(--md-sys-color-outline-variant)] rounded-full" />
       </div>
 
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 flex-1
         ${maxFocused
-          ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10 bg-white"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+          ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+          : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
         }
       `}>
         <span className={`
-          absolute left-3 text-sm font-bold transition-colors
-          ${maxFocused ? "text-[#8b5cf6]" : "text-[#94a3b8]"}
+          absolute left-3 text-sm font-medium transition-colors
+          ${maxFocused ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
         `}>KES</span>
         <input
           type="number"
@@ -192,7 +192,7 @@ function PriceRangeInput({
           onFocus={() => setMaxFocused(true)}
           onBlur={() => setMaxFocused(false)}
           placeholder="Max"
-          className="w-full pl-10 pr-3 py-2.5 bg-transparent text-sm font-medium focus:outline-none rounded-xl"
+          className="w-full pl-10 pr-3 py-2.5 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-[var(--md-sys-color-on-surface)]"
         />
       </div>
     </div>

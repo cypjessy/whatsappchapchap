@@ -679,42 +679,36 @@ export default function SettingsPage() {
                 <i className="fas fa-info-circle text-[#8b5cf6]"></i>
                 Basic Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Business Name *
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="md3-input-outlined">
                   <input
                     type="text"
+                    id="businessName"
                     value={profile.businessName || ""}
                     onChange={(e) => handleProfileChange("businessName", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm transition-all duration-300 hover:border-[#c4b5fd]"
-                    placeholder="Your business name"
+                    placeholder=" "
                   />
+                  <label htmlFor="businessName">Business Name *</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Tagline
-                  </label>
+                <div className="md3-input-outlined">
                   <input
                     type="text"
+                    id="tagline"
                     value={profile.tagline || ""}
                     onChange={(e) => handleProfileChange("tagline", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm transition-all duration-300 hover:border-[#c4b5fd]"
-                    placeholder="Your business tagline"
+                    placeholder=" "
                   />
+                  <label htmlFor="tagline">Tagline</label>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Description
-                  </label>
+                <div className="md:col-span-2 md3-input-outlined">
                   <textarea
+                    id="description"
                     value={profile.description || ""}
                     onChange={(e) => handleProfileChange("description", e.target.value)}
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none text-sm transition-all duration-300 hover:border-[#c4b5fd]"
-                    placeholder="Tell customers about your business..."
+                    placeholder=" "
                   />
+                  <label htmlFor="description">Description</label>
                 </div>
               </div>
             </div>
@@ -725,54 +719,46 @@ export default function SettingsPage() {
                 <i className="fas fa-phone text-[#8b5cf6]"></i>
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Email
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="md3-input-outlined">
                   <input
                     type="email"
+                    id="email"
                     value={profile.email || ""}
                     onChange={(e) => handleProfileChange("email", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="business@example.com"
+                    placeholder=" "
                   />
+                  <label htmlFor="email">Email</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Phone Number
-                  </label>
+                <div className="md3-input-outlined">
                   <input
                     type="tel"
+                    id="phone"
                     value={profile.phone || ""}
                     onChange={(e) => handleProfileChange("phone", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="+254 7XX XXX XXX"
+                    placeholder=" "
                   />
+                  <label htmlFor="phone">Phone Number</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    WhatsApp Number
-                  </label>
+                <div className="md3-input-outlined">
                   <input
                     type="tel"
+                    id="whatsappNumber"
                     value={profile.whatsappNumber || ""}
                     onChange={(e) => handleProfileChange("whatsappNumber", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="+254 7XX XXX XXX"
+                    placeholder=" "
                   />
+                  <label htmlFor="whatsappNumber">WhatsApp Number</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Website
-                  </label>
+                <div className="md3-input-outlined">
                   <input
                     type="url"
+                    id="website"
                     value={profile.website || ""}
                     onChange={(e) => handleProfileChange("website", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="https://www.example.com"
+                    placeholder=" "
                   />
+                  <label htmlFor="website">Website</label>
                 </div>
               </div>
             </div>
@@ -783,69 +769,60 @@ export default function SettingsPage() {
                 <i className="fas fa-map-marker-alt text-[#8b5cf6]"></i>
                 Business Address
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Street Address
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="md:col-span-2 md3-input-outlined">
                   <input
                     type="text"
+                    id="address"
                     value={profile.address || ""}
                     onChange={(e) => handleProfileChange("address", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="Street address or building name"
+                    placeholder=" "
                   />
+                  <label htmlFor="address">Street Address</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    City
-                  </label>
+                <div className="md3-input-outlined">
                   <input
                     type="text"
+                    id="city"
                     value={profile.city || ""}
                     onChange={(e) => handleProfileChange("city", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="Nairobi"
+                    placeholder=" "
                   />
+                  <label htmlFor="city">City</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Postal Code
-                  </label>
+                <div className="md3-input-outlined">
                   <input
                     type="text"
+                    id="postalCode"
                     value={profile.postalCode || ""}
                     onChange={(e) => handleProfileChange("postalCode", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="00100"
+                    placeholder=" "
                   />
+                  <label htmlFor="postalCode">Postal Code</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Country
-                  </label>
+                <div className="md3-input-outlined">
                   <select
+                    id="country"
                     value={profile.country || "Kenya"}
                     onChange={(e) => handleProfileChange("country", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
                   >
+                    <option value="">Select country</option>
                     <option value="Kenya">Kenya</option>
                     <option value="Uganda">Uganda</option>
                     <option value="Tanzania">Tanzania</option>
                     <option value="Rwanda">Rwanda</option>
                   </select>
+                  <label htmlFor="country">Country</label>
                 </div>
-                <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
-                    Business Category
-                  </label>
+                <div className="md:col-span-2 md3-input-outlined">
                   <input
                     type="text"
+                    id="category"
                     value={profile.category || ""}
                     onChange={(e) => handleProfileChange("category", e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
-                    placeholder="e.g., Electronics, Healthcare, Beauty"
+                    placeholder=" "
                   />
+                  <label htmlFor="category">Business Category</label>
                 </div>
               </div>
             </div>

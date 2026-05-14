@@ -694,37 +694,37 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
   const renderStep1 = () => (
     <div className="space-y-4 animate-fadeIn">
       <FormSection title="Service Information" icon="fa-info-circle" isValid={canProceed}>
-        <div className="space-y-3">
-          <div>
-            <label className="form-label">Business / Provider Name *</label>
+        <div className="space-y-5">
+          <div className="md3-input-outlined">
             <input
               type="text"
-              className="form-input"
-              placeholder="e.g., Sarah's Beauty Salon"
+              id="providerName"
+              placeholder=" "
               value={form.providerName}
               onChange={(e) => updateForm("providerName", e.target.value)}
             />
+            <label htmlFor="providerName">Business / Provider Name *</label>
           </div>
-          <div>
-            <label className="form-label">Service Name *</label>
+          <div className="md3-input-outlined">
             <input
               type="text"
-              className="form-input"
-              placeholder="e.g., Professional Box Braids"
+              id="serviceName"
+              placeholder=" "
               value={form.serviceName}
               onChange={(e) => updateForm("serviceName", e.target.value)}
             />
+            <label htmlFor="serviceName">Service Name *</label>
           </div>
-          <div>
-            <label className="form-label">Description *</label>
+          <div className="md3-input-outlined">
             <textarea
-              className="form-textarea"
+              id="description"
               rows={4}
-              placeholder="Describe what clients can expect..."
+              placeholder=" "
               value={form.description}
               onChange={(e) => updateForm("description", e.target.value)}
             />
-            <div className="text-right text-[10px] text-[#94a3b8] mt-1">
+            <label htmlFor="description">Description *</label>
+            <div className="md3-input-helper text-right">
               {form.description.length} chars {form.description.length < 10 && "(min 10)"}
             </div>
           </div>
@@ -914,12 +914,12 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                 {tier.badge}
               </div>
               <div className="text-sm font-bold text-[#475569] mb-3 mt-1">{tier.label} Package</div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] text-sm font-bold">KES</span>
+              <div className="relative md3-input-outlined mt-2">
+                <span className="absolute left-4 top-0 text-[var(--md-sys-color-on-surface-variant)] text-sm font-medium pointer-events-none bg-[var(--md-sys-color-surface)] px-1 z-10">KES</span>
                 <input
                   type="number"
-                  className="w-full pl-12 pr-3 py-2.5 rounded-lg border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm font-bold"
-                  placeholder="0.00"
+                  id={`price-${tier.key}`}
+                  placeholder=" "
                   value={form.prices[tier.key]}
                   onChange={(e) => setForm((prev) => ({
                     ...prev,
@@ -927,6 +927,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                   }))}
                   onClick={(e) => e.stopPropagation()}
                 />
+                <label htmlFor={`price-${tier.key}`} className="left-10">Price</label>
               </div>
               <div className="mt-3 space-y-1.5">
                 {tier.key === "basic" && (
@@ -1068,13 +1069,16 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
           })}
         </div>
         {form.duration === "custom" && (
-          <input
-            type="text"
-            className="form-input mt-3"
-            placeholder="e.g., 2-3 hours, Half day"
-            value={form.customDuration}
-            onChange={(e) => updateForm("customDuration", e.target.value)}
-          />
+          <div className="md3-input-outlined mt-3">
+            <input
+              type="text"
+              id="customDuration"
+              placeholder=" "
+              value={form.customDuration}
+              onChange={(e) => updateForm("customDuration", e.target.value)}
+            />
+            <label htmlFor="customDuration">Custom Duration</label>
+          </div>
         )}
       </FormSection>
 
@@ -1087,13 +1091,16 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       </FormSection>
 
       <FormSection title="Service Radius" icon="fa-ruler">
-        <input
-          type="number"
-          className="form-input"
-          placeholder="e.g., 10 (km)"
-          value={form.serviceRadius}
-          onChange={(e) => updateForm("serviceRadius", e.target.value)}
-        />
+        <div className="md3-input-outlined">
+          <input
+            type="number"
+            id="serviceRadius"
+            placeholder=" "
+            value={form.serviceRadius}
+            onChange={(e) => updateForm("serviceRadius", e.target.value)}
+          />
+          <label htmlFor="serviceRadius">Service Radius (km)</label>
+        </div>
       </FormSection>
     </div>
   );
