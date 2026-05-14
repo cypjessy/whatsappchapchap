@@ -133,14 +133,11 @@ function BookingCard({
   return (
     <div
       className={`
-        group relative bg-white rounded-2xl border border-[#E2E8F0] 
+        group relative md3-card-elevated 
         p-4 md:p-5 cursor-pointer overflow-hidden
         transition-all duration-200 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-        ${isHovered
-          ? "border-[#8B5CF6]/30 shadow-md shadow-[#8B5CF6]/5 -translate-y-0.5"
-          : "shadow-sm hover:shadow-md"
-        }
+        ${isHovered ? "shadow-md -translate-y-0.5" : "shadow-sm hover:shadow-md"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -163,11 +160,11 @@ function BookingCard({
           <div
             className={`
               w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center 
-              font-semibold text-xs md:text-sm shrink-0 transition-transform duration-200
+              font-medium text-xs md:text-sm shrink-0 transition-transform duration-200
               ${isHovered ? "scale-105" : "scale-100"}
               ${booking.verified
-                ? "bg-[#F3E8FF] text-[#8B5CF6]"
-                : "bg-[#F1F5F9] text-[#64748B]"
+                ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
+                : "bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]"
               }
             `}
           >
@@ -175,13 +172,13 @@ function BookingCard({
           </div>
 
           <div className="min-w-0">
-            <div className="font-medium text-sm md:text-base truncate flex items-center gap-1.5">
+            <div className="font-medium text-sm md:text-base truncate flex items-center gap-1.5 text-[var(--md-sys-color-on-surface)]">
               {booking?.client || "Unknown Client"}
               {booking.verified && (
-                <i className="fas fa-badge-check text-[#10B981] text-xs md:text-sm shrink-0" title="Verified client" />
+                <i className="fas fa-badge-check text-[var(--md-sys-color-success)] text-xs md:text-sm shrink-0" title="Verified client" />
               )}
             </div>
-            <div className="text-[11px] md:text-xs text-[#64748B] flex items-center gap-1">
+            <div className="text-[11px] md:text-xs text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1">
               <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
               <span className="truncate">{booking?.phone || "N/A"}</span>
             </div>
@@ -192,8 +189,8 @@ function BookingCard({
         <span
           className={`
             shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full 
-            text-[10px] md:text-xs font-semibold uppercase tracking-wide border
-            ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}
+            text-[10px] md:text-xs font-medium uppercase tracking-wide
+            ${statusConfig.bg} ${statusConfig.text}
           `}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
@@ -203,23 +200,23 @@ function BookingCard({
 
       {/* Service info - MD3 styling */}
       <div className="mb-3.5 md:mb-4">
-        <div className="font-semibold text-sm md:text-base mb-1.5 md:mb-2 truncate">{booking?.service || "N/A"}</div>
+        <div className="font-medium text-sm md:text-base mb-1.5 md:mb-2 truncate text-[var(--md-sys-color-on-surface)]">{booking?.service || "N/A"}</div>
         <div className="space-y-1.5 md:space-y-2">
-          <div className="flex items-center gap-2 text-[11px] md:text-xs text-[#64748B]">
-            <div className="w-5 h-5 rounded-lg bg-[#F8FAFC] flex items-center justify-center shrink-0">
-              <i className="fas fa-calendar text-[#8B5CF6] text-[9px]" />
+          <div className="flex items-center gap-2 text-[11px] md:text-xs text-[var(--md-sys-color-on-surface-variant)]">
+            <div className="w-5 h-5 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shrink-0">
+              <i className="fas fa-calendar text-[var(--md-sys-color-primary)] text-[9px]" />
             </div>
             <span>{formatDate(booking?.date || "")}</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] md:text-xs text-[#64748B]">
-            <div className="w-5 h-5 rounded-lg bg-[#F8FAFC] flex items-center justify-center shrink-0">
-              <i className="fas fa-clock text-[#8B5CF6] text-[9px]" />
+          <div className="flex items-center gap-2 text-[11px] md:text-xs text-[var(--md-sys-color-on-surface-variant)]">
+            <div className="w-5 h-5 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shrink-0">
+              <i className="fas fa-clock text-[var(--md-sys-color-primary)] text-[9px]" />
             </div>
             <span>{booking?.time || "N/A"} • {booking?.duration || "N/A"}</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] md:text-xs text-[#64748B]">
-            <div className="w-5 h-5 rounded-lg bg-[#F8FAFC] flex items-center justify-center shrink-0">
-              <i className="fas fa-map-marker-alt text-[#8B5CF6] text-[9px]" />
+          <div className="flex items-center gap-2 text-[11px] md:text-xs text-[var(--md-sys-color-on-surface-variant)]">
+            <div className="w-5 h-5 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shrink-0">
+              <i className="fas fa-map-marker-alt text-[var(--md-sys-color-primary)] text-[9px]" />
             </div>
             <span className="truncate">{booking?.location || "N/A"}</span>
           </div>
@@ -230,14 +227,14 @@ function BookingCard({
       <div className="mb-3 md:mb-4">
         <div
           className={`
-            flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] md:text-xs font-semibold
-            ${paymentConfig.bg} ${paymentConfig.text} border border-current/10
+            flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] md:text-xs font-medium
+            ${paymentConfig.bg} ${paymentConfig.text}
           `}
         >
           <i className={`fas ${paymentConfig.icon}`} />
           <span>Payment: {paymentConfig.label}</span>
           {booking?.paymentProof?.amount !== undefined && (booking?.price || 0) > 0 && (
-            <span className="ml-auto font-bold">
+            <span className="ml-auto font-semibold">
               KES {booking?.paymentProof?.amount?.toLocaleString()} / {(booking?.price || 0).toLocaleString()}
             </span>
           )}
@@ -245,10 +242,10 @@ function BookingCard({
       </div>
 
       {/* Footer - MD3 styling */}
-      <div className="flex justify-between items-center pt-3 md:pt-4 border-t border-[#E2E8F0]">
+      <div className="flex justify-between items-center pt-3 md:pt-4 border-t border-[var(--md-sys-color-outline-variant)]">
         <div className="flex flex-col">
-          <span className="text-[10px] text-[#94A3B8] font-semibold uppercase tracking-wide">Total</span>
-          <span className="font-bold text-base md:text-lg text-[#8B5CF6]">
+          <span className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] font-medium uppercase tracking-wide">Total</span>
+          <span className="font-semibold text-base md:text-lg text-[var(--md-sys-color-primary)]">
             KES {(booking?.price || 0).toLocaleString()}
           </span>
         </div>
@@ -260,8 +257,8 @@ function BookingCard({
             className={`
               relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
               transition-all duration-200 active:scale-90
-              bg-[#E8F5E9] text-[#25D366]
-              hover:bg-[#25D366] hover:text-white hover:shadow-md hover:shadow-[#25D366]/20
+              bg-[var(--md-sys-color-success-container)] text-[var(--md-sys-color-on-success-container)]
+              hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md
             `}
             aria-label="Message on WhatsApp"
             title="Message on WhatsApp"
@@ -278,8 +275,8 @@ function BookingCard({
             className={`
               relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
               transition-all duration-200 active:scale-90
-              bg-[#F3E8FF] text-[#8B5CF6]
-              hover:bg-[#8B5CF6] hover:text-white hover:shadow-md hover:shadow-[#8B5CF6]/20
+              bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]
+              hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:shadow-md
             `}
             aria-label="View booking details"
             title="View details"
