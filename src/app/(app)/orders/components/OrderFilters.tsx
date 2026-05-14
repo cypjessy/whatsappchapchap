@@ -107,17 +107,17 @@ function SelectField({
   icon?: string;
 }) {
   return (
-    <div className="relative">
+    <div className="relative md3-input-outlined">
       {icon && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+        <div className="absolute left-4 top-[18px] text-[var(--md-sys-color-on-surface-variant)] pointer-events-none z-10">
           <i className={`fas ${icon} text-xs`} />
         </div>
       )}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-3 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all appearance-none cursor-pointer bg-white hover:border-gray-300 ${
-          icon ? "pl-9" : ""
+        className={`w-full px-4 py-4 border-1 rounded-lg text-sm focus:outline-none transition-all appearance-none cursor-pointer bg-transparent text-[var(--md-sys-color-on-surface)] ${
+          icon ? "pl-10" : ""
         }`}
       >
         {options.map((opt) => (
@@ -126,7 +126,7 @@ function SelectField({
           </option>
         ))}
       </select>
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] pointer-events-none">
         <i className="fas fa-chevron-down text-xs" />
       </div>
     </div>

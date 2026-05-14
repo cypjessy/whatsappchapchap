@@ -149,14 +149,14 @@ function SelectDropdown({
         className={`
           relative flex items-center rounded-xl border transition-all duration-200
           ${isFocused
-            ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-white"
-            : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
+            ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+            : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
           }
         `}
       >
         <i className={`
-          ${icon} absolute left-3 text-sm transition-colors duration-200
-          ${isFocused ? "text-[#8B5CF6]" : "text-[#94A3B8]"}
+          ${icon} absolute left-4 text-sm transition-colors duration-200
+          ${isFocused ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
         `} />
         <select
           value={value}
@@ -164,9 +164,9 @@ function SelectDropdown({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={`
-            w-full pl-9 pr-8 py-2.5 md:py-3 bg-transparent text-sm font-medium
-            focus:outline-none rounded-xl appearance-none cursor-pointer
-            ${value ? "text-[#1E293B]" : "text-[#94A3B8]"}
+            w-full pl-10 pr-8 py-3 md:py-4 bg-transparent text-sm font-medium
+            focus:outline-none rounded-lg appearance-none cursor-pointer
+            ${value ? "text-[var(--md-sys-color-on-surface)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
           `}
         >
           <option value="">{placeholder}</option>
@@ -174,7 +174,7 @@ function SelectDropdown({
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <i className="fas fa-chevron-down absolute right-3 text-[10px] text-[#94A3B8] pointer-events-none" />
+        <i className="fas fa-chevron-down absolute right-4 text-[10px] text-[var(--md-sys-color-on-surface-variant)] pointer-events-none" />
       </div>
     </div>
   );

@@ -470,20 +470,20 @@ export default function ServiceFilters({
               <div className={`
                 relative flex items-center rounded-xl border-2 transition-all duration-200
                 ${selectedBusinessType
-                  ? "border-[#8b5cf6] bg-[#ede9fe]"
-                  : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                  ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)]"
+                  : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
                 }
               `}>
                 <i className={`
-                  fas fa-store absolute left-3 text-sm transition-colors
-                  ${selectedBusinessType ? "text-[#8b5cf6]" : "text-[#94a3b8]"}
+                  fas fa-store absolute left-4 text-sm transition-colors
+                  ${selectedBusinessType ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
                 `} />
                 <select
                   value={selectedBusinessType}
                   onChange={(e) => setSelectedBusinessType(e.target.value)}
                   className={`
-                    w-full pl-9 pr-8 py-2.5 bg-transparent text-sm font-medium focus:outline-none rounded-xl appearance-none cursor-pointer
-                    ${selectedBusinessType ? "text-[#1e293b]" : "text-[#94a3b8]"}
+                    w-full pl-10 pr-8 py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl appearance-none cursor-pointer
+                    ${selectedBusinessType ? "text-[var(--md-sys-color-on-surface)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
                   `}
                 >
                   <option value="">All Business Types</option>
@@ -491,7 +491,7 @@ export default function ServiceFilters({
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 w-4 h-4 text-[#94a3b8] pointer-events-none" />
+                <ChevronDown className="absolute right-3 w-4 h-4 text-[var(--md-sys-color-on-surface-variant)] pointer-events-none" />
               </div>
             </div>
 

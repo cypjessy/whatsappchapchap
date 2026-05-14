@@ -200,22 +200,18 @@ function SelectField({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="relative">
-      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none z-10" />
+    <div className="relative md3-input-outlined">
+      <Icon className="absolute left-4 top-[18px] w-4 h-4 text-[var(--md-sys-color-on-surface-variant)] pointer-events-none z-10" />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsOpen(true)}
         onBlur={() => setIsOpen(false)}
         className={`
-          appearance-none w-full pl-9 pr-8 py-2.5 bg-white border-2 rounded-xl 
+          appearance-none w-full pl-10 pr-8 py-4 bg-transparent border-1 rounded-lg 
           text-sm font-medium transition-all duration-200 cursor-pointer
-          focus:outline-none focus:ring-2 focus:ring-[#25D366]/20
-          ${isOpen || value !== (options[0]?.value ?? "")
-            ? "border-[#25D366] bg-white shadow-sm"
-            : "border-[#e2e8f0] hover:border-[#cbd5e1]"
-          }
-          ${value !== (options[0]?.value ?? "") ? "text-[#1e293b]" : "text-[#64748b]"}
+          focus:outline-none
+          ${value !== (options[0]?.value ?? "") ? "text-[var(--md-sys-color-on-surface)]" : "text-[var(--md-sys-color-on-surface-variant)]"}
         `}
       >
         {placeholder && <option value="">{placeholder}</option>}
