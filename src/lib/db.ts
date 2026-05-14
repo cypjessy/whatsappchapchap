@@ -348,6 +348,9 @@ export interface Product {
     stock: number;
   }>;
   
+  // Product Specifications (key-value pairs)
+  specifications?: Record<string, string | number>;
+  
   createdAt: any;
   updatedAt: any;
 }

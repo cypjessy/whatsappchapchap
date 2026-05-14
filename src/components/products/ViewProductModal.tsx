@@ -385,22 +385,30 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderSpecs = () => {
-    // Build specs from available product fields
+    // Build specs from specifications field or available product fields
     const specs: { label: string; value: string }[] = [];
     
-    if (product.brand) specs.push({ label: "Brand", value: product.brand });
-    if (product.sku) specs.push({ label: "SKU", value: product.sku });
-    if (product.barcode) specs.push({ label: "Barcode", value: product.barcode });
-    if (product.weight) specs.push({ label: "Weight", value: `${product.weight} ${product.weightUnit || "kg"}` });
-    if (product.warranty) specs.push({ label: "Warranty", value: product.warranty });
-    if (product.dimensions) {
-      const dims = [];
-      if (product.dimensions.length) dims.push(`L: ${product.dimensions.length}`);
-      if (product.dimensions.width) dims.push(`W: ${product.dimensions.width}`);
-      if (product.dimensions.height) dims.push(`H: ${product.dimensions.height}`);
-      if (dims.length > 0) specs.push({ label: "Dimensions", value: dims.join(" × ") });
+    // Use specifications field if available
+    if (product.specifications && Object.keys(product.specifications).length > 0) {
+      Object.entries(product.specifications).forEach(([key, value]) => {
+        specs.push({ label: key, value: String(value) });
+      });
+    } else {
+      // Fallback to building specs from product fields
+      if (product.brand) specs.push({ label: "Brand", value: product.brand });
+      if (product.sku) specs.push({ label: "SKU", value: product.sku });
+      if (product.barcode) specs.push({ label: "Barcode", value: product.barcode });
+      if (product.weight) specs.push({ label: "Weight", value: `${product.weight} ${product.weightUnit || "kg"}` });
+      if (product.warranty) specs.push({ label: "Warranty", value: product.warranty });
+      if (product.dimensions) {
+        const dims = [];
+        if (product.dimensions.length) dims.push(`L: ${product.dimensions.length}`);
+        if (product.dimensions.width) dims.push(`W: ${product.dimensions.width}`);
+        if (product.dimensions.height) dims.push(`H: ${product.dimensions.height}`);
+        if (dims.length > 0) specs.push({ label: "Dimensions", value: dims.join(" × ") });
+      }
+      if (product.taxEnabled) specs.push({ label: "Tax Rate", value: `${product.taxRate || 0}%` });
     }
-    if (product.taxEnabled) specs.push({ label: "Tax Rate", value: `${product.taxRate || 0}%` });
     
     return (
       <div className="space-y-6 animate-fadeIn">
