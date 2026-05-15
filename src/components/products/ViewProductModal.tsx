@@ -215,10 +215,19 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
   // Computed values
   const stockConfig = useMemo(() => getStockConfig(product?.stock || 0), [product?.stock]);
-  const allImages = useMemo(
-    () => [product?.image, ...(product?.images || [])].filter(Boolean) as string[],
-    [product?.image, product?.images]
-  );
+  const allImages = useMemo(() => {
+    const mainImage = product?.image;
+    const otherImages = product?.images || [];
+    
+    // If no main image, just return other images
+    if (!mainImage) return otherImages.filter(Boolean) as string[];
+    
+    // Filter out duplicate of main image from other images
+    const uniqueOtherImages = otherImages.filter(img => img !== mainImage);
+    
+    // Return main image + unique other images
+    return [mainImage, ...uniqueOtherImages].filter(Boolean) as string[];
+  }, [product?.image, product?.images]);
   const currentImage = useMemo(() => allImages[selectedImage] || null, [allImages, selectedImage]);
 
   // Early return
