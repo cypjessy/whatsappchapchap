@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "firebase/auth";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import sharp from "sharp";
 
 function getAdminDb() {
   if (getApps().length === 0) {
@@ -59,15 +60,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    // Convert File to Buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Compress image with Sharp before uploading
+    let compressedBuffer: Buffer;
+    try {
+      compressedBuffer = await sharp(buffer)
+        .resize(800, 800, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 75 })
+        .toBuffer();
+      
+      console.log(`API: Image compressed - Original: ${buffer.length} bytes, Compressed: ${compressedBuffer.length} bytes`);
+    } catch (compressError) {
+      console.error('API: Compression failed, using original:', compressError);
+      // Fallback to original if compression fails (e.g., non-image files)
+      compressedBuffer = buffer;
+    }
+
     const tenantId = `tenant_${userId}`;
     const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${timestamp}-${sanitizedName}`;
+    // Always use .webp extension for compressed images
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_").replace(/\.[^.]+$/, '');
+    const filename = `${timestamp}-${sanitizedName}.webp`;
     const path = `${tenantId}/${folder}/${filename}`;
     const uploadUrl = `https://${BUNNY_STORAGE_HOST}/${BUNNY_STORAGE_ZONE}/${path}`;
 
-    const buffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(buffer);
+    const uint8Array = new Uint8Array(compressedBuffer);
 
     console.log("API: Uploading to:", uploadUrl);
 

@@ -32,76 +32,39 @@ function getTenantId(user: User): string {
 export const bunnyStorage = {
   async uploadFile(user: User, file: File, folder: string = "products"): Promise<UploadResult> {
     console.log("Bunny Storage uploadFile called:", { 
-      host: BUNNY_STORAGE_HOST, 
-      zone: BUNNY_STORAGE_ZONE, 
-      hasApiKey: !!BUNNY_STORAGE_API_KEY, 
-      cdnUrl: BUNNY_CDN_URL,
       fileName: file.name,
-      fileSize: file.size
+      fileSize: file.size,
+      folder
     });
     
-    if (!BUNNY_STORAGE_HOST || !BUNNY_STORAGE_ZONE || !BUNNY_STORAGE_API_KEY) {
-      console.error("Bunny Storage not configured - missing config");
-      return { success: false, error: "Bunny Storage not configured" };
-    }
-
     try {
-      const tenantId = getTenantId(user);
-      const timestamp = Date.now();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-      const filename = `${timestamp}-${sanitizedName}`;
-      // Use the storage API URL format that Bunny expects
-      const path = `${tenantId}/${folder}/${filename}`;
-      const uploadUrl = `https://${BUNNY_STORAGE_HOST}/${BUNNY_STORAGE_ZONE}/${path}`;
+      // Get auth token
+      const token = await user.getIdToken();
       
-      console.log("Uploading to:", uploadUrl);
-      console.log("Using API Key:", BUNNY_STORAGE_API_KEY?.substring(0, 8) + "...");
-      console.log("Zone:", BUNNY_STORAGE_ZONE);
+      // Create FormData for API upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder);
       
-      const buffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(buffer);
-
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
+      console.log("Uploading via API route with Sharp compression...");
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
         headers: {
-          "Content-Type": file.type,
-          "AccessKey": BUNNY_STORAGE_API_KEY!,
+          'Authorization': `Bearer ${token}`,
         },
-        body: uint8Array,
+        body: formData,
       });
-
-      console.log("Upload response:", response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Upload failed:", errorText);
-        
-        // Try with Authorization header if AccessKey failed
-        if (response.status === 401) {
-          console.log("Trying with Authorization header...");
-          const altResponse = await fetch(uploadUrl, {
-            method: "PUT",
-            headers: {
-              "Content-Type": file.type,
-              "Authorization": BUNNY_STORAGE_API_KEY!,
-            },
-            body: uint8Array,
-          });
-          console.log("Alt response:", altResponse.status, altResponse.statusText);
-          if (altResponse.ok) {
-            const url = `${BUNNY_CDN_URL}/${path}`;
-            return { success: true, url };
-          }
-          const altError = await altResponse.text();
-          console.error("Alt also failed:", altError);
-        }
-        
-        return { success: false, error: `Upload failed: ${errorText}` };
+      
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        console.error("Upload failed:", data.error);
+        return { success: false, error: data.error || 'Upload failed' };
       }
-
-      const url = `${BUNNY_CDN_URL}/${path}`;
-      console.log("Upload success, URL:", url);
-      return { success: true, url };
+      
+      console.log("Upload success, URL:", data.url);
+      return { success: true, url: data.url };
     } catch (error) {
       console.error("Bunny Storage upload error:", error);
       return { success: false, error: error instanceof Error ? error.message : "Upload failed" };
