@@ -80,22 +80,32 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Compress image with Sharp before uploading
-    // NOTE: Image is already pre-compressed client-side, so we do a lighter compression here
+    // NOTE: Image is already pre-compressed client-side (WebP at 800px)
+    // We'll only re-compress if it's NOT already a WebP or if it's too large
     let compressedBuffer: Buffer;
-    try {
-      compressedBuffer = await sharp(buffer)
-        .resize(800, 800, {
-          fit: 'inside',
-          withoutEnlargement: true,
-        })
-        .webp({ quality: 70 }) // Lower quality for faster compression
-        .toBuffer();
-      
-      console.log(`API: Image compressed - Original: ${buffer.length} bytes, Compressed: ${compressedBuffer.length} bytes`);
-    } catch (compressError) {
-      console.error('API: Compression failed, using original:', compressError);
-      // Fallback to original if compression fails (e.g., non-image files)
+    const isAlreadyWebP = file.type === 'image/webp';
+    const isSmallEnough = buffer.length < 200 * 1024; // < 200KB
+    
+    if (isAlreadyWebP && isSmallEnough) {
+      // Already compressed client-side, use directly (no double compression)
+      console.log(`API: Using client-compressed image directly (${buffer.length} bytes)`);
       compressedBuffer = buffer;
+    } else {
+      // Need server-side compression (original format or too large)
+      try {
+        compressedBuffer = await sharp(buffer)
+          .resize(800, 800, {
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
+          .webp({ quality: 70 })
+          .toBuffer();
+        
+        console.log(`API: Image compressed - Original: ${buffer.length} bytes, Compressed: ${compressedBuffer.length} bytes`);
+      } catch (compressError) {
+        console.error('API: Compression failed, using original:', compressError);
+        compressedBuffer = buffer;
+      }
     }
 
     const tenantId = `tenant_${userId}`;

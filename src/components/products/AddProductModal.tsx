@@ -647,18 +647,36 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   const uploadAllImages = async (): Promise<string[]> => {
     if (productImages.length === 0 || !user) return [];
+    
+    console.log(`📤 Uploading ${productImages.length} image(s)...`);
+    
+    // Deduplicate images by URL to prevent double uploads
+    const uniqueImages = productImages.filter((img, index, self) =>
+      index === self.findIndex((t) => t.url === img.url)
+    );
+    
+    if (uniqueImages.length < productImages.length) {
+      console.warn(`️ Removed ${productImages.length - uniqueImages.length} duplicate image(s)`);
+    }
+    
     const uploadedUrls: string[] = [];
-    for (const img of productImages) {
+    for (const img of uniqueImages) {
       if (img.url.startsWith("data:")) {
+        console.log(` Uploading image ${uploadedUrls.length + 1}/${uniqueImages.length}...`);
         const base64Response = await fetch(img.url);
         const blob = await base64Response.blob();
-        const file = new File([blob], `image_${img.id}.jpg`, { type: "image/jpeg" });
+        const file = new File([blob], `image_${img.id}.webp`, { type: "image/webp" });
         const result = await bunnyStorage.uploadFile(user, file, "products");
-        if (result.success && result.url) uploadedUrls.push(result.url);
+        if (result.success && result.url) {
+          uploadedUrls.push(result.url);
+          console.log(`✅ Uploaded: ${result.url}`);
+        }
       } else {
         uploadedUrls.push(img.url);
       }
     }
+    
+    console.log(`✅ Upload complete: ${uploadedUrls.length} URL(s)`);
     return uploadedUrls;
   };
 
