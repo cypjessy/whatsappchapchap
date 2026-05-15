@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
-import categoryData from "@/lib/categoryData"; // Import your hardcoded data
+import categoryData from "@/lib/categoryData"; // Updated with all 15 categories
 import type { Category, Subcategory, SpecField } from "@/lib/categoryData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -47,13 +47,12 @@ const STEPS = [
   { id: 5, label: "Images", icon: "fa-images" },
 ];
 
-// ─── Helper to get category icons ───────────────────────────────────────────
-
-const getCategoryIcon = (categoryId: string): string => {
-  return categoryData[categoryId]?.icon || "📦";
+// Helper to get category display name
+const getCategoryName = (categoryId: string): string => {
+  return categoryData[categoryId]?.name || categoryId;
 };
 
-// ─── Sub-Components (same as original) ───────────────────────────────────────
+// ─── Sub-Components ───────────────────────────────────────────────────────
 
 function StepIndicator({ currentStep, completedSteps }: { currentStep: number; completedSteps: Set<number> }) {
   return (
@@ -193,16 +192,19 @@ function SelectableCard({
   );
 }
 
+// UPDATED: Enhanced SpecButton with support for multiple selection visual feedback
 function SpecButton({
   label,
   selected,
   onClick,
   isCustom,
+  multiple,
 }: {
   label: string;
   selected: boolean;
   onClick: () => void;
   isCustom?: boolean;
+  multiple?: boolean;
 }) {
   return (
     <button
@@ -218,12 +220,147 @@ function SpecButton({
         }
       `}
     >
-      {selected && <i className="fas fa-check text-[9px]" />}
+      {selected && multiple && <i className="fas fa-check text-[9px]" />}
+      {selected && !multiple && <i className="fas fa-dot-circle text-[8px]" />}
       {label}
     </button>
   );
 }
 
+// NEW: Multi-select dropdown component for specs with many options
+function MultiSelectDropdown({
+  options,
+  selectedValues,
+  onToggle,
+  label,
+}: {
+  options: string[];
+  selectedValues: Set<string>;
+  onToggle: (value: string) => void;
+  label: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(opt => 
+    opt.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-left text-sm flex justify-between items-center hover:border-[#8b5cf6] transition-colors"
+      >
+        <span className="text-[#475569]">
+          {selectedValues.size === 0 
+            ? "Select options..." 
+            : `${selectedValues.size} selected`}
+        </span>
+        <i className={`fas fa-chevron-down text-[#94a3b8] transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-20 mt-1 w-full bg-white border border-[#e2e8f0] rounded-lg shadow-lg max-h-64 overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-[#e2e8f0]">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:border-[#8b5cf6]"
+            />
+          </div>
+          <div className="overflow-y-auto max-h-48">
+            {filteredOptions.map(opt => (
+              <label
+                key={opt}
+                className="flex items-center gap-2 px-3 py-2 hover:bg-[#f1f5f9] cursor-pointer text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedValues.has(opt)}
+                  onChange={() => onToggle(opt)}
+                  className="rounded border-[#cbd5e1] text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                />
+                <span className="text-[#475569]">{opt}</span>
+              </label>
+            ))}
+            {filteredOptions.length === 0 && (
+              <div className="px-3 py-2 text-sm text-[#94a3b8] text-center">
+                No options found
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// NEW: Text input for custom specs with allowCustom flag
+function CustomSpecInput({
+  onAdd,
+  onCancel,
+  placeholder = "Enter custom value...",
+}: {
+  onAdd: (value: string) => void;
+  onCancel: () => void;
+  placeholder?: string;
+}) {
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onAdd(value.trim());
+      setValue("");
+    }
+  };
+
+  return (
+    <div className="flex gap-2 mt-3 animate-fadeIn">
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+        placeholder={placeholder}
+        className="flex-1 px-3 py-2 rounded-lg border-2 border-[#8b5cf6] text-sm focus:outline-none"
+      />
+      <button
+        onClick={handleSubmit}
+        className="px-3 py-2 bg-[#8b5cf6] text-white rounded-lg hover:bg-[#7c3aed] transition-colors"
+      >
+        <i className="fas fa-check" />
+      </button>
+      <button
+        onClick={onCancel}
+        className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
+      >
+        <i className="fas fa-times" />
+      </button>
+    </div>
+  );
+}
+
+// UPDATED: ImageCard remains the same
 function ImageCard({
   image,
   index,
@@ -351,8 +488,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, Set<string>>>({});
   const [customSpecOptions, setCustomSpecOptions] = useState<Record<string, string[]>>({});
-  const [customInputKey, setCustomInputKey] = useState<string | null>(null);
+  const [customInputState, setCustomInputState] = useState<{ specKey: string | null; fieldLabel: string }>({ specKey: null, fieldLabel: "" });
   const [customInputValue, setCustomInputValue] = useState("");
+
+  // NEW: Track if specs are being loaded
+  const [isLoadingSpecs, setIsLoadingSpecs] = useState(false);
 
   const [variants, setVariants] = useState<Variant[]>([]);
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
@@ -387,6 +527,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   // Reset specs when category or subcategory changes
   useEffect(() => {
     setSelectedSpecs({});
+    setCustomSpecOptions({});
     setVariants([]);
   }, [selectedCategoryId, selectedSubcategoryKey]);
 
@@ -409,7 +550,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setVariants([]);
     setProductImages([]);
     setErrors({});
-    setCustomInputKey(null);
+    setCustomInputState({ specKey: null, fieldLabel: "" });
     setCustomInputValue("");
   };
 
@@ -428,13 +569,17 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     }
 
     if (step === 3) {
-      const hasSpecs = Object.values(selectedSpecs).some((set) => set.size > 0);
-      if (!hasSpecs) newErrors.specs = "Please select at least one specification";
+      // Optional: Allow no specs - seller can proceed without any
+      // If you want to require at least one spec, uncomment:
+      // const hasSpecs = Object.values(selectedSpecs).some((set) => set.size > 0);
+      // if (!hasSpecs) newErrors.specs = "Please select at least one specification";
     }
 
     if (step === 4) {
       const hasValidVariant = variants.some((v) => v.price && parseFloat(v.price) > 0 && v.stock && parseInt(v.stock) > 0);
-      if (!hasValidVariant && variants.length > 0) newErrors.variants = "Please add price and stock for at least one variant";
+      if (variants.length > 0 && !hasValidVariant) {
+        newErrors.variants = "Please add price and stock for at least one variant";
+      }
     }
 
     setErrors(newErrors);
@@ -464,6 +609,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const selectCategory = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryKey(null);
+    if (errors.category) setErrors((prev) => { const n = { ...prev }; delete n.category; return n; });
   };
 
   const selectSubcategory = (subcategoryKey: string) => {
@@ -471,29 +617,36 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     if (errors.subcategory) setErrors((prev) => { const n = { ...prev }; delete n.subcategory; return n; });
   };
 
-  const toggleSpec = (specKey: string, option: string) => {
+  // UPDATED: Handle spec selection (supports both single and multi-select)
+  const toggleSpec = (specKey: string, option: string, multiple: boolean = false) => {
     setSelectedSpecs((prev) => {
       const newSpecs = { ...prev };
       if (!newSpecs[specKey]) newSpecs[specKey] = new Set();
-      if (newSpecs[specKey].has(option)) {
-        newSpecs[specKey].delete(option);
-        if (newSpecs[specKey].size === 0) delete newSpecs[specKey];
+      
+      if (multiple) {
+        // Multi-select: toggle the option
+        if (newSpecs[specKey].has(option)) {
+          newSpecs[specKey].delete(option);
+          if (newSpecs[specKey].size === 0) delete newSpecs[specKey];
+        } else {
+          newSpecs[specKey].add(option);
+        }
       } else {
-        newSpecs[specKey].add(option);
+        // Single-select: replace with new option
+        newSpecs[specKey] = new Set([option]);
       }
+      
       return newSpecs;
     });
   };
 
-  const addCustomOption = () => {
-    if (!customInputKey || !customInputValue.trim()) return;
-    const value = customInputValue.trim();
+  const addCustomOption = (specKey: string, value: string) => {
     setCustomSpecOptions((prev) => ({
       ...prev,
-      [customInputKey]: [...(prev[customInputKey] || []), value],
+      [specKey]: [...(prev[specKey] || []), value],
     }));
-    toggleSpec(customInputKey, value);
-    setCustomInputKey(null);
+    toggleSpec(specKey, value, false);
+    setCustomInputState({ specKey: null, fieldLabel: "" });
     setCustomInputValue("");
   };
 
@@ -509,18 +662,19 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       [[]]
     );
 
-    if (combinations.length > 50) {
-      showToast("error", `Too many combinations (${combinations.length}). Max 50 allowed.`);
+    if (combinations.length > 100) {
+      showToast("error", `Too many combinations (${combinations.length}). Max 100 allowed.`);
       return;
     }
 
     const newVariants: Variant[] = combinations.map((combo, index) => {
       const variantSpecs: Record<string, string> = {};
       specEntries.forEach(([key, _], idx) => { variantSpecs[key] = combo[idx]; });
+      const baseSku = formData.name?.toUpperCase().replace(/\s+/g, "-").replace(/[^A-Z0-9-]/g, "").slice(0, 15) || "PRODUCT";
       return {
         id: index + 1,
         specs: variantSpecs,
-        sku: `${formData.name?.toUpperCase().replace(/\s+/g, "-").slice(0, 10) || "PRODUCT"}-${Object.values(variantSpecs).join("-").replace(/\s+/g, "").toUpperCase().slice(0, 20)}`,
+        sku: `${baseSku}-${Object.values(variantSpecs).join("-").replace(/\s+/g, "").toUpperCase().slice(0, 30)}`,
         price: "",
         stock: "",
       };
@@ -598,7 +752,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } // Prefer back camera on mobile
+        video: { facingMode: "environment" }
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -628,7 +782,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         const file = new File([blob], `camera-capture-${Date.now()}.jpg`, { type: "image/jpeg" });
         addImageFromCamera(file);
       }
-      // Close camera after capture
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -650,19 +803,18 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     
     console.log(`📤 Uploading ${productImages.length} image(s)...`);
     
-    // Deduplicate images by URL to prevent double uploads
     const uniqueImages = productImages.filter((img, index, self) =>
       index === self.findIndex((t) => t.url === img.url)
     );
     
     if (uniqueImages.length < productImages.length) {
-      console.warn(`️ Removed ${productImages.length - uniqueImages.length} duplicate image(s)`);
+      console.warn(`⚠️ Removed ${productImages.length - uniqueImages.length} duplicate image(s)`);
     }
     
     const uploadedUrls: string[] = [];
     for (const img of uniqueImages) {
       if (img.url.startsWith("data:")) {
-        console.log(` Uploading image ${uploadedUrls.length + 1}/${uniqueImages.length}...`);
+        console.log(`📸 Uploading image ${uploadedUrls.length + 1}/${uniqueImages.length}...`);
         const base64Response = await fetch(img.url);
         const blob = await base64Response.blob();
         const file = new File([blob], `image_${img.id}.webp`, { type: "image/webp" });
@@ -700,9 +852,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         ? Math.min(...variantsWithPrice.filter((v) => v.price > 0).map((v) => v.price))
         : parseFloat(formData.price) || 0;
 
-      // Extract brand from specs for top-level field (bot compatibility)
+      // Extract brand from specs for top-level field
       const brandValue = selectedSpecs.brand ? Array.from(selectedSpecs.brand)[0] : undefined;
-      const extractedBrand = brandValue && brandValue !== "Generic" ? brandValue : undefined;
+      const extractedBrand = brandValue && brandValue !== "Generic" && brandValue !== "Other" ? brandValue : undefined;
 
       // Build filters from selected specs (excluding brand since it's top-level)
       const filters: Record<string, string[]> = {};
@@ -715,12 +867,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
-        // Backward compatibility fields (bot uses these)
         category: selectedCategoryId!,
         categoryName: currentCategory?.name || selectedCategoryId!,
-        subcategory: selectedSubcategoryKey!, // Bot queries this field
-        brand: extractedBrand, // Top-level brand for bot extraction
-        // Hybrid structure fields
+        subcategory: selectedSubcategoryKey!,
+        brand: extractedBrand,
         categoryId: selectedCategoryId!,
         subcategoryId: selectedSubcategoryKey!,
         price: minPrice,
@@ -729,12 +879,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         images: images.length > 0 ? images : undefined,
         status: "active",
         filters: Object.keys(filters).length > 0 ? filters : undefined,
-        variants: variants.length > 0 ? variants.map((v, idx) => ({
+        variants: variants.length > 0 ? variantsWithPrice.map((v, idx) => ({
           id: `variant_${idx + 1}`,
           specs: v.specs,
           sku: v.sku || "",
-          price: parseFloat(v.price) || 0,
-          stock: parseInt(v.stock) || 0,
+          price: v.price,
+          stock: v.stock,
         })) : undefined,
       });
 
@@ -752,7 +902,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     }
   };
 
-  // ── Render Steps ───────────────────────────────────────────────────────────
+  // ── Render Step 1: Basic Info ─────────────────────────────────────────────
 
   const renderStep1 = () => (
     <div className="space-y-4 md:space-y-6 animate-fadeIn">
@@ -760,47 +910,37 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         <div className="md3-input-outlined">
           <input
             type="text"
-            name="name"
-            id="product-name"
             value={formData.name}
-            onChange={handleInputChange}
-            placeholder=" "
-            className="w-full"
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Enter product name"
+            className="w-full px-4 py-3 text-sm bg-transparent outline-none"
           />
-          <label htmlFor="product-name">e.g., iPhone 15 Pro Max</label>
         </div>
       </InputField>
 
-      <InputField label="Description">
+      <InputField label="Description" error={errors.description}>
         <div className="md3-input-outlined">
           <textarea
-            name="description"
-            id="product-description"
             value={formData.description}
-            onChange={handleInputChange}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Describe your product"
             rows={3}
-            placeholder=" "
-            className="w-full resize-none"
+            className="w-full px-4 py-3 text-sm bg-transparent outline-none resize-none"
           />
-          <label htmlFor="product-description">Describe your product...</label>
         </div>
       </InputField>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 gap-4">
         <InputField label="Price (KES)" required error={errors.price}>
           <div className="md3-input-outlined">
             <input
               type="number"
-              name="price"
-              id="product-price"
               value={formData.price}
-              onChange={handleInputChange}
-              placeholder=" "
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              placeholder="0"
               min="0"
-              step="0.01"
-              className="w-full"
+              className="w-full px-4 py-3 text-sm bg-transparent outline-none"
             />
-            <label htmlFor="product-price">0.00</label>
           </div>
         </InputField>
 
@@ -808,78 +948,85 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           <div className="md3-input-outlined">
             <input
               type="number"
-              name="initialStock"
-              id="product-stock"
               value={formData.initialStock}
-              onChange={handleInputChange}
-              placeholder=" "
+              onChange={(e) => setFormData({ ...formData, initialStock: e.target.value })}
+              placeholder="0"
               min="0"
-              className="w-full"
+              className="w-full px-4 py-3 text-sm bg-transparent outline-none"
             />
-            <label htmlFor="product-stock">e.g., 100</label>
           </div>
         </InputField>
       </div>
 
-      <InputField label="Low Stock Alert">
+      <InputField label="Low Stock Alert Threshold">
         <div className="md3-input-outlined">
           <input
             type="number"
-            name="lowStockAlert"
-            id="product-alert"
             value={formData.lowStockAlert}
-            onChange={handleInputChange}
-            placeholder=" "
+            onChange={(e) => setFormData({ ...formData, lowStockAlert: e.target.value })}
+            placeholder="5"
             min="0"
-            className="w-full"
+            className="w-full px-4 py-3 text-sm bg-transparent outline-none"
           />
-          <label htmlFor="product-alert">5</label>
         </div>
+        <p className="text-xs text-[#64748b] mt-1.5 ml-1">You'll be notified when stock falls below this number</p>
       </InputField>
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="space-y-6 animate-fadeIn">
-      <InputField label="Category" required error={errors.category}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {Object.entries(categoryData).map(([catId, cat]) => {
-            const category = cat as Category;
-            return (
-              <SelectableCard
-                key={catId}
-                selected={selectedCategoryId === catId}
-                onClick={() => selectCategory(catId)}
-              >
-                <div className="text-2xl md:text-3xl mb-1 transition-transform duration-200">
-                  {category.icon}
-                </div>
-                <div className="font-bold text-xs md:text-sm text-[#475569]">{category.name}</div>
-              </SelectableCard>
-            );
-          })}
-        </div>
-      </InputField>
+  // ── UPDATED: Render Step 2 with improved category grid (now handles 15 categories) ──
 
-      {selectedCategoryId && currentCategory && (
-        <InputField label="Subcategory" required error={errors.subcategory}>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(currentCategory.subcategories).map(([subKey, sub]) => {
-              const subcategory = sub as Subcategory;
+  const renderStep2 = () => {
+    // Group categories into rows for better display
+    const categoryEntries = Object.entries(categoryData);
+    
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        <InputField label="Category" required error={errors.category}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[50vh] overflow-y-auto p-1">
+            {categoryEntries.map(([catId, cat]) => {
+              const category = cat as Category;
               return (
-                <SpecButton
-                  key={subKey}
-                  label={subcategory.name}
-                  selected={selectedSubcategoryKey === subKey}
-                  onClick={() => selectSubcategory(subKey)}
-                />
+                <SelectableCard
+                  key={catId}
+                  selected={selectedCategoryId === catId}
+                  onClick={() => selectCategory(catId)}
+                  className="p-3"
+                >
+                  <div className="text-2xl md:text-3xl mb-1 transition-transform duration-200">
+                    {category.icon}
+                  </div>
+                  <div className="font-bold text-xs text-[#475569] line-clamp-2">
+                    {category.name}
+                  </div>
+                </SelectableCard>
               );
             })}
           </div>
         </InputField>
-      )}
-    </div>
-  );
+
+        {selectedCategoryId && currentCategory && (
+          <InputField label="Subcategory" required error={errors.subcategory}>
+            <div className="flex flex-wrap gap-2 max-h-[40vh] overflow-y-auto p-1">
+              {Object.entries(currentCategory.subcategories).map(([subKey, sub]) => {
+                const subcategory = sub as Subcategory;
+                return (
+                  <SpecButton
+                    key={subKey}
+                    label={subcategory.name}
+                    selected={selectedSubcategoryKey === subKey}
+                    onClick={() => selectSubcategory(subKey)}
+                  />
+                );
+              })}
+            </div>
+          </InputField>
+        )}
+      </div>
+    );
+  };
+
+  // ── UPDATED: Render Step 3 with improved spec rendering (supports large option lists) ──
 
   const renderStep3 = () => {
     if (!currentSubcategory) {
@@ -892,9 +1039,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     }
 
     const specs = currentSubcategory.specs;
+    const specEntries = Object.entries(specs);
+
+    // Check if there are too many options for any spec (use dropdown for > 15 options)
+    const shouldUseDropdown = (options: string[]) => options.length > 15;
 
     return (
-      <div className="space-y-6 animate-fadeIn">
+      <div className="space-y-6 animate-fadeIn max-h-[55vh] overflow-y-auto pr-2">
         {errors.specs && (
           <div className="p-3 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] text-sm font-semibold flex items-center gap-2">
             <i className="fas fa-exclamation-circle" />
@@ -902,11 +1053,22 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </div>
         )}
 
-        {Object.entries(specs).map(([specKey, spec]) => {
+        {specEntries.length === 0 && (
+          <div className="text-center py-12 text-[#64748b]">
+            <i className="fas fa-cogs text-4xl mb-3 opacity-50" />
+            <p>No specifications available for this subcategory</p>
+            <p className="text-xs mt-1">You can still add variants directly in the next step</p>
+          </div>
+        )}
+
+        {specEntries.map(([specKey, spec]) => {
           const specField = spec as SpecField;
-          const specOptions = specField.options;
+          const specOptions = specField.options || [];
           const customOptions = customSpecOptions[specKey] || [];
           const allOptions = [...specOptions, ...customOptions];
+          const isMultiple = specField.multiple === true;
+          const useDropdown = shouldUseDropdown(allOptions);
+          const selectedValues = selectedSpecs[specKey] || new Set<string>();
 
           return (
             <div key={specKey} className="bg-white rounded-xl p-4 md:p-5 border border-[#e2e8f0]">
@@ -915,69 +1077,65 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <i className={`fas ${specField.icon || "fa-tag"}`} />
                 </div>
                 <span className="font-bold text-sm text-[#475569]">{specField.label}</span>
-                {specField.multiple && (
+                {isMultiple && (
                   <span className="text-[10px] bg-[#e2e8f0] px-2 py-0.5 rounded-full text-[#64748b]">
                     Multi-select
                   </span>
                 )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {allOptions.map((option) => (
-                  <SpecButton
-                    key={option}
-                    label={option}
-                    selected={selectedSpecs[specKey]?.has(option) || false}
-                    onClick={() => toggleSpec(specKey, option)}
-                  />
-                ))}
-                <SpecButton
-                  label="Add Custom"
-                  selected={false}
-                  onClick={() => { setCustomInputKey(specKey); setCustomInputValue(""); }}
-                  isCustom
-                />
+                {specField.allowCustom && (
+                  <span className="text-[10px] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-full text-[#8b5cf6]">
+                    Custom allowed
+                  </span>
+                )}
               </div>
 
-              {customInputKey === specKey && (
-                <div className="flex gap-2 mt-3 animate-fadeIn">
-                  <input
-                    type="text"
-                    value={customInputValue}
-                    onChange={(e) => setCustomInputValue(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addCustomOption()}
-                    placeholder="Enter custom value..."
-                    className="flex-1 px-3 py-2 rounded-lg border-2 border-[#8b5cf6] text-sm focus:outline-none"
-                    autoFocus
-                  />
-                  <button
-                    onClick={addCustomOption}
-                    className="px-3 py-2 bg-[#8b5cf6] text-white rounded-lg hover:bg-[#7c3aed] transition-colors"
-                  >
-                    <i className="fas fa-check" />
-                  </button>
-                  <button
-                    onClick={() => setCustomInputKey(null)}
-                    className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
-                  >
-                    <i className="fas fa-times" />
-                  </button>
+              {useDropdown ? (
+                // Use dropdown for specs with many options
+                <MultiSelectDropdown
+                  options={allOptions}
+                  selectedValues={selectedValues}
+                  onToggle={(option) => toggleSpec(specKey, option, isMultiple)}
+                  label={specField.label}
+                />
+              ) : (
+                // Use buttons for specs with few options
+                <div className="flex flex-wrap gap-2">
+                  {allOptions.map((option) => (
+                    <SpecButton
+                      key={option}
+                      label={option}
+                      selected={selectedValues.has(option)}
+                      onClick={() => toggleSpec(specKey, option, isMultiple)}
+                      multiple={isMultiple}
+                    />
+                  ))}
+                  {specField.allowCustom && (
+                    <SpecButton
+                      label="+ Add Custom"
+                      selected={false}
+                      onClick={() => setCustomInputState({ specKey, fieldLabel: specField.label })}
+                      isCustom
+                    />
+                  )}
                 </div>
+              )}
+
+              {/* Custom input for this spec */}
+              {customInputState.specKey === specKey && (
+                <CustomSpecInput
+                  onAdd={(value) => addCustomOption(specKey, value)}
+                  onCancel={() => setCustomInputState({ specKey: null, fieldLabel: "" })}
+                  placeholder={`Enter custom ${specField.label.toLowerCase()}...`}
+                />
               )}
             </div>
           );
         })}
-
-        {Object.keys(specs).length === 0 && (
-          <div className="text-center py-12 text-[#64748b]">
-            <i className="fas fa-cogs text-4xl mb-3 opacity-50" />
-            <p>No specifications available for this subcategory</p>
-            <p className="text-xs mt-1">You can still add variants directly in the next step</p>
-          </div>
-        )}
       </div>
     );
   };
 
+  // Step 4 and 5 remain largely the same, with minor improvements
   const renderStep4 = () => (
     <div className="space-y-4 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -996,7 +1154,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           <p className="text-xs mt-1">Select specifications in the previous step to generate variants</p>
         </div>
       ) : (
-        <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
           {variants.map((variant, idx) => (
             <div
               key={variant.id}
@@ -1051,7 +1209,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   const renderStep5 = () => (
     <div className="space-y-4 animate-fadeIn">
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[55vh] overflow-y-auto p-1">
         {productImages.map((img, idx) => (
           <ImageCard
             key={img.id}
