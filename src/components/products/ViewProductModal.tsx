@@ -185,12 +185,12 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   // ─── Tab Content Renderers ────────────────────────────────────────────────
 
   const renderOverview = () => (
-    <div className="space-y-5 animate-fadeIn">
+    <div className="space-y-4 animate-fadeIn">
       {/* Image Gallery */}
       {allImages.length > 0 && (
         <div className="space-y-3">
           <div className="relative group">
-            <div className="aspect-video rounded-2xl overflow-hidden bg-surface-variant cursor-pointer" onClick={() => setLightboxOpen(true)}>
+            <div className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 cursor-pointer shadow-lg" onClick={() => setLightboxOpen(true)}>
               {!mainImageError && currentImage ? (
                 <img
                   src={currentImage}
@@ -203,14 +203,14 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   <span className="text-6xl opacity-30 select-none">{getCategoryEmoji(product.category || "other")}</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent group-hover:from-black/30 transition-all duration-300 flex items-center justify-center">
                 <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
               </div>
             </div>
             
             {/* Image Counter */}
             {allImages.length > 1 && (
-              <div className="absolute bottom-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-xs text-white">
+              <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-semibold rounded-full shadow-lg backdrop-blur-sm">
                 {selectedImage + 1} / {allImages.length}
               </div>
             )}
@@ -228,7 +228,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                   }}
                   className={`
                     flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all
-                    ${selectedImage === idx ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}
+                    ${selectedImage === idx ? "border-primary shadow-lg scale-105" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"}
                   `}
                 >
                   {!thumbnailErrors.has(idx) ? (
@@ -241,8 +241,8 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-surface-variant flex items-center justify-center">
-                      <i className="fas fa-image text-on-surface-variant/30" />
+                    <div className="w-full h-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                      <i className="fas fa-image text-primary/30" />
                     </div>
                   )}
                 </button>
@@ -252,73 +252,124 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
         </div>
       )}
 
-      {/* Product Name */}
-      <div>
-        <h2 className="text-xl font-bold text-on-surface">{product.name}</h2>
-        {product.description && (
-          <p className="text-sm text-on-surface-variant mt-2">{product.description}</p>
+      {/* Product Header Card */}
+      <div className="bg-gradient-to-br from-primary/10 via-surface to-secondary/10 rounded-2xl p-5 space-y-3 shadow-sm border border-outline-variant/20">
+        {/* Category Badge */}
+        {product.categoryName && (
+          <div className="flex items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface rounded-full shadow-sm border border-outline-variant/30">
+              <span className="text-lg">{getCategoryEmoji(product.category || "other")}</span>
+              <span className="text-xs font-semibold text-on-surface-variant">{product.categoryName}</span>
+            </div>
+          </div>
         )}
-      </div>
 
-      {/* Category */}
-      {product.categoryName && (
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{getCategoryEmoji(product.category || "other")}</span>
-          <span className="text-sm text-on-surface-variant">{product.categoryName}</span>
-        </div>
-      )}
+        {/* Product Name */}
+        <h2 className="text-2xl font-bold text-on-surface text-center">{product.name}</h2>
+        
+        {/* Description */}
+        {product.description && (
+          <p className="text-sm text-on-surface-variant text-center leading-relaxed">{product.description}</p>
+        )}
 
-      {/* Price */}
-      <div className="text-2xl font-bold text-primary">{formatCurrency(product.price)}</div>
-
-      {/* Stock & Status */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-surface-variant/20 rounded-xl p-3">
-          <div className="text-xs text-on-surface-variant mb-1">Stock</div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${stockConfig.dot}`} />
-            <span className="text-lg font-bold text-on-surface">{product.stock || 0}</span>
+        {/* Price */}
+        <div className="text-center">
+          <div className="inline-flex items-baseline gap-2">
+            <span className="text-3xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              {formatCurrency(product.price)}
+            </span>
           </div>
         </div>
-        <div className="bg-surface-variant/20 rounded-xl p-3">
-          <div className="text-xs text-on-surface-variant mb-1">Status</div>
-          <span className={`text-sm font-semibold ${product.status === "active" ? "text-success" : "text-error"}`}>
+      </div>
+
+      {/* Stock & Status Cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Stock Card */}
+        <div className={`bg-gradient-to-br ${stockConfig.dot === 'bg-success' ? 'from-success/10 to-success/5' : stockConfig.dot === 'bg-warning' ? 'from-warning/10 to-warning/5' : stockConfig.dot === 'bg-error' ? 'from-error/10 to-error/5' : 'from-info/10 to-info/5'} rounded-2xl p-4 border border-outline-variant/20 shadow-sm`}>
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-8 h-8 rounded-full ${stockConfig.dot} flex items-center justify-center shadow-sm`}>
+              <i className="fas fa-box text-white text-xs" />
+            </div>
+            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Stock</span>
+          </div>
+          <div className="text-2xl font-black text-on-surface">{product.stock || 0}</div>
+          <div className="text-xs font-semibold mt-1" style={{ color: stockConfig.color }}>{stockConfig.text}</div>
+        </div>
+
+        {/* Status Card */}
+        <div className={`bg-gradient-to-br ${product.status === "active" ? 'from-success/10 to-success/5' : 'from-error/10 to-error/5'} rounded-2xl p-4 border border-outline-variant/20 shadow-sm`}>
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-8 h-8 rounded-full ${product.status === "active" ? 'bg-success' : 'bg-error'} flex items-center justify-center shadow-sm`}>
+              <i className={`fas ${product.status === "active" ? 'fa-check' : 'fa-times'} text-white text-xs`} />
+            </div>
+            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Status</span>
+          </div>
+          <div className={`text-lg font-black ${product.status === "active" ? 'text-success' : 'text-error'}`}>
             {product.status === "active" ? "Active" : "Inactive"}
-          </span>
+          </div>
+          <div className="text-xs font-semibold text-on-surface-variant/60 mt-1">
+            {product.status === "active" ? "Available for sale" : "Not selling"}
+          </div>
         </div>
       </div>
 
-      {/* Variants */}
+      {/* Variants Section */}
       {product.variants && product.variants.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-semibold text-on-surface">Variants</div>
-          {product.variants.map((variant, idx) => (
-            <div key={idx} className="bg-surface-variant/20 rounded-xl p-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-on-surface">{Object.values(variant.specs).join(" / ")}</span>
-                <span className="text-sm font-bold text-primary">{formatCurrency(variant.price)}</span>
-              </div>
-              <div className="text-xs text-on-surface-variant mt-1">{variant.stock} in stock</div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+              <i className="fas fa-layer-group text-primary text-xs" />
             </div>
-          ))}
+            <span className="text-sm font-bold text-on-surface">Variants ({product.variants.length})</span>
+          </div>
+          
+          <div className="space-y-2">
+            {product.variants.map((variant, idx) => (
+              <div key={idx} className="bg-gradient-to-r from-surface to-surface-variant/10 rounded-xl p-4 border border-outline-variant/20 hover:border-primary/30 transition-all hover:shadow-sm group">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <span className="text-xs font-bold text-primary">{idx + 1}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-on-surface">{Object.values(variant.specs).join(" / ")}</span>
+                  </div>
+                  <span className="text-sm font-black text-primary">{formatCurrency(variant.price)}</span>
+                </div>
+                <div className="flex items-center gap-2 pl-10">
+                  <div className={`w-2 h-2 rounded-full ${variant.stock > 0 ? 'bg-success' : 'bg-error'}`} />
+                  <span className="text-xs font-medium text-on-surface-variant">
+                    {variant.stock > 0 ? `${variant.stock} in stock` : 'Out of stock'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Filters/Options */}
+      {/* Filters/Options Section */}
       {product.filters && Object.keys(product.filters).length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-semibold text-on-surface">Options</div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(product.filters).map(([key, values]) => {
-              if (Array.isArray(values) && values.length > 0) {
-                return values.map((value, idx) => (
-                  <span key={`${key}-${idx}`} className="px-3 py-1 bg-surface-variant/30 rounded-full text-xs text-on-surface-variant">
-                    {value}
-                  </span>
-                ));
-              }
-              return null;
-            })}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-6 h-6 rounded-lg bg-secondary/10 flex items-center justify-center">
+              <i className="fas fa-tags text-secondary text-xs" />
+            </div>
+            <span className="text-sm font-bold text-on-surface">Options</span>
+          </div>
+          
+          <div className="bg-surface-variant/10 rounded-xl p-4 border border-outline-variant/20">
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(product.filters).map(([key, values]) => {
+                if (Array.isArray(values) && values.length > 0) {
+                  return values.map((value, idx) => (
+                    <span key={`${key}-${idx}`} className="px-4 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-full text-xs font-semibold text-on-surface-variant hover:from-primary/20 hover:to-secondary/20 transition-all cursor-default shadow-sm">
+                      {value}
+                    </span>
+                  ));
+                }
+                return null;
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -326,41 +377,76 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderDetails = () => (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Product Info */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-on-surface">Product Information</h3>
+    <div className="space-y-4 animate-fadeIn">
+      {/* Product Information Card */}
+      <div className="bg-gradient-to-br from-primary/10 via-surface to-secondary/10 rounded-2xl p-5 border border-outline-variant/20 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+            <i className="fas fa-info text-white text-sm" />
+          </div>
+          <h3 className="text-lg font-bold text-on-surface">Product Information</h3>
+        </div>
         
-        <div className="space-y-3">
-          <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-            <span className="text-sm text-on-surface-variant">Category</span>
-            <span className="text-sm font-medium text-on-surface">{product.categoryName || product.category || "N/A"}</span>
+        <div className="space-y-4">
+          {/* Category */}
+          <div className="flex items-center justify-between p-3 bg-surface rounded-xl border border-outline-variant/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                <span className="text-lg">{getCategoryEmoji(product.category || "other")}</span>
+              </div>
+              <span className="text-sm font-semibold text-on-surface-variant">Category</span>
+            </div>
+            <span className="text-sm font-bold text-on-surface">{product.categoryName || product.category || "N/A"}</span>
           </div>
           
+          {/* Brand */}
           {product.brand && (
-            <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-              <span className="text-sm text-on-surface-variant">Brand</span>
-              <span className="text-sm font-medium text-on-surface">{product.brand}</span>
+            <div className="flex items-center justify-between p-3 bg-surface rounded-xl border border-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
+                  <i className="fas fa-copyright text-info text-sm" />
+                </div>
+                <span className="text-sm font-semibold text-on-surface-variant">Brand</span>
+              </div>
+              <span className="text-sm font-bold text-on-surface">{product.brand}</span>
             </div>
           )}
           
-          <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-            <span className="text-sm text-on-surface-variant">Created</span>
-            <span className="text-sm font-medium text-on-surface">
+          {/* Created Date */}
+          <div className="flex items-center justify-between p-3 bg-surface rounded-xl border border-outline-variant/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+                <i className="fas fa-calendar-alt text-warning text-sm" />
+              </div>
+              <span className="text-sm font-semibold text-on-surface-variant">Created</span>
+            </div>
+            <span className="text-sm font-bold text-on-surface">
               {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : "N/A"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Pricing Details */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-on-surface">Pricing</h3>
+      {/* Pricing Card */}
+      <div className="bg-gradient-to-br from-success/10 via-surface to-success/5 rounded-2xl p-5 border border-outline-variant/20 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-success flex items-center justify-center shadow-sm">
+            <i className="fas fa-tag text-white text-sm" />
+          </div>
+          <h3 className="text-lg font-bold text-on-surface">Pricing</h3>
+        </div>
         
         <div className="space-y-3">
-          <div className="flex justify-between items-center py-3 border-b border-outline-variant/50">
-            <span className="text-sm text-on-surface-variant">Price</span>
-            <span className="text-sm font-semibold text-on-surface">{formatCurrency(product.price)}</span>
+          <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <i className="fas fa-money-bill-wave text-primary text-sm" />
+              </div>
+              <span className="text-sm font-semibold text-on-surface-variant">Price</span>
+            </div>
+            <span className="text-xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              {formatCurrency(product.price)}
+            </span>
           </div>
         </div>
       </div>
@@ -368,38 +454,78 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
   );
 
   const renderInventory = () => (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Stock Overview */}
-      <div className="bg-surface-variant/20 rounded-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-on-surface">Stock Level</h3>
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${stockConfig.bg}`}>
+    <div className="space-y-4 animate-fadeIn">
+      {/* Stock Overview Card */}
+      <div className={`bg-gradient-to-br ${stockConfig.dot === 'bg-success' ? 'from-success/15 via-success/5 to-success/10' : stockConfig.dot === 'bg-warning' ? 'from-warning/15 via-warning/5 to-warning/10' : stockConfig.dot === 'bg-error' ? 'from-error/15 via-error/5 to-error/10' : 'from-info/15 via-info/5 to-info/10'} rounded-2xl p-6 border border-outline-variant/20 shadow-sm`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl ${stockConfig.dot} flex items-center justify-center shadow-lg`}>
+              <i className="fas fa-boxes text-white text-lg" />
+            </div>
+            <h3 className="text-lg font-bold text-on-surface">Stock Level</h3>
+          </div>
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${stockConfig.bg} shadow-sm border border-outline-variant/20`}>
             <div className={`w-2 h-2 rounded-full ${stockConfig.dot}`} />
-            <span className="text-xs font-semibold" style={{ color: stockConfig.color }}>{stockConfig.text}</span>
+            <span className="text-xs font-bold" style={{ color: stockConfig.color }}>{stockConfig.text}</span>
           </div>
         </div>
         
-        <div className="text-center">
-          <span className="text-5xl font-bold text-on-surface">{product.stock || 0}</span>
-          <div className="text-sm text-on-surface-variant mt-1">units available</div>
+        <div className="text-center py-4">
+          <div className="inline-flex items-baseline gap-1">
+            <span className="text-6xl font-black text-on-surface">{product.stock ?? 0}</span>
+            <span className="text-sm font-semibold text-on-surface-variant ml-1">units</span>
+          </div>
+          <div className="text-sm text-on-surface-variant mt-2 font-medium">available in inventory</div>
+        </div>
+
+        {/* Stock Level Indicator */}
+        <div className="mt-4 pt-4 border-t border-outline-variant/20">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-on-surface-variant">Stock Level</span>
+            <span className="text-xs font-bold" style={{ color: stockConfig.color }}>{stockConfig.text}</span>
+          </div>
+          <div className="w-full h-3 bg-surface rounded-full overflow-hidden shadow-inner">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${stockConfig.dot}`} 
+              style={{ 
+                width: (product.stock ?? 0) === 0 ? '0%' : (product.stock ?? 0) <= 5 ? '25%' : (product.stock ?? 0) <= 20 ? '50%' : '100%' 
+              }} 
+            />
+          </div>
         </div>
       </div>
 
 
-      {/* Variants */}
+      {/* Variants Section */}
       {product.variants && product.variants.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-on-surface">Product Variants</h3>
+        <div className="bg-gradient-to-br from-primary/10 via-surface to-secondary/10 rounded-2xl p-5 border border-outline-variant/20 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
+              <i className="fas fa-layer-group text-white text-lg" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-on-surface">Product Variants</h3>
+              <p className="text-xs text-on-surface-variant font-medium">{product.variants.length} variant{product.variants.length !== 1 ? 's' : ''}</p>
+            </div>
+          </div>
+          
           <div className="space-y-2">
             {product.variants.map((variant, idx) => (
-              <div key={idx} className="bg-surface-variant/20 rounded-xl p-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-on-surface">{Object.values(variant.specs).join(" / ")}</span>
-                  <span className="text-sm font-semibold text-primary">{formatCurrency(variant.price)}</span>
+              <div key={idx} className="bg-surface rounded-xl p-4 border border-outline-variant/20 hover:border-primary/30 transition-all hover:shadow-sm group">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <span className="text-xs font-bold text-primary">{idx + 1}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-on-surface">{Object.values(variant.specs).join(" / ")}</span>
+                  </div>
+                  <span className="text-sm font-black text-primary">{formatCurrency(variant.price)}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-                  <i className="fas fa-box" />
-                  <span>{variant.stock} in stock</span>
+                <div className="flex items-center gap-2 pl-11">
+                  <div className={`w-2 h-2 rounded-full ${variant.stock > 0 ? 'bg-success' : 'bg-error'}`} />
+                  <span className="text-xs font-medium text-on-surface-variant">
+                    {variant.stock > 0 ? `${variant.stock} in stock` : 'Out of stock'}
+                  </span>
                 </div>
               </div>
             ))}
@@ -411,27 +537,51 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
   const renderSpecs = () => {
     // Build specs from filters or product fields
-    const specs: { label: string; value: string }[] = [];
+    const specs: { label: string; value: string; icon: string; color: string }[] = [];
     
-    if (product.brand) specs.push({ label: "Brand", value: product.brand });
-    if (product.categoryName) specs.push({ label: "Category", value: product.categoryName });
-    if (product.subcategory) specs.push({ label: "Subcategory", value: product.subcategory });
+    if (product.brand) specs.push({ label: "Brand", value: product.brand, icon: "fa-copyright", color: "text-info" });
+    if (product.categoryName) specs.push({ label: "Category", value: product.categoryName, icon: "fa-folder", color: "text-primary" });
+    if (product.subcategory) specs.push({ label: "Subcategory", value: product.subcategory, icon: "fa-tag", color: "text-secondary" });
+    
+    const specColors = ['from-primary/10 to-primary/5', 'from-secondary/10 to-secondary/5', 'from-info/10 to-info/5', 'from-warning/10 to-warning/5', 'from-success/10 to-success/5'];
     
     return (
-      <div className="space-y-6 animate-fadeIn">
+      <div className="space-y-4 animate-fadeIn">
         {specs.length > 0 ? (
-          <div className="space-y-3">
-            {specs.map((spec, idx) => (
-              <div key={idx} className="bg-surface-variant/20 rounded-xl p-4">
-                <div className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">{spec.label}</div>
-                <div className="text-sm font-medium text-on-surface">{spec.value}</div>
+          <div className="bg-gradient-to-br from-surface to-surface-variant/10 rounded-2xl p-5 border border-outline-variant/20 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+                <i className="fas fa-cogs text-white text-lg" />
               </div>
-            ))}
+              <div>
+                <h3 className="text-lg font-bold text-on-surface">Specifications</h3>
+                <p className="text-xs text-on-surface-variant font-medium">{specs.length} specification{specs.length !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {specs.map((spec, idx) => (
+                <div key={idx} className={`bg-gradient-to-r ${specColors[idx % specColors.length]} rounded-xl p-4 border border-outline-variant/20`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center shadow-sm">
+                        <i className={`fas ${spec.icon} ${spec.color} text-sm`} />
+                      </div>
+                      <span className="text-sm font-semibold text-on-surface-variant">{spec.label}</span>
+                    </div>
+                    <span className="text-sm font-bold text-on-surface">{spec.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="text-center py-12 text-on-surface-variant">
-            <i className="fas fa-info-circle text-4xl mb-3 opacity-50" />
-            <p className="text-sm">No specifications available for this product</p>
+          <div className="bg-gradient-to-br from-surface to-surface-variant/10 rounded-2xl p-12 border border-outline-variant/20 text-center">
+            <div className="w-16 h-16 rounded-full bg-surface-variant/30 flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-info-circle text-3xl text-on-surface-variant/50" />
+            </div>
+            <p className="text-sm font-semibold text-on-surface-variant">No specifications available</p>
+            <p className="text-xs text-on-surface-variant/60 mt-1">Add product details to see them here</p>
           </div>
         )}
       </div>
