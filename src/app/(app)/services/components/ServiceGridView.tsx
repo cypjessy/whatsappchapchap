@@ -207,6 +207,8 @@ function ServiceCard({
               src={service.imageUrl || service.portfolioImages![0]}
               alt={service.name}
               className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
               onError={() => setImageError(true)}
             />
           ) : (

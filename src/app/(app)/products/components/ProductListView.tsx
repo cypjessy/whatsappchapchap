@@ -391,6 +391,7 @@ const ProductRow = memo(({
                     onLoad={handleImageLoad}
                     onError={handleImageError}
                     loading="lazy"
+                    decoding="async"
                   />
                 </>
               ) : (
