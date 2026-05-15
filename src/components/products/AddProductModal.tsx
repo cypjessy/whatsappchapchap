@@ -856,10 +856,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const brandValue = selectedSpecs.brand ? Array.from(selectedSpecs.brand)[0] : undefined;
       const extractedBrand = brandValue && brandValue !== "Generic" && brandValue !== "Other" ? brandValue : undefined;
 
-      // Build filters from selected specs (excluding brand since it's top-level)
+      // Extract type from specs for top-level field (for bot navigation)
+      const typeValue = selectedSpecs.type ? Array.from(selectedSpecs.type)[0] : undefined;
+
+      // Build filters from selected specs (excluding brand and type since they're top-level)
       const filters: Record<string, string[]> = {};
       Object.entries(selectedSpecs).forEach(([key, set]) => {
-        if (key !== 'brand' && set.size > 0) {
+        if (key !== 'brand' && key !== 'type' && set.size > 0) {
           filters[key] = Array.from(set);
         }
       });
@@ -870,6 +873,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         category: selectedCategoryId!,
         categoryName: currentCategory?.name || selectedCategoryId!,
         subcategory: selectedSubcategoryKey!,
+        type: typeValue,  // Save type for bot navigation
         brand: extractedBrand,
         categoryId: selectedCategoryId!,
         subcategoryId: selectedSubcategoryKey!,

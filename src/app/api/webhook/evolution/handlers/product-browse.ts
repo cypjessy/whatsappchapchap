@@ -171,8 +171,8 @@ export async function handleProductBrowseInput(
       await handleCategorySelection(tenantId, phone, message, selections, deps);
     } else if (currentStep === 'subcategory_selection') {
       await handleSubcategorySelection(tenantId, phone, message, flowState, deps);
-    } else if (currentStep === 'brand_selection') {
-      await handleBrandSelection(tenantId, phone, message, flowState, deps);
+    } else if (currentStep === 'type_selection') {
+      await handleTypeSelection(tenantId, phone, message, flowState, deps);
     } else if (currentStep === 'product_pagination') {
       await handleProductPagination(tenantId, phone, message, flowState, deps);
     }
@@ -317,21 +317,38 @@ async function handleSubcategorySelection(
     deps.debugLog("[ProductBrowse] Selected subcategory:", selectedSubcategory);
   }
   
-  const brands = (categoryBrands || []).filter((b: string) => 
-    b && b.toLowerCase() !== 'null' && b.toLowerCase() !== 'unknown'
-  );
+  // Query unique types from products in this subcategory
+  const productsSnap = await adminDb
+    .collection("products")
+    .where("tenantId", "==", tenantId)
+    .where("categoryId", "==", categoryId)
+    .where("subcategory", "==", selectedSubcategory)
+    .where("status", "==", "active")
+    .get();
+  
+  const uniqueTypes = new Set<string>();
+  productsSnap.docs.forEach((doc: any) => {
+    const productData = doc.data();
+    if (productData.type && productData.type.trim() !== '' && 
+        productData.type.toLowerCase() !== 'null' && 
+        productData.type.toLowerCase() !== 'unknown') {
+      uniqueTypes.add(productData.type);
+    }
+  });
+  
+  const types = Array.from(uniqueTypes).sort();
   
   if (deps.debugLog) {
-    deps.debugLog(`[ProductBrowse] Brands for subcategory "${selectedSubcategory}":`, brands);
+    deps.debugLog(`[ProductBrowse] Types for subcategory "${selectedSubcategory}":`, types);
   }
   
-  if (brands.length > 0) {
-    // Show brands
-    const brandList = brands
-      .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
+  if (types.length > 0) {
+    // Show types
+    const typeList = types
+      .map((type: string, idx: number) => `${idx + 1}️⃣ ${type}`)
       .join('\n');
     
-    const response = `🏷️ *${selectedSubcategory}* - Choose a brand\n\n${brandList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
+    const response = `🏷️ *${selectedSubcategory}* - Choose a type\n\n${typeList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
     
@@ -344,17 +361,17 @@ async function handleSubcategorySelection(
         flowState: {
           isActive: true,
           flowName: 'product_browse',
-          currentStep: 'brand_selection',
+          currentStep: 'type_selection',
           selections: {
             ...selections,
             subcategory: selectedSubcategory,
-            availableBrands: brands,
+            availableTypes: types,
           },
           lastActivity: new Date().toISOString(),
         }
       }, { merge: true });
   } else {
-    // No brands, show products directly
+    // No types, show products directly
     await showProductsForSelection(tenantId, phone, {
       ...selections,
       subcategory: selectedSubcategory,
@@ -365,7 +382,10 @@ async function handleSubcategorySelection(
 /**
  * Handle brand selection
  */
-async function handleBrandSelection(
+/**
+ * Handle type selection
+ */
+async function handleTypeSelection(
   tenantId: string,
   phone: string,
   message: string,
@@ -375,10 +395,10 @@ async function handleBrandSelection(
   const adminDb = getDb();
   const { selections } = flowState;
   const num = parseInt(message.trim());
-  const availableBrands = selections.availableBrands || [];
+  const availableTypes = selections.availableTypes || [];
   const trimmed = message.trim().toLowerCase();
   
-  if (isNaN(num) || num < 1 || num > availableBrands.length) {
+  if (isNaN(num) || num < 1 || num > availableTypes.length) {
     // Check for navigation commands
     if (trimmed === 'categories' || num === 3) {
       await deps.stopTyping(tenantId, phone);
@@ -416,14 +436,14 @@ async function handleBrandSelection(
     return;
   }
   
-  const selectedBrand = availableBrands[num - 1];
+  const selectedType = availableTypes[num - 1];
   if (deps.debugLog) {
-    deps.debugLog("[ProductBrowse] Selected brand:", selectedBrand);
+    deps.debugLog("[ProductBrowse] Selected type:", selectedType);
   }
   
   await showProductsForSelection(tenantId, phone, {
     ...selections,
-    brand: selectedBrand,
+    type: selectedType,
   }, deps);
 }
 
@@ -446,14 +466,17 @@ async function handleProductPagination(
     await showNextProductPage(tenantId, phone, selections, deps);
   } else if (trimmed === 'back' || num === '2') {
     // Navigate back based on current context
-    if (selections.brand) {
-      await handleBrandOrProductSelection(tenantId, phone, {
-        id: selections.categoryId,
-        categorySlug: selections.categorySlug,
-        name: selections.categoryName,
-        brands: selections.categoryBrands || [],
-        subcategories: selections.categorySubcategories || [],
-      }, deps);
+    if (selections.type) {
+      // Go back to type selection
+      const typeList = (selections.availableTypes || [])
+        .map((type: string, idx: number) => `${idx + 1}️⃣ ${type}`)
+        .join('\n');
+      const response = `🏷️ *${selections.subcategory}* - Choose a type\n\n${typeList}\n\n2️⃣ - Back to subcategories\n3️⃣ - View Categories\n4️⃣ - Main menu`;
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(tenantId, phone, response);
+      await adminDb.collection("tenants").doc(tenantId)
+        .collection("conversations").doc(phone)
+        .set({ flowState: { ...flowState, currentStep: 'type_selection', lastActivity: new Date().toISOString() } }, { merge: true });
     } else if (selections.subcategory) {
       const subcategoryList = (selections.categorySubcategories || [])
         .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
@@ -551,7 +574,7 @@ async function handleBrandOrProductSelection(
 }
 
 /**
- * Show products for current selection (category/subcategory/brand)
+ * Show products for current selection (category/subcategory/type)
  */
 async function showProductsForSelection(
   tenantId: string,
@@ -568,7 +591,7 @@ async function showProductsForSelection(
       categoryId: selections.categoryId,
       categorySlug: selections.categorySlug,
       subcategory: selections.subcategory,
-      brand: selections.brand,
+      type: selections.type,
     }));
   }
   
@@ -602,12 +625,11 @@ async function showProductsForSelection(
     });
   }
   
-  // Filter by brand if selected
-  if (selections.brand) {
+  // Filter by type if selected
+  if (selections.type) {
     products = products.filter((p: any) => {
-      const matchesBrand = p.brand === selections.brand || 
-                          p.filters?.brand?.includes(selections.brand);
-      return matchesBrand;
+      const matchesType = p.type === selections.type;
+      return matchesType;
     });
   }
   
@@ -620,7 +642,7 @@ async function showProductsForSelection(
   const productsToShow = products.slice(0, 5);
   const totalProducts = products.length;
   
-  let headerMessage = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.brand ? ' → ' + selections.brand : ''}*\n\n`;
+  let headerMessage = `🛍️ *${selections.categoryName}${selections.subcategory ? ' → ' + selections.subcategory : ''}${selections.type ? ' → ' + selections.type : ''}*\n\n`;
   headerMessage += `Showing ${productsToShow.length} of ${totalProducts} products:\n\n`;
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, headerMessage);

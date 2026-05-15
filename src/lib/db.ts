@@ -294,6 +294,7 @@ export interface Product {
   categoryId?: string; // Reference to productCategories collection
   subcategory?: string | null; // Subcategory key for bot compatibility (e.g., "smartphones", "dresses")
   subcategoryId?: string | null; // Subcategory within the main category
+  type?: string | null; // Product type for bot navigation (e.g., "T-Shirt", "Smartphone")
   brandId?: string | null; // Reference to brand within category
   
   imageUrl?: string;
