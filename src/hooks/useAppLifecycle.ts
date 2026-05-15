@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
+import { getAuth } from 'firebase/auth';
 
 /**
  * Hook to handle app lifecycle events in Capacitor
@@ -45,7 +46,7 @@ export function useAppLifecycle() {
       
       // Native listener: Fires when app state changes (foreground/background)
       // This is the MOST RELIABLE listener - works even after long idle
-      App.addListener('appStateChange', ({ isActive }) => {
+      App.addListener('appStateChange', async ({ isActive }) => {
         console.log('[AppLifecycle] appStateChange: isActive =', isActive);
         
         // Always update timestamp - this is critical for detecting idle state
@@ -54,6 +55,19 @@ export function useAppLifecycle() {
         
         if (isActive) {
           console.log('[AppLifecycle] ✅ App resumed - waking up all listeners');
+          
+          // FIX: Refresh Firebase token on app resume to prevent 401 errors
+          try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (user) {
+              await user.getIdToken(true); // Force token refresh
+              console.log('[AppLifecycle] ✅ Firebase token refreshed on app resume');
+            }
+          } catch (error) {
+            console.error('[AppLifecycle] ❌ Failed to refresh Firebase token:', error);
+          }
+          
           // Force wake up all web event listeners
           window.dispatchEvent(new Event('focus'));
           window.dispatchEvent(new Event('pageshow'));

@@ -44,7 +44,15 @@ export async function POST(req: NextRequest) {
       const adminAuth = require("firebase-admin/auth");
       const decodedToken = await adminAuth.getAuth().verifyIdToken(token);
       userId = decodedToken.uid;
-    } catch {
+    } catch (err) {
+      // Detailed error logging for debugging token issues
+      console.error('[Upload API]  Token verification failed:', err);
+      console.error('[Upload API] Token details:', {
+        tokenLength: token?.length || 0,
+        tokenPrefix: token?.substring(0, 20) || 'empty',
+        timestamp: new Date().toISOString(),
+        hasFirebaseConfig: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      });
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 

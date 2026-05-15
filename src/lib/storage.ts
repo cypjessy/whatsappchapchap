@@ -27,8 +27,8 @@ export const bunnyStorage = {
     });
     
     try {
-      // Get auth token
-      const token = await user.getIdToken();
+      // Get auth token - FORCE REFRESH to prevent stale token issues on Android
+      const token = await user.getIdToken(true);
       
       // Create FormData for API upload
       const formData = new FormData();
@@ -63,7 +63,8 @@ export const bunnyStorage = {
   // ✅ Now goes through API route — API key stays server-side only
   async deleteFile(user: User, fileUrl: string): Promise<boolean> {
     try {
-      const token = await user.getIdToken();
+      // Force token refresh to prevent stale token issues on Android
+      const token = await user.getIdToken(true);
 
       const response = await fetch(`/api/upload?url=${encodeURIComponent(fileUrl)}`, {
         method: 'DELETE',
