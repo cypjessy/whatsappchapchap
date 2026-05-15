@@ -6,6 +6,8 @@ import { productService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import categoryData from "@/lib/categoryData"; // Updated with all 15 categories
 import type { Category, Subcategory, SpecField } from "@/lib/categoryData";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -832,12 +834,63 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     return uploadedUrls;
   };
 
+  /**
+   * Auto-populate categoryNames collection when user adds their first product
+   * This ensures WhatsApp bot can browse categories even with zero products
+   */
+  const ensureCategoriesPopulated = async (userId: string) => {
+    const tenantId = `tenant_${userId}`;
+    
+    try {
+      // Check if at least one category exists for this tenant
+      const sampleDocId = `${tenantId}_electronics`;
+      const sampleDoc = await getDoc(doc(db, "categoryNames", sampleDocId));
+      
+      if (sampleDoc.exists()) {
+        // Categories already exist, skip
+        return;
+      }
+      
+      console.log('[AddProduct] First product detected - auto-creating categories...');
+      
+      // Create all 15 categories
+      const categories = Object.values(categoryData);
+      const batchPromises = categories.map(async (category) => {
+        const docId = `${tenantId}_${category.id}`;
+        const subcategories = Object.values(category.subcategories).map(sub => sub.name);
+        
+        await setDoc(doc(db, "categoryNames", docId), {
+          id: category.id,
+          tenantId: tenantId,
+          mainCategory: category.id,
+          mainCategoryName: category.name,
+          icon: category.icon,
+          description: category.description,
+          subcategories: subcategories,
+          productCount: 0,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      });
+      
+      await Promise.all(batchPromises);
+      console.log(`[AddProduct] Created ${categories.length} categories successfully`);
+    } catch (error) {
+      console.error('[AddProduct] Failed to auto-create categories:', error);
+      // Don't fail the product save if category creation fails
+      // Categories can be created manually later
+    }
+  };
+
   const saveProduct = async () => {
     if (!user) return;
     if (!validateStep(currentStep)) return;
 
     setSaving(true);
     try {
+      // Auto-create categories on first product (idempotent - safe to call every time)
+      await ensureCategoriesPopulated(user.uid);
+      
       const images = await uploadAllImages();
       const imageUrl = images[0];
 
