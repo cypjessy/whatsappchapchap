@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth } from "firebase/auth";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import sharp from "sharp";
 
-function getAdminDb() {
+// ✅ Initialize Firebase Admin - separate from Firestore
+function initAdmin() {
   if (getApps().length === 0) {
     initializeApp({
       credential: cert({
@@ -14,6 +15,11 @@ function getAdminDb() {
       }),
     });
   }
+}
+
+// Firestore helper (if needed elsewhere)
+function getAdminDb() {
+  initAdmin();
   return getFirestore();
 }
 
@@ -38,20 +44,21 @@ export async function POST(req: NextRequest) {
 
     const token = authHeader.split("Bearer ")[1];
     
-    // Verify token using Firebase Admin
+    // ✅ Initialize Firebase Admin BEFORE verifying token
     let userId: string;
     try {
-      const adminAuth = require("firebase-admin/auth");
-      const decodedToken = await adminAuth.getAuth().verifyIdToken(token);
+      initAdmin();
+      const decodedToken = await getAdminAuth().verifyIdToken(token);
       userId = decodedToken.uid;
     } catch (err) {
       // Detailed error logging for debugging token issues
-      console.error('[Upload API]  Token verification failed:', err);
+      console.error('[Upload API] 🔴 Token verification failed:', err);
       console.error('[Upload API] Token details:', {
         tokenLength: token?.length || 0,
         tokenPrefix: token?.substring(0, 20) || 'empty',
         timestamp: new Date().toISOString(),
         hasFirebaseConfig: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        adminInitialized: getApps().length > 0,
       });
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -105,7 +112,7 @@ export async function POST(req: NextRequest) {
     const response = await fetch(uploadUrl, {
       method: "PUT",
       headers: {
-        "Content-Type": file.type,
+        "Content-Type": "image/webp", // ✅ Always webp after compression
         "AccessKey": BUNNY_STORAGE_API_KEY!,
       },
       body: uint8Array,
@@ -131,6 +138,16 @@ export async function DELETE(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // ✅ Verify token before delete operation
+    const token = authHeader.split("Bearer ")[1];
+    try {
+      initAdmin();
+      await getAdminAuth().verifyIdToken(token);
+    } catch (err) {
+      console.error('[Upload API DELETE] Token verification failed:', err);
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
