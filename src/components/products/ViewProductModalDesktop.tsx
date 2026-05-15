@@ -13,7 +13,7 @@ interface ViewProductModalDesktopProps {
   onEdit: (product: Product) => void;
 }
 
-type TabId = "overview" | "details" | "inventory" | "specs" | "ai";
+type TabId = "overview" | "details" | "inventory" | "specs";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -22,7 +22,6 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "details", label: "Details", icon: "fa-list" },
   { id: "inventory", label: "Inventory", icon: "fa-boxes" },
   { id: "specs", label: "Specs", icon: "fa-cogs" },
-  { id: "ai", label: "AI Insights", icon: "fa-robot" },
 ];
 
 const STOCK_CONFIG = {
@@ -434,46 +433,13 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
     );
   };
 
-  const renderAI = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
-            <i className="fas fa-robot text-white text-xl"></i>
-          </div>
-          <div>
-            <h4 className="text-lg font-semibold text-gray-900">AI Insights</h4>
-            <p className="text-sm text-gray-600">Powered by artificial intelligence</p>
-          </div>
-        </div>
-        <div className="space-y-3">
-          <div className="p-4 bg-white rounded-xl">
-            <p className="text-sm text-gray-600 mb-1">Recommendation</p>
-            <p className="font-medium text-gray-900">
-              {product.stock === 0 ? "Consider restocking this product soon" : 
-               product.stock && product.stock <= 5 ? "Low stock - reorder recommended" : 
-               "Stock levels are healthy"}
-            </p>
-          </div>
-          {hasDiscount && (
-            <div className="p-4 bg-white rounded-xl">
-              <p className="text-sm text-gray-600 mb-1">Pricing Strategy</p>
-              <p className="font-medium text-gray-900">
-                Active discount of {discountPercent}% - monitor conversion rates
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+
 
   const tabContent: Record<TabId, () => React.ReactNode> = {
     overview: renderOverview,
     details: renderDetails,
     inventory: renderInventory,
     specs: renderSpecs,
-    ai: renderAI,
   };
 
   return (
