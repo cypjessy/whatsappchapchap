@@ -224,15 +224,15 @@ export default function AndroidTopBar({
 
   return (
     <>
-      {/* Spacer for fixed header - matches TopBar height including safe area */}
+      {/* Spacer for fixed header - matches TopBar height (no safe area needed when overlay=false) */}
       <div 
         className="lg:hidden flex-shrink-0" 
         style={{ 
-          height: 'calc(64px + env(safe-area-inset-top, 0px))'
+          height: '64px'
         }} 
       />
 
-      {/* Minimal TopBar - Just background with safe area support */}
+      {/* Minimal TopBar - Just background */}
       <header
         className={`
           fixed left-0 right-0 z-50 lg:hidden
@@ -241,20 +241,10 @@ export default function AndroidTopBar({
         `}
         style={{
           top: 0,
-          minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
           willChange: 'transform',
         }}
       >
-        {/* Safe Area Spacer - Transparent region for status bar */}
-        <div
-          className="w-full"
-          style={{ 
-            height: 'env(safe-area-inset-top, 0px)',
-            backgroundColor: 'transparent'
-          }}
-        />
-        
-        {/* App Bar Container - Colored background starts here */}
+        {/* App Bar Container */}
         <div
           className="relative transition-all duration-300 flex-shrink-0 w-full"
           style={{ 

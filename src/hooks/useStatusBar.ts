@@ -44,6 +44,10 @@ export function useStatusBar(config: StatusBarConfig) {
           import('@capacitor/status-bar'),
         ]);
 
+        // CRITICAL: Disable overlay mode so status bar doesn't cover content
+        // This ensures Android respects the status bar as a separate area
+        await StatusBar.setOverlaysWebView({ overlay: false });
+
         // Set status bar color
         await StatusBar.setBackgroundColor({ color: config.color });
 
@@ -51,7 +55,7 @@ export function useStatusBar(config: StatusBarConfig) {
         const iconStyle = config.style === 'light' ? Style.Light : Style.Dark;
         await StatusBar.setStyle({ style: iconStyle });
 
-        console.log('[StatusBar] Set to', config.color, 'with', config.style || 'auto', 'icons');
+        console.log('[StatusBar] Set to', config.color, 'with', config.style || 'auto', 'icons (overlay: false)');
       } catch (err) {
         console.warn('[StatusBar] Failed to set status bar:', err);
       }
