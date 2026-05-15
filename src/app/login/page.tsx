@@ -20,16 +20,17 @@ interface LoginPageProps {
   redirectTo?: string;
 }
 
-function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss: () => void }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (message) {
       setIsVisible(true);
+      // Auto-dismiss after 6 seconds
       const timer = setTimeout(() => {
         setIsVisible(false);
         setTimeout(onDismiss, 300);
-      }, 5000);
+      }, 6000);
       return () => clearTimeout(timer);
     }
   }, [message, onDismiss]);
@@ -37,26 +38,78 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
   if (!message) return null;
 
   return (
-    <div
-      className={`
-        fixed top-4 left-4 right-4 z-50 max-w-md mx-auto
-        bg-[#ef4444] text-white px-4 py-3 rounded-xl shadow-lg
-        flex items-center gap-3
-        transition-all duration-300
-        ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"}
-      `}
-    >
-      <i className="fas fa-exclamation-circle text-lg shrink-0" />
-      <p className="text-sm font-medium flex-1">{message}</p>
-      <button
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className={`
+          absolute inset-0 bg-black/60 backdrop-blur-sm
+          transition-opacity duration-300
+          ${isVisible ? "opacity-100" : "opacity-0"}
+        `}
         onClick={() => {
           setIsVisible(false);
           setTimeout(onDismiss, 300);
         }}
-        className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors shrink-0"
+      />
+      
+      {/* Modal */}
+      <div
+        className={`
+          relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden
+          transition-all duration-300 ease-out
+          ${isVisible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"}
+        `}
       >
-        <i className="fas fa-times text-xs" />
-      </button>
+        {/* Gradient Header */}
+        <div className="bg-gradient-to-br from-red-500 to-pink-500 p-6 text-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <i className="fas fa-shield-alt text-4xl text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-1">Access Denied</h2>
+          <p className="text-white/80 text-sm">Authentication Failed</p>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-exclamation-triangle text-red-500 text-sm" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-800 mb-1">Invalid Credentials</p>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  The email or password you entered is incorrect. Please check your details and try again.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-lightbulb text-blue-500 text-sm" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-800 mb-1">Need Help?</p>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Forgot your password? Try resetting it or contact support for assistance.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Action Button */}
+          <button
+            onClick={() => {
+              setIsVisible(false);
+              setTimeout(onDismiss, 300);
+            }}
+            className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            <i className="fas fa-check-circle" />
+            Try Again
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -164,8 +217,8 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
         </div>
       )}
 
-      {/* Error Toast */}
-      <ErrorToast message={error} onDismiss={clearError} />
+      {/* Premium Error Modal */}
+      <PremiumErrorModal message={error} onDismiss={clearError} />
 
       {/* Main Content - Android Material Design 3 */}
       <div

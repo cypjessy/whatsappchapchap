@@ -165,11 +165,61 @@ export default function DashboardLayout({
 
   return (
     <>
-      {/* Offline Banner */}
+      {/* Premium Offline Modal - Mobile/Android Only */}
       {showOfflineBanner && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-500 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
-          <i className="fas fa-wifi-slash mr-2"></i>
-          You're offline. Some features may be limited.
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 lg:hidden">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn" />
+          
+          {/* Modal */}
+          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
+            {/* Gradient Header */}
+            <div className="bg-gradient-to-br from-red-500 to-orange-500 p-6 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <i className="fas fa-wifi-slash text-4xl text-white" />
+              </div>
+              <h2 className="text-2xl font-black text-white mb-1">No Internet</h2>
+              <p className="text-white/80 text-sm">Connection Lost</p>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-exclamation-triangle text-red-500 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-800 mb-1">You're Offline</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Some features require an internet connection. You can still view cached content.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-lightbulb text-blue-500 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-800 mb-1">Quick Tip</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Check your Wi-Fi or mobile data settings and try again.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Action Button */}
+              <button
+                onClick={() => setShowOfflineBanner(false)}
+                className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-check-circle" />
+                Got It
+              </button>
+            </div>
+          </div>
         </div>
       )}
       
