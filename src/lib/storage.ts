@@ -18,6 +18,54 @@ function getTenantId(user: User): string {
   return `tenant_${user.uid}`;
 }
 
+// Client-side image compression using canvas
+function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      
+      // Calculate new dimensions maintaining aspect ratio
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(img.src);
+          if (blob) {
+            const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', {
+              type: 'image/webp',
+            });
+            resolve(compressedFile);
+          } else {
+            resolve(file); // Fallback to original if compression fails
+          }
+        },
+        'image/webp',
+        quality
+      );
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      resolve(file); // Fallback to original on error
+    };
+  });
+}
+
 export const bunnyStorage = {
   async uploadFile(user: User, file: File, folder: string = "products"): Promise<UploadResult> {
     console.log("Bunny Storage uploadFile called:", { 
@@ -27,12 +75,20 @@ export const bunnyStorage = {
     });
     
     try {
+      //  CLIENT-SIDE COMPRESSION: Compress before upload to speed up server processing
+      const compressedFile = await compressImage(file, 800, 0.7);
+      console.log("Client-side compression:", {
+        originalSize: file.size,
+        compressedSize: compressedFile.size,
+        reduction: `${Math.round((1 - compressedFile.size / file.size) * 100)}%`
+      });
+      
       // Get auth token - FORCE REFRESH to prevent stale token issues on Android
       const token = await user.getIdToken(true);
       
       // Create FormData for API upload
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('folder', folder);
       
       console.log("Uploading via API route with Sharp compression...");

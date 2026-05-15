@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Compress image with Sharp before uploading
+    // NOTE: Image is already pre-compressed client-side, so we do a lighter compression here
     let compressedBuffer: Buffer;
     try {
       compressedBuffer = await sharp(buffer)
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
           fit: 'inside',
           withoutEnlargement: true,
         })
-        .webp({ quality: 75 })
+        .webp({ quality: 70 }) // Lower quality for faster compression
         .toBuffer();
       
       console.log(`API: Image compressed - Original: ${buffer.length} bytes, Compressed: ${compressedBuffer.length} bytes`);
