@@ -17,6 +17,7 @@ interface OrderCardProps {
   onSendWhatsApp: (order: Order, status: OrderStatus) => Promise<void> | void;
   onCancelOrder?: (order: Order) => Promise<void> | void;
   onEditOrder?: (order: Order) => void;
+  productImages?: Record<string, string>; // Map of productId to image URL
 }
 
 // ─── Status Config ────────────────────────────────────────────────────────────
@@ -151,6 +152,7 @@ export default function OrderCard({
   onSendWhatsApp,
   onCancelOrder,
   onEditOrder,
+  productImages = {},
 }: OrderCardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -339,7 +341,7 @@ export default function OrderCard({
 
         {/* Action Buttons - MD3 tonal buttons */}
         <div className="flex gap-2 pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
-          {/* Print Button */}
+          {/* Print Button - Always available */}
           <button
             onClick={handlePrint}
             disabled={loadingAction === "print"}
@@ -349,25 +351,29 @@ export default function OrderCard({
             <span className="hidden sm:inline">Print</span>
           </button>
           
-          {/* Duplicate Button */}
-          <button
-            onClick={handleDuplicate}
-            disabled={loadingAction === "duplicate"}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-secondary-container)] hover:bg-[var(--md-sys-color-secondary-container)]/80 text-[var(--md-sys-color-on-secondary-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
-          >
-            <i className="fas fa-copy text-xs" />
-            <span className="hidden sm:inline">Duplicate</span>
-          </button>
+          {/* Duplicate Button - Hide for delivered/cancelled/refunded */}
+          {!["delivered", "cancelled", "refunded"].includes(order.status) && (
+            <button
+              onClick={handleDuplicate}
+              disabled={loadingAction === "duplicate"}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-secondary-container)] hover:bg-[var(--md-sys-color-secondary-container)]/80 text-[var(--md-sys-color-on-secondary-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
+            >
+              <i className="fas fa-copy text-xs" />
+              <span className="hidden sm:inline">Duplicate</span>
+            </button>
+          )}
           
-          {/* WhatsApp Button */}
-          <button
-            onClick={handleWhatsApp}
-            disabled={loadingAction === "whatsapp"}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-success-container)] hover:bg-[var(--md-sys-color-success-container)]/80 text-[var(--md-sys-color-on-success-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
-          >
-            <i className="fab fa-whatsapp text-xs" />
-            <span className="hidden sm:inline">Notify</span>
-          </button>
+          {/* WhatsApp Button - Hide for cancelled/refunded */}
+          {!["cancelled", "refunded"].includes(order.status) && (
+            <button
+              onClick={handleWhatsApp}
+              disabled={loadingAction === "whatsapp"}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[var(--md-sys-color-success-container)] hover:bg-[var(--md-sys-color-success-container)]/80 text-[var(--md-sys-color-on-success-container)] rounded-lg font-medium text-[11px] transition-all duration-200 active:scale-95 disabled:opacity-50"
+            >
+              <i className="fab fa-whatsapp text-xs" />
+              <span className="hidden sm:inline">Notify</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -386,7 +392,8 @@ export default function OrderCard({
 
           {showDropdown && (
             <div className="absolute right-0 top-full mt-1 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn">
-              {onEditOrder && (
+              {/* Edit - Only for non-finalized orders */}
+              {onEditOrder && !["delivered", "cancelled", "refunded"].includes(order.status) && (
                 <button
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-variant)]"
                   onClick={() => { handleEdit(); setShowDropdown(false); }}
@@ -417,22 +424,28 @@ export default function OrderCard({
                 <i className="fas fa-print w-4 text-center" />
                 Print Invoice
               </button>
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]"
-                onClick={() => { handleAction("duplicate", () => onDuplicateOrder(order)); setShowDropdown(false); }}
-                disabled={loadingAction === "duplicate"}
-              >
-                <i className="fas fa-copy w-4 text-center" />
-                Duplicate
-              </button>
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-success)] hover:bg-[var(--md-sys-color-surface-variant)]"
-                onClick={() => { handleAction("whatsapp", () => onSendWhatsApp(order, order.status as OrderStatus)); setShowDropdown(false); }}
-                disabled={loadingAction === "whatsapp"}
-              >
-                <i className="fab fa-whatsapp w-4 text-center" />
-                Send WhatsApp
-              </button>
+              {/* Duplicate - Hide for delivered/cancelled/refunded */}
+              {!["delivered", "cancelled", "refunded"].includes(order.status) && (
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)]"
+                  onClick={() => { handleAction("duplicate", () => onDuplicateOrder(order)); setShowDropdown(false); }}
+                  disabled={loadingAction === "duplicate"}
+                >
+                  <i className="fas fa-copy w-4 text-center" />
+                  Duplicate
+                </button>
+              )}
+              {/* WhatsApp - Hide for cancelled/refunded */}
+              {!["cancelled", "refunded"].includes(order.status) && (
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--md-sys-color-success)] hover:bg-[var(--md-sys-color-surface-variant)]"
+                  onClick={() => { handleAction("whatsapp", () => onSendWhatsApp(order, order.status as OrderStatus)); setShowDropdown(false); }}
+                  disabled={loadingAction === "whatsapp"}
+                >
+                  <i className="fab fa-whatsapp w-4 text-center" />
+                  Send WhatsApp
+                </button>
+              )}
               <div className="border-t border-[var(--md-sys-color-outline-variant)]" />
               {onCancelOrder && !isCancelled && (
                 <button

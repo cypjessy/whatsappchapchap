@@ -23,6 +23,7 @@ interface OrderTableProps {
   onBulkDelete?: (orderIds: string[]) => Promise<void> | void;
   onBulkStatusUpdate?: (orderIds: string[], status: OrderStatus) => Promise<void> | void;
   isLoading?: boolean;
+  productImages?: Record<string, string>; // Map of productId to image URL
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -235,6 +236,7 @@ export default function OrderTable({
   onBulkDelete,
   onBulkStatusUpdate,
   isLoading = false,
+  productImages = {},
 }: OrderTableProps) {
   const [loadingActions, setLoadingActions] = useState<Record<string, string>>({});
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
@@ -409,8 +411,24 @@ export default function OrderTable({
                     {/* Products */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
-                          📦
+                        {order.productImage ? (
+                          <img
+                            src={order.productImage}
+                            alt={order.products?.[0]?.name || order.productName || "Product"}
+                            className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-gray-100"
+                            onError={(e) => {
+                              const img = e.target as HTMLImageElement;
+                              img.style.display = 'none';
+                              const fallback = img.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0"
+                          style={{ display: order.productImage ? 'none' : 'flex' }}
+                        >
+                          
                         </div>
                         <div className="min-w-0">
                           <div className="font-bold text-sm text-[#1e293b] truncate max-w-[120px]">
@@ -450,6 +468,7 @@ export default function OrderTable({
                     {/* Actions */}
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
+                        {/* Print - Always available */}
                         <ActionButton
                           icon="fa-print"
                           color="text-blue-500"
@@ -462,30 +481,40 @@ export default function OrderTable({
                           title="Print Invoice"
                           loading={loadingActions[`${order.id}-print`] === "loading"}
                         />
-                        <ActionButton
-                          icon="fa-copy"
-                          color="text-purple-500"
-                          bgColor="bg-purple-50"
-                          hoverColor="hover:bg-purple-500 hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction(order.id, "duplicate", () => onDuplicateOrder(order));
-                          }}
-                          title="Duplicate"
-                          loading={loadingActions[`${order.id}-duplicate`] === "loading"}
-                        />
-                        <ActionButton
-                          icon="fa-whatsapp"
-                          color="text-[#25D366]"
-                          bgColor="bg-[rgba(37,211,102,0.1)]"
-                          hoverColor="hover:bg-[#25D366] hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction(order.id, "whatsapp", () => onSendWhatsApp(order, order.status as OrderStatus));
-                          }}
-                          title="Send WhatsApp"
-                          loading={loadingActions[`${order.id}-whatsapp`] === "loading"}
-                        />
+                        
+                        {/* Duplicate - Hide for delivered/cancelled/refunded orders */}
+                        {!["delivered", "cancelled", "refunded"].includes(order.status) && (
+                          <ActionButton
+                            icon="fa-copy"
+                            color="text-purple-500"
+                            bgColor="bg-purple-50"
+                            hoverColor="hover:bg-purple-500 hover:text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAction(order.id, "duplicate", () => onDuplicateOrder(order));
+                            }}
+                            title="Duplicate"
+                            loading={loadingActions[`${order.id}-duplicate`] === "loading"}
+                          />
+                        )}
+                        
+                        {/* WhatsApp - Only for active orders (not cancelled/refunded) */}
+                        {!["cancelled", "refunded"].includes(order.status) && (
+                          <ActionButton
+                            icon="fa-whatsapp"
+                            color="text-[#25D366]"
+                            bgColor="bg-[rgba(37,211,102,0.1)]"
+                            hoverColor="hover:bg-[#25D366] hover:text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAction(order.id, "whatsapp", () => onSendWhatsApp(order, order.status as OrderStatus));
+                            }}
+                            title="Send WhatsApp"
+                            loading={loadingActions[`${order.id}-whatsapp`] === "loading"}
+                          />
+                        )}
+                        
+                        {/* View Details - Always available */}
                         <ActionButton
                           icon="fa-eye"
                           color="text-emerald-500"
@@ -497,18 +526,24 @@ export default function OrderTable({
                           }}
                           title="View Details"
                         />
-                        <ActionButton
-                          icon="fa-edit"
-                          color="text-amber-500"
-                          bgColor="bg-amber-50"
-                          hoverColor="hover:bg-amber-500 hover:text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenEditModal(order);
-                          }}
-                          title="Edit Order"
-                        />
-                        {onDeleteOrder && (
+                        
+                        {/* Edit - Only for non-finalized orders */}
+                        {!["delivered", "cancelled", "refunded"].includes(order.status) && (
+                          <ActionButton
+                            icon="fa-edit"
+                            color="text-amber-500"
+                            bgColor="bg-amber-50"
+                            hoverColor="hover:bg-amber-500 hover:text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenEditModal(order);
+                            }}
+                            title="Edit Order"
+                          />
+                        )}
+                        
+                        {/* Delete - Only for pending orders */}
+                        {onDeleteOrder && order.status === "pending" && (
                           <ActionButton
                             icon="fa-trash"
                             color="text-red-400"

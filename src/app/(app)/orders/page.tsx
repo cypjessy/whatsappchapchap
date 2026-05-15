@@ -323,6 +323,17 @@ export default function OrdersPage() {
 
   // ─── Filtered Orders ────────────────────────────────────────────────────────
 
+  // Create product images mapping (productId -> imageUrl)
+  const productImagesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    products.forEach((product) => {
+      if (product.image) {
+        map[product.id] = product.image;
+      }
+    });
+    return map;
+  }, [products]);
+
   const filteredOrders = useMemo(() => {
     let result = [...orders];
 
@@ -1137,6 +1148,7 @@ export default function OrdersPage() {
                       onPrintInvoice={handlePrintInvoice}
                       onDuplicateOrder={handleDuplicateOrder}
                       onSendWhatsApp={sendWhatsAppNotification}
+                      productImages={productImagesMap}
                     />
                   ))}
                 </div>
@@ -1158,6 +1170,7 @@ export default function OrdersPage() {
               onPrintInvoice={handlePrintInvoice}
               onDuplicateOrder={handleDuplicateOrder}
               onSendWhatsApp={sendWhatsAppNotification}
+              productImages={productImagesMap}
               onBulkDelete={async (ids: string[]) => {
                 // Implement bulk delete if needed
                 console.log("Delete orders:", ids);
