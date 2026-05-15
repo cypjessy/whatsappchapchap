@@ -55,6 +55,7 @@ interface ActionConfig {
   color?: "green" | "blue" | "amber";
   handler: string;
   ariaLabel?: string | ((status: string) => string);
+  shouldShow?: (product: Product) => boolean;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ const ACTION_CONFIG: readonly ActionConfig[] = [
     getColor: (status: string) => (status === "active" ? "amber" : "green"),
     handler: "handleToggleStatus",
     ariaLabel: (status: string) => status === "active" ? "Pause product" : "Activate product",
+    shouldShow: () => true, // Always show toggle
   },
   {
     key: "duplicate",
@@ -75,6 +77,7 @@ const ACTION_CONFIG: readonly ActionConfig[] = [
     color: "blue",
     handler: "handleDuplicateProduct",
     ariaLabel: "Duplicate product",
+    shouldShow: (product: Product) => product.status !== "draft", // Hide for draft products
   },
   {
     key: "share",
@@ -83,6 +86,7 @@ const ACTION_CONFIG: readonly ActionConfig[] = [
     color: "green",
     handler: "handleShareProduct",
     ariaLabel: "Share product",
+    shouldShow: (product: Product) => product.status === "active", // Only share active products
   },
   {
     key: "whatsapp",
@@ -91,6 +95,7 @@ const ACTION_CONFIG: readonly ActionConfig[] = [
     color: "green",
     handler: "shareProductWhatsApp",
     ariaLabel: "Share via WhatsApp",
+    shouldShow: (product: Product) => product.status === "active" && (product.stock ?? 0) > 0, // Only if active and in stock
   },
   {
     key: "print",
@@ -99,6 +104,7 @@ const ACTION_CONFIG: readonly ActionConfig[] = [
     color: "blue",
     handler: "printProductCatalog",
     ariaLabel: "Print product catalog",
+    shouldShow: () => true, // Always available
   },
 ] as const;
 
@@ -538,31 +544,33 @@ const ProductCard = memo(({
             <div className="relative pt-2 border-t border-[#e2e8f0]">
               {/* Desktop: Full actions */}
               <div className="hidden sm:grid grid-cols-5 gap-1">
-                {ACTION_CONFIG.map((action) => {
-                  const Icon = action.key === "toggle"
-                    ? action.getIcon!(product.status || "active")
-                    : action.icon!;
-                  const label = action.key === "toggle"
-                    ? action.getLabel!(product.status || "active")
-                    : action.label!;
-                  const color = action.key === "toggle"
-                    ? action.getColor!(product.status || "active")
-                    : action.color!;
-                  const ariaLabel = typeof action.ariaLabel === 'function'
-                    ? action.ariaLabel(product.status || "active")
-                    : action.ariaLabel;
+                {ACTION_CONFIG
+                  .filter((action) => !action.shouldShow || action.shouldShow(product))
+                  .map((action) => {
+                    const Icon = action.key === "toggle"
+                      ? action.getIcon!(product.status || "active")
+                      : action.icon!;
+                    const label = action.key === "toggle"
+                      ? action.getLabel!(product.status || "active")
+                      : action.label!;
+                    const color = action.key === "toggle"
+                      ? action.getColor!(product.status || "active")
+                      : action.color!;
+                    const ariaLabel = typeof action.ariaLabel === 'function'
+                      ? action.ariaLabel(product.status || "active")
+                      : action.ariaLabel;
 
-                  return (
-                    <ActionButton
-                      key={action.key}
-                      onClick={(e) => handleActionWrapper(action.handler, e)}
-                      icon={Icon}
-                      label={label}
-                      color={color}
-                      ariaLabel={ariaLabel}
-                    />
-                  );
-                })}
+                    return (
+                      <ActionButton
+                        key={action.key}
+                        onClick={(e) => handleActionWrapper(action.handler, e)}
+                        icon={Icon}
+                        label={label}
+                        color={color}
+                        ariaLabel={ariaLabel}
+                      />
+                    );
+                  })}
               </div>
 
               {/* Mobile: Expandable actions */}
@@ -587,32 +595,34 @@ const ProductCard = memo(({
                   ${expandedMobile ? "max-h-[300px] opacity-100 mt-1.5" : "max-h-0 opacity-0 mt-0"}
                 `}>
                   <div className="grid grid-cols-2 gap-1.5">
-                    {ACTION_CONFIG.map((action, idx) => {
-                      const Icon = action.key === "toggle"
-                        ? action.getIcon!(product.status || "active")
-                        : action.icon!;
-                      const label = action.key === "toggle"
-                        ? action.getLabel!(product.status || "active")
-                        : action.label!;
-                      const color = action.key === "toggle"
-                        ? action.getColor!(product.status || "active")
-                        : action.color!;
-                      const ariaLabel = typeof action.ariaLabel === 'function'
-                        ? action.ariaLabel(product.status || "active")
-                        : action.ariaLabel;
+                    {ACTION_CONFIG
+                      .filter((action) => !action.shouldShow || action.shouldShow(product))
+                      .map((action, idx) => {
+                        const Icon = action.key === "toggle"
+                          ? action.getIcon!(product.status || "active")
+                          : action.icon!;
+                        const label = action.key === "toggle"
+                          ? action.getLabel!(product.status || "active")
+                          : action.label!;
+                        const color = action.key === "toggle"
+                          ? action.getColor!(product.status || "active")
+                          : action.color!;
+                        const ariaLabel = typeof action.ariaLabel === 'function'
+                          ? action.ariaLabel(product.status || "active")
+                          : action.ariaLabel;
 
-                      return (
-                        <MobileActionButton
-                          key={action.key}
-                          onClick={(e) => handleActionWrapper(action.handler, e)}
-                          icon={Icon}
-                          label={label}
-                          color={color}
-                          delay={idx * 50}
-                          ariaLabel={ariaLabel}
-                        />
-                      );
-                    })}
+                        return (
+                          <MobileActionButton
+                            key={action.key}
+                            onClick={(e) => handleActionWrapper(action.handler, e)}
+                            icon={Icon}
+                            label={label}
+                            color={color}
+                            delay={idx * 50}
+                            ariaLabel={ariaLabel}
+                          />
+                        );
+                      })}
                   </div>
                 </div>
               </div>

@@ -60,6 +60,7 @@ interface ActionConfig {
   label?: string;
   handler: string;
   ariaLabel?: string | ((status: string) => string);
+  shouldShow?: (product: Product) => boolean;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -88,12 +89,48 @@ const DESKTOP_ACTIONS: readonly ActionConfig[] = [
     getLabel: (s) => (s === "active" ? "Pause" : "Activate"),
     handler: "handleToggleStatus",
     ariaLabel: (s) => s === "active" ? "Pause product" : "Activate product",
+    shouldShow: () => true, // Always show toggle
   },
-  { key: "duplicate", icon: Copy, color: "blue", label: "Duplicate", handler: "handleDuplicateProduct" },
-  { key: "share", icon: Share2, color: "green", label: "Share", handler: "handleShareProduct" },
-  { key: "whatsapp", icon: MessageCircle, color: "green", label: "WhatsApp", handler: "shareProductWhatsApp" },
-  { key: "print", icon: Printer, color: "cyan", label: "Print", handler: "printProductCatalog" },
-  { key: "delete", icon: Trash2, color: "red", label: "Delete", handler: "handleDelete" },
+  { 
+    key: "duplicate", 
+    icon: Copy, 
+    color: "blue", 
+    label: "Duplicate", 
+    handler: "handleDuplicateProduct",
+    shouldShow: (product: Product) => product.status !== "draft", // Hide for draft products
+  },
+  { 
+    key: "share", 
+    icon: Share2, 
+    color: "green", 
+    label: "Share", 
+    handler: "handleShareProduct",
+    shouldShow: (product: Product) => product.status === "active", // Only share active products
+  },
+  { 
+    key: "whatsapp", 
+    icon: MessageCircle, 
+    color: "green", 
+    label: "WhatsApp", 
+    handler: "shareProductWhatsApp",
+    shouldShow: (product: Product) => product.status === "active" && (product.stock ?? 0) > 0, // Only if active and in stock
+  },
+  { 
+    key: "print", 
+    icon: Printer, 
+    color: "cyan", 
+    label: "Print", 
+    handler: "printProductCatalog",
+    shouldShow: () => true, // Always available
+  },
+  { 
+    key: "delete", 
+    icon: Trash2, 
+    color: "red", 
+    label: "Delete", 
+    handler: "handleDelete",
+    shouldShow: (product: Product) => product.status !== "draft", // Hide for draft products
+  },
 ] as const;
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -420,21 +457,23 @@ const ProductRow = memo(({
                 <>
                   {/* Desktop actions */}
                   <div className="hidden md:flex items-center gap-1.5">
-                    {DESKTOP_ACTIONS.map((action) => {
-                      const Icon = action.key === "toggle" ? action.getIcon!(status) : action.icon!;
-                      const color = action.key === "toggle" ? action.getColor!(status) : action.color!;
-                      const label = action.key === "toggle" ? action.getLabel!(status) : action.label!;
-                      const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(status) : action.ariaLabel;
-                      return (
-                        <ActionIconButton
-                          key={action.key}
-                          onClick={(e) => handleActionWrapper(action.handler, e)}
-                          icon={Icon}
-                          color={color}
-                          label={ariaLabel || label}
-                        />
-                      );
-                    })}
+                    {DESKTOP_ACTIONS
+                      .filter((action) => !action.shouldShow || action.shouldShow(product))
+                      .map((action) => {
+                        const Icon = action.key === "toggle" ? action.getIcon!(status) : action.icon!;
+                        const color = action.key === "toggle" ? action.getColor!(status) : action.color!;
+                        const label = action.key === "toggle" ? action.getLabel!(status) : action.label!;
+                        const ariaLabel = typeof action.ariaLabel === 'function' ? action.ariaLabel(status) : action.ariaLabel;
+                        return (
+                          <ActionIconButton
+                            key={action.key}
+                            onClick={(e) => handleActionWrapper(action.handler, e)}
+                            icon={Icon}
+                            color={color}
+                            label={ariaLabel || label}
+                          />
+                        );
+                      })}
                   </div>
 
                   {/* Mobile expand */}
@@ -458,26 +497,28 @@ const ProductRow = memo(({
           <div className={`md:hidden overflow-hidden transition-all duration-300 ${expandedMobile ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"}`}>
             <div className="px-3 pb-3">
               <div className="grid grid-cols-3 gap-2 p-2 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
-                {DESKTOP_ACTIONS.map((action, idx) => {
-                  const Icon = action.key === "toggle" ? action.getIcon!(status) : action.icon!;
-                  const color = action.key === "toggle" ? action.getColor!(status) : action.color!;
-                  const label = action.key === "toggle" ? action.getLabel!(status) : action.label!;
-                  return (
-                    <button
-                      key={action.key}
-                      onClick={(e) => handleActionWrapper(action.handler, e)}
-                      className={`
-                        flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-xs font-semibold
-                        border transition-all active:scale-95
-                        ${BG_MAP[color]} ${COLOR_MAP[color]}
-                      `}
-                      style={{ transitionDelay: `${idx * 50}ms` }}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span className="text-[10px]">{label}</span>
-                    </button>
-                  );
-                })}
+                {DESKTOP_ACTIONS
+                  .filter((action) => !action.shouldShow || action.shouldShow(product))
+                  .map((action, idx) => {
+                    const Icon = action.key === "toggle" ? action.getIcon!(status) : action.icon!;
+                    const color = action.key === "toggle" ? action.getColor!(status) : action.color!;
+                    const label = action.key === "toggle" ? action.getLabel!(status) : action.label!;
+                    return (
+                      <button
+                        key={action.key}
+                        onClick={(e) => handleActionWrapper(action.handler, e)}
+                        className={`
+                          flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-xs font-semibold
+                          border transition-all active:scale-95
+                          ${BG_MAP[color]} ${COLOR_MAP[color]}
+                        `}
+                        style={{ transitionDelay: `${idx * 50}ms` }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="text-[10px]">{label}</span>
+                      </button>
+                    );
+                  })}
               </div>
             </div>
           </div>
