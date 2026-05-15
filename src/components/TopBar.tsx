@@ -243,19 +243,27 @@ export default function AndroidTopBar({
           top: 0,
           minHeight: 'calc(64px + env(safe-area-inset-top, 0px))',
           willChange: 'transform',
-          backgroundColor: isScrolled ? '#ffffff' : '#25D366',
-          boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
         }}
       >
-        {/* App Bar Container */}
+        {/* Safe Area Spacer - Transparent region for status bar */}
+        <div
+          className="w-full"
+          style={{ 
+            height: 'env(safe-area-inset-top, 0px)',
+            backgroundColor: 'transparent'
+          }}
+        />
+        
+        {/* App Bar Container - Colored background starts here */}
         <div
           className="relative transition-all duration-300 flex-shrink-0 w-full"
           style={{ 
             minHeight: '64px',
-            paddingTop: 'env(safe-area-inset-top, 0px)'
+            backgroundColor: isScrolled ? '#ffffff' : '#25D366',
+            boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
           }}
         >
-          {/* Content Container - Empty, just provides safe area padding */}
+          {/* Content Container - Empty, just provides structure */}
           <div className="flex items-center justify-between px-3 h-16 min-h-[64px] w-full">
           </div>
         </div>
