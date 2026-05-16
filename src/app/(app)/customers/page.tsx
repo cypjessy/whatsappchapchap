@@ -628,7 +628,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-white">
+    <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface">
       {/* Hide header on mobile - TopBar handles navigation */}
       <div className="hidden md:block">
         <CustomersHeader

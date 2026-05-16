@@ -526,7 +526,7 @@ export default function BookingsPage() {
   const hasData = filteredBookings.length > 0;
 
   return (
-    <div ref={pageRef} className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-white">
+    <div ref={pageRef} className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
       {/* Sticky Header - Desktop only (TopBar handles mobile) */}

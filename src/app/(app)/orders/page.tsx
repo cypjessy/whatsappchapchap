@@ -943,7 +943,7 @@ export default function OrdersPage() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="overflow-x-hidden bg-white w-full">
+    <div className="overflow-x-hidden bg-surface w-full">
       {/* Desktop Header — hidden on mobile, TopBar handles mobile */}
       <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-6 pt-4" style={{ animationDelay: '0.1s' }}>
         <div>

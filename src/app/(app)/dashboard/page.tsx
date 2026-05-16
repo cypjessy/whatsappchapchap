@@ -104,7 +104,7 @@ export default function DashboardPage() {
   }, [user]);
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-white">
+    <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface">
       {/* Header Section */}
       <SectionWrapper delay={0}>
         <DashboardHeader />
