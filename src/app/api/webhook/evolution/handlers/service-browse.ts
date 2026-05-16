@@ -404,26 +404,31 @@ async function showServicesForSubcategory(
   
   await deps.startTyping(tenantId, phone);
   
-  // FIXED: Query by businessType and filter by subcategory key
-  const servicesSnap = await adminDb
-    .collection("services")
-    .where("tenantId", "==", tenantId)
-    .where("businessType", "==", categorySlug)
-    .where("status", "==", "active")
-    .get();
+  // OPTIMIZED: Query by businessType AND subcategory in Firestore (server-side filtering)
+  let servicesSnap;
+  if (subcategoryKey) {
+    // Use composite index for efficient query
+    servicesSnap = await adminDb
+      .collection("services")
+      .where("tenantId", "==", tenantId)
+      .where("businessType", "==", categorySlug)
+      .where("subcategory", "==", subcategoryKey)
+      .where("status", "==", "active")
+      .get();
+  } else {
+    // Fallback: query without subcategory filter
+    servicesSnap = await adminDb
+      .collection("services")
+      .where("tenantId", "==", tenantId)
+      .where("businessType", "==", categorySlug)
+      .where("status", "==", "active")
+      .get();
+  }
   
   let services = servicesSnap.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data()
   })) as Service[];
-  
-  // Filter by subcategory key (services store the key, not display name)
-  if (subcategoryKey) {
-    services = services.filter((s: any) => s.subcategory === subcategoryKey);
-  } else {
-    // Fallback: try matching by display name
-    services = services.filter((s: any) => s.subcategoryName === subcategoryName);
-  }
   
   if (services.length === 0) {
     await deps.stopTyping(tenantId, phone);
