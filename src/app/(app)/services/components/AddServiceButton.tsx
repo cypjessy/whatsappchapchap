@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { serviceService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, getDocs, updateDoc, serverTimestamp, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 // IMPORT THE EXPANDED SERVICE DATA
 import { serviceData, SERVICE_CATEGORIES, getServiceSubcategories, getServiceSpecs, ServiceSpec } from "@/lib/serviceCategoryData";
@@ -514,19 +514,21 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     const tenantId = `tenant_${userId}`;
     
     try {
-      // Check if at least one service category exists
-      const sampleDocId = `${tenantId}_beauty`;
-      const sampleDoc = await getDoc(doc(db, "serviceCategoryNames", sampleDocId));
-      
-      if (sampleDoc.exists()) {
-        return;
-      }
-      
-      console.log('[AddService] First service detected - auto-creating service categories...');
+      // Get ALL serviceCategoryNames documents for this tenant
+      const snapshot = await getDocs(
+        query(
+          collection(db, "serviceCategoryNames"),
+          where("tenantId", "==", tenantId)
+        )
+      );
       
       const categories = SERVICE_CATEGORIES;
-      const batchPromises = categories.map(async (category) => {
+      const updates: Promise<void>[] = [];
+      
+      // Check each category and create/update as needed
+      for (const category of categories) {
         const docId = `${tenantId}_${category.id}`;
+        const existingDoc = snapshot.docs.find(d => d.id === docId);
         const subcategoriesList = getServiceSubcategories(category.id);
         
         // Store both display names (for UI) and key-to-name mapping (for bot)
@@ -536,25 +538,46 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
           return acc;
         }, {} as Record<string, string>);
         
-        await setDoc(doc(db, "serviceCategoryNames", docId), {
-          id: category.id,
-          tenantId: tenantId,
-          mainCategory: category.id,
-          mainCategoryName: category.name,
-          icon: category.icon,
-          description: category.description,
-          subcategories: subcategories,
-          subcategoryMap: subcategoryMap,  // NEW: key -> display name mapping
-          serviceCount: 0,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      });
+        if (!existingDoc || !existingDoc.exists()) {
+          // Create new document
+          console.log(`[AddService] Creating service category: ${category.id}`);
+          updates.push(setDoc(doc(db, "serviceCategoryNames", docId), {
+            id: category.id,
+            tenantId: tenantId,
+            mainCategory: category.id,
+            mainCategoryName: category.name,
+            icon: category.icon,
+            description: category.description,
+            subcategories: subcategories,
+            subcategoryMap: subcategoryMap,
+            serviceCount: 0,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          }));
+        } else {
+          // Update existing document if missing required fields
+          const data = existingDoc.data();
+          const needsUpdate = !data.mainCategory || !data.mainCategoryName || !data.subcategoryMap || data.serviceCount === undefined;
+          
+          if (needsUpdate) {
+            console.log(`[AddService] Updating service category: ${category.id}`);
+            updates.push(updateDoc(doc(db, "serviceCategoryNames", docId), {
+              mainCategory: category.id,
+              mainCategoryName: category.name,
+              subcategoryMap: subcategoryMap,
+              serviceCount: data.serviceCount || 0,
+              updatedAt: serverTimestamp(),
+            }));
+          }
+        }
+      }
       
-      await Promise.all(batchPromises);
-      console.log(`[AddService] Created ${categories.length} service categories successfully`);
+      if (updates.length > 0) {
+        await Promise.all(updates);
+        console.log(`[AddService] Processed ${updates.length} service categories`);
+      }
     } catch (error) {
-      console.error('[AddService] Failed to auto-create service categories:', error);
+      console.error('[AddService] Failed to populate service categories:', error);
     }
   };
 
