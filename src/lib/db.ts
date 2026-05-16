@@ -205,6 +205,13 @@ export interface Service {
     timeSlots: string[]; // ['9:00 AM', '10:00 AM', etc.]
   };
   customTimeSlots?: string[]; // Custom time slots based on service duration
+  
+  // Booking Policy Fields
+  depositRequired?: boolean; // Whether deposit is required
+  reschedulingAllowed?: boolean; // Whether rescheduling is allowed
+  cancellationNoticeHours?: number; // Hours of notice required for cancellation
+  serviceRadiusKm?: number; // Service radius in kilometers
+  
   createdAt: any;
   updatedAt: any;
 }

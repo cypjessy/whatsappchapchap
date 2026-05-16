@@ -742,6 +742,23 @@ async function showServiceDetail(
     details.push(`⭐ *Rating:* ${service.rating}/5`);
   }
   
+  // NEW: Add booking policy fields
+  if (service.depositRequired === true) {
+    details.push(`💳 *Deposit Required:* Yes`);
+  }
+  
+  if (service.reschedulingAllowed !== undefined) {
+    details.push(`🔄 *Rescheduling:* ${service.reschedulingAllowed ? 'Allowed' : 'Not Allowed'}`);
+  }
+  
+  if (service.cancellationNoticeHours && service.cancellationNoticeHours > 0) {
+    details.push(`⚠️ *Cancellation:* ${service.cancellationNoticeHours}h notice required`);
+  }
+  
+  if (service.serviceRadiusKm) {
+    details.push(`📍 *Service Radius:* ${service.serviceRadiusKm} km`);
+  }
+  
   const detailsText = details.length > 0 ? `\n\n${details.join('\n')}` : '';
   
   // Build specifications section
