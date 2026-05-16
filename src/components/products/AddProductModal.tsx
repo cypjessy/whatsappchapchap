@@ -925,7 +925,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         description: formData.description || undefined,
         category: selectedCategoryId!,
         categoryName: currentCategory?.name || selectedCategoryId!,
-        subcategory: selectedSubcategoryKey!,
+        subcategory: currentSubcategory?.name || selectedSubcategoryKey!,  // Save display name for bot compatibility
         type: typeValue,  // Save type for bot navigation
         brand: extractedBrand,
         categoryId: selectedCategoryId!,
