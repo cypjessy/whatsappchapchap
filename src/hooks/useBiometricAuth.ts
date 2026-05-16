@@ -29,10 +29,10 @@ export function useBiometricAuth() {
         let typeStr = "none";
         switch (result.biometryType) {
           case BiometryType.touchId:
-            typeStr = "fingerprint";
+            typeStr = "touchId";
             break;
           case BiometryType.faceId:
-            typeStr = "face";
+            typeStr = "faceId";
             break;
           case BiometryType.fingerprintAuthentication:
             typeStr = "fingerprint";
@@ -62,40 +62,62 @@ export function useBiometricAuth() {
     }
 
     setIsLoading(true);
-
     try {
       await BiometricAuth.authenticate({
         reason: reason || "Authenticate to continue",
       });
 
-      setIsLoading(false);
       console.log("[BiometricAuth] Authentication successful");
-      
       return {
         success: true,
-        biometricType: biometricType,
+        biometricType,
       };
     } catch (error: any) {
-      setIsLoading(false);
-      console.error("[BiometricAuth] Authentication error:", error);
+      console.error("[BiometricAuth] Authentication failed:", error);
       
+      let errorMessage = "Authentication failed";
+      if (error.message) {
+        errorMessage = error.message;
+      }
+
       return {
         success: false,
-        error: error.message || "Authentication failed or cancelled",
+        error: errorMessage,
       };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getBiometricIcon = (): string => {
+    switch (biometricType) {
+      case "fingerprint":
+        return "fas fa-fingerprint";
+      case "face":
+      case "faceId":
+        return "fas fa-face-viewfinder";
+      case "touchId":
+        return "fas fa-fingerprint";
+      case "iris":
+        return "fas fa-eye";
+      default:
+        return "fas fa-shield-halved";
     }
   };
 
   const getBiometricLabel = (): string => {
     switch (biometricType) {
       case "fingerprint":
-        return "Fingerprint";
+        return "Use Fingerprint";
       case "face":
-        return "Face ID";
+      case "faceId":
+        return "Use Face ID";
+      case "touchId":
+        return "Use Touch ID";
       case "iris":
-        return "Iris Scan";
+        return "Use Iris Scan";
       default:
-        return "Biometric";
+        return "Use Biometrics";
     }
   };
 
@@ -104,7 +126,8 @@ export function useBiometricAuth() {
     biometricType,
     isLoading,
     authenticate,
+    getBiometricIcon,
     getBiometricLabel,
-    checkAvailability,
+    refresh: checkAvailability,
   };
 }
