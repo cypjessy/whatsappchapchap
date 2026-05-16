@@ -364,16 +364,7 @@ async function handleSubcategorySelection(
   const selectedSubcategoryName = categorySubcategories[num - 1];
   console.log(`[ServiceBrowse] Selected subcategory name: ${selectedSubcategoryName}`);
   
-  // FIXED: Find the subcategory key from the display name using the mapping
-  let selectedSubcategoryKey = '';
-  if (subcategoryMap && typeof subcategoryMap === 'object') {
-    // Reverse lookup: find key by display name
-    selectedSubcategoryKey = Object.entries(subcategoryMap).find(([key, name]) => name === selectedSubcategoryName)?.[0] || '';
-    console.log(`[ServiceBrowse] Mapped subcategory key: ${selectedSubcategoryKey} for name: ${selectedSubcategoryName}`);
-  } else {
-    console.warn(`[ServiceBrowse] No subcategoryMap available for reverse lookup`);
-  }
-  
+  // Show services for this subcategory
   await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategoryName, categoryName, deps);
 }
 
