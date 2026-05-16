@@ -14,7 +14,7 @@ import {
   updateDoc
 } from "firebase/firestore";
 import { User } from "firebase/auth";
-import { generateOrderNumber } from "../app/api/webhook/evolution/handlers/order-status";
+import { generateOrderNumber } from "../utils/orderNumber";
 
 const getTenantId = (user: User): string => `tenant_${user.uid}`;
 

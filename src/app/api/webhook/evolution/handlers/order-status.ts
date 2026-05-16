@@ -13,6 +13,7 @@
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { generateOrderNumber } from "@/utils/orderNumber";
 
 /**
  * Lazy initialization - get Firestore instance only when needed
@@ -29,17 +30,6 @@ export interface OrderStatusDeps {
   sendMessage: (tenantId: string, phone: string, message: string) => Promise<void>;
   startTyping?: (tenantId: string, phone: string) => Promise<void>;
   stopTyping?: (tenantId: string, phone: string) => Promise<void>;
-}
-
-/**
- * Generate a unique order number
- * Format: ORD-{timestamp}-{random}
- * Example: ORD-1705123456789-ABC123
- */
-export function generateOrderNumber(): string {
-  const timestamp = Date.now().toString().slice(-10);
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `ORD-${timestamp}-${random}`;
 }
 
 /**
