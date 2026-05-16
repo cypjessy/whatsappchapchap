@@ -571,7 +571,7 @@ async function showServiceBatch(
     }
   }
   
-  // Show navigation options
+  // Show navigation options with 4 action buttons
   const remaining = totalServices - (startIndex + batchSize);
   let navigationMessage = `\n*Reply with a number to view service details:*\n`;
   
@@ -584,8 +584,13 @@ async function showServiceBatch(
   if (remaining > 0) {
     navigationMessage += `6️⃣ - View More (${remaining} more)\n`;
   }
-  navigationMessage += `0️⃣ - Go back\n`;
-  navigationMessage += `*MENU* - Main menu`;
+  
+  // ⭐ 4 ACTION BUTTONS
+  navigationMessage += `\n*Quick Actions:*\n`;
+  navigationMessage += `1️⃣ Book This Service (after selecting a service above)\n`;
+  navigationMessage += `2️⃣ Back to Services\n`;
+  navigationMessage += `3️⃣ Main Menu\n`;
+  navigationMessage += `0️⃣ Browse Categories`;
   
   await deps.sendMessage(tenantId, phone, navigationMessage);
 }
@@ -628,6 +633,34 @@ async function handleServiceListing(
   const batchSize = 5;
   const currentBatchIds = serviceIds.slice(currentIndex, currentIndex + batchSize);
   
+  // ⭐ Handle Quick Actions (check before service selection)
+  if (num === 2) {
+    // 2️⃣ Back to Services - Go back to category/subcategory list
+    await deps.stopTyping(tenantId, phone);
+    if (listingType === 'subcategory' && subcategoryName) {
+      // Go back to show services for this subcategory
+      await showServicesForSubcategory(tenantId, phone, categorySlug, subcategoryName, categoryName, deps);
+    } else {
+      // Go back to show services for this category
+      await showServicesForCategory(tenantId, phone, categorySlug, categoryName, deps);
+    }
+    return;
+  }
+  
+  if (num === 3) {
+    // 3️⃣ Main Menu
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendWelcomeMenu(tenantId, phone);
+    return;
+  }
+  
+  if (num === 0) {
+    // 0️⃣ Browse Categories - Restart service browse from beginning
+    await deps.stopTyping(tenantId, phone);
+    await startServiceBrowseFlow(tenantId, phone, deps);
+    return;
+  }
+  
   // Numbers 1-5 = select a service from current batch
   if (num >= 1 && num <= currentBatchIds.length) {
     const selectedServiceId = currentBatchIds[num - 1];
@@ -639,7 +672,7 @@ async function handleServiceListing(
         tenantId,
         phone,
         "❌ Service not found. Please try browsing again.\n\n" +
-        "0️⃣ Go back"
+        "0️⃣ Browse Categories"
       );
       return;
     }
@@ -722,8 +755,10 @@ async function handleServiceListing(
     tenantId,
     phone,
     `❌ Invalid selection. Please reply with 1️⃣-${currentBatchIds.length}️⃣ to view a service, or 6️⃣ for more.\n\n` +
-    `0️⃣ - Go back\n` +
-    `*MENU* - Main menu`
+    `*Quick Actions:*\n` +
+    `2️⃣ Back to Services\n` +
+    `3️⃣ Main Menu\n` +
+    `0️⃣ Browse Categories`
   );
 }
 
