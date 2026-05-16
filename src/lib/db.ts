@@ -14,6 +14,7 @@ import {
   updateDoc
 } from "firebase/firestore";
 import { User } from "firebase/auth";
+import { generateOrderNumber } from "../app/api/webhook/evolution/handlers/order-status";
 
 const getTenantId = (user: User): string => `tenant_${user.uid}`;
 
@@ -1324,10 +1325,15 @@ export const orderService = {
   async createOrder(user: User, order: Omit<Order, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Order> {
     const tenantId = getTenantId(user);
     const docRef = doc(collection(db, "orders"));
+    
+    // Generate unique order number
+    const orderNumber = generateOrderNumber();
+    
     const orderData: Order = {
       ...order,
       id: docRef.id,
       tenantId,
+      orderNumber,  // ✅ Add generated order number
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
