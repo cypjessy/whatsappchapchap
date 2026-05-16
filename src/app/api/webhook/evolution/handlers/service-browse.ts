@@ -93,6 +93,7 @@ export async function startServiceBrowseFlow(
         name: data.mainCategoryName || data.mainCategory,
         icon: data.icon || DEFAULT_CATEGORY_ICONS[data.mainCategory] || '✨',
         subcategories: data.subcategories || [],
+        subcategoryMap: data.subcategoryMap || {},  // NEW: key -> display name mapping
         serviceCount: data.serviceCount || 0,
       };
     }).filter(cat => cat.serviceCount > 0); // Only show categories with services
@@ -252,6 +253,7 @@ async function handleCategorySelection(
             categorySlug: selectedCategory.categorySlug,
             categoryName: selectedCategory.name,
             categorySubcategories: selectedCategory.subcategories,
+            subcategoryMap: selectedCategory.subcategoryMap || {},  // NEW: Store key->name mapping
           },
           lastActivity: new Date().toISOString(),
         }
@@ -275,7 +277,7 @@ async function handleSubcategorySelection(
   const adminDb = getDb();
   const { selections } = flowState;
   const num = parseInt(message.trim());
-  const { categorySlug, categoryName, categorySubcategories } = selections;
+  const { categorySlug, categoryName, categorySubcategories, subcategoryMap } = selections;
   const trimmed = message.trim().toLowerCase();
   
   if (trimmed === '0' || trimmed === 'back') {
@@ -301,13 +303,23 @@ async function handleSubcategorySelection(
     return;
   }
   
-  const selectedSubcategory = categorySubcategories[num - 1];
+  const selectedSubcategoryName = categorySubcategories[num - 1];
   
-  if (deps.debugLog) {
-    deps.debugLog("[ServiceBrowse] Selected subcategory:", selectedSubcategory);
+  // FIXED: Find the subcategory key from the display name using the mapping
+  let selectedSubcategoryKey = '';
+  if (subcategoryMap && typeof subcategoryMap === 'object') {
+    // Reverse lookup: find key by display name
+    selectedSubcategoryKey = Object.entries(subcategoryMap).find(([key, name]) => name === selectedSubcategoryName)?.[0] || '';
   }
   
-  await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategory, categoryName, deps);
+  if (deps.debugLog) {
+    deps.debugLog("[ServiceBrowse] Selected subcategory:", {
+      name: selectedSubcategoryName,
+      key: selectedSubcategoryKey
+    });
+  }
+  
+  await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategoryName, selectedSubcategoryKey, categoryName, deps);
 }
 
 /**
@@ -384,6 +396,7 @@ async function showServicesForSubcategory(
   phone: string,
   categorySlug: string,
   subcategoryName: string,
+  subcategoryKey: string,  // NEW: Added subcategory key parameter
   categoryName: string,
   deps: ServiceBrowseDeps
 ): Promise<void> {
@@ -391,9 +404,7 @@ async function showServicesForSubcategory(
   
   await deps.startTyping(tenantId, phone);
   
-  // FIXED: Query by subcategory key (not display name)
-  // We need to convert display name back to key for querying
-  // Since we don't have the key here, query by businessType and filter client-side
+  // FIXED: Query by businessType and filter by subcategory key
   const servicesSnap = await adminDb
     .collection("services")
     .where("tenantId", "==", tenantId)
@@ -406,10 +417,13 @@ async function showServicesForSubcategory(
     ...doc.data()
   })) as Service[];
   
-  // Filter by subcategory (match both key and display name for compatibility)
-  services = services.filter((s: any) => {
-    return s.subcategory === subcategoryName || s.subcategoryName === subcategoryName;
-  });
+  // Filter by subcategory key (services store the key, not display name)
+  if (subcategoryKey) {
+    services = services.filter((s: any) => s.subcategory === subcategoryKey);
+  } else {
+    // Fallback: try matching by display name
+    services = services.filter((s: any) => s.subcategoryName === subcategoryName);
+  }
   
   if (services.length === 0) {
     await deps.stopTyping(tenantId, phone);

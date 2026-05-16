@@ -527,7 +527,14 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       const categories = SERVICE_CATEGORIES;
       const batchPromises = categories.map(async (category) => {
         const docId = `${tenantId}_${category.id}`;
-        const subcategories = getServiceSubcategories(category.id).map(sub => sub.name);
+        const subcategoriesList = getServiceSubcategories(category.id);
+        
+        // Store both display names (for UI) and key-to-name mapping (for bot)
+        const subcategories = subcategoriesList.map(sub => sub.name);
+        const subcategoryMap = subcategoriesList.reduce((acc, sub) => {
+          acc[sub.key] = sub.name;
+          return acc;
+        }, {} as Record<string, string>);
         
         await setDoc(doc(db, "serviceCategoryNames", docId), {
           id: category.id,
@@ -537,6 +544,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
           icon: category.icon,
           description: category.description,
           subcategories: subcategories,
+          subcategoryMap: subcategoryMap,  // NEW: key -> display name mapping
           serviceCount: 0,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
