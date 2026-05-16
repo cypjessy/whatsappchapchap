@@ -499,19 +499,27 @@ export async function handleOrderStatusSelection(
     let businessName = "Our Shop";
     try {
       const adminDb = getDb();
-      
-      // Try whatsappSettings first (matches save logic)
-      const whatsappQuery = await adminDb.collection("whatsappSettings").where("tenantId", "==", tenantId).get();
-      
-      if (!whatsappQuery.empty) {
-        const data = whatsappQuery.docs[0].data();
-        businessName = data?.businessName || "Our Shop";
+        
+      // ⭐ PRIORITY 1: Fetch from tenants collection (most accurate - primary source)
+      const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+        
+      if (tenantDoc.exists) {
+        const tenantData = tenantDoc.data();
+        businessName = tenantData?.businessName || "Our Shop";
       } else {
-        // Fallback to settings collection
-        const settingsDoc = await adminDb.collection("settings").doc(tenantId).get();
-        if (settingsDoc.exists) {
-          const data = settingsDoc.data();
+        // Fallback: Try whatsappSettings
+        const whatsappQuery = await adminDb.collection("whatsappSettings").where("tenantId", "==", tenantId).get();
+          
+        if (!whatsappQuery.empty) {
+          const data = whatsappQuery.docs[0].data();
           businessName = data?.businessName || "Our Shop";
+        } else {
+          // Fallback to settings collection
+          const settingsDoc = await adminDb.collection("settings").doc(tenantId).get();
+          if (settingsDoc.exists) {
+            const data = settingsDoc.data();
+            businessName = data?.businessName || "Our Shop";
+          }
         }
       }
     } catch (error) {

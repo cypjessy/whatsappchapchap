@@ -59,7 +59,19 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
   try {
     const adminDb = getAdminDb();
     
-    // ⭐ FIXED: Use query instead of direct doc lookup for whatsappSettings
+    // ⭐ PRIORITY 1: Fetch from tenants collection (most accurate - primary source)
+    const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+    
+    if (tenantDoc.exists) {
+      const tenantData = tenantDoc.data();
+      return {
+        businessName: tenantData?.businessName || "Our Shop",
+        welcomeMessage: tenantData?.welcomeMessage || `Hello! 👋 Welcome to {{business_name}}.\n\nWe're excited to connect with you! How can we help you today?`,
+        welcomeMessageEnabled: tenantData?.welcomeMessageEnabled ?? true
+      };
+    }
+    
+    // Fallback: whatsappSettings collection
     const whatsappQuery = await adminDb.collection("whatsappSettings").where("tenantId", "==", tenantId).get();
     
     if (!whatsappQuery.empty) {
