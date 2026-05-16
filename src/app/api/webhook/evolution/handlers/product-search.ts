@@ -354,7 +354,7 @@ export async function handleProductSearch(
     
     let replyMessage = '';
     if (totalResults > 5) {
-      replyMessage = `\n*Reply with a number:*\n1️ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
+      replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
     } else {
       replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
     }
