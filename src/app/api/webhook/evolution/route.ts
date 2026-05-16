@@ -1136,8 +1136,22 @@ async function handleServiceSearchInput(
       return;
     }
 
-    // Main menu
+    // ⭐ View Categories (same as browse services)
     if (num === 3) {
+      await stopTypingIndicator(tenantId, phone);
+      const serviceDeps: ServiceBrowseDeps = {
+        sendMessage: sendEvolutionMessage,
+        sendMedia: sendEvolutionMedia,
+        startTyping: startTypingIndicator,
+        stopTyping: stopTypingIndicator,
+        sendWelcomeMenu: sendWelcomeMenu,
+      };
+      await startServiceBrowseFlow(tenantId, phone, serviceDeps);
+      return;
+    }
+
+    // ⭐ Main menu is option 4
+    if (num === 4) {
       await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
       return;
@@ -1147,7 +1161,7 @@ async function handleServiceSearchInput(
   // Fallback
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone,
-    "❌ Invalid selection.\n\n*Reply:*\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - Main Menu"
+    "❌ Invalid selection.\n\n*Reply:*\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
   );
 }
 
