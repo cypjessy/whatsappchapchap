@@ -653,6 +653,11 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
           timeSlots,
         },
         customTimeSlots: generateTimeSlots(Number(form.duration)),
+        // Booking Policy Fields
+        depositRequired: form.deposit,
+        reschedulingAllowed: form.rescheduling,
+        cancellationNoticeHours: form.cancellationNotice ? 24 : 0,
+        serviceRadiusKm: form.serviceRadius ? Number(form.serviceRadius) : undefined,
       };
 
       const createdService = await serviceService.createService(user, serviceDataToSave);
