@@ -178,6 +178,11 @@ export interface Service {
   businessCategory?: string; // Human-readable business category name (e.g., "Beauty & Hair", "Home Services")
   serviceName?: string; // Human-readable service name (e.g., "Hair Braiding", "Massage")
   categoryName?: string; // For AI context - same as businessCategory
+  
+  // ⭐ Subcategory fields for 3-level navigation (Categories → Subcategories → Services)
+  subcategory?: string;      // Subcategory key/slug (e.g., "hair_styling", "plumbing")
+  subcategoryName?: string;  // Display name (e.g., "Hair Styling", "Plumbing")
+  
   specifications: any;
   tier: string;
   mode: string;
