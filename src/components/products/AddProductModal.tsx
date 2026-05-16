@@ -923,13 +923,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const productToSave = await productService.createProduct(user, {
         name: formData.name,
         description: formData.description || undefined,
-        category: selectedCategoryId!,
+        category: currentCategory?.name || selectedCategoryId!,  // Save full display name for bot compatibility
         categoryName: currentCategory?.name || selectedCategoryId!,
         subcategory: currentSubcategory?.name || selectedSubcategoryKey!,  // Save display name for bot compatibility
         type: typeValue,  // Save type for bot navigation
         brand: extractedBrand,
-        categoryId: selectedCategoryId!,
-        subcategoryId: selectedSubcategoryKey!,
+        categoryId: selectedCategoryId!,  // Keep slug for reference
+        subcategoryId: selectedSubcategoryKey!,  // Keep slug for reference
         price: minPrice,
         stock: totalStock || parseInt(formData.initialStock) || 0,
         image: imageUrl,

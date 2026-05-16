@@ -732,13 +732,13 @@ async function showProductsForSelection(
     }));
   }
   
-  // FIXED: Use "category" field (not "categoryId") to match Add Product Modal
+  // FIXED: Use "category" field with display name to match Add Product Modal
   let query = adminDb.collection('products')
     .where('tenantId', '==', tenantId)
     .where('status', '==', 'active');
   
-  if (selections.categorySlug) {
-    query = query.where('category', '==', selections.categorySlug);
+  if (selections.categoryName) {
+    query = query.where('category', '==', selections.categoryName);
   }
   
   // Also support categoryId as fallback
@@ -804,7 +804,7 @@ async function showProductsForSelection(
     if (selections.type && selections.subcategory) {
       const broaderQuery = adminDb.collection('products')
         .where('tenantId', '==', tenantId)
-        .where('category', '==', selections.categorySlug || selections.categoryId)
+        .where('category', '==', selections.categoryName || selections.categoryId)
         .where('subcategory', '==', selections.subcategory)
         .where('status', '==', 'active')
         .limit(3);
@@ -1074,8 +1074,8 @@ async function showNextProductPage(
     .where('tenantId', '==', tenantId)
     .where('status', '==', 'active');
   
-  if (selections.categoryId || selections.categorySlug) {
-    query = query.where('category', '==', selections.categorySlug || selections.categoryId);
+  if (selections.categoryName || selections.categorySlug) {
+    query = query.where('category', '==', selections.categoryName || selections.categorySlug);
   }
   
   if (selections.subcategory) {
