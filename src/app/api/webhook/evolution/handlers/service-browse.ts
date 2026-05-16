@@ -93,9 +93,11 @@ export async function startServiceBrowseFlow(
     const categories = categoriesSnap.docs.map((doc: any) => {
       const data = doc.data();
       console.log(`[ServiceBrowse] Category doc ${doc.id}:`, {
+        id: doc.id,
         mainCategory: data.mainCategory,
         mainCategoryName: data.mainCategoryName,
-        subcategoryMap: data.subcategoryMap ? Object.keys(data.subcategoryMap).length : 'missing',
+        subcategories: data.subcategories,
+        subcategoryMap: data.subcategoryMap ? Object.keys(data.subcategoryMap) : 'missing',
         serviceCount: data.serviceCount
       });
       return {
@@ -112,6 +114,7 @@ export async function startServiceBrowseFlow(
     const categoriesWithServices = categories.filter(cat => cat.serviceCount > 0);
     
     console.log(`[ServiceBrowse] Total categories: ${categories.length}, With services: ${categoriesWithServices.length}`);
+    console.log(`[ServiceBrowse] Categories order:`, categoriesWithServices.map((c, i) => `${i+1}. ${c.name} (${c.categorySlug}) - ${c.serviceCount} services`));
     
     if (categoriesWithServices.length === 0) {
       console.warn(`[ServiceBrowse] No categories have services for tenant: ${tenantId}`);
