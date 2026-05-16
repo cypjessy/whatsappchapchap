@@ -251,17 +251,45 @@ async function handleCategorySelection(
   
   // Check if category has subcategories
   if (selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
-    console.log(`[ServiceBrowse] Showing ${selectedCategory.subcategories.length} subcategories for ${selectedCategory.name}`);
-    // Show subcategories
-    const subcategoryList = selectedCategory.subcategories
-      .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
+    console.log(`[ServiceBrowse] Category has ${selectedCategory.subcategories.length} template subcategories`);
+    
+    // ⭐ DYNAMIC FILTER: Get only subcategories that actually have services
+    const servicesSnap = await adminDb
+      .collection("services")
+      .where("tenantId", "==", tenantId)
+      .where("businessType", "==", selectedCategory.categorySlug)
+      .where("status", "==", "active")
+      .get();
+    
+    console.log(`[ServiceBrowse] Found ${servicesSnap.size} active services for category ${selectedCategory.categorySlug}`);
+    
+    // Collect unique subcategory names that have services
+    const uniqueSubcategories = new Set<string>();
+    servicesSnap.docs.forEach(doc => {
+      const serviceData = doc.data();
+      if (serviceData.subcategoryName) {
+        uniqueSubcategories.add(serviceData.subcategoryName);
+      }
+    });
+    
+    const subcategoryList = Array.from(uniqueSubcategories);
+    console.log(`[ServiceBrowse] Subcategories with actual services: ${subcategoryList.length}`, subcategoryList);
+    
+    if (subcategoryList.length === 0) {
+      // No subcategories with services, show services directly
+      console.log(`[ServiceBrowse] No subcategories with services, showing all services directly`);
+      await showServicesForCategory(tenantId, phone, selectedCategory.categorySlug, selectedCategory.name, deps);
+      return;
+    }
+    
+    // Show only subcategories that have services
+    const formattedList = subcategoryList
+      .map((sub, idx) => `${idx + 1}️⃣ ${sub}`)
       .join('\n');
     
-    const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories`;
+    const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${formattedList}\n\n0️⃣ Back to categories`;
     
-    await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(tenantId, phone, response);
-    
+    // Store the actual subcategory names for selection
     await adminDb
       .collection("tenants")
       .doc(tenantId)
@@ -276,12 +304,15 @@ async function handleCategorySelection(
             ...selections,
             categorySlug: selectedCategory.categorySlug,
             categoryName: selectedCategory.name,
-            categorySubcategories: selectedCategory.subcategories,
-            subcategoryMap: selectedCategory.subcategoryMap || {},  // NEW: Store key->name mapping
+            categorySubcategories: subcategoryList,  // Store actual subcategory names
           },
           lastActivity: new Date().toISOString(),
         }
       }, { merge: true });
+    
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(tenantId, phone, response);
+    return;
   } else {
     // No subcategories, show services directly
     await showServicesForCategory(tenantId, phone, selectedCategory.categorySlug, selectedCategory.name, deps);
@@ -343,7 +374,7 @@ async function handleSubcategorySelection(
     console.warn(`[ServiceBrowse] No subcategoryMap available for reverse lookup`);
   }
   
-  await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategoryName, selectedSubcategoryKey, categoryName, deps);
+  await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategoryName, categoryName, deps);
 }
 
 /**
@@ -420,7 +451,6 @@ async function showServicesForSubcategory(
   phone: string,
   categorySlug: string,
   subcategoryName: string,
-  subcategoryKey: string,  // NEW: Added subcategory key parameter
   categoryName: string,
   deps: ServiceBrowseDeps
 ): Promise<void> {
@@ -428,31 +458,19 @@ async function showServicesForSubcategory(
   
   await deps.startTyping(tenantId, phone);
   
-  console.log(`[ServiceBrowse] Querying services for: category=${categorySlug}, subcategory=${subcategoryName}, key=${subcategoryKey}`);
+  console.log(`[ServiceBrowse] Querying services for: category=${categorySlug}, subcategory=${subcategoryName}`);
   
-  // OPTIMIZED: Query by businessType AND subcategory in Firestore (server-side filtering)
+  // ⭐ FIXED: Query by subcategoryName (display name) instead of subcategory key
   let servicesSnap;
   try {
-    if (subcategoryKey) {
-      console.log(`[ServiceBrowse] Using composite query with subcategory key`);
-      // Use composite index for efficient query
-      servicesSnap = await adminDb
-        .collection("services")
-        .where("tenantId", "==", tenantId)
-        .where("businessType", "==", categorySlug)
-        .where("subcategory", "==", subcategoryKey)
-        .where("status", "==", "active")
-        .get();
-    } else {
-      console.warn(`[ServiceBrowse] No subcategory key, using fallback query`);
-      // Fallback: query without subcategory filter
-      servicesSnap = await adminDb
-        .collection("services")
-        .where("tenantId", "==", tenantId)
-        .where("businessType", "==", categorySlug)
-        .where("status", "==", "active")
-        .get();
-    }
+    console.log(`[ServiceBrowse] Using subcategoryName query: ${subcategoryName}`);
+    servicesSnap = await adminDb
+      .collection("services")
+      .where("tenantId", "==", tenantId)
+      .where("businessType", "==", categorySlug)
+      .where("subcategoryName", "==", subcategoryName)
+      .where("status", "==", "active")
+      .get();
   } catch (error: any) {
     console.error(`[ServiceBrowse] Firestore query error:`, error.message);
     console.error(`[ServiceBrowse] Error code:`, error.code);
