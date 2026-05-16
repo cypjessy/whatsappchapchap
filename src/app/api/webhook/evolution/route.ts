@@ -787,6 +787,7 @@ async function handleFlowInput(
           sendTypingIndicator: startTypingIndicator,
           stopTypingIndicator: stopTypingIndicator,
           sendMessage: sendEvolutionMessage,
+          sendMedia: sendEvolutionMedia,  // ⭐ ADDED: Support for service images
           setFlowState: setFlowState,
         }
       );
@@ -899,7 +900,14 @@ async function handleFlowInput(
       await sendEvolutionMessage(tenantId, phone, msg);
     }
 
-    await setFlowState(tenantId, phone, { isActive: false });
+    // ⭐ FIXED: Use FieldValue.delete() to properly clear flow state
+    const adminDb = getAdminDb();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({ flowState: FieldValue.delete() }, { merge: true });
     return;
   }
 }
