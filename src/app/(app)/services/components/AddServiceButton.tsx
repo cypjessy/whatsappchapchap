@@ -1219,27 +1219,27 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 md3-dialog-backdrop z-50 flex items-start justify-center p-2 md:p-4 overflow-y-auto">
+        <div className="fixed inset-0 md3-dialog-backdrop z-50 flex items-center justify-center p-2 md:p-4">
           <div
-            className="md3-dialog w-full max-w-3xl my-2 md:my-8"
+            className="md3-dialog w-full max-w-3xl my-2 md:my-8 bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-[var(--md-sys-color-surface)]">
-              <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)]">
+            <div className="sticky top-0 z-10 bg-white rounded-t-2xl border-b border-[#e2e8f0]">
+              <div className="flex items-center justify-between px-6 py-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg">
                     <i className="fas fa-plus text-lg" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-normal text-[var(--md-sys-color-on-surface)] leading-tight">Add New Service</h2>
-                    <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
+                    <h2 className="text-xl font-normal text-[#1e293b] leading-tight">Add New Service</h2>
+                    <p className="text-xs text-[#64748b] mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
                   disabled={isSaving || isUploading}
-                  className="w-10 h-10 rounded-full bg-transparent text-[var(--md-sys-color-on-surface-variant)] flex items-center justify-center hover:bg-[var(--md-sys-color-surface-variant)] transition-all duration-200 active:scale-95"
+                  className="w-10 h-10 rounded-full bg-transparent text-[#64748b] flex items-center justify-center hover:bg-[#f1f5f9] transition-all duration-200 active:scale-95"
                 >
                   <i className="fas fa-times" />
                 </button>
@@ -1248,8 +1248,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               <StepIndicator currentStep={currentStep} totalSteps={WIZARD_STEPS.length} />
             </div>
 
-            {/* Body */}
-            <div className="md3-dialog-content">
+            {/* Body - Scrollable */}
+            <div className="md3-dialog-content overflow-y-auto flex-1 px-6 py-4">
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
@@ -1260,8 +1260,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               {currentStep === 8 && renderStep8()}
             </div>
 
-            {/* Footer */}
-            <div className="md3-dialog-actions">
+            {/* Footer - Always Visible */}
+            <div className="md3-dialog-actions sticky bottom-0 bg-white border-t border-[#e2e8f0] px-6 py-4 rounded-b-2xl">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 1 || isSaving || isUploading}
