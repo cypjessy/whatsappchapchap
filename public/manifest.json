@@ -8,6 +8,7 @@
   "theme_color": "#25D366",
   "orientation": "portrait",
   "scope": "/",
+  "offline_url": "/offline",
   "icons": [
     {
       "src": "/icons/icon-48.webp",
