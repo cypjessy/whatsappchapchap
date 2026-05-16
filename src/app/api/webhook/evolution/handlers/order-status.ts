@@ -498,10 +498,21 @@ export async function handleOrderStatusSelection(
     // ⭐ Fetch business name for personalized welcome
     let businessName = "Our Shop";
     try {
-      const settingsDoc = await db.collection("settings").doc(tenantId).get();
-      if (settingsDoc.exists) {
-        const data = settingsDoc.data();
+      const adminDb = getDb();
+      
+      // Try whatsappSettings first (matches save logic)
+      const whatsappQuery = await adminDb.collection("whatsappSettings").where("tenantId", "==", tenantId).get();
+      
+      if (!whatsappQuery.empty) {
+        const data = whatsappQuery.docs[0].data();
         businessName = data?.businessName || "Our Shop";
+      } else {
+        // Fallback to settings collection
+        const settingsDoc = await adminDb.collection("settings").doc(tenantId).get();
+        if (settingsDoc.exists) {
+          const data = settingsDoc.data();
+          businessName = data?.businessName || "Our Shop";
+        }
       }
     } catch (error) {
       console.error('[OrderStatus] Error fetching business name:', error);
