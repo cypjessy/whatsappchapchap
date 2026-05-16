@@ -20,6 +20,14 @@ import {
   handleProductBrowseInput,
   type ProductBrowseDeps
 } from "./handlers/product-browse";
+import { 
+  handleProductSearch as handleProductSearchHandler,
+  type Deps as ProductSearchDeps
+} from "./handlers/product-search";
+import { 
+  handleServiceSearch as handleServiceSearchHandler,
+  type Deps as ServiceSearchDeps
+} from "./handlers/service-search";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -59,7 +67,7 @@ async function getTenantSettings(tenantId: string): Promise<{ businessName: stri
   try {
     const adminDb = getAdminDb();
     
-    // ⭐ PRIORITY 1: Fetch from tenants collection (most accurate - primary source)
+    // PRIORITY 1: Fetch from tenants collection (most accurate - primary source)
     const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
     
     if (tenantDoc.exists) {
@@ -306,7 +314,6 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
       };
     });
     
-    // FIXED BUG 2: Added bookingUrl to services mapping
     const services = servicesSnap.docs.map((doc: any) => {
       const data = doc.data();
       return {
@@ -454,10 +461,11 @@ export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<
     `1️⃣ Browse Products\n` +
     `2️⃣ Browse Services\n` +
     `3️⃣ 🔍 Search Products\n` +
-    `4️⃣ Check Order Status\n` +
-    `5️⃣ Payment Info\n` +
-    `6️⃣ Talk to Support${cartNote}\n\n` +
-    `*Reply with a number (1-6)*`;
+    `4️⃣ 🔍 Search Services\n` +
+    `5️⃣ Check Order Status\n` +
+    `6️⃣ Payment Info\n` +
+    `7️⃣ Talk to Support${cartNote}\n\n` +
+    `*Reply with a number (1-7)*`;
   
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, menuMsg);
@@ -503,7 +511,7 @@ function parseMenuSelection(message: string): number | null {
   const wordCount = trimmed.split(/\s+/).length;
   
   const num = parseInt(trimmed);
-  if (!isNaN(num) && num >= 1 && num <= 6) {
+  if (!isNaN(num) && num >= 1 && num <= 7) {
     return num;
   }
   
@@ -551,6 +559,37 @@ async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
     }, { merge: true });
 }
 
+async function startServiceSearchFlow(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
+  const response = `🔍 *Service Search*\n\n` +
+    `Please type the service you're looking for.\n\n` +
+    `📝 *Examples:*\n` +
+    `• "haircut"\n` +
+    `• "massage"\n` +
+    `• "consultation"\n\n` +
+    `0️⃣ - Back to main menu`;
+  
+  await stopTypingIndicator(tenantId, phone);
+  await sendEvolutionMessage(tenantId, phone, response);
+  
+  const adminDb = getAdminDb();
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'service_search_prompt',
+        currentStep: 'waiting_for_search_term',
+        startedAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
+}
+
 async function handleMenuSelection(tenantId: string, phone: string, selection: number): Promise<void> {
   switch (selection) {
     case 1:
@@ -567,9 +606,9 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       };
       await startProductBrowseFlow(tenantId, phone, productDeps);
       break;
+      
     case 2:
       debugLog("[Webhook] Starting service browse flow");
-      // FIXED: Added sendWelcomeMenu to service deps
       const serviceDeps: ServiceBrowseDeps = { 
         sendMessage: sendEvolutionMessage,
         sendMedia: sendEvolutionMedia,
@@ -579,25 +618,37 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       };
       await startServiceBrowseFlow(tenantId, phone, serviceDeps);
       break;
+      
     case 3:
-      debugLog("[Webhook] Starting search flow");
+      debugLog("[Webhook] Starting product search flow");
       await startSearchFlow(tenantId, phone);
       break;
+      
     case 4:
+      debugLog("[Webhook] Starting service search flow");
+      await startServiceSearchFlow(tenantId, phone);
+      break;
+      
+    case 5:
       debugLog("[Webhook] Order status requested");
       await sendOrderStatusInfo(tenantId, phone);
       break;
-    case 5:
+      
+    case 6:
       debugLog("[Webhook] Payment info requested");
       await sendPaymentInfo(tenantId, phone);
       break;
-    case 6:
+      
+    case 7:
       debugLog("[Webhook] Support requested");
       await sendSupportInfo(tenantId, phone);
       break;
+      
+    default:
+      debugLog("[Webhook] Unknown menu selection:", selection);
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number 1-7.");
   }
 }
-
 
 async function handleFlowInput(
   tenantId: string,
@@ -694,7 +745,51 @@ async function handleFlowInput(
         return;
       }
       
-      await handleProductSearch(tenantId, phone, trimmed);
+      await handleProductSearchHandler(
+        tenantId,
+        phone,
+        trimmed,
+        {
+          sendTypingIndicator: startTypingIndicator,
+          stopTypingIndicator: stopTypingIndicator,
+          sendMessage: sendEvolutionMessage,
+          sendMedia: sendEvolutionMedia,
+          setFlowState: setFlowState,
+        }
+      );
+      return;
+    }
+  }
+  
+  if (flowName === 'service_search_prompt') {
+    if (currentStep === 'waiting_for_search_term') {
+      const trimmed = message.trim();
+      
+      if (trimmed === '0') {
+        await sendWelcomeMenu(tenantId, phone);
+        return;
+      }
+      
+      if (trimmed.length < 2) {
+        await sendEvolutionMessage(tenantId, phone, 
+          "❌ Please enter a valid search term (at least 2 characters).\n\n" +
+          "Example: 'haircut', 'massage', 'consultation'\n\n" +
+          "Or reply *0* to go back."
+        );
+        return;
+      }
+      
+      await handleServiceSearchHandler(
+        tenantId,
+        phone,
+        trimmed,
+        {
+          sendTypingIndicator: startTypingIndicator,
+          stopTypingIndicator: stopTypingIndicator,
+          sendMessage: sendEvolutionMessage,
+          setFlowState: setFlowState,
+        }
+      );
       return;
     }
   }
@@ -715,7 +810,6 @@ async function handleFlowInput(
   }
   
   if (flowName === 'service_browse') {
-    // FIXED: Added sendWelcomeMenu to service deps
     const deps: ServiceBrowseDeps = { 
       sendMessage: sendEvolutionMessage,
       sendMedia: sendEvolutionMedia,
@@ -788,7 +882,7 @@ async function handleProductSearchInput(
       
       if (nextBatch.length === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await sendEvolutionMessage(tenantId, phone, " No more products to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️ - Main Menu");
+        await sendEvolutionMessage(tenantId, phone, "✅ No more products to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu");
         return;
       }
       
@@ -888,7 +982,18 @@ async function handleProductSearchInput(
   
   if (checkIfSearchQuery(trimmed)) {
     await stopTypingIndicator(tenantId, phone);
-    await handleProductSearch(tenantId, phone, trimmed);
+    await handleProductSearchHandler(
+      tenantId,
+      phone,
+      trimmed,
+      {
+        sendTypingIndicator: startTypingIndicator,
+        stopTypingIndicator: stopTypingIndicator,
+        sendMessage: sendEvolutionMessage,
+        sendMedia: sendEvolutionMedia,
+        setFlowState: setFlowState,
+      }
+    );
   } else {
     await stopTypingIndicator(tenantId, phone);
     await sendEvolutionMessage(tenantId, phone,
@@ -906,7 +1011,6 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
     stopTyping: stopTypingIndicator
   };
   
-  // This shows recent orders AND sets the correct flow state ('order_status_selection')
   await startOrderStatusFlow(tenantId, phone, deps);
   
   await stopTypingIndicator(tenantId, phone);
@@ -940,7 +1044,7 @@ async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   await stopTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, " Our support team is here to help! Please describe your issue and we'll assist you.");
+  await sendEvolutionMessage(tenantId, phone, "🆘 Our support team is here to help! Please describe your issue and we'll assist you.");
 }
 
 async function handleViewCart(tenantId: string, phone: string): Promise<void> {
@@ -1113,7 +1217,6 @@ async function handleProductSearch(
     
     debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
     
-    // Direct Firestore query
     const adminDb = getAdminDb();
     
     const productsSnap = await adminDb
@@ -1132,7 +1235,6 @@ async function handleProductSearch(
       return;
     }
     
-    // Score products with fuzzy matching
     const searchLower = searchTerm.toLowerCase();
     const allProducts = productsSnap.docs.map((doc: any) => ({
       id: doc.id,
@@ -1147,80 +1249,39 @@ async function handleProductSearch(
       const category = (product.category || product.categoryName || "").toLowerCase();
       const description = (product.description || "").toLowerCase();
       
-      // EXACT NAME MATCH (Highest)
-      if (name === searchLower) {
-        score += 200;
-      }
+      if (name === searchLower) score += 200;
+      if (name.startsWith(searchLower)) score += 150;
+      if (name.includes(searchLower)) score += 100;
+      if (isFuzzyMatch(name, searchLower, 2) && !name.includes(searchLower)) score += 80;
       
-      // NAME STARTS WITH
-      if (name.startsWith(searchLower)) {
-        score += 150;
-      }
-      
-      // NAME CONTAINS
-      if (name.includes(searchLower)) {
-        score += 100;
-      }
-      
-      // FUZZY NAME MATCH (for typos)
-      if (isFuzzyMatch(name, searchLower, 2) && !name.includes(searchLower)) {
-        score += 80;
-      }
-      
-      // Split into words for multi-word matching
       const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
       const nameWords = name.split(/\s+/);
       
       for (const searchWord of searchWords) {
         for (const nameWord of nameWords) {
-          if (nameWord === searchWord) {
-            score += 60;
-          } else if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) {
-            score += 30;
-          }
+          if (nameWord === searchWord) score += 60;
+          else if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) score += 30;
         }
       }
       
-      // BRAND MATCH
-      if (brand === searchLower) {
-        score += 80;
-      } else if (brand.includes(searchLower)) {
-        score += 50;
-      } else if (isFuzzyMatch(brand, searchLower, 2)) {
-        score += 30;
-      }
+      if (brand === searchLower) score += 80;
+      else if (brand.includes(searchLower)) score += 50;
+      else if (isFuzzyMatch(brand, searchLower, 2)) score += 30;
       
-      // CATEGORY MATCH
-      if (category === searchLower) {
-        score += 60;
-      } else if (category.includes(searchLower)) {
-        score += 40;
-      } else if (isFuzzyMatch(category, searchLower, 2)) {
-        score += 20;
-      }
+      if (category === searchLower) score += 60;
+      else if (category.includes(searchLower)) score += 40;
+      else if (isFuzzyMatch(category, searchLower, 2)) score += 20;
       
-      // DESCRIPTION MATCH (lower weight)
-      if (description.includes(searchLower)) {
-        score += 15;
-      } else if (isFuzzyMatch(description, searchLower, 3)) {
-        score += 10;
-      }
+      if (description.includes(searchLower)) score += 15;
+      else if (isFuzzyMatch(description, searchLower, 3)) score += 10;
       
       return { ...product, score };
     }).filter((p: any) => p.score > 0);
     
-    // Sort by score (highest first)
     scoredProducts.sort((a: any, b: any) => b.score - a.score);
     
     debugLog(`[Webhook] Search found ${scoredProducts.length} matching products for "${searchTerm}"`);
     
-    // Debug logging
-    if (DEBUG && scoredProducts.length > 0) {
-      console.log(`[Webhook] Sample product names:`, allProducts.slice(0, 3).map(p => p.name));
-      console.log(`[Webhook] First scored product:`, scoredProducts[0]?.name, scoredProducts[0]?.score);
-    }
-    
-    // Find similar products for suggestions
     let similarProducts: any[] = [];
     if (scoredProducts.length === 0) {
       const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
@@ -1230,16 +1291,11 @@ async function handleProductSearch(
         let matchScore = 0;
         
         for (const searchWord of searchWords) {
-          if (name.includes(searchWord)) {
-            matchScore += 10;
-          }
+          if (name.includes(searchWord)) matchScore += 10;
         }
         
         if (matchScore > 0) {
-          similarProducts.push({
-            ...product,
-            matchScore: matchScore
-          });
+          similarProducts.push({ ...product, matchScore });
         }
       }
       
@@ -1247,12 +1303,10 @@ async function handleProductSearch(
       similarProducts.splice(5);
     }
     
-    // CASE 1: No results but have similar products suggestions
     if (scoredProducts.length === 0 && similarProducts.length > 0) {
       await stopTypingIndicator(tenantId, phone);
       
-      let suggestionMessage = `🔍 *No exact match for "${searchTerm}"*\n\n` +
-        `💡 *Did you mean?*\n\n`;
+      let suggestionMessage = `🔍 *No exact match for "${searchTerm}"*\n\n💡 *Did you mean?*\n\n`;
       
       similarProducts.forEach((product: any, idx: number) => {
         suggestionMessage += `${idx + 1}. *${product.name}* - KES ${product.price?.toLocaleString()}\n`;
@@ -1263,8 +1317,7 @@ async function handleProductSearch(
         suggestionMessage += `\n`;
       });
       
-      suggestionMessage += `Reply with a number to see product details, or *0* to go back.\n\n` +
-        `Or try searching with different keywords!`;
+      suggestionMessage += `Reply with a number to see product details, or *0* to go back.\n\nOr try searching with different keywords!`;
       
       await sendEvolutionMessage(tenantId, phone, suggestionMessage);
       
@@ -1279,7 +1332,6 @@ async function handleProductSearch(
       return;
     }
     
-    // CASE 2: No results at all
     if (scoredProducts.length === 0) {
       await stopTypingIndicator(tenantId, phone);
       await sendEvolutionMessage(
@@ -1290,16 +1342,13 @@ async function handleProductSearch(
       return;
     }
     
-    // CASE 3: Has results - display them
     const results = scoredProducts.slice(0, 5);
     const totalResults = scoredProducts.length;
     
-    let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\n`;
-    headerMessage += `Found ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
+    let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
     await sendEvolutionMessage(tenantId, phone, headerMessage);
     
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://yourdomain.com');
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://yourdomain.com');
     
     for (let idx = 0; idx < results.length; idx++) {
       const product = results[idx];
@@ -1314,11 +1363,7 @@ async function handleProductSearch(
       }
 
       if (product.stock !== undefined) {
-        const stockLabel = product.stock === 0
-          ? '❌ Out of stock'
-          : product.stock <= 5
-            ? `⚠️ Only ${product.stock} left`
-            : `✅ In stock (${product.stock})`;
+        const stockLabel = product.stock === 0 ? '❌ Out of stock' : product.stock <= 5 ? `⚠️ Only ${product.stock} left` : `✅ In stock (${product.stock})`;
         productText += `   📦 ${stockLabel}\n`;
       }
 
@@ -1327,16 +1372,11 @@ async function handleProductSearch(
         productText += `   📝 ${shortDesc}${product.description.length > 100 ? '...' : ''}\n`;
       }
 
-      if (product.brand) {
-        productText += `   🏷️ Brand: ${product.brand}\n`;
-      }
-      
-      if (product.category || product.categoryName) {
-        productText += `   📂 Category: ${product.category || product.categoryName}\n`;
-      }
+      if (product.brand) productText += `   🏷️ Brand: ${product.brand}\n`;
+      if (product.category || product.categoryName) productText += `   📂 Category: ${product.category || product.categoryName}\n`;
 
       const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
-      productText += `    Order: ${orderLink}\n`;
+      productText += `   🛒 Order: ${orderLink}\n`;
 
       if (imageUrl) {
         await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
@@ -1344,17 +1384,12 @@ async function handleProductSearch(
         await sendEvolutionMessage(tenantId, phone, productText);
       }
       
-      if (idx < results.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 600));
-      }
+      if (idx < results.length - 1) await new Promise(resolve => setTimeout(resolve, 600));
     }
     
-    let replyMessage = '';
-    if (totalResults > 5) {
-      replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
-    } else {
-      replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
-    }
+    let replyMessage = totalResults > 5 
+      ? `\n*Reply with a number:*\n1️⃣ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`
+      : `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
     
     await sendEvolutionMessage(tenantId, phone, replyMessage);
     
@@ -1501,11 +1536,9 @@ async function processWithAI(
     const currentFlowState = await getFlowState(tenantId, phone);
     
     // CRITICAL: Check for '0' FIRST, before ANY flow routing
-    // This prevents stale flow state from triggering unwanted behavior
     if (message.trim() === '0') {
       console.log(`[Webhook] CRITICAL: '0' detected - clearing flow and showing main menu`);
       
-      // Clear flow state immediately
       const adminDb = getAdminDb();
       await adminDb
         .collection("tenants")
@@ -1516,7 +1549,6 @@ async function processWithAI(
           flowState: FieldValue.delete()
         }, { merge: true });
       
-      // Show main menu
       await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
       return;
@@ -1544,12 +1576,23 @@ async function processWithAI(
         } else {
           if (checkIfSearchQuery(message)) {
             debugLog("[Webhook] Natural language query from main menu:", message);
-            await handleProductSearch(tenantId, phone, message);
+            await handleProductSearchHandler(
+              tenantId,
+              phone,
+              message,
+              {
+                sendTypingIndicator: startTypingIndicator,
+                stopTypingIndicator: stopTypingIndicator,
+                sendMessage: sendEvolutionMessage,
+                sendMedia: sendEvolutionMedia,
+                setFlowState: setFlowState,
+              }
+            );
           } else {
             debugLog("[Webhook] Invalid main menu input:", message);
             await stopTypingIndicator(tenantId, phone);
             await sendEvolutionMessage(tenantId, phone, 
-              "Please reply with a number *1-6* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Check Order Status\n5 Payment Info\n6 Talk to Support"
+              "Please reply with a number *1-7* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Search Services\n5 Check Order Status\n6 Payment Info\n7 Talk to Support"
             );
           }
         }
@@ -1579,7 +1622,18 @@ async function processWithAI(
     const isSearchQuery = checkIfSearchQuery(message);
     if (isSearchQuery) {
       debugLog("[Webhook] Search query detected:", message);
-      await handleProductSearch(tenantId, phone, message);
+      await handleProductSearchHandler(
+        tenantId,
+        phone,
+        message,
+        {
+          sendTypingIndicator: startTypingIndicator,
+          stopTypingIndicator: stopTypingIndicator,
+          sendMessage: sendEvolutionMessage,
+          sendMedia: sendEvolutionMedia,
+          setFlowState: setFlowState,
+        }
+      );
       return;
     }
     
