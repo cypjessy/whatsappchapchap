@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { businessProfileService, whatsappSettingsService, shippingService, pickupStationService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, PickupStation, ProductSettings, ServiceSettings } from "@/lib/db";
 import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
   const { show: showToastNative } = useToast();
-  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments" | "security">("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -133,6 +134,18 @@ export default function SettingsPage() {
 
   // M-Pesa active tab state
   const [mpesaActiveTab, setMpesaActiveTab] = useState<'buyGoods' | 'paybill' | 'personal'>('buyGoods');
+
+  // Biometric Authentication State
+  const { 
+    isAvailable: biometricAvailable,
+    biometricType,
+    isLoading: biometricLoading,
+    authenticate,
+    getBiometricIcon,
+    getBiometricLabel,
+  } = useBiometricAuth();
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [testingBiometric, setTestingBiometric] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -634,6 +647,7 @@ export default function SettingsPage() {
             { id: "pickup-stations", label: "Pickup", sublabel: "Stations", icon: "fa-map-marker-alt", color: "from-blue-500 to-indigo-500" },
             { id: "whatsapp", label: "WhatsApp", sublabel: "", icon: "fab fa-whatsapp", color: "from-[#25D366] to-[#128C7E]" },
             { id: "payments", label: "Payment", sublabel: "Methods", icon: "fa-credit-card", color: "from-green-500 to-emerald-500" },
+            { id: "security", label: "Security", sublabel: "Biometrics", icon: "fa-fingerprint", color: "from-orange-500 to-red-500" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -2053,6 +2067,155 @@ export default function SettingsPage() {
                 </>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Security Tab - Biometric Authentication */}
+      {activeTab === "security" && (
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 mx-4 md:mx-6 mt-4 md:mt-6">
+            <div className="flex items-start gap-3">
+              <i className="fas fa-shield-alt text-xl md:text-2xl text-orange-500"></i>
+              <div>
+                <h3 className="font-bold text-base md:text-lg mb-1">Biometric Authentication</h3>
+                <p className="text-sm text-[#64748b]">
+                  Enable fingerprint or face recognition for faster, more secure login to your app.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4 md:px-6 pb-6">
+            {/* Biometric Status Card */}
+            <div className="bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] rounded-xl p-4 md:p-6 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
+                    biometricAvailable ? 'bg-green-100' : 'bg-gray-200'
+                  }`}>
+                    <i className={`fas ${biometricAvailable ? getBiometricIcon() : 'fa-times-circle'} text-2xl ${
+                      biometricAvailable ? 'text-green-600' : 'text-gray-400'
+                    }`}></i>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-base md:text-lg text-[#1e293b]">
+                      {biometricAvailable ? 'Biometric Available' : 'Not Available'}
+                    </h4>
+                    <p className="text-sm text-[#64748b]">
+                      {biometricAvailable 
+                        ? `Your device supports ${biometricType} authentication`
+                        : 'Your device does not support biometric authentication'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Toggle Biometric Login */}
+            <div className="bg-white border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-bold text-base md:text-lg text-[#1e293b] mb-1">
+                    Enable Biometric Login
+                  </h4>
+                  <p className="text-sm text-[#64748b]">
+                    Use {biometricType === 'fingerprint' ? 'fingerprint' : biometricType === 'face' || biometricType === 'faceId' ? 'face recognition' : 'biometrics'} to quickly log in to your account
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    await impactMedium();
+                    if (!biometricAvailable) {
+                      await showToastNative({ text: 'Biometric authentication not available on this device', position: 'top' });
+                      return;
+                    }
+                    setBiometricEnabled(!biometricEnabled);
+                    await notificationSuccess();
+                    await showToastNative({ 
+                      text: biometricEnabled ? 'Biometric login disabled' : 'Biometric login enabled', 
+                      position: 'top' 
+                    });
+                  }}
+                  disabled={!biometricAvailable}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 ${
+                    biometricEnabled && biometricAvailable
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500'
+                      : 'bg-gray-300'
+                  } ${!biometricAvailable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                      biometricEnabled && biometricAvailable ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Test Biometric Button */}
+            {biometricAvailable && (
+              <div className="bg-white border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6">
+                <h4 className="font-bold text-base md:text-lg text-[#1e293b] mb-3">
+                  Test Authentication
+                </h4>
+                <p className="text-sm text-[#64748b] mb-4">
+                  Try authenticating with your {biometricType} to ensure everything works correctly
+                </p>
+                <button
+                  onClick={async () => {
+                    await impactLight();
+                    setTestingBiometric(true);
+                    const result = await authenticate('Test biometric authentication');
+                    setTestingBiometric(false);
+                    
+                    if (result.success) {
+                      await notificationSuccess();
+                      await showToastNative({ 
+                        text: 'Authentication successful! ✅', 
+                        position: 'top' 
+                      });
+                    } else {
+                      await notificationError();
+                      await showToastNative({ 
+                        text: result.error || 'Authentication failed', 
+                        position: 'top' 
+                      });
+                    }
+                  }}
+                  disabled={testingBiometric}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {testingBiometric ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Authenticating...
+                    </>
+                  ) : (
+                    <>
+                      <i className={getBiometricIcon()}></i>
+                      {getBiometricLabel()}
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Info Box */}
+            <div className="mt-6 p-4 rounded-xl bg-blue-50 border border-blue-200">
+              <div className="flex items-start gap-3">
+                <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                <div className="text-sm text-[#64748b]">
+                  <p className="font-semibold text-[#1e293b] mb-1">How it works:</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Your biometric data never leaves your device</li>
+                    <li>Authentication is handled by Android's secure system</li>
+                    <li>You can disable this feature anytime</li>
+                    <li>Fallback to password if biometric fails</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
