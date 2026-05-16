@@ -151,7 +151,7 @@ export async function startServiceBrowseFlow(
           flowName: 'service_browse',
           currentStep: 'category_selection',
           selections: {
-            categories,
+            categories: categoriesWithServices,  // ⭐ FIXED: Store filtered list to match display
           },
           startedAt: new Date().toISOString(),
           lastActivity: new Date().toISOString(),
