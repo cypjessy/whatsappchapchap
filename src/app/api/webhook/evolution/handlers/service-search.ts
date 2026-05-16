@@ -131,19 +131,42 @@ export async function handleServiceSearch(
     // Direct Firestore query
     const adminDb = getAdminDb();
     
+    debugLog(`[ServiceSearch] Querying services collection for tenantId: ${tenantId}, status: active`);
+    
     const servicesSnap = await adminDb
       .collection("services")
       .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
       .get();
     
+    debugLog(`[ServiceSearch] Found ${servicesSnap.size} services in Firestore`);
+    
     if (servicesSnap.empty) {
-      await deps.stopTypingIndicator(tenantId, phone);
-      await deps.sendMessage(
-        tenantId,
-        phone,
-        `🔍 No services found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
-      );
+      debugLog(`[ServiceSearch] No services found - checking if collection exists`);
+      
+      // Try querying without status filter to see if any services exist at all
+      const allServicesCheck = await adminDb
+        .collection("services")
+        .where("tenantId", "==", tenantId)
+        .get();
+      
+      debugLog(`[ServiceSearch] Total services (all statuses): ${allServicesCheck.size}`);
+      
+      if (allServicesCheck.empty) {
+        await deps.stopTypingIndicator(tenantId, phone);
+        await deps.sendMessage(
+          tenantId,
+          phone,
+          `🔍 No services found for "${searchTerm}".\n\nIt looks like you haven't added any services yet. Please add services first, then try searching!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+        );
+      } else {
+        await deps.stopTypingIndicator(tenantId, phone);
+        await deps.sendMessage(
+          tenantId,
+          phone,
+          `🔍 No active services found for "${searchTerm}".\n\nYou have ${allServicesCheck.size} service(s) but they may be paused or in draft status.\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+        );
+      }
       return;
     }
     
@@ -153,6 +176,17 @@ export async function handleServiceSearch(
       id: doc.id,
       ...doc.data()
     }));
+    
+    debugLog(`[ServiceSearch] Processing ${allServices.length} services for scoring`);
+    if (process.env.DEBUG === 'true' && allServices.length > 0) {
+      console.log(`[ServiceSearch] Sample service data:`, {
+        id: allServices[0].id,
+        name: allServices[0].name,
+        serviceName: allServices[0].serviceName,
+        businessCategory: allServices[0].businessCategory,
+        status: allServices[0].status
+      });
+    }
     
     const scoredServices = allServices.map((service: any) => {
       let score = 0;
