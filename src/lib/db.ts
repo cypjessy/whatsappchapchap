@@ -1129,7 +1129,7 @@ export const serviceService = {
         service.businessType, 
         service.businessCategory, 
         service.serviceName,
-        service.subcategory ? [service.subcategory] : undefined  // ⭐ NEW: Pass subcategory
+        service.subcategoryName ? [service.subcategoryName] : undefined  // ⭐ FIXED: Use display name, not key
       );
     }
     
