@@ -495,11 +495,23 @@ export async function handleOrderStatusSelection(
         flowState: FieldValue.delete()
       }, { merge: true });
     
-    // Send welcome menu message directly
+    // ⭐ Fetch business name for personalized welcome
+    let businessName = "Our Shop";
+    try {
+      const settingsDoc = await db.collection("settings").doc(tenantId).get();
+      if (settingsDoc.exists) {
+        const data = settingsDoc.data();
+        businessName = data?.businessName || "Our Shop";
+      }
+    } catch (error) {
+      console.error('[OrderStatus] Error fetching business name:', error);
+    }
+    
+    // Send welcome menu message with business name
     await deps.sendMessage(
       tenantId,
       phone,
-      `👋 *Welcome Back!*\n\n` +
+      `👋 *Welcome to ${businessName}!*\n\n` +
       `How can we help you today?\n\n` +
       `1️⃣ Browse Products\n` +
       `2️⃣ Browse Services\n` +
