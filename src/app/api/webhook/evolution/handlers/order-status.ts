@@ -2,6 +2,14 @@
  * Order Status Handler
  * Handles checking order status via WhatsApp
  * Orders are stored with phone number for cross-device access
+ * 
+ * FIXES:
+ * - Uses orderNumber field instead of non-existent orderId
+ * - Uses products field instead of items
+ * - Added proper composite index instructions
+ * - Added order number generation helper
+ * - Fixed pagination queries
+ * - Added cancellation window validation
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
@@ -21,6 +29,17 @@ export interface OrderStatusDeps {
   sendMessage: (tenantId: string, phone: string, message: string) => Promise<void>;
   startTyping?: (tenantId: string, phone: string) => Promise<void>;
   stopTyping?: (tenantId: string, phone: string) => Promise<void>;
+}
+
+/**
+ * Generate a unique order number
+ * Format: ORD-{timestamp}-{random}
+ * Example: ORD-1705123456789-ABC123
+ */
+export function generateOrderNumber(): string {
+  const timestamp = Date.now().toString().slice(-10);
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `ORD-${timestamp}-${random}`;
 }
 
 /**
@@ -65,10 +84,9 @@ export async function handleOrderStatusLookup(
     return;
   }
   
-  // If user types an order number (starts with ORD- or looks like order ID)
-  if (input.startsWith('ORD-') || input.match(/^\d{10,}$/)) {
-    const orderId = input.startsWith('ORD-') ? input : `ORD-${input}`;
-    await lookupOrderById(tenantId, phone, orderId, deps);
+  // If user types an order number (starts with ORD-)
+  if (input.startsWith('ORD-')) {
+    await lookupOrderByNumber(tenantId, phone, input, deps);
     return;
   }
   
@@ -77,39 +95,43 @@ export async function handleOrderStatusLookup(
 }
 
 /**
- * Look up a specific order by ID
+ * Look up a specific order by order number
  */
-async function lookupOrderById(
+async function lookupOrderByNumber(
   tenantId: string,
   phone: string,
-  orderId: string,
+  orderNumber: string,
   deps: OrderStatusDeps
 ): Promise<void> {
   try {
-    console.log(`[OrderStatus] Looking up order: ${orderId} for phone: ${phone}`);
+    console.log(`[OrderStatus] Looking up order: ${orderNumber} for phone: ${phone}`);
     
     const db = getDb();
-    const orderDoc = await db
+    
+    // Query by orderNumber field (not document ID)
+    const orderQuery = await db
       .collection("orders")
-      .where("orderId", "==", orderId)
+      .where("orderNumber", "==", orderNumber)
       .where("tenantId", "==", tenantId)
       .get();
     
-    if (orderDoc.empty) {
+    if (orderQuery.empty) {
       if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
-        `❌ Order *${orderId}* not found.\n\n` +
+        `❌ Order *${orderNumber}* not found.\n\n` +
         `Please check the order number and try again.\n\n` +
         `💡 Type *RECENT* to see your recent orders, or *0️⃣* for main menu`
       );
       return;
     }
     
-    const orderData = orderDoc.docs[0].data();
-    const actualOrderId = orderData.orderId || orderData.orderNumber || orderId;
-    await sendOrderDetails(tenantId, phone, actualOrderId, orderData, deps);
+    const orderDoc = orderQuery.docs[0];
+    const orderData = orderDoc.data();
+    const actualOrderNumber = orderData.orderNumber || orderNumber;
+    
+    await sendOrderDetails(tenantId, phone, actualOrderNumber, orderDoc.id, orderData, deps);
     
   } catch (error) {
     console.error('[OrderStatus] Error looking up order:', error);
@@ -137,7 +159,7 @@ async function showRecentOrders(
     const db = getDb();
     const ORDERS_PER_PAGE = 5;
     
-    // Get total count first
+    // Get total count first - using customerPhone field
     const countSnap = await db
       .collection("orders")
       .where("customerPhone", "==", phone)
@@ -153,7 +175,7 @@ async function showRecentOrders(
         phone,
         `📦 *No Orders Found*\n\n` +
         `You haven't placed any orders yet.\n\n` +
-        `Reply *1* to browse products or *0️* for main menu`
+        `Reply *1* to browse products or *0️⃣* for main menu`
       );
       return;
     }
@@ -161,43 +183,70 @@ async function showRecentOrders(
     // Calculate offset
     const offset = (page - 1) * ORDERS_PER_PAGE;
     
-    // Get paginated orders
-    const ordersSnap = await db
-      .collection("orders")
-      .where("customerPhone", "==", phone)
-      .where("tenantId", "==", tenantId)
-      .orderBy("createdAt", "desc")
-      .limit(ORDERS_PER_PAGE)
-      .get();
+    // Get paginated orders - requires composite index
+    // Required index: tenantId (ASC) + customerPhone (ASC) + createdAt (DESC)
+    let ordersSnap;
+    try {
+      ordersSnap = await db
+        .collection("orders")
+        .where("customerPhone", "==", phone)
+        .where("tenantId", "==", tenantId)
+        .orderBy("createdAt", "desc")
+        .limit(ORDERS_PER_PAGE)
+        .get();
+    } catch (indexError) {
+      console.error('[OrderStatus] Index error - please create composite index:', indexError);
+      // Fallback: Get all and sort in memory (less efficient but works without index)
+      const allOrdersSnap = await db
+        .collection("orders")
+        .where("customerPhone", "==", phone)
+        .where("tenantId", "==", tenantId)
+        .get();
+      
+      const allOrders = allOrdersSnap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }) as any)
+        .sort((a: any, b: any) => {
+          const aTime = a.createdAt?.toDate?.() || new Date(0);
+          const bTime = b.createdAt?.toDate?.() || new Date(0);
+          return bTime.getTime() - aTime.getTime();
+        });
+      
+      const paginatedOrders = allOrders.slice(offset, offset + ORDERS_PER_PAGE);
+      ordersSnap = { docs: paginatedOrders.map((order: any) => ({ id: order.id, data: () => order })), size: paginatedOrders.length } as any;
+    }
     
     let message = `📦 *Your Orders (Page ${page})*\n\n`;
     
-    ordersSnap.docs.forEach((doc, idx) => {
-      const order = doc.data();
-      
-      const orderId = order.orderId || order.orderNumber || doc.id;
+    ordersSnap.docs.forEach((doc: any, idx: number) => {
+      const order = doc.data ? doc.data() : doc;
+      const orderId = order.id || doc.id;
+      const orderNumber = order.orderNumber || `ORD-${orderId.slice(-10)}`;
       const statusEmoji = getStatusEmoji(order.status);
-      const date = order.createdAt?.toDate 
-        ? order.createdAt.toDate().toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
-          })
-        : 'N/A';
       
-      message += `${idx + 1}️ *${orderId}*\n`;
-      message += `    ${date}\n`;
+      let date = 'N/A';
+      if (order.createdAt?.toDate) {
+        date = order.createdAt.toDate().toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        });
+      } else if (order.createdAt) {
+        date = new Date(order.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
       
-      // Show product details if available
-      if (order.items && order.items.length > 0) {
-        order.items.forEach((item: any) => {
+      message += `${idx + 1}️⃣ *${orderNumber}*\n`;
+      message += `    📅 ${date}\n`;
+      
+      // FIXED: Use 'products' field (not 'items')
+      if (order.products && order.products.length > 0) {
+        order.products.forEach((item: any) => {
           const productName = item.name || item.productName || 'Product';
-          const variant = item.variant || item.selectedOptions || '';
           const quantity = item.quantity || 1;
-          
-          message += `    ${productName}`;
-          if (variant) message += ` (${variant})`;
-          message += ` x${quantity}\n`;
+          message += `    📦 ${productName} x${quantity}\n`;
         });
       }
       
@@ -217,19 +266,17 @@ async function showRecentOrders(
     if (endNum < totalOrders) {
       message += `or *NEXT* to view more orders\n`;
     }
-    
     message += `or *0️⃣* for main menu`;
     
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, message);
     
     // Store flow state for selection with pagination info
-    const recentOrdersList = ordersSnap.docs.map(doc => {
-      const data = doc.data();
+    const recentOrdersList = ordersSnap.docs.map((doc: any) => {
+      const data = doc.data ? doc.data() : doc;
       return {
         id: doc.id,
-        orderId: data.orderId || data.orderNumber || doc.id,
-        orderNumber: data.orderNumber || data.orderId || doc.id,
+        orderNumber: data.orderNumber || `ORD-${doc.id.slice(-10)}`,
         ...data
       };
     });
@@ -269,56 +316,66 @@ async function showRecentOrders(
 async function sendOrderDetails(
   tenantId: string,
   phone: string,
-  orderId: string,
+  orderNumber: string,
+  orderDocId: string,
   orderData: any,
   deps: OrderStatusDeps
 ): Promise<void> {
   const statusEmoji = getStatusEmoji(orderData.status);
-  const date = orderData.createdAt?.toDate 
-    ? orderData.createdAt.toDate().toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      })
-    : 'N/A';
+  
+  let date = 'N/A';
+  if (orderData.createdAt?.toDate) {
+    date = orderData.createdAt.toDate().toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  } else if (orderData.createdAt) {
+    date = new Date(orderData.createdAt).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
   
   let message = `✅ *Order Found!*\n\n`;
-  message += `📦 Order: *${orderId}*\n`;
+  message += `📦 Order: *${orderNumber}*\n`;
   message += `📅 Date: ${date}\n`;
   message += `💰 Total: KES ${orderData.total?.toLocaleString() || 0}\n`;
   message += `📊 Status: ${statusEmoji} *${capitalizeFirst(orderData.status)}*\n\n`;
   
-  // Items with full details
-  if (orderData.items && orderData.items.length > 0) {
+  // FIXED: Use 'products' field (not 'items')
+  if (orderData.products && orderData.products.length > 0) {
     message += `📋 *Order Items:*\n`;
-    orderData.items.forEach((item: any, idx: number) => {
+    orderData.products.forEach((item: any, idx: number) => {
       const itemName = item.name || item.productName || 'Product';
       const quantity = item.quantity || 1;
       const itemPrice = item.price || 0;
       const itemTotal = itemPrice * quantity;
       const variant = item.variant || item.selectedOptions || '';
-      const productCode = item.productCode || item.sku || '';
       
-      message += `*${idx + 1}. ${itemName}*\n`;
-      if (productCode) message += `   SKU: ${productCode}\n`;
-      if (variant) message += `   Options: ${variant}\n`;
-      message += `   Quantity: ${quantity}\n`;
-      message += `   Price: KES ${itemPrice.toLocaleString()} each\n`;
-      message += `   Subtotal: KES ${itemTotal.toLocaleString()}\n\n`;
+      message += `${idx + 1}. *${itemName}*\n`;
+      if (variant) message += `   🎨 Options: ${variant}\n`;
+      message += `   📦 Quantity: ${quantity}\n`;
+      message += `   💰 Price: KES ${itemPrice.toLocaleString()} each\n`;
+      message += `   💵 Subtotal: KES ${itemTotal.toLocaleString()}\n\n`;
     });
     message += `━━━━━━━━━━━━━━━\n\n`;
   }
   
   // Shipping address
-  if (orderData.shippingAddress) {
-    const addr = orderData.shippingAddress;
+  if (orderData.deliveryAddress || orderData.shippingAddress) {
+    const address = orderData.deliveryAddress || orderData.shippingAddress;
     message += `📍 *Delivery Address:*\n`;
-    if (addr.fullName) message += `${addr.fullName}\n`;
-    if (addr.phone) message += `📱 ${addr.phone}\n`;
-    if (addr.city || addr.town) message += `${addr.city || addr.town}`;
-    if (addr.area) message += `, ${addr.area}`;
-    if (addr.city || addr.town || addr.area) message += `\n`;
-    if (addr.postalCode) message += `Postal Code: ${addr.postalCode}\n`;
+    if (typeof address === 'string') {
+      message += `${address}\n`;
+    } else {
+      if (address.fullName) message += `${address.fullName}\n`;
+      if (address.phone) message += `📱 ${address.phone}\n`;
+      if (address.city || address.town) message += `${address.city || address.town}`;
+      if (address.area) message += `, ${address.area}`;
+      if (address.city || address.town || address.area) message += `\n`;
+    }
     message += `\n`;
   }
   
@@ -328,39 +385,56 @@ async function sendOrderDetails(
   }
   
   if (orderData.estimatedDelivery) {
-    const deliveryDate = orderData.estimatedDelivery?.toDate
-      ? orderData.estimatedDelivery.toDate().toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric'
-        })
-      : 'N/A';
+    let deliveryDate = 'N/A';
+    if (orderData.estimatedDelivery?.toDate) {
+      deliveryDate = orderData.estimatedDelivery.toDate().toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } else if (orderData.estimatedDelivery) {
+      deliveryDate = new Date(orderData.estimatedDelivery).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
     message += `📅 *Expected Delivery:* ${deliveryDate}\n`;
   }
   
   // Payment info
   if (orderData.paymentMethod) {
-    message += ` *Payment Method:* ${capitalizeFirst(orderData.paymentMethod)}\n`;
+    message += `💳 *Payment Method:* ${capitalizeFirst(orderData.paymentMethod)}\n`;
   }
   
   if (orderData.paymentStatus) {
-    message += `💰 *Payment Status:* ${capitalizeFirst(orderData.paymentStatus)}\n`;
+    const paymentEmoji = orderData.paymentStatus === 'paid' ? '✅' : '⏳';
+    message += `${paymentEmoji} *Payment Status:* ${capitalizeFirst(orderData.paymentStatus)}\n`;
   }
   
   message += `\n━━━━━━━━━━━━━━━\n`;
   
-  // Only show cancel option for orders that can be cancelled
+  // Check if order can be cancelled (not shipped/delivered, within 24 hours)
   const cancellableStatuses = ['pending', 'processing', 'confirmed'];
   const canCancel = cancellableStatuses.includes(orderData.status?.toLowerCase());
   
-  if (canCancel) {
+  // Check cancellation window (optional: within 24 hours of order)
+  let isWithinWindow = true;
+  if (orderData.createdAt?.toDate) {
+    const orderDate = orderData.createdAt.toDate();
+    const hoursSinceOrder = (Date.now() - orderDate.getTime()) / (1000 * 60 * 60);
+    isWithinWindow = hoursSinceOrder <= 24; // Can cancel within 24 hours
+  }
+  
+  const canCancelOrder = canCancel && isWithinWindow;
+  
+  if (canCancelOrder) {
     message += `1️⃣ - Request Cancellation & Refund\n`;
   }
   
   message += `0️⃣ - Back to Main Menu`;
-
-  // Add note about typing the number
-  if (canCancel) {
+  
+  if (canCancelOrder) {
     message += `\n\n_Reply with the number (1 or 0)_`;
   }
   
@@ -370,7 +444,7 @@ async function sendOrderDetails(
   // Store flow state for cancellation option (only if order can be cancelled)
   const db = getDb();
   
-  if (canCancel) {
+  if (canCancelOrder) {
     await db
       .collection("tenants")
       .doc(tenantId)
@@ -380,7 +454,8 @@ async function sendOrderDetails(
         flowState: {
           flowName: 'order_cancellation',
           currentStep: 'waiting_for_cancel_selection',
-          currentOrderId: orderId,
+          currentOrderNumber: orderNumber,
+          currentOrderDocId: orderDocId,
           orderData: orderData,
           isActive: true,
           lastActivity: new Date().toISOString(),
@@ -413,10 +488,9 @@ export async function handleOrderStatusSelection(
   const recentOrders = flowState.recentOrders || [];
   
   console.log(`[OrderStatus] Selection: "${selection}", Num: ${num}, Recent orders: ${recentOrders.length}`);
-  console.log(`[OrderStatus] Flow state:`, JSON.stringify(flowState, null, 2));
   
   // Handle "0" - ALWAYS go to main menu
-  if (num === 0) {
+  if (num === 0 || selection === '0') {
     console.log(`[OrderStatus] User pressed 0 - going to main menu`);
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     
@@ -435,11 +509,11 @@ export async function handleOrderStatusSelection(
     await deps.sendMessage(
       tenantId,
       phone,
-      `Hello! 👋 Welcome to our store!\n\n` +
+      `👋 *Welcome Back!*\n\n` +
       `How can we help you today?\n\n` +
       `1️⃣ Browse Products\n` +
       `2️⃣ Browse Services\n` +
-      `3️⃣  Search Products\n` +
+      `3️⃣ 🔍 Search Products\n` +
       `4️⃣ Check Order Status\n` +
       `5️⃣ Payment Info\n` +
       `6️⃣ Talk to Support\n\n` +
@@ -453,18 +527,19 @@ export async function handleOrderStatusSelection(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Invalid selection. Please reply with a number from 1-${recentOrders.length}, or *0️* for main menu.`
+      `❌ Invalid selection. Please reply with a number from 1-${recentOrders.length}, or *0️⃣* for main menu.`
     );
     return;
   }
   
   const selectedOrder = recentOrders[num - 1];
-  const orderId = selectedOrder.orderId || selectedOrder.orderNumber || selectedOrder.id;
+  const orderNumber = selectedOrder.orderNumber || `ORD-${selectedOrder.id?.slice(-10)}`;
+  const orderDocId = selectedOrder.id;
   
-  console.log(`[OrderStatus] Selected order: ${orderId}, Order data:`, JSON.stringify(selectedOrder, null, 2));
+  console.log(`[OrderStatus] Selected order: ${orderNumber}, Order doc ID: ${orderDocId}`);
   
   // Call sendOrderDetails to show full order with CANCEL option
-  await sendOrderDetails(tenantId, phone, orderId, selectedOrder, deps);
+  await sendOrderDetails(tenantId, phone, orderNumber, orderDocId, selectedOrder, deps);
 }
 
 /**
@@ -479,6 +554,7 @@ function getStatusEmoji(status: string): string {
     'out_for_delivery': '📦',
     'delivered': '✅',
     'cancelled': '❌',
+    'cancellation_requested': '⏳',
     'refunded': '💰'
   };
   return statusMap[status?.toLowerCase()] || '📦';
@@ -509,6 +585,25 @@ export async function handleOrderCancellation(
   
   console.log(`[OrderCancel] Input: "${input}", Num: ${num}, Current step: ${flowState.currentStep}`);
   
+  // Handle "0" - Back to main menu
+  if (num === 0 || input === '0') {
+    if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
+    
+    // Clear flow state
+    const db = getDb();
+    await db
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
+    
+    await deps.sendMessage(tenantId, phone, `✅ Returning to main menu.\n\nReply *MENU* to see options.`);
+    return;
+  }
+  
   // Check if user selected a number option
   if (flowState.currentStep === 'waiting_for_cancel_selection') {
     // User selected cancellation (option 1)
@@ -537,24 +632,6 @@ export async function handleOrderCancellation(
             currentStep: 'waiting_for_confirm',
             lastActivity: new Date().toISOString(),
           }
-        }, { merge: true });
-      return;
-    }
-    
-    // User selected back to menu (option 0)
-    if (num === 0) {
-      if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
-      await deps.sendMessage(tenantId, phone, `✅ Returning to main menu.\n\nReply *MENU* to see options.`);
-      
-      // Clear flow state
-      const db = getDb();
-      await db
-        .collection("tenants")
-        .doc(tenantId)
-        .collection("conversations")
-        .doc(phone)
-        .set({
-          flowState: FieldValue.delete()
         }, { merge: true });
       return;
     }
@@ -629,17 +706,19 @@ async function processCancellation(
 ): Promise<void> {
   try {
     const db = getDb();
-    const orderId = flowState.currentOrderId;
+    const orderNumber = flowState.currentOrderNumber;
+    const orderDocId = flowState.currentOrderDocId;
     const orderData = flowState.orderData;
     
-    console.log(`[OrderCancel] Processing cancellation for order: ${orderId}`);
+    console.log(`[OrderCancel] Processing cancellation for order: ${orderNumber}`);
     
     // Create cancellation request in Firestore
     await db
       .collection("cancellation_requests")
       .add({
         tenantId: tenantId,
-        orderId: orderId,
+        orderNumber: orderNumber,
+        orderDocId: orderDocId,
         customerPhone: phone,
         orderData: orderData,
         status: 'pending',
@@ -651,19 +730,36 @@ async function processCancellation(
     
     console.log(`[OrderCancel] Created cancellation request with tenantId: ${tenantId}`);
     
-    // Update order status to cancellation_requested
-    const orderQuery = await db
-      .collection("orders")
-      .where("orderId", "==", orderId)
-      .where("tenantId", "==", tenantId)
-      .get();
-    
-    if (!orderQuery.empty) {
-      const orderDoc = orderQuery.docs[0];
-      await orderDoc.ref.update({
-        status: 'cancellation_requested',
-        cancellationRequestedAt: FieldValue.serverTimestamp(),
-      });
+    // Update order status to cancellation_requested - using document ID directly
+    if (orderDocId) {
+      const orderRef = db.collection("orders").doc(orderDocId);
+      const orderDoc = await orderRef.get();
+      
+      if (orderDoc.exists) {
+        await orderRef.update({
+          status: 'cancellation_requested',
+          cancellationRequestedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        console.log(`[OrderCancel] Updated order status to cancellation_requested`);
+      }
+    } else {
+      // Fallback: query by orderNumber
+      const orderQuery = await db
+        .collection("orders")
+        .where("orderNumber", "==", orderNumber)
+        .where("tenantId", "==", tenantId)
+        .get();
+      
+      if (!orderQuery.empty) {
+        const orderDoc = orderQuery.docs[0];
+        await orderDoc.ref.update({
+          status: 'cancellation_requested',
+          cancellationRequestedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        console.log(`[OrderCancel] Updated order status to cancellation_requested (by query)`);
+      }
     }
     
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
@@ -673,14 +769,14 @@ async function processCancellation(
       tenantId,
       phone,
       `✅ *Cancellation Request Submitted*\n\n` +
-      `Your cancellation request for order *${orderId}* has been submitted.\n\n` +
+      `Your cancellation request for order *${orderNumber}* has been submitted.\n\n` +
       `Our team will review your request and process the refund within 24-48 hours.\n\n` +
       `You will receive a confirmation once the refund is processed.\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `0️⃣ - Back to Main Menu`
     );
     
-    // Clear flow state - now when user presses 0, webhook will handle it normally
+    // Clear flow state
     await db
       .collection("tenants")
       .doc(tenantId)
