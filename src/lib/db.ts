@@ -1146,7 +1146,48 @@ export const serviceService = {
   ): Promise<void> {
     const tenantId = getTenantId(user);
     
-    // Check if main business category exists for this tenant
+    // Try to find the NEW document structure first (created by ensureServiceCategoriesPopulated)
+    // Document ID format: `${tenantId}_${businessType}`
+    const newDocId = `${tenantId}_${businessType}`;
+    const newDocRef = doc(db, "serviceCategoryNames", newDocId);
+    const newDocSnap = await getDoc(newDocRef);
+    
+    if (newDocSnap.exists()) {
+      // Found NEW structure - update it with the new service
+      console.log(`[saveServiceCategoryName] Updating NEW structure doc: ${newDocId}`);
+      const existingData = newDocSnap.data();
+      const existingServiceNames = existingData.serviceNames || [];
+      const existingSubcategories = existingData.subcategories || [];
+      const existingServiceCount = existingData.serviceCount || 0;
+      
+      const updates: any = {};
+      
+      if (!existingServiceNames.includes(serviceName)) {
+        updates.serviceNames = [...existingServiceNames, serviceName];
+      }
+      
+      if (subcategories && subcategories.length > 0) {
+        const newSubcats = subcategories.filter((s: string) => !existingSubcategories.includes(s));
+        if (newSubcats.length > 0) {
+          updates.subcategories = [...existingSubcategories, ...newSubcats];
+        }
+      }
+      
+      //  CRITICAL: Increment serviceCount
+      updates.serviceCount = existingServiceCount + 1;
+      
+      if (Object.keys(updates).length > 0) {
+        await updateDoc(newDocRef, {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        });
+        console.log(`[saveServiceCategoryName] Updated serviceCount to ${updates.serviceCount}`);
+      }
+      return;
+    }
+    
+    // Fallback: Use OLD query-based approach for legacy documents
+    console.log(`[saveServiceCategoryName] NEW structure not found, using legacy query`);
     const categoryQuery = query(
       collection(db, "serviceCategoryNames"),
       where("tenantId", "==", tenantId),
@@ -1160,10 +1201,15 @@ export const serviceService = {
       await setDoc(categoryDoc, {
         id: categoryDoc.id,
         tenantId,
-        businessType: businessType, // e.g., "beauty", "home"
-        businessCategory: businessCategory, // e.g., "Beauty & Hair", "Home Services"
-        serviceNames: [serviceName], // e.g., ["Hair Braiding"]
-        subcategories: subcategories || [],  // ⭐ NEW: Store subcategories
+        businessType: businessType,
+        businessCategory: businessCategory,
+        serviceNames: [serviceName],
+        subcategories: subcategories || [],
+        // ⭐ Add NEW structure fields
+        mainCategory: businessType,
+        mainCategoryName: businessCategory,
+        subcategoryMap: {},
+        serviceCount: 1, // ⭐ Start at 1 since we're adding first service
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -1173,15 +1219,14 @@ export const serviceService = {
       const existingData = existingDoc.data();
       const existingServiceNames = existingData.serviceNames || [];
       const existingSubcategories = existingData.subcategories || [];
+      const existingServiceCount = existingData.serviceCount || 0;
       
       const updates: any = {};
       
       if (!existingServiceNames.includes(serviceName)) {
-        // Add new service name to existing main category
         updates.serviceNames = [...existingServiceNames, serviceName];
       }
       
-      // ⭐ NEW: Update subcategories if provided
       if (subcategories && subcategories.length > 0) {
         const newSubcats = subcategories.filter((s: string) => !existingSubcategories.includes(s));
         if (newSubcats.length > 0) {
@@ -1189,11 +1234,15 @@ export const serviceService = {
         }
       }
       
+      // ⭐ CRITICAL: Increment serviceCount
+      updates.serviceCount = existingServiceCount + 1;
+      
       if (Object.keys(updates).length > 0) {
         await updateDoc(doc(db, "serviceCategoryNames", existingDoc.id), {
           ...updates,
           updatedAt: serverTimestamp(),
         });
+        console.log(`[saveServiceCategoryName] Updated serviceCount to ${updates.serviceCount}`);
       }
     }
   },

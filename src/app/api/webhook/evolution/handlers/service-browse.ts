@@ -108,25 +108,25 @@ export async function startServiceBrowseFlow(
         serviceCount: data.serviceCount || 0,
       };
     });
-    // REMOVED: Don't filter by serviceCount since it may not be updated
-    // We'll query actual services when user selects a category
+    // Filter to only show categories that have services
+    const categoriesWithServices = categories.filter(cat => cat.serviceCount > 0);
     
-    console.log(`[ServiceBrowse] Total categories loaded: ${categories.length}`);
+    console.log(`[ServiceBrowse] Total categories: ${categories.length}, With services: ${categoriesWithServices.length}`);
     
-    if (categories.length === 0) {
-      console.warn(`[ServiceBrowse] No category documents found for tenant: ${tenantId}`);
+    if (categoriesWithServices.length === 0) {
+      console.warn(`[ServiceBrowse] No categories have services for tenant: ${tenantId}`);
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
-        "🛠️ No services available at the moment. Please check back soon!\n\n" +
+        "️ No services available at the moment. Please check back soon!\n\n" +
         "Reply *0️⃣* for main menu."
       );
       return;
     }
     
     // Build categories menu
-    const categoryList = categories
+    const categoryList = categoriesWithServices
       .map((cat, idx) => `${idx + 1}️⃣ ${cat.icon} *${cat.name}* (${cat.serviceCount} services)`)
       .join('\n');
     
