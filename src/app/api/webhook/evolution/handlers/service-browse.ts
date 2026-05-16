@@ -1,11 +1,17 @@
 /**
  * Service Browse Handler
  * Handles browsing services via WhatsApp
- * Two-level navigation: Categories → Services
+ * Three-level navigation: Categories → Subcategories → Services → Service Details
+ * 
+ * UPDATED: Now supports full hierarchical browsing with subcategories
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import type { Service } from "@/lib/db";
+
+// Import expanded service data helpers
+// Note: This is client-side data, but we need server-side access
+// We'll replicate the structure in Firestore via auto-population
 
 /**
  * Lazy initialization - get Firestore instance only when needed
@@ -22,13 +28,14 @@ export interface ServiceBrowseDeps {
   sendMedia?: (tenantId: string, phone: string, mediaUrl: string, caption: string) => Promise<void>;
   startTyping: (tenantId: string, phone: string) => Promise<void>;
   stopTyping: (tenantId: string, phone: string) => Promise<void>;
-  sendWelcomeMenu: (tenantId: string, phone: string) => Promise<void>;  // ADDED
+  sendWelcomeMenu: (tenantId: string, phone: string) => Promise<void>;
+  debugLog?: (...args: any[]) => void;
 }
 
-// Business type icons
-const BUSINESS_ICONS: Record<string, string> = {
+// Service category icons (fallback - will be overridden by Firestore data)
+const DEFAULT_CATEGORY_ICONS: Record<string, string> = {
   beauty: '💇‍♀️',
-  home: '🏠',
+  home: '🔧',
   health: '🏥',
   education: '📚',
   automotive: '🚗',
@@ -39,11 +46,16 @@ const BUSINESS_ICONS: Record<string, string> = {
   photography: '📸',
   catering: '🍽️',
   medical: '🏥',
+  legal: '⚖️',
+  financial: '💰',
+  real_estate: '🏠',
+  logistics: '🚚',
+  travel: '✈️',
   other: '✨'
 };
 
 /**
- * Start service browse flow - show business categories
+ * Start service browse flow - show service categories
  */
 export async function startServiceBrowseFlow(
   tenantId: string,
@@ -55,64 +67,59 @@ export async function startServiceBrowseFlow(
   await deps.startTyping(tenantId, phone);
   
   try {
-    // Get all services for this tenant
-    const servicesSnap = await adminDb
-      .collection("services")
+    // Get service categories from Firestore (pre-populated by AddServiceModal)
+    const categoriesSnap = await adminDb
+      .collection("serviceCategoryNames")
       .where("tenantId", "==", tenantId)
-      .where("status", "==", "active")
       .get();
     
-    const services = servicesSnap.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Service[];
-    
-    if (services.length === 0) {
+    if (categoriesSnap.empty) {
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
-        "🛠️ We don't have any services available right now.\n\n" +
-        "Please check back later or reply *0️⃣* for main menu."
+        "🛠️ We don't have any services listed yet. Please check back soon!\n\n" +
+        "Reply *0️⃣* for main menu."
       );
       return;
     }
     
-    // Group services by businessType
-    const servicesByType: Record<string, Service[]> = {};
-    services.forEach(service => {
-      const type = service.businessType || 'other';
-      if (!servicesByType[type]) {
-        servicesByType[type] = [];
-      }
-      servicesByType[type].push(service);
-    });
+    // Build categories with service counts
+    const categories = categoriesSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        categorySlug: data.mainCategory,
+        name: data.mainCategoryName || data.mainCategory,
+        icon: data.icon || DEFAULT_CATEGORY_ICONS[data.mainCategory] || '✨',
+        subcategories: data.subcategories || [],
+        serviceCount: data.serviceCount || 0,
+      };
+    }).filter(cat => cat.serviceCount > 0); // Only show categories with services
     
-    // Build category list
-    const categories = Object.entries(servicesByType).map(([type, typeServices]) => ({
-      type,
-      name: typeServices[0]?.businessCategory || typeServices[0]?.categoryName || type,
-      icon: BUSINESS_ICONS[type] || '✨',
-      count: typeServices.length
-    }));
+    if (categories.length === 0) {
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        "🛠️ No services available at the moment. Please check back soon!\n\n" +
+        "Reply *0️⃣* for main menu."
+      );
+      return;
+    }
     
-    // Build categories menu with emoji numbers
+    // Build categories menu
     const categoryList = categories
-      .map((cat, idx) => {
-        const emojiNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-        return `${emojiNumbers[idx]} ${cat.icon} *${cat.name}* (${cat.count} services)`;
-      })
+      .map((cat, idx) => `${idx + 1}️⃣ ${cat.icon} *${cat.name}* (${cat.serviceCount} services)`)
       .join('\n');
     
-    const response = `🛠️ *Browse Our Services*\n\n` +
+    const response = `🛠️ *Browse Services*\n\n` +
       `Choose a category:\n\n${categoryList}\n\n` +
-      `*Reply with a number (1️⃣-${categories.length}️⃣)*\n` +
-      `Or reply *0️⃣* for main menu`;
+      `0️⃣ Back to main menu`;
     
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
     
-    // Store only IDs, not full service objects
     await adminDb
       .collection("tenants")
       .doc(tenantId)
@@ -125,15 +132,9 @@ export async function startServiceBrowseFlow(
           currentStep: 'category_selection',
           selections: {
             categories,
-            // Store only IDs grouped by type, not full objects
-            serviceIdsByType: Object.fromEntries(
-              Object.entries(servicesByType).map(([type, svcs]) => [
-                type,
-                svcs.map(s => s.id)
-              ])
-            ),
           },
-          lastActivity: new Date().toISOString()
+          startedAt: new Date().toISOString(),
+          lastActivity: new Date().toISOString(),
         }
       }, { merge: true });
       
@@ -158,29 +159,40 @@ export async function handleServiceBrowseInput(
   flowState: any,
   deps: ServiceBrowseDeps
 ): Promise<void> {
-  const adminDb = getDb();
   const { currentStep, selections } = flowState;
   
   await deps.startTyping(tenantId, phone);
   
-  if (currentStep === 'category_selection') {
-    await handleCategorySelection(tenantId, phone, message, selections, deps);
-  } else if (currentStep === 'service_listing') {
-    await handleServiceListing(tenantId, phone, message, flowState, deps);
-  } else if (currentStep === 'service_detail') {
-    await handleServiceDetailInput(tenantId, phone, message, flowState, deps);
-  } else {
+  try {
+    if (currentStep === 'category_selection') {
+      await handleCategorySelection(tenantId, phone, message, selections, deps);
+    } else if (currentStep === 'subcategory_selection') {
+      await handleSubcategorySelection(tenantId, phone, message, flowState, deps);
+    } else if (currentStep === 'service_listing') {
+      await handleServiceListing(tenantId, phone, message, flowState, deps);
+    } else if (currentStep === 'service_detail') {
+      await handleServiceDetailInput(tenantId, phone, message, flowState, deps);
+    } else {
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        "❌ Invalid state. Reply *0️⃣* for main menu."
+      );
+    }
+  } catch (error) {
+    console.error("[ServiceBrowse] Error handling input:", error);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid state. Reply *0️⃣* for main menu."
+      "❌ Something went wrong. Please try again or reply *0️⃣* for main menu."
     );
   }
 }
 
 /**
- * Handle category selection - show services in that category
+ * Handle category selection - show subcategories or services
  */
 async function handleCategorySelection(
   tenantId: string,
@@ -192,7 +204,13 @@ async function handleCategorySelection(
   const adminDb = getDb();
   const num = parseInt(message.trim());
   const categories = selections.categories;
-  const serviceIdsByType = selections.serviceIdsByType;
+  const trimmed = message.trim().toLowerCase();
+  
+  if (trimmed === '0' || trimmed === 'menu') {
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendWelcomeMenu(tenantId, phone);
+    return;
+  }
   
   if (isNaN(num) || num < 1 || num > categories.length) {
     await deps.stopTyping(tenantId, phone);
@@ -200,61 +218,142 @@ async function handleCategorySelection(
       tenantId,
       phone,
       `❌ Invalid selection. Please choose a number from 1️⃣ to ${categories.length}️⃣.\n\n` +
-      `Or reply *0️⃣* for main menu.`
+      `0️⃣ Back to main menu`
     );
     return;
   }
   
   const selectedCategory = categories[num - 1];
-  const serviceIds = serviceIdsByType[selectedCategory.type] || [];
   
-  if (serviceIds.length === 0) {
+  // Check if category has subcategories
+  if (selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
+    // Show subcategories
+    const subcategoryList = selectedCategory.subcategories
+      .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
+      .join('\n');
+    
+    const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories`;
+    
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(tenantId, phone, response);
+    
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          isActive: true,
+          flowName: 'service_browse',
+          currentStep: 'subcategory_selection',
+          selections: {
+            ...selections,
+            categorySlug: selectedCategory.categorySlug,
+            categoryName: selectedCategory.name,
+            categorySubcategories: selectedCategory.subcategories,
+          },
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  } else {
+    // No subcategories, show services directly
+    await showServicesForCategory(tenantId, phone, selectedCategory.categorySlug, selectedCategory.name, deps);
+  }
+}
+
+/**
+ * Handle subcategory selection - show services in that subcategory
+ */
+async function handleSubcategorySelection(
+  tenantId: string,
+  phone: string,
+  message: string,
+  flowState: any,
+  deps: ServiceBrowseDeps
+): Promise<void> {
+  const adminDb = getDb();
+  const { selections } = flowState;
+  const num = parseInt(message.trim());
+  const { categorySlug, categoryName, categorySubcategories } = selections;
+  const trimmed = message.trim().toLowerCase();
+  
+  if (trimmed === '0' || trimmed === 'back') {
+    await deps.stopTyping(tenantId, phone);
+    await startServiceBrowseFlow(tenantId, phone, deps);
+    return;
+  }
+  
+  if (trimmed === 'menu') {
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendWelcomeMenu(tenantId, phone);
+    return;
+  }
+  
+  if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ No services found in this category.\n\n` +
-      `Reply *0️⃣* for main menu.`
+      `❌ Invalid selection. Please choose a number from 1️⃣ to ${categorySubcategories.length}️⃣.\n\n` +
+      `0️⃣ Back to categories`
     );
     return;
   }
   
-  // Re-fetch full service objects by ID
-  const services: Service[] = [];
-  const batchSize = 10;
-  for (let i = 0; i < serviceIds.length; i += batchSize) {
-    const batch = serviceIds.slice(i, i + batchSize);
-    const servicesSnap = await adminDb
-      .collection("services")
-      .where('__name__', 'in', batch)
-      .get();
-    
-    servicesSnap.docs.forEach((doc: any) => {
-      services.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
+  const selectedSubcategory = categorySubcategories[num - 1];
+  
+  if (deps.debugLog) {
+    deps.debugLog("[ServiceBrowse] Selected subcategory:", selectedSubcategory);
   }
   
-  // Preserve original order
-  services.sort((a, b) => serviceIds.indexOf(a.id) - serviceIds.indexOf(b.id));
+  await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategory, categoryName, deps);
+}
+
+/**
+ * Show services for a specific category (no subcategory)
+ */
+async function showServicesForCategory(
+  tenantId: string,
+  phone: string,
+  categorySlug: string,
+  categoryName: string,
+  deps: ServiceBrowseDeps
+): Promise<void> {
+  const adminDb = getDb();
+  
+  await deps.startTyping(tenantId, phone);
+  
+  // Query services by businessType
+  const servicesSnap = await adminDb
+    .collection("services")
+    .where("tenantId", "==", tenantId)
+    .where("businessType", "==", categorySlug)
+    .where("status", "==", "active")
+    .get();
+  
+  const services = servicesSnap.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Service[];
   
   if (services.length === 0) {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ No services found in this category.\n\n` +
-      `Reply *0️⃣* for main menu.`
+      `😔 No services found in ${categoryName}.\n\n` +
+      `0️⃣ Back to categories`
     );
     return;
   }
   
-  // Show first 5 services
-  await showServiceBatch(tenantId, phone, services, 0, selectedCategory, deps);
+  // Store service IDs for pagination
+  const serviceIds = services.map(s => s.id);
   
-  // Update flow state - store service IDs only
+  await showServiceBatch(tenantId, phone, services, 0, { name: categoryName, type: 'category' }, deps);
+  
+  // Update flow state
   await adminDb
     .collection("tenants")
     .doc(tenantId)
@@ -266,13 +365,88 @@ async function handleCategorySelection(
         flowName: 'service_browse',
         currentStep: 'service_listing',
         selections: {
-          ...selections,
-          categoryId: selectedCategory.type,
-          categoryName: selectedCategory.name,
-          categoryServiceIds: serviceIds,
-          currentIndex: 0
+          categorySlug,
+          categoryName,
+          serviceIds,
+          currentIndex: 0,
+          listingType: 'category',
         },
-        lastActivity: new Date().toISOString()
+        lastActivity: new Date().toISOString(),
+      }
+    }, { merge: true });
+}
+
+/**
+ * Show services for a specific subcategory
+ */
+async function showServicesForSubcategory(
+  tenantId: string,
+  phone: string,
+  categorySlug: string,
+  subcategoryName: string,
+  categoryName: string,
+  deps: ServiceBrowseDeps
+): Promise<void> {
+  const adminDb = getDb();
+  
+  await deps.startTyping(tenantId, phone);
+  
+  // FIXED: Query by subcategory key (not display name)
+  // We need to convert display name back to key for querying
+  // Since we don't have the key here, query by businessType and filter client-side
+  const servicesSnap = await adminDb
+    .collection("services")
+    .where("tenantId", "==", tenantId)
+    .where("businessType", "==", categorySlug)
+    .where("status", "==", "active")
+    .get();
+  
+  let services = servicesSnap.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Service[];
+  
+  // Filter by subcategory (match both key and display name for compatibility)
+  services = services.filter((s: any) => {
+    return s.subcategory === subcategoryName || s.subcategoryName === subcategoryName;
+  });
+  
+  if (services.length === 0) {
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `😔 No services found in ${categoryName} → ${subcategoryName}.\n\n` +
+      `0️⃣ Back to subcategories`
+    );
+    return;
+  }
+  
+  // Store service IDs for pagination
+  const serviceIds = services.map(s => s.id);
+  
+  await showServiceBatch(tenantId, phone, services, 0, { name: `${categoryName} → ${subcategoryName}`, type: 'subcategory' }, deps);
+  
+  // Update flow state
+  await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("conversations")
+    .doc(phone)
+    .set({
+      flowState: {
+        isActive: true,
+        flowName: 'service_browse',
+        currentStep: 'service_listing',
+        selections: {
+          categorySlug,
+          categoryName,
+          subcategoryName,
+          serviceIds,
+          currentIndex: 0,
+          listingType: 'subcategory',
+        },
+        lastActivity: new Date().toISOString(),
       }
     }, { merge: true });
 }
@@ -285,11 +459,18 @@ async function showServiceBatch(
   phone: string,
   services: Service[],
   startIndex: number,
-  category: any,
+  context: { name: string; type: string },
   deps: ServiceBrowseDeps
 ): Promise<void> {
   const batchSize = 5;
   const batch = services.slice(startIndex, startIndex + batchSize);
+  const totalServices = services.length;
+  
+  let headerMessage = `🛠️ *${context.name}*\n\n`;
+  headerMessage += `Showing ${startIndex + 1}-${Math.min(startIndex + batchSize, totalServices)} of ${totalServices} services:\n\n`;
+  
+  await deps.stopTyping(tenantId, phone);
+  await deps.sendMessage(tenantId, phone, headerMessage);
   
   // Send each service
   for (let idx = 0; idx < batch.length; idx++) {
@@ -313,24 +494,23 @@ async function showServiceBatch(
     }
   }
   
-  // Show navigation with clear service selection numbers
-  const remaining = services.length - (startIndex + batchSize);
-  let responseText = `\n*Reply with a number to view a service:*\n`;
+  // Show navigation options
+  const remaining = totalServices - (startIndex + batchSize);
+  let navigationMessage = `\n*Reply with a number to view service details:*\n`;
   
   for (let i = 0; i < batch.length; i++) {
-    responseText += `${i + 1}️⃣ - View *${batch[i].name}* details\n`;
+    navigationMessage += `${i + 1}️⃣ - View *${batch[i].name}*\n`;
   }
   
-  responseText += `\n`;
+  navigationMessage += `\n`;
   
   if (remaining > 0) {
-    responseText += `6️⃣ - View More (${remaining} more)\n`;
+    navigationMessage += `6️⃣ - View More (${remaining} more)\n`;
   }
-  responseText += `7️⃣ - Back to categories\n`;
-  responseText += `8️⃣ - Main menu`;
+  navigationMessage += `0️⃣ - Go back\n`;
+  navigationMessage += `*MENU* - Main menu`;
   
-  await deps.stopTyping(tenantId, phone);
-  await deps.sendMessage(tenantId, phone, responseText);
+  await deps.sendMessage(tenantId, phone, navigationMessage);
 }
 
 /**
@@ -345,54 +525,69 @@ async function handleServiceListing(
 ): Promise<void> {
   const adminDb = getDb();
   const num = parseInt(message.trim());
-  const { categoryServiceIds, currentIndex, categoryName } = flowState.selections;
+  const trimmed = message.trim().toLowerCase();
+  const { serviceIds, currentIndex, listingType, categorySlug, categoryName, subcategoryName } = flowState.selections;
   
-  if (isNaN(num)) {
+  // Handle navigation commands
+  if (trimmed === '0' || trimmed === 'back') {
+    if (listingType === 'subcategory') {
+      // Go back to subcategories
+      await deps.stopTyping(tenantId, phone);
+      await startServiceBrowseFlow(tenantId, phone, deps);
+    } else {
+      // Go back to categories
+      await deps.stopTyping(tenantId, phone);
+      await startServiceBrowseFlow(tenantId, phone, deps);
+    }
+    return;
+  }
+  
+  if (trimmed === 'menu') {
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      "❌ Please reply with a number.\n\n" +
-      "Or reply *0️⃣* for main menu."
-    );
+    await deps.sendWelcomeMenu(tenantId, phone);
     return;
   }
   
   const batchSize = 5;
-  
-  // Re-fetch current batch for service selection
-  const serviceIds = categoryServiceIds;
-  const startIdx = currentIndex;
-  const currentBatchIds = serviceIds.slice(startIdx, startIdx + batchSize);
+  const currentBatchIds = serviceIds.slice(currentIndex, currentIndex + batchSize);
   
   // Numbers 1-5 = select a service from current batch
   if (num >= 1 && num <= currentBatchIds.length) {
     const selectedServiceId = currentBatchIds[num - 1];
     const serviceDoc = await adminDb.collection("services").doc(selectedServiceId).get();
-    const selectedService = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
     
+    if (!serviceDoc.exists) {
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        "❌ Service not found. Please try browsing again.\n\n" +
+        "0️⃣ Go back"
+      );
+      return;
+    }
+    
+    const selectedService = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
     await showServiceDetail(tenantId, phone, selectedService, flowState, deps);
     return;
   }
   
-  // Shifted navigation numbers
+  // Number 6 = view more
   if (num === 6) {
-    // View more services
     const nextIndex = currentIndex + batchSize;
     if (nextIndex >= serviceIds.length) {
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
-        "✅ You've seen all services in this category.\n\n" +
-        "*Reply with a number:*\n" +
-        "7️⃣ - Back to categories\n" +
-        "8️⃣ - Main menu"
+        "✅ You've seen all services.\n\n" +
+        "0️⃣ - Go back\n" +
+        "*MENU* - Main menu"
       );
       return;
     }
     
-    // Re-fetch services for next batch
+    // Fetch next batch of services
     const nextBatchIds = serviceIds.slice(nextIndex, nextIndex + batchSize);
     const nextServices: Service[] = [];
     
@@ -411,14 +606,20 @@ async function handleServiceListing(
       });
     }
     
+    // Preserve order
     nextServices.sort((a, b) => nextBatchIds.indexOf(a.id) - nextBatchIds.indexOf(b.id));
+    
+    let contextName = categoryName;
+    if (subcategoryName) {
+      contextName = `${categoryName} → ${subcategoryName}`;
+    }
     
     await showServiceBatch(
       tenantId,
       phone,
       nextServices,
       0,
-      { name: categoryName },
+      { name: contextName, type: listingType },
       deps
     );
     
@@ -435,24 +636,18 @@ async function handleServiceListing(
           lastActivity: new Date().toISOString()
         }
       }, { merge: true });
-      
-  } else if (num === 7) {
-    // Back to categories
-    await startServiceBrowseFlow(tenantId, phone, deps);
-    
-  } else if (num === 8) {
-    // Main menu - use the passed dependency
-    await deps.stopTyping(tenantId, phone);
-    await deps.sendWelcomeMenu(tenantId, phone);
-  } else {
-    await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      "❌ Invalid selection. Please reply with 1️⃣-8️⃣ as shown above.\n\n" +
-      "Or reply *0️⃣* for main menu."
-    );
+    return;
   }
+  
+  // Invalid selection
+  await deps.stopTyping(tenantId, phone);
+  await deps.sendMessage(
+    tenantId,
+    phone,
+    `❌ Invalid selection. Please reply with 1️⃣-${currentBatchIds.length}️⃣ to view a service, or 6️⃣ for more.\n\n` +
+    `0️⃣ - Go back\n` +
+    `*MENU* - Main menu`
+  );
 }
 
 /**
@@ -467,10 +662,9 @@ async function showServiceDetail(
 ): Promise<void> {
   const adminDb = getDb();
   
-  // Build pricing display based on your DB schema
+  // Build pricing display
   let pricingText = '';
   
-  // Check for packagePrices (new structure)
   if (service.packagePrices) {
     const prices = service.packagePrices;
     const priceLines = [];
@@ -481,28 +675,23 @@ async function showServiceDetail(
     if (priceLines.length > 0) {
       pricingText = `\n💰 *Pricing:*\n${priceLines.join('\n')}`;
     }
-  } 
-  // Fallback to priceMin/priceMax
-  else if (service.priceMin === service.priceMax) {
-    pricingText = `\n💰 *Price:* KES ${service.priceMin.toLocaleString()}`;
+  } else if (service.priceMin === service.priceMax) {
+    pricingText = `\n💰 *Price:* KES ${service.priceMin?.toLocaleString() || 'N/A'}`;
   } else if (service.priceMin && service.priceMax) {
     pricingText = `\n💰 *Price Range:* KES ${service.priceMin.toLocaleString()} - ${service.priceMax.toLocaleString()}`;
   }
   
-  // Build service details based on your DB schema
+  // Build service details
   const details = [];
   
-  // Provider name
   if (service.providerName) {
     details.push(`👤 *Provider:* ${service.providerName}`);
   }
   
-  // Duration - IMPORTANT field from your DB
   if (service.duration) {
     details.push(`⏱️ *Duration:* ${service.duration}`);
   }
   
-  // Location
   if (service.location) {
     const locationMap: Record<string, string> = {
       'client-place': "Client's place",
@@ -513,7 +702,6 @@ async function showServiceDetail(
     details.push(`📍 *Location:* ${locationMap[service.location] || service.location}`);
   }
   
-  // Mode
   if (service.mode) {
     const modeMap: Record<string, string> = {
       'in-person': 'In-Person',
@@ -523,26 +711,27 @@ async function showServiceDetail(
     details.push(`🔄 *Mode:* ${modeMap[service.mode] || service.mode}`);
   }
   
-  // Category
   if (service.businessCategory || service.categoryName) {
     details.push(`📂 *Category:* ${service.businessCategory || service.categoryName}`);
   }
   
-  // Rating
+  if (service.subcategoryName) {
+    details.push(`📁 *Subcategory:* ${service.subcategoryName}`);
+  }
+  
   if (service.rating) {
     details.push(`⭐ *Rating:* ${service.rating}/5`);
   }
   
   const detailsText = details.length > 0 ? `\n\n${details.join('\n')}` : '';
   
-  // Build specifications section - properly display arrays
+  // Build specifications section
   let specsText = '';
   if (service.specifications && typeof service.specifications === 'object') {
     const specEntries = Object.entries(service.specifications);
     if (specEntries.length > 0) {
       const specLines = specEntries.map(([key, value]) => {
         const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        // Handle array values properly
         if (Array.isArray(value) && value.length > 0) {
           return `   • ${formattedKey}: ${value.join(', ')}`;
         } else if (typeof value === 'string' && value) {
@@ -557,7 +746,7 @@ async function showServiceDetail(
     }
   }
   
-  // Build package features section
+  // Build package features
   let featuresText = '';
   if (service.packageFeatures) {
     const featureSections = [];
@@ -577,13 +766,7 @@ async function showServiceDetail(
     }
   }
   
-  // Build tags section
-  let tagsText = '';
-  if (service.tags && service.tags.length > 0) {
-    tagsText = `\n\n🏷️ *Tags:* ${service.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ')}`;
-  }
-  
-  // Build availability section
+  // Build availability
   let availabilityText = '';
   if (service.availability) {
     const availParts = [];
@@ -591,26 +774,25 @@ async function showServiceDetail(
       availParts.push(`📅 ${service.availability.days.join(', ')}`);
     }
     if (service.availability.timeSlots && service.availability.timeSlots.length > 0) {
-      availParts.push(`⏰ ${service.availability.timeSlots.join(', ')}`);
+      const timeSlots = service.availability.timeSlots.slice(0, 5);
+      availParts.push(`⏰ ${timeSlots.join(', ')}${service.availability.timeSlots.length > 5 ? '...' : ''}`);
     }
     if (availParts.length > 0) {
       availabilityText = `\n\n🕒 *Available:*\n   ${availParts.join(' · ')}`;
     }
   }
   
-  // Booking URL - use direct link from database
+  // Booking URL
   let bookingUrlText = '';
   if (service.bookingUrl) {
     bookingUrlText = `\n\n🛒 *Book Now:* ${service.bookingUrl}`;
   }
   
-  // Proper emoji fallback
+  // Build complete message
   let completeMessage = `${service.emoji || '🛠️'} *${service.name}*${pricingText}${detailsText}`;
-  
-  // CRITICAL: Add booking URL immediately after basic info
   completeMessage += bookingUrlText;
   
-  // Add description (truncated like products - max 300 chars)
+  // Add description
   if (service.description && service.description.trim() !== '') {
     const desc = service.description.length > 300 
       ? service.description.substring(0, 300) + '...' 
@@ -618,69 +800,39 @@ async function showServiceDetail(
     completeMessage += `\n\n📝 *Description:*\n${desc}`;
   }
   
-  // Add specifications
   completeMessage += specsText;
-  
-  // Add package features
   completeMessage += featuresText;
-  
-  // Add availability
   completeMessage += availabilityText;
   
-  // Fixed navigation options
+  // Navigation options
   const navOptions = `\n\n*Reply with a number:*\n` +
     `1️⃣ - Book this service\n` +
     `2️⃣ - Back to services\n` +
     `3️⃣ - Main menu\n` +
-    `4️⃣ - Browse Service Categories`;
+    `0️⃣ - Browse Categories`;
   
-  // Hard cap the message at 980 characters to prevent WhatsApp truncation
-  const MAX_CAPTION = 980;
-  
-  // Find where booking URL ends
-  const safeBase = completeMessage.substring(0, completeMessage.indexOf(bookingUrlText) + bookingUrlText.length);
-  
-  if (completeMessage.length + navOptions.length > MAX_CAPTION) {
-    // Calculate how much we can keep after the safe base
-    const remainingSpace = MAX_CAPTION - safeBase.length - navOptions.length - 10;
-    let truncatedContent = completeMessage.substring(safeBase.length, safeBase.length + remainingSpace);
-    
-    // Find last complete word or sentence
-    const lastPeriod = truncatedContent.lastIndexOf('.');
-    const lastNewline = truncatedContent.lastIndexOf('\n');
-    const cutPoint = Math.max(lastPeriod, lastNewline, 50);
-    
-    truncatedContent = truncatedContent.substring(0, cutPoint);
-    if (truncatedContent.length < completeMessage.substring(safeBase.length).length) {
-      truncatedContent += '...';
-    }
-    
-    completeMessage = safeBase + truncatedContent + navOptions;
-  } else {
-    completeMessage += navOptions;
+  // Ensure message isn't too long
+  const MAX_LENGTH = 980;
+  if (completeMessage.length + navOptions.length > MAX_LENGTH) {
+    const availableForContent = MAX_LENGTH - navOptions.length - 50;
+    completeMessage = completeMessage.substring(0, availableForContent) + '...';
   }
   
-  console.log(`[ServiceBrowse] Complete message length: ${completeMessage.length} chars`);
-  console.log(`[ServiceBrowse] Has booking URL: ${!!service.bookingUrl}`);
+  completeMessage += navOptions;
   
-  // Send using same pattern as products
+  // Send message
   if (service.imageUrl || (service.portfolioImages && service.portfolioImages.length > 0)) {
     const imageUrl = service.imageUrl || service.portfolioImages![0];
     if (deps.sendMedia) {
-      console.log(`[ServiceBrowse] Sending with image (product pattern)`);
       await deps.sendMedia(tenantId, phone, imageUrl, completeMessage);
     } else {
-      console.log(`[ServiceBrowse] sendMedia not available, sending as text`);
       await deps.sendMessage(tenantId, phone, completeMessage);
     }
   } else {
-    console.log(`[ServiceBrowse] No image, sending complete message as text`);
     await deps.sendMessage(tenantId, phone, completeMessage);
   }
   
-  console.log(`[ServiceBrowse] Service details sent successfully`);
-  
-  // Store only service ID, not full object
+  // Update flow state
   await adminDb
     .collection("tenants")
     .doc(tenantId)
@@ -712,20 +864,36 @@ async function handleServiceDetailInput(
 ): Promise<void> {
   const adminDb = getDb();
   const num = parseInt(message.trim());
+  const trimmed = message.trim().toLowerCase();
+  
+  if (trimmed === '0' || trimmed === 'categories') {
+    await deps.stopTyping(tenantId, phone);
+    await startServiceBrowseFlow(tenantId, phone, deps);
+    return;
+  }
+  
+  if (trimmed === 'menu') {
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendWelcomeMenu(tenantId, phone);
+    return;
+  }
   
   if (isNaN(num)) {
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Please reply with a number.\n\n" +
-      "Or reply *0️⃣* for main menu."
+      "❌ Please reply with a number:\n\n" +
+      "1️⃣ - Book this service\n" +
+      "2️⃣ - Back to services\n" +
+      "3️⃣ - Main menu\n" +
+      "0️⃣ - Browse Categories"
     );
     return;
   }
-    
+  
   if (num === 1) {
-    // Re-fetch service by ID instead of reading from flow state
+    // Book this service
     const serviceId = flowState.selections.selectedServiceId;
     if (!serviceId) {
       await deps.stopTyping(tenantId, phone);
@@ -733,7 +901,7 @@ async function handleServiceDetailInput(
         tenantId,
         phone,
         "❌ Service not found. Please try browsing again.\n\n" +
-        "Reply *0️⃣* for main menu."
+        "0️⃣ Browse Categories"
       );
       return;
     }
@@ -746,7 +914,7 @@ async function handleServiceDetailInput(
         tenantId,
         phone,
         "❌ Service not found. Please try browsing again.\n\n" +
-        "Reply *0️⃣* for main menu."
+        "0️⃣ Browse Categories"
       );
       return;
     }
@@ -774,23 +942,76 @@ async function handleServiceDetailInput(
       );
     }
   } else if (num === 2) {
-    // Back to service listing
-    await handleServiceListing(tenantId, phone, '7', flowState, deps);
+    // Back to services
+    const { serviceIds, currentIndex, listingType, categorySlug, categoryName, subcategoryName } = flowState.selections;
+    
+    if (serviceIds && serviceIds.length > 0) {
+      // Re-fetch current batch
+      const batchSize = 5;
+      const currentBatchIds = serviceIds.slice(currentIndex, currentIndex + batchSize);
+      const services: Service[] = [];
+      
+      for (let i = 0; i < currentBatchIds.length; i += 10) {
+        const batch = currentBatchIds.slice(i, i + 10);
+        const servicesSnap = await adminDb
+          .collection("services")
+          .where('__name__', 'in', batch)
+          .get();
+        
+        servicesSnap.docs.forEach((doc: any) => {
+          services.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+      }
+      
+      services.sort((a, b) => currentBatchIds.indexOf(a.id) - currentBatchIds.indexOf(b.id));
+      
+      let contextName = categoryName;
+      if (subcategoryName) {
+        contextName = `${categoryName} → ${subcategoryName}`;
+      }
+      
+      await showServiceBatch(
+        tenantId,
+        phone,
+        services,
+        0,
+        { name: contextName, type: listingType },
+        deps
+      );
+      
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            ...flowState,
+            currentStep: 'service_listing',
+            lastActivity: new Date().toISOString()
+          }
+        }, { merge: true });
+    } else {
+      await deps.stopTyping(tenantId, phone);
+      await startServiceBrowseFlow(tenantId, phone, deps);
+    }
   } else if (num === 3) {
-    // Main menu - use passed dependency
+    // Main menu
     await deps.stopTyping(tenantId, phone);
     await deps.sendWelcomeMenu(tenantId, phone);
-  } else if (num === 4) {
-    // Browse Service Categories
-    await startServiceBrowseFlow(tenantId, phone, deps);
   } else {
-    // Updated error message to include 4️⃣
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, 3️⃣, or 4️⃣.\n\n" +
-      "Or reply *0️⃣* for main menu."
+      "❌ Invalid selection. Please reply with 1️⃣, 2️⃣, 3️⃣, or 0️⃣.\n\n" +
+      "1️⃣ - Book this service\n" +
+      "2️⃣ - Back to services\n" +
+      "3️⃣ - Main menu\n" +
+      "0️⃣ - Browse Categories"
     );
   }
 }
@@ -799,45 +1020,37 @@ async function handleServiceDetailInput(
  * Format a service for WhatsApp display (list view)
  */
 function formatServiceMessage(service: Service, index: number): string {
-  // Emoji numbers for list display
   const emojiNumbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
   const numberEmoji = emojiNumbers[index - 1] || `${index}️⃣`;
   
-  // Build pricing based on your DB schema
+  // Build pricing
   let priceText = '';
   if (service.packagePrices) {
     const prices = service.packagePrices;
     const validPrices = [prices.basic, prices.standard, prices.premium]
       .filter((p): p is number => p !== undefined && p > 0);
     if (validPrices.length === 1) {
-      priceText = `💰 KES ${validPrices[0]!.toLocaleString()}`;
+      priceText = `💰 KES ${validPrices[0].toLocaleString()}`;
     } else if (validPrices.length > 1) {
       priceText = `💰 KES ${Math.min(...validPrices).toLocaleString()} - ${Math.max(...validPrices).toLocaleString()}`;
-    } else {
-      priceText = `💰 KES ${service.priceMin?.toLocaleString() || '0'} - ${service.priceMax?.toLocaleString() || '0'}`;
     }
   } else if (service.priceMin === service.priceMax) {
-    priceText = `💰 KES ${service.priceMin?.toLocaleString() || '0'}`;
+    priceText = `💰 KES ${service.priceMin?.toLocaleString() || 'N/A'}`;
   } else if (service.priceMin && service.priceMax) {
     priceText = `💰 KES ${service.priceMin.toLocaleString()} - ${service.priceMax.toLocaleString()}`;
-  } else {
-    priceText = `💰 Price on request`;
   }
   
-  // Build service info
+  // Build info badges
   const info = [];
   if (service.duration) info.push(`⏱️ ${service.duration}`);
-  if (service.businessCategory || service.categoryName) {
-    info.push(`📂 ${service.businessCategory || service.categoryName}`);
-  }
   if (service.location) {
-    const locationMap: Record<string, string> = {
+    const locationShort: Record<string, string> = {
       'client-place': '🏠 Client',
-      'my-place': '🏢 My place',
+      'my-place': '🏢 Studio',
       'remote': '💻 Remote',
       'both-places': '📍 Both'
     };
-    info.push(locationMap[service.location] || service.location);
+    info.push(locationShort[service.location] || service.location);
   }
   const infoText = info.length > 0 ? `\n   ${info.join(' | ')}` : '';
   
