@@ -107,12 +107,14 @@ export async function startServiceBrowseFlow(
         subcategoryMap: data.subcategoryMap || {},  // NEW: key -> display name mapping
         serviceCount: data.serviceCount || 0,
       };
-    }).filter(cat => cat.serviceCount > 0); // Only show categories with services
+    });
+    // REMOVED: Don't filter by serviceCount since it may not be updated
+    // We'll query actual services when user selects a category
     
-    console.log(`[ServiceBrowse] After filtering: ${categories.length} categories with services`);
+    console.log(`[ServiceBrowse] Total categories loaded: ${categories.length}`);
     
     if (categories.length === 0) {
-      console.warn(`[ServiceBrowse] All categories have 0 services for tenant: ${tenantId}`);
+      console.warn(`[ServiceBrowse] No category documents found for tenant: ${tenantId}`);
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
