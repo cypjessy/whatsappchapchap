@@ -858,6 +858,50 @@ async function handleFlowInput(
     await handleProductSearchInput(tenantId, phone, message, flowState);
     return;
   }
+  
+  // ⭐ ADD THIS — Handle service search results navigation
+  if (flowName === 'service_search') {
+    await handleServiceSearchInput(tenantId, phone, message, flowState);
+    return;
+  }
+  
+  // ⭐ ADD THIS — Handle "did you mean?" service suggestions
+  if (flowName === 'similar_services_selection') {
+    const num = parseInt(message.trim());
+    const similarServices = flowState.similarServices || [];
+
+    if (isNaN(num) || num < 1 || num > similarServices.length) {
+      await stopTypingIndicator(tenantId, phone);
+      await sendEvolutionMessage(tenantId, phone,
+        `❌ Invalid selection. Reply with 1-${similarServices.length} or *0* to go back.`
+      );
+      return;
+    }
+
+    const selected = similarServices[num - 1];
+    const name = selected.serviceName || selected.name;
+    let msg = `✅ *${name}*\n`;
+    if (selected.packagePrices?.basic) msg += `💰 KES ${selected.packagePrices.basic.toLocaleString()}\n`;
+    else if (selected.priceMin) msg += `💰 KES ${selected.priceMin.toLocaleString()}${selected.priceMax && selected.priceMax !== selected.priceMin ? ` - ${selected.priceMax.toLocaleString()}` : ''}\n`;
+    if (selected.duration) msg += `⏱️ Duration: ${selected.duration}\n`;
+    if (selected.businessCategory) msg += `📂 ${selected.businessCategory}\n`;
+    if (selected.subcategoryName) msg += `📁 ${selected.subcategoryName}\n`;
+    if (selected.description) msg += `\n📝 ${selected.description.substring(0, 200)}${selected.description.length > 200 ? '...' : ''}\n`;
+    if (selected.bookingUrl) msg += `\n🛒 Book: ${selected.bookingUrl}`;
+    else msg += `\n💬 Reply *BOOK* to book this service`;
+    msg += `\n\nReply *0* to go back or *MENU* for main menu.`;
+
+    const imageUrl = selected.imageUrl || selected.portfolioImages?.[0];
+    await stopTypingIndicator(tenantId, phone);
+    if (imageUrl) {
+      await sendEvolutionMedia(tenantId, phone, imageUrl, msg);
+    } else {
+      await sendEvolutionMessage(tenantId, phone, msg);
+    }
+
+    await setFlowState(tenantId, phone, { isActive: false });
+    return;
+  }
 }
 
 async function handleProductSearchInput(
@@ -1000,6 +1044,103 @@ async function handleProductSearchInput(
       "❌ Invalid selection. Please reply with a number:\n\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu"
     );
   }
+}
+
+async function handleServiceSearchInput(
+  tenantId: string,
+  phone: string,
+  message: string,
+  flowState: any
+): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+
+  const adminDb = getAdminDb();
+  const { currentStep, allResults = [], searchQuery } = flowState;
+  const trimmed = message.trim();
+  const num = parseInt(trimmed);
+
+  if (!isNaN(num)) {
+    // "View More"
+    if (num === 1 && currentStep === 'search_results') {
+      const currentIndex = flowState.currentIndex || 0;
+      const nextIndex = currentIndex + 5;
+      const nextBatch = allResults.slice(nextIndex, nextIndex + 5);
+
+      if (nextBatch.length === 0) {
+        await stopTypingIndicator(tenantId, phone);
+        await sendEvolutionMessage(tenantId, phone, "✅ No more services to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu");
+        return;
+      }
+
+      for (let idx = 0; idx < nextBatch.length; idx++) {
+        const service = nextBatch[idx];
+        const name = service.serviceName || service.name;
+        let text = `*${idx + 1}. ${name}*\n`;
+        if (service.packagePrices?.basic) text += `   💰 KES ${service.packagePrices.basic.toLocaleString()}\n`;
+        else if (service.priceMin) text += `   💰 KES ${service.priceMin.toLocaleString()}${service.priceMax && service.priceMax !== service.priceMin ? ` - ${service.priceMax.toLocaleString()}` : ''}\n`;
+        if (service.duration) text += `   ⏱️ ${service.duration}\n`;
+        if (service.businessCategory) text += `   📂 ${service.businessCategory}\n`;
+        if (service.bookingUrl) text += `\n   🛒 Book: ${service.bookingUrl}`;
+        else text += `\n   💬 Reply *${idx + 1}* to book`;
+
+        const imageUrl = service.imageUrl || service.portfolioImages?.[0];
+        if (imageUrl) await sendEvolutionMedia(tenantId, phone, imageUrl, text);
+        else await sendEvolutionMessage(tenantId, phone, text);
+
+        if (idx < nextBatch.length - 1) await new Promise(r => setTimeout(r, 600));
+      }
+
+      const remaining = allResults.length - (nextIndex + 5);
+      const replyMsg = remaining > 0
+        ? `\n*Reply:*\n1️⃣ - View More (${remaining} more)\n2️⃣ - Go back\n3️⃣ - Main Menu`
+        : `\n*Reply:*\n2️⃣ - Go back\n3️⃣ - Main Menu`;
+
+      await stopTypingIndicator(tenantId, phone);
+      await sendEvolutionMessage(tenantId, phone, replyMsg);
+      
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            ...flowState,
+            currentIndex: nextIndex,
+            lastActivity: new Date().toISOString(),
+          }
+        }, { merge: true });
+      
+      return;
+    }
+
+    // Go back / browse services
+    if (num === 2) {
+      await stopTypingIndicator(tenantId, phone);
+      const serviceDeps: ServiceBrowseDeps = {
+        sendMessage: sendEvolutionMessage,
+        sendMedia: sendEvolutionMedia,
+        startTyping: startTypingIndicator,
+        stopTyping: stopTypingIndicator,
+        sendWelcomeMenu: sendWelcomeMenu,
+      };
+      await startServiceBrowseFlow(tenantId, phone, serviceDeps);
+      return;
+    }
+
+    // Main menu
+    if (num === 3) {
+      await stopTypingIndicator(tenantId, phone);
+      await sendWelcomeMenu(tenantId, phone);
+      return;
+    }
+  }
+
+  // Fallback
+  await stopTypingIndicator(tenantId, phone);
+  await sendEvolutionMessage(tenantId, phone,
+    "❌ Invalid selection.\n\n*Reply:*\n1️⃣ - View More\n2️⃣ - Go back\n3️⃣ - Main Menu"
+  );
 }
 
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
