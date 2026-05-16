@@ -165,14 +165,16 @@ export default function DashboardLayout({
 
   return (
     <>
-      {/* Premium Offline Modal - Mobile/Android Only */}
-      {showOfflineBanner && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 lg:hidden">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn" />
-          
-          {/* Modal */}
-          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
+      {/* Material Design 3 Page Background */}
+      <div className="min-h-screen bg-surface">
+        {/* Premium Offline Modal - Mobile/Android Only */}
+        {showOfflineBanner && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 lg:hidden">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn" />
+            
+            {/* Modal */}
+            <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
             {/* Gradient Header */}
             <div className="bg-gradient-to-br from-red-500 to-orange-500 p-6 text-center">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -221,13 +223,14 @@ export default function DashboardLayout({
             </div>
           </div>
         </div>
-      )}
-      
-      <ModeProvider>
-        <AppLayout>
-          <DashboardProtection>{children}</DashboardProtection>
-        </AppLayout>
-      </ModeProvider>
+        )}
+        
+        <ModeProvider>
+          <AppLayout>
+            <DashboardProtection>{children}</DashboardProtection>
+          </AppLayout>
+        </ModeProvider>
+      </div>
     </>
   );
 }

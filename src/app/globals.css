@@ -187,10 +187,20 @@ button:active::after, .clickable:active::after, [role="button"]:active::after {
 }
 
 body {
-  background: var(--bg);
-  color: var(--text-primary);
+  background: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
   font-family: var(--font-plus-jakarta), system-ui, sans-serif;
   position: relative;
+}
+
+/* Material Design 3 Surface Background for App Pages */
+.bg-surface {
+  background: linear-gradient(
+    180deg,
+    var(--md-sys-color-surface) 0%,
+    var(--md-sys-color-surface-variant) 100%
+  );
+  min-height: 100vh;
 }
 
 /* ============================================
@@ -219,7 +229,7 @@ button:active, a:active, [role="button"]:active {
   transform: scale(0.98);
 }
 
-/* Pure white background for consistent app experience */
+/* Material Design 3 Background for consistent app experience */
 body::before {
   content: '';
   position: fixed;
@@ -227,7 +237,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #ffffff;
+  background: var(--md-sys-color-background);
   z-index: -1;
   pointer-events: none;
 }
