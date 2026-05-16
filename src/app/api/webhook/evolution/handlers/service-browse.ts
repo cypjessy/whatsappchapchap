@@ -67,13 +67,18 @@ export async function startServiceBrowseFlow(
   await deps.startTyping(tenantId, phone);
   
   try {
+    console.log(`[ServiceBrowse] Starting service browse for tenant: ${tenantId}`);
+    
     // Get service categories from Firestore (pre-populated by AddServiceModal)
     const categoriesSnap = await adminDb
       .collection("serviceCategoryNames")
       .where("tenantId", "==", tenantId)
       .get();
     
+    console.log(`[ServiceBrowse] Found ${categoriesSnap.size} serviceCategoryNames documents`);
+    
     if (categoriesSnap.empty) {
+      console.warn(`[ServiceBrowse] No serviceCategoryNames found for tenant: ${tenantId}`);
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
@@ -87,6 +92,12 @@ export async function startServiceBrowseFlow(
     // Build categories with service counts
     const categories = categoriesSnap.docs.map((doc: any) => {
       const data = doc.data();
+      console.log(`[ServiceBrowse] Category doc ${doc.id}:`, {
+        mainCategory: data.mainCategory,
+        mainCategoryName: data.mainCategoryName,
+        subcategoryMap: data.subcategoryMap ? Object.keys(data.subcategoryMap).length : 'missing',
+        serviceCount: data.serviceCount
+      });
       return {
         id: doc.id,
         categorySlug: data.mainCategory,
@@ -98,7 +109,10 @@ export async function startServiceBrowseFlow(
       };
     }).filter(cat => cat.serviceCount > 0); // Only show categories with services
     
+    console.log(`[ServiceBrowse] After filtering: ${categories.length} categories with services`);
+    
     if (categories.length === 0) {
+      console.warn(`[ServiceBrowse] All categories have 0 services for tenant: ${tenantId}`);
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
@@ -207,6 +221,8 @@ async function handleCategorySelection(
   const categories = selections.categories;
   const trimmed = message.trim().toLowerCase();
   
+  console.log(`[ServiceBrowse] Category selection - input: "${message}", parsed: ${num}, total categories: ${categories.length}`);
+  
   if (trimmed === '0' || trimmed === 'menu') {
     await deps.stopTyping(tenantId, phone);
     await deps.sendWelcomeMenu(tenantId, phone);
@@ -214,6 +230,7 @@ async function handleCategorySelection(
   }
   
   if (isNaN(num) || num < 1 || num > categories.length) {
+    console.warn(`[ServiceBrowse] Invalid category selection: ${message}`);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
@@ -225,9 +242,11 @@ async function handleCategorySelection(
   }
   
   const selectedCategory = categories[num - 1];
+  console.log(`[ServiceBrowse] Selected category: ${selectedCategory.name} (${selectedCategory.categorySlug})`);
   
   // Check if category has subcategories
   if (selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
+    console.log(`[ServiceBrowse] Showing ${selectedCategory.subcategories.length} subcategories for ${selectedCategory.name}`);
     // Show subcategories
     const subcategoryList = selectedCategory.subcategories
       .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
@@ -280,6 +299,8 @@ async function handleSubcategorySelection(
   const { categorySlug, categoryName, categorySubcategories, subcategoryMap } = selections;
   const trimmed = message.trim().toLowerCase();
   
+  console.log(`[ServiceBrowse] Subcategory selection - input: "${message}", parsed: ${num}, total subcategories: ${categorySubcategories?.length}`);
+  
   if (trimmed === '0' || trimmed === 'back') {
     await deps.stopTyping(tenantId, phone);
     await startServiceBrowseFlow(tenantId, phone, deps);
@@ -293,6 +314,7 @@ async function handleSubcategorySelection(
   }
   
   if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
+    console.warn(`[ServiceBrowse] Invalid subcategory selection: ${message}`);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
@@ -304,19 +326,16 @@ async function handleSubcategorySelection(
   }
   
   const selectedSubcategoryName = categorySubcategories[num - 1];
+  console.log(`[ServiceBrowse] Selected subcategory name: ${selectedSubcategoryName}`);
   
   // FIXED: Find the subcategory key from the display name using the mapping
   let selectedSubcategoryKey = '';
   if (subcategoryMap && typeof subcategoryMap === 'object') {
     // Reverse lookup: find key by display name
     selectedSubcategoryKey = Object.entries(subcategoryMap).find(([key, name]) => name === selectedSubcategoryName)?.[0] || '';
-  }
-  
-  if (deps.debugLog) {
-    deps.debugLog("[ServiceBrowse] Selected subcategory:", {
-      name: selectedSubcategoryName,
-      key: selectedSubcategoryKey
-    });
+    console.log(`[ServiceBrowse] Mapped subcategory key: ${selectedSubcategoryKey} for name: ${selectedSubcategoryName}`);
+  } else {
+    console.warn(`[ServiceBrowse] No subcategoryMap available for reverse lookup`);
   }
   
   await showServicesForSubcategory(tenantId, phone, categorySlug, selectedSubcategoryName, selectedSubcategoryKey, categoryName, deps);
@@ -404,33 +423,58 @@ async function showServicesForSubcategory(
   
   await deps.startTyping(tenantId, phone);
   
+  console.log(`[ServiceBrowse] Querying services for: category=${categorySlug}, subcategory=${subcategoryName}, key=${subcategoryKey}`);
+  
   // OPTIMIZED: Query by businessType AND subcategory in Firestore (server-side filtering)
   let servicesSnap;
-  if (subcategoryKey) {
-    // Use composite index for efficient query
-    servicesSnap = await adminDb
-      .collection("services")
-      .where("tenantId", "==", tenantId)
-      .where("businessType", "==", categorySlug)
-      .where("subcategory", "==", subcategoryKey)
-      .where("status", "==", "active")
-      .get();
-  } else {
-    // Fallback: query without subcategory filter
-    servicesSnap = await adminDb
-      .collection("services")
-      .where("tenantId", "==", tenantId)
-      .where("businessType", "==", categorySlug)
-      .where("status", "==", "active")
-      .get();
+  try {
+    if (subcategoryKey) {
+      console.log(`[ServiceBrowse] Using composite query with subcategory key`);
+      // Use composite index for efficient query
+      servicesSnap = await adminDb
+        .collection("services")
+        .where("tenantId", "==", tenantId)
+        .where("businessType", "==", categorySlug)
+        .where("subcategory", "==", subcategoryKey)
+        .where("status", "==", "active")
+        .get();
+    } else {
+      console.warn(`[ServiceBrowse] No subcategory key, using fallback query`);
+      // Fallback: query without subcategory filter
+      servicesSnap = await adminDb
+        .collection("services")
+        .where("tenantId", "==", tenantId)
+        .where("businessType", "==", categorySlug)
+        .where("status", "==", "active")
+        .get();
+    }
+  } catch (error: any) {
+    console.error(`[ServiceBrowse] Firestore query error:`, error.message);
+    console.error(`[ServiceBrowse] Error code:`, error.code);
+    console.error(`[ServiceBrowse] Full error:`, JSON.stringify(error, null, 2));
+    
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Database error. Please contact support.\n\n` +
+      `Error: ${error.message}\n\n` +
+      `0️⃣ Back to menu`
+    );
+    return;
   }
+  
+  console.log(`[ServiceBrowse] Firestore returned ${servicesSnap.size} documents`);
   
   let services = servicesSnap.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data()
   })) as Service[];
   
+  console.log(`[ServiceBrowse] Mapped ${services.length} services from Firestore`);
+  
   if (services.length === 0) {
+    console.warn(`[ServiceBrowse] No active services found for ${categoryName} → ${subcategoryName}`);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,

@@ -514,6 +514,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     const tenantId = `tenant_${userId}`;
     
     try {
+      console.log(`[AddService] ensureServiceCategoriesPopulated called for tenant: ${tenantId}`);
+      
       // Get ALL serviceCategoryNames documents for this tenant
       const snapshot = await getDocs(
         query(
@@ -522,8 +524,12 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
         )
       );
       
+      console.log(`[AddService] Found ${snapshot.size} existing serviceCategoryNames documents`);
+      
       const categories = SERVICE_CATEGORIES;
       const updates: Promise<void>[] = [];
+      let created = 0;
+      let updated = 0;
       
       // Check each category and create/update as needed
       for (const category of categories) {
@@ -540,7 +546,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
         
         if (!existingDoc || !existingDoc.exists()) {
           // Create new document
-          console.log(`[AddService] Creating service category: ${category.id}`);
+          console.log(`[AddService] Creating NEW service category: ${category.id}`);
           updates.push(setDoc(doc(db, "serviceCategoryNames", docId), {
             id: category.id,
             tenantId: tenantId,
@@ -554,13 +560,18 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           }));
+          created++;
         } else {
           // Update existing document if missing required fields
           const data = existingDoc.data();
-          const needsUpdate = !data.mainCategory || !data.mainCategoryName || !data.subcategoryMap || data.serviceCount === undefined;
+          const missingFields = [];
+          if (!data.mainCategory) missingFields.push('mainCategory');
+          if (!data.mainCategoryName) missingFields.push('mainCategoryName');
+          if (!data.subcategoryMap) missingFields.push('subcategoryMap');
+          if (data.serviceCount === undefined) missingFields.push('serviceCount');
           
-          if (needsUpdate) {
-            console.log(`[AddService] Updating service category: ${category.id}`);
+          if (missingFields.length > 0) {
+            console.log(`[AddService] Updating service category: ${category.id} - Missing fields: ${missingFields.join(', ')}`);
             updates.push(updateDoc(doc(db, "serviceCategoryNames", docId), {
               mainCategory: category.id,
               mainCategoryName: category.name,
@@ -568,16 +579,22 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               serviceCount: data.serviceCount || 0,
               updatedAt: serverTimestamp(),
             }));
+            updated++;
+          } else {
+            console.log(`[AddService] Service category ${category.id} is complete - no update needed`);
           }
         }
       }
       
       if (updates.length > 0) {
         await Promise.all(updates);
-        console.log(`[AddService] Processed ${updates.length} service categories`);
+        console.log(`[AddService] ✅ Successfully processed service categories: ${created} created, ${updated} updated`);
+      } else {
+        console.log(`[AddService] All service categories are already up to date`);
       }
     } catch (error) {
-      console.error('[AddService] Failed to populate service categories:', error);
+      console.error('[AddService] ❌ Failed to populate service categories:', error);
+      // Don't throw - let service save continue even if categories fail
     }
   };
 
