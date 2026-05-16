@@ -5,7 +5,10 @@ import { useAuth } from "@/context/AuthContext";
 import { serviceService } from "@/lib/db";
 import { bunnyStorage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
-import { businessSpecs, BUSINESS_ICONS, BUSINESS_GRADIENTS, ServiceBusinessType } from "@/lib/serviceCategoryData";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+// IMPORT THE EXPANDED SERVICE DATA
+import { serviceData, SERVICE_CATEGORIES, getServiceSubcategories, getServiceSpecs, ServiceSpec } from "@/lib/serviceCategoryData";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -13,7 +16,7 @@ interface AddServiceButtonRef {
   open: () => void;
 }
 
-type BusinessKey = keyof typeof businessSpecs;
+type ServiceCategoryId = keyof typeof serviceData;
 type Tier = "basic" | "standard" | "premium";
 type Mode = "in-person" | "remote" | "both";
 type Location = "client-place" | "my-place" | "both-places" | "remote";
@@ -22,7 +25,8 @@ interface ServiceFormData {
   providerName: string;
   serviceName: string;
   description: string;
-  businessType: BusinessKey | null;
+  businessType: ServiceCategoryId | null;
+  subcategoryKey: string | null;  // NEW: Selected subcategory
   mode: Mode;
   location: Location;
   duration: string;
@@ -43,12 +47,13 @@ const DEFAULT_TIME_SLOTS = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00
 
 const WIZARD_STEPS = [
   { id: 1, label: "Basic Info", icon: "fa-info-circle" },
-  { id: 2, label: "Business Type", icon: "fa-store" },
-  { id: 3, label: "Specifications", icon: "fa-sliders-h" },
-  { id: 4, label: "Pricing", icon: "fa-tags" },
-  { id: 5, label: "Availability", icon: "fa-calendar-alt" },
-  { id: 6, label: "Details", icon: "fa-map-pin" },
-  { id: 7, label: "Portfolio", icon: "fa-images" },
+  { id: 2, label: "Category", icon: "fa-store" },
+  { id: 3, label: "Subcategory", icon: "fa-layer-group" },  // NEW STEP
+  { id: 4, label: "Specifications", icon: "fa-sliders-h" },
+  { id: 5, label: "Pricing", icon: "fa-tags" },
+  { id: 6, label: "Availability", icon: "fa-calendar-alt" },
+  { id: 7, label: "Details", icon: "fa-map-pin" },
+  { id: 8, label: "Portfolio", icon: "fa-images" },
 ];
 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -83,14 +88,16 @@ function getStepValidation(step: number, form: ServiceFormData): boolean {
     case 2:
       return form.businessType !== null;
     case 3:
-      return Object.keys(form.specs).length > 0;
+      return form.subcategoryKey !== null;
     case 4:
-      return Object.values(form.prices).some((p) => p && Number(p) > 0);
+      return Object.keys(form.specs).length > 0;
     case 5:
-      return form.days.size > 0;
+      return Object.values(form.prices).some((p) => p && Number(p) > 0);
     case 6:
-      return true;
+      return form.days.size > 0;
     case 7:
+      return true;
+    case 8:
       return true;
     default:
       return true;
@@ -208,6 +215,41 @@ function ToggleSwitch({ label, checked, onChange }: {
   );
 }
 
+// NEW: SpecButton component for service specifications
+function SpecButton({
+  label,
+  selected,
+  onClick,
+  isCustom,
+  multiple,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+  isCustom?: boolean;
+  multiple?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        px-3 py-1.5 md:px-4 md:py-2 rounded-full border-2 text-xs md:text-sm font-semibold transition-all duration-200
+        active:scale-95 flex items-center gap-1.5
+        ${selected
+          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md"
+          : isCustom
+            ? "border-dashed border-[#cbd5e1] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+            : "border-[#e2e8f0] text-[#475569] hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-white"
+        }
+      `}
+    >
+      {selected && multiple && <i className="fas fa-check text-[9px]" />}
+      {selected && !multiple && <i className="fas fa-dot-circle text-[8px]" />}
+      {label}
+    </button>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
@@ -233,6 +275,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     serviceName: "",
     description: "",
     businessType: null,
+    subcategoryKey: null,
     mode: "in-person",
     location: "client-place",
     duration: "60",
@@ -265,18 +308,36 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     }
   }, [isCameraOpen]);
 
+  // Reset specs when category or subcategory changes
+  useEffect(() => {
+    setForm(prev => ({ ...prev, specs: {} }));
+  }, [form.businessType, form.subcategoryKey]);
+
   // ─── Form Helpers ──────────────────────────────────────────────────────────
 
   const updateForm = useCallback(<K extends keyof ServiceFormData>(key: K, value: ServiceFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const toggleSpec = (specKey: string, option: string) => {
+  const toggleSpec = (specKey: string, option: string, multiple: boolean = true) => {
     setForm((prev) => {
       const currentSet = new Set(prev.specs[specKey] || []);
-      if (currentSet.has(option)) currentSet.delete(option);
-      else currentSet.add(option);
-      return { ...prev, specs: { ...prev.specs, [specKey]: currentSet } };
+      
+      if (multiple) {
+        if (currentSet.has(option)) currentSet.delete(option);
+        else currentSet.add(option);
+      } else {
+        // Single select - replace with new option
+        return {
+          ...prev,
+          specs: { ...prev.specs, [specKey]: new Set([option]) }
+        };
+      }
+      
+      return {
+        ...prev,
+        specs: { ...prev.specs, [specKey]: currentSet.size > 0 ? currentSet : new Set<string>() }
+      };
     });
   };
 
@@ -296,6 +357,12 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       else newTimes.add(time);
       return { ...prev, times: newTimes };
     });
+  };
+
+  const addCustomOption = (specKey: string, value: string) => {
+    toggleSpec(specKey, value, true);
+    setActiveCustomSpec(null);
+    setTempCustomValue("");
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -335,10 +402,9 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     setCameraTargetIndex(index);
     setIsCameraOpen(true);
     
-    // Try to get user media
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } // Prefer back camera on mobile
+        video: { facingMode: "environment" }
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -373,7 +439,6 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
           return { ...prev, portfolioImages: newImages.filter(Boolean) as File[] };
         });
       }
-      // Close camera after capture
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -420,6 +485,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       serviceName: "",
       description: "",
       businessType: null,
+      subcategoryKey: null,
       mode: "in-person",
       location: "client-place",
       duration: "60",
@@ -441,6 +507,49 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     setShowCloseConfirm(false);
   };
 
+  /**
+   * Auto-populate service category names collection for WhatsApp bot
+   */
+  const ensureServiceCategoriesPopulated = async (userId: string) => {
+    const tenantId = `tenant_${userId}`;
+    
+    try {
+      // Check if at least one service category exists
+      const sampleDocId = `${tenantId}_beauty`;
+      const sampleDoc = await getDoc(doc(db, "serviceCategoryNames", sampleDocId));
+      
+      if (sampleDoc.exists()) {
+        return;
+      }
+      
+      console.log('[AddService] First service detected - auto-creating service categories...');
+      
+      const categories = SERVICE_CATEGORIES;
+      const batchPromises = categories.map(async (category) => {
+        const docId = `${tenantId}_${category.id}`;
+        const subcategories = getServiceSubcategories(category.id).map(sub => sub.name);
+        
+        await setDoc(doc(db, "serviceCategoryNames", docId), {
+          id: category.id,
+          tenantId: tenantId,
+          mainCategory: category.id,
+          mainCategoryName: category.name,
+          icon: category.icon,
+          description: category.description,
+          subcategories: subcategories,
+          serviceCount: 0,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      });
+      
+      await Promise.all(batchPromises);
+      console.log(`[AddService] Created ${categories.length} service categories successfully`);
+    } catch (error) {
+      console.error('[AddService] Failed to auto-create service categories:', error);
+    }
+  };
+
   // ─── Save ──────────────────────────────────────────────────────────────────
 
   const saveService = async () => {
@@ -451,6 +560,12 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
 
     setIsSaving(true);
     try {
+      // Auto-create service categories on first service
+      await ensureServiceCategoriesPopulated(user.uid);
+      
+      const selectedCategory = serviceData[form.businessType!];
+      const selectedSubcategory = selectedCategory?.subcategories[form.subcategoryKey!];
+      
       const specs: Record<string, string[]> = {};
       Object.entries(form.specs).forEach(([key, set]) => {
         specs[key] = Array.from(set);
@@ -495,22 +610,24 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
 
       const timeSlots = form.times.size > 0 ? Array.from(form.times).sort() : DEFAULT_TIME_SLOTS;
 
-      const serviceData = {
+      const serviceDataToSave = {
         name: form.serviceName,
         description: form.description,
         providerName: form.providerName,
-        emoji: BUSINESS_ICONS[form.businessType!] || "✨",
-        bgGradient: BUSINESS_GRADIENTS[form.businessType!] || "from-gray-100 to-gray-200",
+        emoji: selectedCategory?.icon || "✨",
+        bgGradient: selectedCategory?.gradient || "from-gray-100 to-gray-200",
         duration: durationValue,
         location: form.location,
-        tags: [form.businessType!, ...(specs.service_type || [])].slice(0, 5),
+        tags: [form.businessType!, form.subcategoryKey!, ...(specs.service_type || [])].slice(0, 5),
         priceMin,
         priceMax,
         packagePrices,
         businessType: form.businessType!,
-        businessCategory: businessSpecs[form.businessType!]?.name || form.businessType!,
-        serviceName: specs.service_type?.[0] || form.serviceName,
-        categoryName: businessSpecs[form.businessType!]?.name || form.businessType!,
+        businessCategory: selectedCategory?.name || form.businessType!,
+        serviceName: specs.service_type?.[0] || selectedSubcategory?.name || form.serviceName,
+        categoryName: selectedCategory?.name || form.businessType!,
+        subcategory: form.subcategoryKey!,  // NEW: Save subcategory for browsing
+        subcategoryName: selectedSubcategory?.name,
         specifications: specs,
         tier: form.tier,
         mode: form.mode,
@@ -530,7 +647,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
         customTimeSlots: generateTimeSlots(Number(form.duration)),
       };
 
-      const createdService = await serviceService.createService(user, serviceData);
+      const createdService = await serviceService.createService(user, serviceDataToSave);
       const bookingUrl = `${window.location.origin}/book/${createdService.id}`;
       await serviceService.updateService(user, createdService.id, { bookingUrl });
 
@@ -538,6 +655,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       window.location.reload();
     } catch (error) {
       console.error("Error saving service:", error);
+      alert("Failed to save service. Please try again.");
     } finally {
       setIsSaving(false);
       setIsUploading(false);
@@ -588,25 +706,29 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     </div>
   );
 
+  // NEW: Step 2 - Category Selection (using expanded 18 categories)
   const renderStep2 = () => (
     <div className="space-y-4 animate-fadeIn">
-      <FormSection title="Select Business Type" icon="fa-store" isValid={canProceed}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3">
-          {Object.entries(businessSpecs).map(([key, spec]) => (
+      <FormSection title="Select Service Category" icon="fa-store" isValid={canProceed}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3 max-h-[50vh] overflow-y-auto p-1">
+          {SERVICE_CATEGORIES.map((category) => (
             <button
-              key={key}
-              onClick={() => updateForm("businessType", key as BusinessKey)}
+              key={category.id}
+              onClick={() => {
+                updateForm("businessType", category.id as ServiceCategoryId);
+                updateForm("subcategoryKey", null);
+              }}
               className={`
                 relative p-3 md:p-4 rounded-xl border-2 transition-all duration-200 text-center
-                ${form.businessType === key
+                ${form.businessType === category.id
                   ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
                   : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:shadow-sm"
                 }
               `}
             >
-              <div className="text-2xl md:text-3xl mb-1.5">{BUSINESS_ICONS[key]}</div>
-              <div className="text-xs md:text-sm font-bold text-[#475569]">{spec.name}</div>
-              {form.businessType === key && (
+              <div className="text-2xl md:text-3xl mb-1.5">{category.icon}</div>
+              <div className="text-xs md:text-sm font-bold text-[#475569] line-clamp-2">{category.name}</div>
+              {form.businessType === category.id && (
                 <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#8b5cf6] rounded-full flex items-center justify-center">
                   <i className="fas fa-check text-white text-[9px]" />
                 </div>
@@ -646,95 +768,34 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     </div>
   );
 
+  // NEW: Step 3 - Subcategory Selection
   const renderStep3 = () => {
     if (!form.businessType) return null;
-    const business = businessSpecs[form.businessType];
-    if (!business) return null;
-
+    
+    const subcategories = getServiceSubcategories(form.businessType);
+    
+    if (subcategories.length === 0) {
+      return (
+        <div className="text-center py-12 text-[#64748b]">
+          <i className="fas fa-layer-group text-4xl mb-3 opacity-50" />
+          <p>No subcategories available for this service type</p>
+          <p className="text-xs mt-1">You can proceed to specifications</p>
+        </div>
+      );
+    }
+    
     return (
       <div className="space-y-4 animate-fadeIn">
-        <FormSection title="Service Specifications" icon="fa-sliders-h" isValid={canProceed}>
-          <div className="space-y-4">
-            {Object.entries(business.specs).map(([key, spec]: [string, any]) => (
-              <div key={key} className="spec-group">
-                <div className="spec-header">
-                  <i className={`fas ${spec.icon} text-[#8b5cf6]`} />
-                  <span>{spec.label}</span>
-                  <span className="ml-auto text-[10px] text-[#94a3b8] font-medium">
-                    {form.specs[key]?.size || 0} selected
-                  </span>
-                </div>
-                <div className="spec-options">
-                  {spec.options.map((opt: string) => (
-                    <button
-                      key={opt}
-                      onClick={() => toggleSpec(key, opt)}
-                      className={`
-                        spec-option
-                        ${form.specs[key]?.has(opt) ? "active" : ""}
-                      `}
-                    >
-                      <i className="fas fa-check check-icon" />
-                      {opt}
-                    </button>
-                  ))}
-                  {activeCustomSpec !== key ? (
-                    <button
-                      className="add-custom-btn"
-                      onClick={() => {
-                        setActiveCustomSpec(key);
-                        setTempCustomValue("");
-                      }}
-                    >
-                      <i className="fas fa-plus" />
-                      Add Custom
-                    </button>
-                  ) : (
-                    <div className="custom-input-row">
-                      <input
-                        type="text"
-                        className="custom-input"
-                        placeholder="Enter custom..."
-                        value={tempCustomValue}
-                        onChange={(e) => setTempCustomValue(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            if (tempCustomValue.trim()) toggleSpec(key, tempCustomValue.trim());
-                            setActiveCustomSpec(null);
-                            setTempCustomValue("");
-                          }
-                          if (e.key === "Escape") {
-                            setActiveCustomSpec(null);
-                            setTempCustomValue("");
-                          }
-                        }}
-                      />
-                      <button
-                        className="spec-option"
-                        onClick={() => {
-                          if (tempCustomValue.trim()) toggleSpec(key, tempCustomValue.trim());
-                          setActiveCustomSpec(null);
-                          setTempCustomValue("");
-                        }}
-                        style={{ background: "#8b5cf6", color: "white" }}
-                      >
-                        <i className="fas fa-check" />
-                      </button>
-                      <button
-                        className="spec-option"
-                        onClick={() => {
-                          setActiveCustomSpec(null);
-                          setTempCustomValue("");
-                        }}
-                        style={{ background: "#ef4444", color: "white" }}
-                      >
-                        <i className="fas fa-times" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+        <FormSection title="Select Subcategory" icon="fa-layer-group" isValid={canProceed}>
+          <div className="flex flex-wrap gap-2 max-h-[40vh] overflow-y-auto p-1">
+            {subcategories.map((sub) => (
+              <SpecButton
+                key={sub.key}
+                label={sub.name}
+                selected={form.subcategoryKey === sub.key}
+                onClick={() => updateForm("subcategoryKey", sub.key)}
+                multiple={false}
+              />
             ))}
           </div>
         </FormSection>
@@ -742,7 +803,123 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     );
   };
 
-  const renderStep4 = () => (
+  // UPDATED: Step 4 - Specifications (using expanded service specs)
+  const renderStep4 = () => {
+    if (!form.businessType || !form.subcategoryKey) {
+      return (
+        <div className="text-center py-12 text-[#64748b]">
+          <i className="fas fa-sliders-h text-4xl mb-3 opacity-50" />
+          <p>Please select a category and subcategory first</p>
+        </div>
+      );
+    }
+    
+    const specs = getServiceSpecs(form.businessType, form.subcategoryKey);
+    
+    if (!specs || Object.keys(specs).length === 0) {
+      return (
+        <div className="text-center py-12 text-[#64748b]">
+          <i className="fas fa-cogs text-4xl mb-3 opacity-50" />
+          <p>No specifications available for this service</p>
+          <p className="text-xs mt-1">You can still proceed to pricing</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-4 animate-fadeIn">
+        <FormSection title="Service Specifications" icon="fa-sliders-h" isValid={canProceed}>
+          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+            {Object.entries(specs).map(([specKey, spec]) => {
+              const selectedValues = form.specs[specKey] || new Set<string>();
+              const isMultiple = spec.multiple !== false; // Default to true
+              
+              return (
+                <div key={specKey} className="bg-white rounded-xl p-4 border border-[#e2e8f0]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white text-xs">
+                      <i className={`fas ${spec.icon}`} />
+                    </div>
+                    <span className="font-bold text-sm text-[#475569]">{spec.label}</span>
+                    {isMultiple && (
+                      <span className="text-[10px] bg-[#e2e8f0] px-2 py-0.5 rounded-full text-[#64748b]">
+                        Multi-select
+                      </span>
+                    )}
+                    {spec.allowCustom && (
+                      <span className="text-[10px] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-full text-[#8b5cf6]">
+                        Custom allowed
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {spec.options.map((option) => (
+                      <SpecButton
+                        key={option}
+                        label={option}
+                        selected={selectedValues.has(option)}
+                        onClick={() => toggleSpec(specKey, option, isMultiple)}
+                        multiple={isMultiple}
+                      />
+                    ))}
+                    {spec.allowCustom && activeCustomSpec !== specKey && (
+                      <SpecButton
+                        label="+ Add Custom"
+                        selected={false}
+                        onClick={() => setActiveCustomSpec(specKey)}
+                        isCustom
+                      />
+                    )}
+                  </div>
+                  
+                  {activeCustomSpec === specKey && (
+                    <div className="flex gap-2 mt-3 animate-fadeIn">
+                      <input
+                        type="text"
+                        value={tempCustomValue}
+                        onChange={(e) => setTempCustomValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && tempCustomValue.trim()) {
+                            addCustomOption(specKey, tempCustomValue.trim());
+                          }
+                          if (e.key === "Escape") {
+                            setActiveCustomSpec(null);
+                            setTempCustomValue("");
+                          }
+                        }}
+                        placeholder={`Enter custom ${spec.label.toLowerCase()}...`}
+                        className="flex-1 px-3 py-2 rounded-lg border-2 border-[#8b5cf6] text-sm focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (tempCustomValue.trim()) addCustomOption(specKey, tempCustomValue.trim());
+                        }}
+                        className="px-3 py-2 bg-[#8b5cf6] text-white rounded-lg hover:bg-[#7c3aed] transition-colors"
+                      >
+                        <i className="fas fa-check" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveCustomSpec(null);
+                          setTempCustomValue("");
+                        }}
+                        className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
+                      >
+                        <i className="fas fa-times" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </FormSection>
+      </div>
+    );
+  };
+
+  const renderStep5 = () => (
     <div className="space-y-4 animate-fadeIn">
       <FormSection title="Pricing Packages" icon="fa-tags" isValid={canProceed}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
@@ -813,7 +990,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     </div>
   );
 
-  const renderStep5 = () => {
+  const renderStep6 = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const times = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM"];
 
@@ -845,7 +1022,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
 
             <div>
               <label className="form-label">Time Slots</label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-[30vh] overflow-y-auto p-1">
                 {times.map((time) => (
                   <button
                     key={time}
@@ -873,7 +1050,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     );
   };
 
-  const renderStep6 = () => (
+  const renderStep7 = () => (
     <div className="space-y-4 animate-fadeIn">
       <FormSection title="Service Location" icon="fa-map-pin">
         <div className="grid grid-cols-2 gap-2 md:gap-3">
@@ -960,7 +1137,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     </div>
   );
 
-  const renderStep7 = () => (
+  const renderStep8 = () => (
     <div className="space-y-4 animate-fadeIn">
       <FormSection title="Portfolio Photos" icon="fa-images">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1041,7 +1218,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
             className="md3-dialog w-full max-w-3xl my-2 md:my-8"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header - MD3 Dialog Header */}
+            {/* Header */}
             <div className="sticky top-0 z-10 bg-[var(--md-sys-color-surface)]">
               <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)]">
                 <div className="flex items-center gap-4">
@@ -1065,7 +1242,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               <StepIndicator currentStep={currentStep} totalSteps={WIZARD_STEPS.length} />
             </div>
 
-            {/* Body - MD3 Dialog Content */}
+            {/* Body */}
             <div className="md3-dialog-content">
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
@@ -1074,9 +1251,10 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               {currentStep === 5 && renderStep5()}
               {currentStep === 6 && renderStep6()}
               {currentStep === 7 && renderStep7()}
+              {currentStep === 8 && renderStep8()}
             </div>
 
-            {/* Footer - MD3 Dialog Actions */}
+            {/* Footer */}
             <div className="md3-dialog-actions">
               <button
                 onClick={prevStep}
