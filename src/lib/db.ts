@@ -1116,14 +1116,26 @@ export const serviceService = {
     
     // Save service category to serviceCategoryNames collection for AI (hierarchical structure)
     if (service.serviceName && service.businessType && service.businessCategory) {
-      await this.saveServiceCategoryName(user, service.businessType, service.businessCategory, service.serviceName);
+      await this.saveServiceCategoryName(
+        user, 
+        service.businessType, 
+        service.businessCategory, 
+        service.serviceName,
+        service.subcategory ? [service.subcategory] : undefined  // ⭐ NEW: Pass subcategory
+      );
     }
     
     return serviceData;
   },
 
   // Save unique service category name for AI to fetch (hierarchical structure)
-  async saveServiceCategoryName(user: User, businessType: string, businessCategory: string, serviceName: string): Promise<void> {
+  async saveServiceCategoryName(
+    user: User, 
+    businessType: string, 
+    businessCategory: string, 
+    serviceName: string,
+    subcategories?: string[]  // ⭐ NEW: Optional subcategories array
+  ): Promise<void> {
     const tenantId = getTenantId(user);
     
     // Check if main business category exists for this tenant
@@ -1143,6 +1155,7 @@ export const serviceService = {
         businessType: businessType, // e.g., "beauty", "home"
         businessCategory: businessCategory, // e.g., "Beauty & Hair", "Home Services"
         serviceNames: [serviceName], // e.g., ["Hair Braiding"]
+        subcategories: subcategories || [],  // ⭐ NEW: Store subcategories
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -1151,11 +1164,26 @@ export const serviceService = {
       const existingDoc = categorySnap.docs[0];
       const existingData = existingDoc.data();
       const existingServiceNames = existingData.serviceNames || [];
+      const existingSubcategories = existingData.subcategories || [];
+      
+      const updates: any = {};
       
       if (!existingServiceNames.includes(serviceName)) {
         // Add new service name to existing main category
+        updates.serviceNames = [...existingServiceNames, serviceName];
+      }
+      
+      // ⭐ NEW: Update subcategories if provided
+      if (subcategories && subcategories.length > 0) {
+        const newSubcats = subcategories.filter((s: string) => !existingSubcategories.includes(s));
+        if (newSubcats.length > 0) {
+          updates.subcategories = [...existingSubcategories, ...newSubcats];
+        }
+      }
+      
+      if (Object.keys(updates).length > 0) {
         await updateDoc(doc(db, "serviceCategoryNames", existingDoc.id), {
-          serviceNames: [...existingServiceNames, serviceName],
+          ...updates,
           updatedAt: serverTimestamp(),
         });
       }
@@ -1163,7 +1191,7 @@ export const serviceService = {
   },
 
   // Get all service category names for AI (hierarchical structure)
-  async getServiceCategoryNames(user: User): Promise<Array<{businessType: string, businessCategory: string, serviceNames: string[]}>> {
+  async getServiceCategoryNames(user: User): Promise<Array<{businessType: string, businessCategory: string, serviceNames: string[], subcategories?: string[]}>> {
     const tenantId = getTenantId(user);
     const q = query(
       collection(db, "serviceCategoryNames"),
@@ -1177,6 +1205,7 @@ export const serviceService = {
         businessType: data.businessType,
         businessCategory: data.businessCategory,
         serviceNames: data.serviceNames || [],
+        subcategories: data.subcategories || [],  // ⭐ NEW: Return subcategories
       };
     });
   },
