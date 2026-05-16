@@ -718,7 +718,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
   const renderStep2 = () => (
     <div className="space-y-4 animate-fadeIn">
       <FormSection title="Select Service Category" icon="fa-store" isValid={canProceed}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3 max-h-[50vh] overflow-y-auto p-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3 max-h-[60vh] overflow-y-auto p-1">
           {SERVICE_CATEGORIES.map((category) => (
             <button
               key={category.id}
@@ -745,34 +745,6 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
           ))}
         </div>
       </FormSection>
-
-      {form.businessType && (
-        <FormSection title="Delivery Mode" icon="fa-briefcase">
-          <div className="flex flex-wrap gap-2">
-            {([
-              { key: "in-person", label: "In-Person", icon: "fa-map-marker-alt" },
-              { key: "remote", label: "Remote/Video", icon: "fa-video" },
-              { key: "both", label: "Both", icon: "fa-random" },
-            ] as const).map((mode) => (
-              <button
-                key={mode.key}
-                onClick={() => updateForm("mode", mode.key)}
-                className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold
-                  transition-all duration-200
-                  ${form.mode === mode.key
-                    ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6]"
-                    : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
-                  }
-                `}
-              >
-                <i className={`fas ${mode.icon}`} />
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        </FormSection>
-      )}
     </div>
   );
 
@@ -1060,6 +1032,32 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
 
   const renderStep7 = () => (
     <div className="space-y-4 animate-fadeIn">
+      <FormSection title="Delivery Mode" icon="fa-briefcase">
+        <div className="flex flex-wrap gap-2">
+          {([
+            { key: "in-person", label: "In-Person", icon: "fa-map-marker-alt" },
+            { key: "remote", label: "Remote/Video", icon: "fa-video" },
+            { key: "both", label: "Both", icon: "fa-random" },
+          ] as const).map((mode) => (
+            <button
+              key={mode.key}
+              onClick={() => updateForm("mode", mode.key)}
+              className={`
+                flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold
+                transition-all duration-200
+                ${form.mode === mode.key
+                  ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6]"
+                  : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+                }
+              `}
+            >
+              <i className={`fas ${mode.icon}`} />
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </FormSection>
+
       <FormSection title="Service Location" icon="fa-map-pin">
         <div className="grid grid-cols-2 gap-2 md:gap-3">
           {([
