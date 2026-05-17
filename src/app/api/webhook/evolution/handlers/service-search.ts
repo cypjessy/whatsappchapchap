@@ -374,32 +374,52 @@ export async function handleServiceSearch(
     for (let idx = 0; idx < results.length; idx++) {
       const service = results[idx];
       const serviceName = service.serviceName || service.name;
-      const priceText = getServicePrice(service);
       const imageUrl = service.imageUrl || service.portfolioImages?.[0];
       
-      let serviceText = `*${idx + 1}. ${serviceName}*\n`;
-      serviceText += `   💰 ${priceText}\n`;
-      
-      if (service.duration) {
-        serviceText += `   ⏱️ Duration: ${service.duration}\n`;
+      // ⭐ Build pricing (same as browse)
+      let priceText = '';
+      if (service.packagePrices) {
+        const prices = service.packagePrices;
+        const validPrices = [prices.basic, prices.standard, prices.premium]
+          .filter((p): p is number => p !== undefined && p > 0);
+        if (validPrices.length === 1) {
+          priceText = `💰 KES ${validPrices[0].toLocaleString()}`;
+        } else if (validPrices.length > 1) {
+          priceText = `💰 KES ${Math.min(...validPrices).toLocaleString()} - ${Math.max(...validPrices).toLocaleString()}`;
+        }
+      } else if (service.priceMin === service.priceMax) {
+        priceText = `💰 KES ${service.priceMin?.toLocaleString() || 'N/A'}`;
+      } else if (service.priceMin && service.priceMax) {
+        priceText = `💰 KES ${service.priceMin.toLocaleString()} - ${service.priceMax.toLocaleString()}`;
       }
       
-      if (service.businessCategory) {
-        serviceText += `   📂 Category: ${service.businessCategory}\n`;
-      }
-      
-      if (service.subcategoryName) {
-        serviceText += `   📁 Subcategory: ${service.subcategoryName}\n`;
-      }
-      
+      // ⭐ Build info badges (same as browse)
+      const info = [];
+      if (service.duration) info.push(`⏱️ ${service.duration}`);
       if (service.mode) {
-        serviceText += `   📍 ${getDisplayMode(service.mode)}\n`;
+        const modeMap: Record<string, string> = {
+          'on-site': '🏠 On-site',
+          'remote': '💻 Remote',
+          'both': '📍 Both',
+          'in-person': '🏢 In-person'
+        };
+        info.push(modeMap[service.mode] || service.mode);
       }
+      const infoText = info.length > 0 ? `\n   ${info.join(' | ')}` : '';
       
-      if (service.description) {
-        const shortDesc = service.description.substring(0, 100);
-        serviceText += `   📝 ${shortDesc}${service.description.length > 100 ? '...' : ''}\n`;
-      }
+      // ⭐ Short description (same as browse)
+      const description = service.description 
+        ? `\n   📝 ${service.description.substring(0, 80)}${service.description.length > 80 ? '...' : ''}`
+        : '';
+      
+      // ⭐ Category/Subcategory (additional info for search context)
+      const categoryInfo = [];
+      if (service.businessCategory) categoryInfo.push(service.businessCategory);
+      if (service.subcategoryName) categoryInfo.push(service.subcategoryName);
+      const categoryText = categoryInfo.length > 0 ? `\n   📂 ${categoryInfo.join(' → ')}` : '';
+      
+      let serviceText = `*${idx + 1}. ${serviceName}*\n`;
+      serviceText += `   ${priceText}${infoText}${categoryText}${description}\n`;
       
       if (service.bookingUrl) {
         serviceText += `\n   🛒 Book: ${service.bookingUrl}`;

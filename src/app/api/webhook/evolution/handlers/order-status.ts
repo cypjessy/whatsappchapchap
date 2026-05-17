@@ -13,7 +13,6 @@
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { generateOrderNumber } from "@/utils/orderNumber";
 
 /**
  * Lazy initialization - get Firestore instance only when needed
@@ -30,6 +29,7 @@ export interface OrderStatusDeps {
   sendMessage: (tenantId: string, phone: string, message: string) => Promise<void>;
   startTyping?: (tenantId: string, phone: string) => Promise<void>;
   stopTyping?: (tenantId: string, phone: string) => Promise<void>;
+  sendWelcomeMenu?: (tenantId: string, phone: string) => Promise<void>; // ⭐ ADDED for main menu navigation
 }
 
 /**
@@ -526,20 +526,19 @@ export async function handleOrderStatusSelection(
       console.error('[OrderStatus] Error fetching business name:', error);
     }
     
-    // Send welcome menu message with business name
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      `👋 *Welcome to ${businessName}!*\n\n` +
-      `How can we help you today?\n\n` +
-      `1️⃣ Browse Products\n` +
-      `2️⃣ Browse Services\n` +
-      `3️⃣ 🔍 Search Products\n` +
-      `4️⃣ Check Order Status\n` +
-      `5️⃣ Payment Info\n` +
-      `6️⃣ Talk to Support\n\n` +
-      `*Reply with a number (1-6)*`
-    );
+    // ⭐ FIXED: Use sendWelcomeMenu instead of hardcoded menu
+    if (deps.sendWelcomeMenu) {
+      await deps.sendWelcomeMenu(tenantId, phone);
+    } else {
+      // Fallback if sendWelcomeMenu not provided
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        `👋 *Welcome to ${businessName}!*\n\n` +
+        `How can we help you today?\n\n` +
+        `Reply *MENU* to see the main menu.`
+      );
+    }
     return;
   }
   

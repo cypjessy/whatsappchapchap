@@ -827,7 +827,8 @@ async function handleFlowInput(
     const deps: OrderStatusDeps = { 
       sendMessage: sendEvolutionMessage,
       startTyping: startTypingIndicator,
-      stopTyping: stopTypingIndicator
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,  // ⭐ ADDED
     };
     await handleOrderStatusLookup(tenantId, phone, message, deps);
     return;
@@ -837,7 +838,8 @@ async function handleFlowInput(
     const deps: OrderStatusDeps = { 
       sendMessage: sendEvolutionMessage,
       startTyping: startTypingIndicator,
-      stopTyping: stopTypingIndicator
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,  // ⭐ ADDED
     };
     console.log(`[Webhook] Routing to order_status_selection with message: ${message}`);
     await handleOrderStatusSelection(tenantId, phone, message, flowState, deps);
@@ -849,7 +851,8 @@ async function handleFlowInput(
     const deps: OrderStatusDeps = { 
       sendMessage: sendEvolutionMessage,
       startTyping: startTypingIndicator,
-      stopTyping: stopTypingIndicator
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,  // ⭐ ADDED
     };
     await handleOrderCancellation(tenantId, phone, message, flowState, deps);
     return;
@@ -1171,7 +1174,8 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
   const deps: OrderStatusDeps = { 
     sendMessage: sendEvolutionMessage,
     startTyping: startTypingIndicator,
-    stopTyping: stopTypingIndicator
+    stopTyping: stopTypingIndicator,
+    sendWelcomeMenu: sendWelcomeMenu,  // ⭐ ADDED
   };
   
   await startOrderStatusFlow(tenantId, phone, deps);
