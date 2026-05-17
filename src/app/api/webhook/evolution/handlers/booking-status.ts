@@ -170,7 +170,9 @@ async function showRecentBookings(
         phone,
         `📅 *No Bookings Found*\n\n` +
         `You haven't made any bookings yet.\n\n` +
-        `Reply *MENU* for main menu or type *2* to browse services`
+        `━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `0️⃣ - Back to Main Menu\n` +
+        `2️ - Browse Services`
       );
       return;
     }
