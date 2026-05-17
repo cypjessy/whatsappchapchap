@@ -565,6 +565,122 @@ export default function BookingPage() {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        
+        /* ============================================
+           MATERIAL DESIGN 3 - MOBILE/CAPACITOR ANDROID
+           ============================================ */
+        @media (max-width: 768px) {
+          /* MD3 Background */
+          .min-h-screen.bg-gradient-to-b {
+            background: var(--md-sys-color-background, #f8fafc) !important;
+          }
+          
+          /* MD3 Cards */
+          .bg-white.rounded-\[16px\] {
+            border-radius: 16px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+            background: var(--md-sys-color-surface, white) !important;
+            border: none !important;
+          }
+          
+          /* MD3 Input Fields */
+          input[type="text"],
+          input[type="tel"],
+          textarea {
+            padding: 16px !important;
+            border-radius: 4px !important;
+            font-size: 16px !important; /* Prevents zoom on iOS */
+            border: 1px solid var(--md-sys-color-outline, #e2e8f0) !important;
+            background: transparent !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          
+          input[type="text"]:focus,
+          input[type="tel"]:focus,
+          textarea:focus {
+            border-color: var(--md-sys-color-primary, #8b5cf6) !important;
+            border-width: 2px !important;
+            outline: none !important;
+            padding: 15px !important; /* Adjust for thicker border */
+          }
+          
+          /* MD3 Buttons */
+          button.bg-gradient-to-r.from-\[\#8b5cf6\] {
+            background: var(--md-sys-color-primary, #8b5cf6) !important;
+            color: var(--md-sys-color-on-primary, white) !important;
+            border-radius: 20px !important; /* MD3 pill shape */
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-weight: 500 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          
+          button.bg-gradient-to-r.from-\[\#8b5cf6\]:active:not(:disabled) {
+            transform: scale(0.98) !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          }
+          
+          /* MD3 Package Selection Cards */
+          div[style*="cursor.*pointer"][style*="border"] {
+            border-radius: 12px !important;
+            transition: all 0.2s ease !important;
+          }
+          
+          /* MD3 Date/Time Chips */
+          button.border-2 {
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+          }
+          
+          /* MD3 Location Selection */
+          .rounded-xl.border-2 {
+            border-radius: 12px !important;
+          }
+          
+          /* MD3 Typography */
+          h1, h2, h3 {
+            color: var(--md-sys-color-on-surface, #1e293b) !important;
+            font-weight: 500 !important;
+          }
+          
+          /* MD3 Section Headers */
+          .font-bold.text-base,
+          .font-bold.text-lg {
+            font-weight: 500 !important;
+            color: var(--md-sys-color-on-surface, #1e293b) !important;
+          }
+          
+          /* MD3 Labels */
+          label.text-xs,
+          label.text-sm {
+            color: var(--md-sys-color-on-surface-variant, #64748b) !important;
+            font-weight: 500 !important;
+          }
+          
+          /* MD3 Header Gradient */
+          .bg-gradient-to-br.from-\[\#8b5cf6\] {
+            background: linear-gradient(135deg, var(--md-sys-color-primary, #8b5cf6) 0%, var(--md-sys-color-primary-container, #7c3aed) 100%) !important;
+            border-radius: 0 0 24px 24px !important;
+          }
+          
+          /* MD3 Spacing */
+          .space-y-4 > * + *,
+          .space-y-3 > * + * {
+            margin-top: 16px !important;
+          }
+          
+          /* MD3 Service Image Container */
+          .w-12.h-12.md\:w-16.md\:h-16 {
+            border-radius: 16px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+          }
+          
+          /* MD3 Provider Info */
+          .text-xs.md\:text-sm.opacity-90 {
+            color: var(--md-sys-color-on-primary, rgba(255,255,255,0.9)) !important;
+          }
+        }
       `}</style>
     </div>
   );
