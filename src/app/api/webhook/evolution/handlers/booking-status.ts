@@ -257,11 +257,53 @@ async function sendBookingDetails(
   }
   
   message += `━━━━━━━━━━━━━━━\n\n`;
-  message += `Need to make changes?\n`;
-  message += `Reply *MENU* for main menu or contact support.`;
+  
+  // Check if booking can be cancelled (NOT completed or already cancelled)
+  const nonCancellableStatuses = ['completed', 'cancelled'];
+  const canCancel = !nonCancellableStatuses.includes(booking.status?.toLowerCase());
+  
+  if (canCancel) {
+    message += `1️⃣ - Cancel Booking\n`;
+  }
+  
+  message += `Reply *MENU* for main menu`;
+  
+  if (canCancel) {
+    message += ` or reply with the number (1 or MENU)`;
+  }
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, message);
+  
+  // Store flow state for cancellation option (only if booking can be cancelled)
+  if (canCancel) {
+    const adminDb = getFirestore();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          isActive: true,
+          flowName: 'booking_cancellation',
+          currentStep: 'waiting_for_cancel_selection',
+          bookingId: booking.id,
+          bookingData: {
+            id: booking.id,
+            client: booking.client,
+            service: booking.service,
+            date: booking.date,
+            time: booking.time,
+            status: booking.status,
+            price: booking.price,
+            phone: booking.phone,
+            location: booking.location,
+          },
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  }
 }
 
 /**
@@ -313,5 +355,224 @@ function formatDate(dateStr: string): string {
     });
   } catch {
     return dateStr;
+  }
+}
+
+/**
+ * Handle booking cancellation request
+ */
+export async function handleBookingCancellation(
+  tenantId: string,
+  phone: string,
+  userInput: string,
+  flowState: any,
+  deps: BookingStatusDeps
+): Promise<void> {
+  await deps.startTyping(tenantId, phone);
+  
+  const input = userInput.trim();
+  const num = parseInt(input);
+  
+  // Handle "0" or "MENU" - Back to main menu
+  if (num === 0 || input === '0' || input.toUpperCase() === 'MENU') {
+    await deps.stopTyping(tenantId, phone);
+    
+    // Clear flow state
+    const adminDb = getFirestore();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: require("firebase-admin/firestore").FieldValue.delete()
+      }, { merge: true });
+    
+    await deps.sendWelcomeMenu(tenantId, phone);
+    return;
+  }
+  
+  // Check if user selected cancellation (option 1)
+  if (flowState.currentStep === 'waiting_for_cancel_selection') {
+    if (num === 1) {
+      // Move to confirmation step
+      await deps.stopTyping(tenantId, phone);
+      
+      const confirmMessage = `⚠️ *Confirm Cancellation*\n\n` +
+        `Are you sure you want to cancel this booking?\n\n` +
+        `1️⃣ - Yes, Cancel Booking\n` +
+        `2️⃣ - No, Go Back\n\n` +
+        `_Reply with the number (1 or 2)_`;
+      
+      await deps.sendMessage(tenantId, phone, confirmMessage);
+      
+      // Update flow state to confirmation step
+      const adminDb = getFirestore();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: {
+            ...flowState,
+            currentStep: 'waiting_for_confirm',
+            lastActivity: new Date().toISOString(),
+          }
+        }, { merge: true });
+      return;
+    }
+    
+    // Invalid selection
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Invalid selection. Please reply with *1* to cancel or *MENU* for main menu.`
+    );
+    return;
+  }
+  
+  // Handle confirmation step
+  if (flowState.currentStep === 'waiting_for_confirm') {
+    // User confirmed cancellation (option 1)
+    if (num === 1) {
+      await processBookingCancellation(tenantId, phone, flowState, deps);
+      return;
+    }
+    
+    // User declined cancellation (option 2)
+    if (num === 2) {
+      await deps.stopTyping(tenantId, phone);
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        `✅ Cancellation cancelled.\n\nReply *MENU* for main menu`
+      );
+      
+      // Clear flow state
+      const adminDb = getFirestore();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: require("firebase-admin/firestore").FieldValue.delete()
+        }, { merge: true });
+      return;
+    }
+    
+    // Invalid selection
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Invalid selection. Please reply with *1* to confirm cancellation or *2* to go back.`
+    );
+    return;
+  }
+  
+  // Fallback
+  await deps.stopTyping(tenantId, phone);
+  await deps.sendMessage(
+    tenantId,
+    phone,
+    `❌ Please reply with *1* to cancel or *MENU* for main menu.`
+  );
+}
+
+/**
+ * Process the actual booking cancellation
+ */
+async function processBookingCancellation(
+  tenantId: string,
+  phone: string,
+  flowState: any,
+  deps: BookingStatusDeps
+): Promise<void> {
+  try {
+    const adminDb = getFirestore();
+    const bookingId = flowState.bookingId;
+    const bookingData = flowState.bookingData;
+    
+    console.log(`[BookingCancel] Processing cancellation for booking: ${bookingId}`);
+    
+    // Create cancellation request in Firestore
+    await adminDb
+      .collection("cancellation_requests")
+      .add({
+        tenantId: tenantId,
+        bookingId: bookingId,
+        customerPhone: phone,
+        bookingData: bookingData,
+        type: 'booking',
+        status: 'pending',
+        reason: 'Customer requested cancellation',
+        requestedAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+        respondedAt: null,
+        responseNote: null,
+      });
+    
+    console.log(`[BookingCancel] Created cancellation request with tenantId: ${tenantId}`);
+    
+    // Update booking status to cancellation_requested
+    if (bookingId) {
+      const bookingRef = adminDb.collection("bookings").doc(bookingId);
+      const bookingDoc = await bookingRef.get();
+      
+      if (bookingDoc.exists) {
+        await bookingRef.update({
+          status: 'cancellation_requested',
+          cancellationRequestedAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+          updatedAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+        });
+        console.log(`[BookingCancel] Updated booking status to cancellation_requested`);
+      }
+    }
+    
+    await deps.stopTyping(tenantId, phone);
+    
+    // Send confirmation message
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `✅ *Cancellation Request Submitted*\n\n` +
+      `Your cancellation request for booking *${bookingId}* has been submitted.\n\n` +
+      `Our team will review your request and confirm the cancellation shortly.\n\n` +
+      `You will receive a confirmation once the cancellation is processed.\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `0️⃣ - Back to Main Menu`
+    );
+    
+    // Clear flow state
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: require("firebase-admin/firestore").FieldValue.delete()
+      }, { merge: true });
+    
+  } catch (error) {
+    console.error('[BookingCancel] Error processing cancellation:', error);
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Error processing cancellation request. Please try again or contact support.\n\n0️⃣ - Back to Main Menu`
+    );
+    
+    // Clear flow state on error too
+    const adminDb = getFirestore();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: require("firebase-admin/firestore").FieldValue.delete()
+      }, { merge: true });
   }
 }

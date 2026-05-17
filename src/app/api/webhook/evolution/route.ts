@@ -13,6 +13,7 @@ import {
 import {
   startBookingStatusFlow,
   handleBookingStatusLookup,
+  handleBookingCancellation,
   type BookingStatusDeps
 } from "./handlers/booking-status";
 import { 
@@ -942,6 +943,18 @@ async function handleFlowInput(
       
       return;
     }
+  }
+  
+  // Handle booking cancellation flow
+  if (flowName === 'booking_cancellation') {
+    const deps: BookingStatusDeps = { 
+      sendMessage: sendEvolutionMessage,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,
+    };
+    await handleBookingCancellation(tenantId, phone, message, flowState, deps);
+    return;
   }
   
   if (flowName === 'product_search') {

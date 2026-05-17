@@ -413,27 +413,17 @@ async function sendOrderDetails(
   
   message += `\n━━━━━━━━━━━━━━━\n`;
   
-  // Check if order can be cancelled (not shipped/delivered, within 24 hours)
-  const cancellableStatuses = ['pending', 'processing', 'confirmed'];
-  const canCancel = cancellableStatuses.includes(orderData.status?.toLowerCase());
+  // Check if order can be cancelled (NOT shipped, delivered, or already cancelled)
+  const nonCancellableStatuses = ['shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+  const canCancel = !nonCancellableStatuses.includes(orderData.status?.toLowerCase());
   
-  // Check cancellation window (optional: within 24 hours of order)
-  let isWithinWindow = true;
-  if (orderData.createdAt?.toDate) {
-    const orderDate = orderData.createdAt.toDate();
-    const hoursSinceOrder = (Date.now() - orderDate.getTime()) / (1000 * 60 * 60);
-    isWithinWindow = hoursSinceOrder <= 24; // Can cancel within 24 hours
-  }
-  
-  const canCancelOrder = canCancel && isWithinWindow;
-  
-  if (canCancelOrder) {
+  if (canCancel) {
     message += `1️⃣ - Request Cancellation & Refund\n`;
   }
   
   message += `0️⃣ - Back to Main Menu`;
   
-  if (canCancelOrder) {
+  if (canCancel) {
     message += `\n\n_Reply with the number (1 or 0)_`;
   }
   
@@ -443,7 +433,7 @@ async function sendOrderDetails(
   // Store flow state for cancellation option (only if order can be cancelled)
   const db = getDb();
   
-  if (canCancelOrder) {
+  if (canCancel) {
     await db
       .collection("tenants")
       .doc(tenantId)
