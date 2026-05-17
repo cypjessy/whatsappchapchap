@@ -67,6 +67,73 @@ export async function handleBookingStatusLookup(
 }
 
 /**
+ * Handle booking status selection (from recent bookings list)
+ */
+export async function handleBookingStatusSelection(
+  tenantId: string,
+  phone: string,
+  selection: string,
+  flowState: any,
+  deps: BookingStatusDeps
+): Promise<void> {
+  console.log(`[BookingStatus] Selection: "${selection}", Recent bookings: ${flowState.recentBookings?.length || 0}`);
+  
+  const recentBookings = flowState.recentBookings || [];
+
+  // Handle NEXT pagination
+  if (selection.trim().toUpperCase() === 'NEXT') {
+    const lastBookingDocId = flowState.lastBookingDocId;
+    const currentPage = flowState.bookingPage || 1;
+    await showRecentBookings(tenantId, phone, deps, currentPage + 1, lastBookingDocId);
+    return;
+  }
+
+  // Handle direct booking ID lookup
+  if (selection.trim().toUpperCase().startsWith('BK-')) {
+    await lookupBookingById(tenantId, phone, selection.trim().toUpperCase(), deps);
+    return;
+  }
+
+  const num = parseInt(selection.trim());
+
+  // Go to main menu
+  if (num === 0 || selection.trim() === '0') {
+    console.log(`[BookingStatus] User pressed 0 - going to main menu`);
+    await deps.stopTyping(tenantId, phone);
+    
+    // Clear flow state
+    const adminDb = getFirestore();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
+    
+    await deps.sendWelcomeMenu(tenantId, phone);
+    return;
+  }
+
+  if (isNaN(num) || num < 1 || num > recentBookings.length) {
+    console.log(`[BookingStatus] Invalid selection - num: ${num}, range: 1-${recentBookings.length}`);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Invalid selection. Reply with a number from 1-${recentBookings.length}, or *0* for main menu.`
+    );
+    return;
+  }
+
+  const selectedBooking = recentBookings[num - 1];
+  console.log(`[BookingStatus] Selected booking: ${selectedBooking.id}`);
+  
+  // Show detailed booking info with cancellation option
+  await sendBookingDetails(tenantId, phone, selectedBooking, deps);
+}
+
+/**
  * Look up a specific booking by booking ID
  */
 async function lookupBookingById(

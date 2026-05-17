@@ -13,6 +13,7 @@ import {
 import {
   startBookingStatusFlow,
   handleBookingStatusLookup,
+  handleBookingStatusSelection,
   handleBookingCancellation,
   type BookingStatusDeps
 } from "./handlers/booking-status";
@@ -891,7 +892,7 @@ async function handleFlowInput(
       stopTyping: stopTypingIndicator,
       sendWelcomeMenu: sendWelcomeMenu,
     };
-    await handleBookingStatusLookup(tenantId, phone, message, deps);
+    await handleBookingStatusSelection(tenantId, phone, message, flowState, deps);
     return;
   }
   
