@@ -483,10 +483,24 @@ export async function handleOrderStatusSelection(
   flowState: any,
   deps: OrderStatusDeps
 ): Promise<void> {
+  console.log(`[OrderStatus] Selection: "${selection}", Recent orders: ${flowState.recentOrders?.length || 0}`);
+  
+  // ⭐ Handle NEXT pagination (before number parsing)
+  if (selection.trim().toUpperCase() === 'NEXT') {
+    const lastOrderDocId = flowState.lastOrderDocId;
+    const currentPage = flowState.orderPage || 1;
+    await showRecentOrders(tenantId, phone, deps, currentPage + 1, lastOrderDocId);
+    return;
+  }
+  
+  // ⭐ Handle direct order number lookup (before number parsing)
+  if (selection.trim().toUpperCase().startsWith('ORD-')) {
+    await lookupOrderByNumber(tenantId, phone, selection.trim().toUpperCase(), deps);
+    return;
+  }
+  
   const num = parseInt(selection);
   const recentOrders = flowState.recentOrders || [];
-  
-  console.log(`[OrderStatus] Selection: "${selection}", Num: ${num}, Recent orders: ${recentOrders.length}`);
   
   // Handle "0" - ALWAYS go to main menu
   if (num === 0 || selection === '0') {
