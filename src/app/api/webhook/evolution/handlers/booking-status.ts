@@ -22,52 +22,6 @@ export async function startBookingStatusFlow(
 }
 
 /**
- * Handle booking status lookup - can look up by booking ID or refresh recent bookings
- */
-export async function handleBookingStatusLookup(
-  tenantId: string,
-  phone: string,
-  userInput: string,
-  deps: BookingStatusDeps
-): Promise<void> {
-  await deps.startTyping(tenantId, phone);
-  
-  const input = userInput.trim().toUpperCase();
-  
-  // Handle "NEXT" for pagination
-  if (input === 'NEXT') {
-    const adminDb = getFirestore();
-    const convDoc = await adminDb
-      .collection("tenants")
-      .doc(tenantId)
-      .collection("conversations")
-      .doc(phone)
-      .get();
-    
-    const currentPage = convDoc.data()?.flowState?.bookingPage || 1;
-    const lastBookingDocId = convDoc.data()?.flowState?.lastBookingDocId;
-    await showRecentBookings(tenantId, phone, deps, currentPage + 1, lastBookingDocId);
-    return;
-  }
-  
-  // Handle "RECENT" to refresh recent bookings
-  if (input === 'RECENT') {
-    await showRecentBookings(tenantId, phone, deps);
-    return;
-  }
-  
-  // If user types a booking ID (Firestore document ID)
-  // Note: Booking IDs are auto-generated Firestore IDs (20 char base62)
-  if (/^[a-zA-Z0-9]{20}$/.test(input.trim())) {
-    await lookupBookingById(tenantId, phone, input.trim(), deps);
-    return;
-  }
-  
-  // Otherwise, show recent bookings again (refresh)
-  await showRecentBookings(tenantId, phone, deps);
-}
-
-/**
  * Handle booking status selection (from recent bookings list)
  */
 export async function handleBookingStatusSelection(

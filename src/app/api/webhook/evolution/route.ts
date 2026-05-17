@@ -12,7 +12,6 @@ import {
 } from "./handlers/order-status";
 import {
   startBookingStatusFlow,
-  handleBookingStatusLookup,
   handleBookingStatusSelection,
   handleBookingCancellation,
   type BookingStatusDeps
@@ -869,18 +868,6 @@ async function handleFlowInput(
       sendWelcomeMenu: sendWelcomeMenu,  // ⭐ ADDED
     };
     await handleOrderCancellation(tenantId, phone, message, flowState, deps);
-    return;
-  }
-  
-  // Handle booking status lookup flow
-  if (flowName === 'booking_status_lookup') {
-    const deps: BookingStatusDeps = { 
-      sendMessage: sendEvolutionMessage,
-      startTyping: startTypingIndicator,
-      stopTyping: stopTypingIndicator,
-      sendWelcomeMenu: sendWelcomeMenu,
-    };
-    await handleBookingStatusLookup(tenantId, phone, message, deps);
     return;
   }
   
