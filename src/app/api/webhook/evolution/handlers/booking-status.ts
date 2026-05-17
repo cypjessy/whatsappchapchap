@@ -57,9 +57,9 @@ export async function handleBookingStatusLookup(
   }
   
   // If user types a booking ID (Firestore document ID)
-  // Note: Booking IDs are auto-generated Firestore IDs, not prefixed with BK-
-  if (input.length > 5 && /^[a-zA-Z0-9]+$/.test(input)) {
-    await lookupBookingById(tenantId, phone, input, deps);
+  // Note: Booking IDs are auto-generated Firestore IDs (20 char base62)
+  if (/^[a-zA-Z0-9]{20}$/.test(input.trim())) {
+    await lookupBookingById(tenantId, phone, input.trim(), deps);
     return;
   }
   
@@ -90,9 +90,9 @@ export async function handleBookingStatusSelection(
   }
 
   // Handle direct booking ID lookup (Firestore document ID)
-  // Note: Booking IDs are auto-generated Firestore IDs, not prefixed with BK-
-  if (selection.trim().length > 5 && /^[a-zA-Z0-9]+$/.test(selection.trim())) {
-    await lookupBookingById(tenantId, phone, selection.trim().toUpperCase(), deps);
+  // Note: Booking IDs are auto-generated Firestore IDs (20 char base62)
+  if (/^[a-zA-Z0-9]{20}$/.test(selection.trim())) {
+    await lookupBookingById(tenantId, phone, selection.trim(), deps);
     return;
   }
 
