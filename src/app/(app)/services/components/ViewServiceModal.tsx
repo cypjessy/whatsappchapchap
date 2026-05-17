@@ -392,11 +392,24 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           relative h-48 md:h-56 overflow-hidden shrink-0
           bg-gradient-to-br ${service.bgGradient || "from-[#8b5cf6] to-[#7c3aed]"}
         `}>
-          {/* Background pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 left-4 text-8xl">{service.emoji || "✨"}</div>
-            <div className="absolute bottom-4 right-4 text-6xl opacity-50">{service.emoji || "✨"}</div>
-          </div>
+          {/* Service Image Background */}
+          {service.imageUrl && (
+            <img
+              src={service.imageUrl}
+              alt={service.name}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
+              decoding="async"
+            />
+          )}
+
+          {/* Background pattern (shown only when no image) */}
+          {!service.imageUrl && (
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-4 left-4 text-8xl">{service.emoji || "✨"}</div>
+              <div className="absolute bottom-4 right-4 text-6xl opacity-50">{service.emoji || "✨"}</div>
+            </div>
+          )}
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
