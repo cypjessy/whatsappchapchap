@@ -273,22 +273,24 @@ export default function ViewBookingModal({
     };
   }, [open, onClose]);
 
-  if (!open || !booking) return null;
-
-  const statusConfig = getStatusConfig(booking.status);
-  const paymentConfig = getPaymentConfig(booking.paymentStatus);
-  const balanceDue = Math.max(0, (booking.balance ?? booking.price) - (booking.deposit || 0));
+  // All hooks must be called BEFORE early return to satisfy React's Rules of Hooks
+  const statusConfig = booking ? getStatusConfig(booking.status) : null;
+  const paymentConfig = booking ? getPaymentConfig(booking.paymentStatus) : null;
+  const balanceDue = booking ? Math.max(0, (booking.balance ?? booking.price) - (booking.deposit || 0)) : 0;
+  const isCompleted = booking?.status === "completed";
+  const isCancelled = booking?.status === "cancelled";
 
   const handleCopyId = useCallback(() => {
+    if (!booking) return;
     navigator.clipboard.writeText(booking.id);
     addToast("Booking ID copied to clipboard!", "success");
-  }, [booking.id, addToast]);
+  }, [booking?.id, addToast]);
 
   const handleSendMessage = useCallback(async () => {
     if (!booking || !user) return;
     setSendingMessage(true);
 
-    const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n📋 Service: ${booking.service}\n📅 Date: ${formatDate(booking.date)}\n⏰ Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${formatCurrency(booking.price)}\n\nThank you!`;
+    const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n Service: ${booking.service}\n📅 Date: ${formatDate(booking.date)}\n Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${formatCurrency(booking.price)}\n\nThank you!`;
 
     try {
       await sendEvolutionWhatsAppMessage(booking.phone, message, `tenant_${user.uid}`);
@@ -325,19 +327,25 @@ export default function ViewBookingModal({
   }, [booking, user, addToast]);
 
   const handleStatusUpdate = useCallback((status: Booking["status"]) => {
+    if (!booking) return;
     onUpdateStatus?.(booking.id, status);
     addToast(`Booking marked as ${status}`, "success");
-  }, [booking.id, onUpdateStatus, addToast]);
+  }, [booking?.id, onUpdateStatus, addToast]);
 
   const handleDelete = useCallback(() => {
+    if (!booking) return;
     if (window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) {
       onDelete?.(booking.id);
       onClose();
     }
-  }, [booking.id, onDelete, onClose, addToast]);
+  }, [booking?.id, onDelete, onClose, addToast]);
 
-  const isCompleted = booking.status === "completed";
-  const isCancelled = booking.status === "cancelled";
+  // ✅ NOW safe to do early return - ALL hooks have been called above
+  if (!open || !booking) return null;
+
+  // At this point, booking is guaranteed to exist, so we can safely use non-null assertions
+  const config = statusConfig!;
+  const payConfig = paymentConfig!;
 
   return (
     <>
@@ -372,10 +380,10 @@ export default function ViewBookingModal({
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`
                     inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border
-                    ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}
+                    ${config.bg} ${config.text} ${config.border}
                   `}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
-                    <i className={`fas ${statusConfig.icon} text-[8px]`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+                    <i className={`fas ${config.icon} text-[8px]`} />
                     {booking.status}
                   </span>
                   {booking.verified && (
@@ -537,9 +545,9 @@ export default function ViewBookingModal({
                   <span className="text-sm text-[#64748b]">Status</span>
                   <span className={`
                     inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border
-                    ${paymentConfig.bg} ${paymentConfig.text} ${paymentConfig.border}
+                    ${payConfig.bg} ${payConfig.text} ${payConfig.border}
                   `}>
-                    <i className={`fas ${paymentConfig.icon} text-[8px]`} />
+                    <i className={`fas ${payConfig.icon} text-[8px]`} />
                     {booking.paymentStatus || "Unpaid"}
                   </span>
                 </div>
