@@ -618,7 +618,7 @@ export async function handleOrderCancellation(
   if (num === 0 || input === '0') {
     if (deps.stopTyping) await deps.stopTyping(tenantId, phone);
     
-    // Clear flow state
+    // Clear flow state using FieldValue.delete()
     const db = getDb();
     await db
       .collection("tenants")
@@ -629,7 +629,12 @@ export async function handleOrderCancellation(
         flowState: FieldValue.delete()
       }, { merge: true });
     
-    await deps.sendMessage(tenantId, phone, `✅ Returning to main menu.\n\nReply *MENU* to see options.`);
+    // ⭐ FIXED: Use sendWelcomeMenu for consistency
+    if (deps.sendWelcomeMenu) {
+      await deps.sendWelcomeMenu(tenantId, phone);
+    } else {
+      await deps.sendMessage(tenantId, phone, `Reply *MENU* to see the main menu.`);
+    }
     return;
   }
   
