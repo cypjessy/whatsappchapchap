@@ -56,8 +56,9 @@ export async function handleBookingStatusLookup(
     return;
   }
   
-  // If user types a booking ID (starts with BK-)
-  if (input.startsWith('BK-')) {
+  // If user types a booking ID (Firestore document ID)
+  // Note: Booking IDs are auto-generated Firestore IDs, not prefixed with BK-
+  if (input.length > 5 && /^[a-zA-Z0-9]+$/.test(input)) {
     await lookupBookingById(tenantId, phone, input, deps);
     return;
   }
@@ -88,8 +89,9 @@ export async function handleBookingStatusSelection(
     return;
   }
 
-  // Handle direct booking ID lookup
-  if (selection.trim().toUpperCase().startsWith('BK-')) {
+  // Handle direct booking ID lookup (Firestore document ID)
+  // Note: Booking IDs are auto-generated Firestore IDs, not prefixed with BK-
+  if (selection.trim().length > 5 && /^[a-zA-Z0-9]+$/.test(selection.trim())) {
     await lookupBookingById(tenantId, phone, selection.trim().toUpperCase(), deps);
     return;
   }
@@ -284,7 +286,7 @@ async function showRecentBookings(
     message += `*Showing bookings ${startNum}-${endNum} of ${totalBookings}*\n\n`;
     
     message += `*Reply with a number (1-${bookingsSnap.docs.length}) to see details,*\n`;
-    message += `or type a Booking ID (e.g., BK-123456) to search\n`;
+    message += `or type a Booking ID to search directly\n`;
     
     // Show "Load More" if there are more bookings
     if (endNum < totalBookings) {
