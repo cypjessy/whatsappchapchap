@@ -885,64 +885,14 @@ async function handleFlowInput(
   
   // Handle booking status selection flow (when multiple bookings found)
   if (flowName === 'booking_status_selection') {
-    if (currentStep === 'waiting_for_booking_selection') {
-      const num = parseInt(message.trim());
-      const bookings = flowState.bookings || [];
-      
-      if (isNaN(num) || num < 1 || num > bookings.length) {
-        await stopTypingIndicator(tenantId, phone);
-        await sendEvolutionMessage(
-          tenantId,
-          phone,
-          `❌ Invalid selection. Please reply with a number from 1-${bookings.length}, or *0* to go back.`
-        );
-        return;
-      }
-      
-      const selectedBooking = bookings[num - 1];
-      
-      // Send detailed booking info
-      const statusEmoji = getStatusEmoji(selectedBooking.status);
-      const paymentEmoji = getPaymentEmoji(selectedBooking.paymentStatus);
-      
-      let msg = `📅 *Booking Details*\n\n`;
-      msg += `*ID:* ${selectedBooking.id}\n`;
-      msg += `*Client:* ${selectedBooking.client}\n`;
-      msg += `*Service:* ${selectedBooking.service}\n\n`;
-      
-      msg += `📅 *Date & Time*\n`;
-      msg += `Date: ${formatDate(selectedBooking.date)}\n`;
-      msg += `Time: ${selectedBooking.time}\n\n`;
-      
-      msg += `📍 *Location*\n`;
-      msg += `${selectedBooking.location || 'N/A'}\n\n`;
-      
-      msg += `${statusEmoji} *Status: ${selectedBooking.status.toUpperCase()}*\n`;
-      msg += `💰 Amount: KES ${selectedBooking.price?.toLocaleString() || 'N/A'}\n\n`;
-      
-      if (selectedBooking.phone) {
-        msg += `📞 ${selectedBooking.phone}\n\n`;
-      }
-      
-      msg += `━━━━━━━━━━━━━━━\n\n`;
-      msg += `Reply *MENU* for main menu.`;
-      
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(tenantId, phone, msg);
-      
-      // Clear flow state
-      const adminDb = getAdminDb();
-      await adminDb
-        .collection("tenants")
-        .doc(tenantId)
-        .collection("conversations")
-        .doc(phone)
-        .set({
-          flowState: FieldValue.delete()
-        }, { merge: true });
-      
-      return;
-    }
+    const deps: BookingStatusDeps = { 
+      sendMessage: sendEvolutionMessage,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,
+    };
+    await handleBookingStatusLookup(tenantId, phone, message, deps);
+    return;
   }
   
   // Handle booking cancellation flow

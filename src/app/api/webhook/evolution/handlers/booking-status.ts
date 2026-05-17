@@ -1,4 +1,4 @@
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 export interface BookingStatusDeps {
   sendMessage: (tenantId: string, phone: string, text: string) => Promise<void>;
@@ -8,7 +8,7 @@ export interface BookingStatusDeps {
 }
 
 /**
- * Start booking status lookup flow - ask for booking ID or phone number
+ * Start booking status check flow - shows recent bookings immediately
  */
 export async function startBookingStatusFlow(
   tenantId: string,
@@ -17,172 +17,228 @@ export async function startBookingStatusFlow(
 ): Promise<void> {
   await deps.startTyping(tenantId, phone);
   
-  const message = `📅 *Check Booking Status*\n\n` +
-    `Please provide one of the following:\n\n` +
-    `• Your *Booking ID* (e.g., BK-123456)\n` +
-    `• Your *Phone Number* used for booking\n\n` +
-    `Example: *BK-ABC123* or *0712345678*\n\n` +
-    `0️⃣ - Back to main menu`;
-  
-  await deps.stopTyping(tenantId, phone);
-  await deps.sendMessage(tenantId, phone, message);
-  
-  // Set flow state
-  const adminDb = getFirestore();
-  await adminDb
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .set({
-      flowState: {
-        isActive: true,
-        flowName: 'booking_status_lookup',
-        currentStep: 'waiting_for_identifier',
-        startedAt: new Date().toISOString(),
-        lastActivity: new Date().toISOString(),
-      }
-    }, { merge: true });
+  // Directly show recent bookings instead of asking for booking ID
+  await showRecentBookings(tenantId, phone, deps);
 }
 
 /**
- * Handle booking status lookup input - search by booking ID or phone
+ * Handle booking status lookup - can look up by booking ID or refresh recent bookings
  */
 export async function handleBookingStatusLookup(
   tenantId: string,
   phone: string,
-  message: string,
+  userInput: string,
   deps: BookingStatusDeps
 ): Promise<void> {
   await deps.startTyping(tenantId, phone);
   
-  const trimmed = message.trim();
+  const input = userInput.trim().toUpperCase();
   
-  // Check if user wants to go back
-  if (trimmed === '0') {
-    await deps.stopTyping(tenantId, phone);
-    await deps.sendWelcomeMenu(tenantId, phone);
+  // Handle "NEXT" for pagination
+  if (input === 'NEXT') {
+    const adminDb = getFirestore();
+    const convDoc = await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .get();
+    
+    const currentPage = convDoc.data()?.flowState?.bookingPage || 1;
+    const lastBookingDocId = convDoc.data()?.flowState?.lastBookingDocId;
+    await showRecentBookings(tenantId, phone, deps, currentPage + 1, lastBookingDocId);
     return;
   }
   
+  // Handle "RECENT" to refresh recent bookings
+  if (input === 'RECENT') {
+    await showRecentBookings(tenantId, phone, deps);
+    return;
+  }
+  
+  // If user types a booking ID (starts with BK-)
+  if (input.startsWith('BK-')) {
+    await lookupBookingById(tenantId, phone, input, deps);
+    return;
+  }
+  
+  // Otherwise, show recent bookings again (refresh)
+  await showRecentBookings(tenantId, phone, deps);
+}
+
+/**
+ * Look up a specific booking by booking ID
+ */
+async function lookupBookingById(
+  tenantId: string,
+  phone: string,
+  bookingId: string,
+  deps: BookingStatusDeps
+): Promise<void> {
   try {
+    console.log(`[BookingStatus] Looking up booking: ${bookingId} for phone: ${phone}`);
+    
     const adminDb = getFirestore();
     
-    let bookingsQuery;
+    // Query by id field
+    const bookingQuery = await adminDb
+      .collection("bookings")
+      .where("id", "==", bookingId)
+      .where("tenantId", "==", tenantId)
+      .get();
     
-    // Check if input looks like a booking ID (starts with BK- or contains alphanumeric)
-    const isBookingId = trimmed.toUpperCase().startsWith('BK-') || /^[A-Z0-9-]+$/i.test(trimmed);
-    
-    if (isBookingId) {
-      // Search by booking ID
-      const normalizedId = trimmed.toUpperCase();
-      bookingsQuery = await adminDb
-        .collection("bookings")
-        .where("tenantId", "==", tenantId)
-        .where("id", "==", normalizedId)
-        .limit(1)
-        .get();
-    } else {
-      // Search by phone number - normalize by removing non-digits
-      const normalizedPhone = trimmed.replace(/\D/g, '');
-      
-      if (normalizedPhone.length < 9) {
-        await deps.stopTyping(tenantId, phone);
-        await deps.sendMessage(
-          tenantId,
-          phone,
-          `❌ Invalid phone number. Please enter a valid phone number.\n\n` +
-          `Example: *0712345678* or *+254712345678*\n\n` +
-          `Or reply with your *Booking ID*\n\n` +
-          `0️⃣ - Back to main menu`
-        );
-        return;
-      }
-      
-      bookingsQuery = await adminDb
-        .collection("bookings")
-        .where("tenantId", "==", tenantId)
-        .where("phone", "==", normalizedPhone)
-        .orderBy("date", "desc")
-        .limit(5)
-        .get();
-    }
-    
-    if (bookingsQuery.empty) {
+    if (bookingQuery.empty) {
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(
         tenantId,
         phone,
-        `❌ No bookings found.\n\n` +
-        `Please check your booking ID or phone number and try again.\n\n` +
-        `💡 *Tip:* Your booking ID was sent when you made the reservation.\n\n` +
-        `0️⃣ - Back to main menu`
+        `❌ Booking *${bookingId}* not found.\n\n` +
+        `Please check the booking ID and try again.\n\n` +
+        `💡 Type *RECENT* to see your recent bookings, or *MENU* for main menu`
       );
       return;
     }
     
-    const bookings = bookingsQuery.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const bookingDoc = bookingQuery.docs[0];
+    const bookingData = bookingDoc.data();
     
-    // If searching by phone and multiple bookings found, show list
-    if (!isBookingId && bookings.length > 1) {
-      let responseMessage = `📅 *Your Recent Bookings*\n\n`;
-      responseMessage += `Found ${bookings.length} booking(s):\n\n`;
-      
-      bookings.forEach((booking: any, idx: number) => {
-        const statusEmoji = getStatusEmoji(booking.status);
-        const date = formatDate(booking.date);
-        
-        responseMessage += `${idx + 1}. *${booking.service}*\n`;
-        responseMessage += `   📅 ${date} at ${booking.time}\n`;
-        responseMessage += `   👤 ${booking.client}\n`;
-        responseMessage += `   ${statusEmoji} Status: *${booking.status.toUpperCase()}*\n`;
-        responseMessage += `   💰 KES ${booking.price?.toLocaleString() || 'N/A'}\n\n`;
-      });
-      
-      responseMessage += `Reply with a number (1-${bookings.length}) to see full details,\n`;
-      responseMessage += `or *0* to go back.`;
-      
+    await sendBookingDetails(tenantId, phone, bookingData, deps);
+    
+  } catch (error) {
+    console.error('[BookingStatus] Error looking up booking:', error);
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(
+      tenantId,
+      phone,
+      `❌ Error looking up booking. Please try again or type *RECENT* to see recent bookings.`
+    );
+  }
+}
+
+/**
+ * Show recent bookings for the user with pagination
+ */
+async function showRecentBookings(
+  tenantId: string,
+  phone: string,
+  deps: BookingStatusDeps,
+  page: number = 1,
+  lastDocId?: string
+): Promise<void> {
+  try {
+    console.log(`[BookingStatus] Fetching bookings for phone: ${phone}, page: ${page}, lastDocId: ${lastDocId || 'none'}`);
+    
+    const adminDb = getFirestore();
+    const BOOKINGS_PER_PAGE = 5;
+    
+    // Get total count first
+    const countSnap = await adminDb
+      .collection("bookings")
+      .where("phone", "==", phone)
+      .where("tenantId", "==", tenantId)
+      .get();
+    
+    const totalBookings = countSnap.size;
+    
+    if (totalBookings === 0) {
       await deps.stopTyping(tenantId, phone);
-      await deps.sendMessage(tenantId, phone, responseMessage);
-      
-      // Update flow state to wait for selection
-      await adminDb
-        .collection("tenants")
-        .doc(tenantId)
-        .collection("conversations")
-        .doc(phone)
-        .set({
-          flowState: {
-            isActive: true,
-            flowName: 'booking_status_selection',
-            currentStep: 'waiting_for_booking_selection',
-            bookings: bookings.map((b: any) => ({
-              id: b.id,
-              client: b.client,
-              service: b.service,
-              date: b.date,
-              time: b.time,
-              status: b.status,
-              price: b.price,
-              phone: b.phone,
-              location: b.location,
-              notes: b.notes,
-            })),
-            lastActivity: new Date().toISOString(),
-          }
-        }, { merge: true });
-      
+      await deps.sendMessage(
+        tenantId,
+        phone,
+        `📅 *No Bookings Found*\n\n` +
+        `You haven't made any bookings yet.\n\n` +
+        `Reply *MENU* for main menu or type *2* to browse services`
+      );
       return;
     }
     
-    // Single booking found - show details
-    const booking = bookings[0];
-    await sendBookingDetails(tenantId, phone, booking, deps);
+    // Use cursor-based pagination with startAfter
+    let query = adminDb.collection("bookings")
+      .where("phone", "==", phone)
+      .where("tenantId", "==", tenantId)
+      .orderBy("createdAt", "desc")
+      .limit(BOOKINGS_PER_PAGE);
     
-    // Clear flow state
+    // Apply cursor for pages beyond 1
+    if (page > 1 && lastDocId) {
+      const lastDoc = await adminDb.collection("bookings").doc(lastDocId).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
+    
+    // Get paginated bookings
+    let bookingsSnap;
+    try {
+      bookingsSnap = await query.get();
+    } catch (indexError) {
+      console.error('[BookingStatus] Index error - please create composite index:', indexError);
+      // Fallback: Get all and sort in memory
+      const allBookingsSnap = await adminDb
+        .collection("bookings")
+        .where("phone", "==", phone)
+        .where("tenantId", "==", tenantId)
+        .get();
+      
+      const allBookings = allBookingsSnap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }) as any)
+        .sort((a: any, b: any) => {
+          const aTime = a.createdAt?.toDate?.() || new Date(0);
+          const bTime = b.createdAt?.toDate?.() || new Date(0);
+          return bTime.getTime() - aTime.getTime();
+        });
+      
+      const paginatedBookings = allBookings.slice((page - 1) * BOOKINGS_PER_PAGE, page * BOOKINGS_PER_PAGE);
+      bookingsSnap = { docs: paginatedBookings.map((booking: any) => ({ id: booking.id, data: () => booking })), size: paginatedBookings.length } as any;
+    }
+    
+    let message = `📅 *Your Bookings (Page ${page})*\n\n`;
+    
+    bookingsSnap.docs.forEach((doc: any, idx: number) => {
+      const booking = doc.data ? doc.data() : doc;
+      const bookingId = booking.id || doc.id;
+      const statusEmoji = getStatusEmoji(booking.status);
+      
+      let date = 'N/A';
+      if (booking.date) {
+        date = formatDate(booking.date);
+      }
+      
+      message += `${idx + 1}️⃣ *${booking.service}*\n`;
+      message += `    📅 ${date} at ${booking.time}\n`;
+      message += `    👤 ${booking.client}\n`;
+      message += `   💰 KES ${booking.price?.toLocaleString() || 0}\n`;
+      message += `   📊 Status: ${statusEmoji} ${capitalizeFirst(booking.status)}\n\n`;
+    });
+    
+    // Pagination info
+    const startNum = (page - 1) * BOOKINGS_PER_PAGE + 1;
+    const endNum = Math.min(page * BOOKINGS_PER_PAGE, totalBookings);
+    message += `*Showing bookings ${startNum}-${endNum} of ${totalBookings}*\n\n`;
+    
+    message += `*Reply with a number (1-${bookingsSnap.docs.length}) to see details,*\n`;
+    message += `or type a Booking ID (e.g., BK-123456) to search\n`;
+    
+    // Show "Load More" if there are more bookings
+    if (endNum < totalBookings) {
+      message += `or *NEXT* to view more bookings\n`;
+    }
+    message += `or *0️⃣* for main menu`;
+    
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(tenantId, phone, message);
+    
+    // Store flow state for selection with pagination info
+    const recentBookingsList = bookingsSnap.docs.map((doc: any) => {
+      const data = doc.data ? doc.data() : doc;
+      return {
+        id: doc.id,
+        ...data
+      };
+    });
+    
+    console.log(`[BookingStatus] Storing ${recentBookingsList.length} bookings in flow state`);
+    
     await adminDb
       .collection("tenants")
       .doc(tenantId)
@@ -190,18 +246,23 @@ export async function handleBookingStatusLookup(
       .doc(phone)
       .set({
         flowState: {
-          flowState: require("firebase-admin/firestore").FieldValue.delete()
+          flowName: 'booking_status_selection',
+          currentStep: 'waiting_for_selection',
+          bookingPage: page,
+          lastBookingDocId: bookingsSnap.docs[bookingsSnap.docs.length - 1]?.id || null,
+          recentBookings: recentBookingsList,
+          isActive: true,
+          lastActivity: new Date().toISOString(),
         }
       }, { merge: true });
     
   } catch (error) {
-    console.error('[Webhook] Error looking up booking:', error);
+    console.error('[BookingStatus] Error fetching recent bookings:', error);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Unable to look up booking. Please try again later.\n\n` +
-      `0️⃣ - Back to main menu`
+      `❌ Error fetching bookings. Please try again.`
     );
   }
 }
@@ -356,6 +417,14 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
+}
+
+/**
+ * Helper: Capitalize first letter and replace underscores with spaces
+ */
+function capitalizeFirst(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
 }
 
 /**
