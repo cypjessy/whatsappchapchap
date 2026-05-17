@@ -454,7 +454,7 @@ export async function handleBookingCancellation(
       .collection("conversations")
       .doc(phone)
       .set({
-        flowState: require("firebase-admin/firestore").FieldValue.delete()
+        flowState: FieldValue.delete()
       }, { merge: true });
     
     await deps.sendWelcomeMenu(tenantId, phone);
@@ -527,7 +527,7 @@ export async function handleBookingCancellation(
         .collection("conversations")
         .doc(phone)
         .set({
-          flowState: require("firebase-admin/firestore").FieldValue.delete()
+          flowState: FieldValue.delete()
         }, { merge: true });
       return;
     }
@@ -578,7 +578,7 @@ async function processBookingCancellation(
         type: 'booking',
         status: 'pending',
         reason: 'Customer requested cancellation',
-        requestedAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+        requestedAt: FieldValue.serverTimestamp(),
         respondedAt: null,
         responseNote: null,
       });
@@ -593,8 +593,8 @@ async function processBookingCancellation(
       if (bookingDoc.exists) {
         await bookingRef.update({
           status: 'cancellation_requested',
-          cancellationRequestedAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
-          updatedAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+          cancellationRequestedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
         console.log(`[BookingCancel] Updated booking status to cancellation_requested`);
       }
@@ -621,7 +621,7 @@ async function processBookingCancellation(
       .collection("conversations")
       .doc(phone)
       .set({
-        flowState: require("firebase-admin/firestore").FieldValue.delete()
+        flowState: FieldValue.delete()
       }, { merge: true });
     
   } catch (error) {
@@ -641,7 +641,7 @@ async function processBookingCancellation(
       .collection("conversations")
       .doc(phone)
       .set({
-        flowState: require("firebase-admin/firestore").FieldValue.delete()
+        flowState: FieldValue.delete()
       }, { merge: true });
   }
 }
