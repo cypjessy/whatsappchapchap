@@ -50,8 +50,17 @@ function levenshteinDistance(a: string, b: string): number {
 
 function isFuzzyMatch(a: string, b: string, maxDistance: number = 2): boolean {
   if (!a || !b) return false;
-  const distance = levenshteinDistance(a, b);
-  return distance <= maxDistance;
+  
+  // Full string match
+  if (levenshteinDistance(a, b) <= maxDistance) return true;
+  
+  // Word-level match (each word in 'a' against 'b')
+  const words = a.split(/\s+/);
+  for (const word of words) {
+    if (word.length > 2 && levenshteinDistance(word, b) <= maxDistance) return true;
+  }
+  
+  return false;
 }
 
 // Debug logging helper
