@@ -364,6 +364,17 @@ async function sendBookingDetails(
           lastActivity: new Date().toISOString(),
         }
       }, { merge: true });
+  } else {
+    // Clear flow state so user isn't stuck in booking_status_selection
+    const adminDb = getFirestore();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: FieldValue.delete()
+      }, { merge: true });
   }
 }
 
