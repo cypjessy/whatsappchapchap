@@ -191,38 +191,31 @@ export async function handleServiceSearch(
     const scoredServices = allServices.map((service: any) => {
       let score = 0;
       
-      // ✅ FIXED: Use correct field names
-      const name = (service.serviceName || service.name || "").toLowerCase();
+      // ⭐ FIXED: Check BOTH serviceName and name fields
+      const serviceName = (service.serviceName || "").toLowerCase();
+      const name = (service.name || "").toLowerCase();
       const category = (service.businessCategory || "").toLowerCase();
       const type = (service.businessType || "").toLowerCase();
-      const subcategory = (service.subcategoryName || "").toLowerCase();  // ✅ Added
+      const subcategory = (service.subcategoryName || "").toLowerCase();
       const description = (service.description || "").toLowerCase();
       const mode = (service.mode || "").toLowerCase();
       const providerName = (service.providerName || "").toLowerCase();
       
-      // EXACT NAME MATCH (Highest)
-      if (name === searchLower) {
-        score += 200;
-      }
+      // Score against serviceName (primary display name)
+      if (serviceName === searchLower) score += 200;
+      if (serviceName.startsWith(searchLower)) score += 150;
+      if (serviceName.includes(searchLower)) score += 100;
+      if (isFuzzyMatch(serviceName, searchLower, 2) && !serviceName.includes(searchLower)) score += 80;
       
-      // NAME STARTS WITH
-      if (name.startsWith(searchLower)) {
-        score += 150;
-      }
+      // Score against name field (stored name like "PROFFESIONAL BRAIDSCARE")
+      if (name === searchLower) score += 200;
+      if (name.startsWith(searchLower)) score += 150;
+      if (name.includes(searchLower)) score += 100;
+      if (isFuzzyMatch(name, searchLower, 2) && !name.includes(searchLower)) score += 80;
       
-      // NAME CONTAINS
-      if (name.includes(searchLower)) {
-        score += 100;
-      }
-      
-      // FUZZY NAME MATCH (for typos)
-      if (isFuzzyMatch(name, searchLower, 2) && !name.includes(searchLower)) {
-        score += 80;
-      }
-      
-      // Split into words for multi-word matching
+      // Word-level matching on BOTH fields
       const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
-      const nameWords = name.split(/\s+/);
+      const nameWords = [...name.split(/\s+/), ...serviceName.split(/\s+/)];
       
       for (const searchWord of searchWords) {
         for (const nameWord of nameWords) {
