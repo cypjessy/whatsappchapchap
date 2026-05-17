@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,9 +25,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get service data to extract tenantId
-    const serviceDoc = await getDoc(doc(db, 'services', serviceId));
-    if (!serviceDoc.exists()) {
+    // Get service data to extract tenantId using Admin SDK
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Database not initialized' },
+        { status: 500 }
+      );
+    }
+    
+    const serviceDoc = await adminDb.collection('services').doc(serviceId).get();
+    
+    if (!serviceDoc.exists) {
       return NextResponse.json(
         { error: 'Service not found' },
         { status: 404 }
@@ -36,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceData = serviceDoc.data();
-    const tenantId = serviceData.tenantId;
+    const tenantId = serviceData?.tenantId;
 
     if (!tenantId) {
       return NextResponse.json(
@@ -45,8 +52,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create booking document
-    const bookingRef = doc(collection(db, 'bookings'));
+    // Create booking document with auto-generated ID
+    const bookingRef = adminDb.collection('bookings').doc();
     const bookingId = bookingRef.id;
 
     // Generate client initials
@@ -75,14 +82,14 @@ export async function POST(request: NextRequest) {
       balance: packagePrice || 0,
       paymentMethod: 'cash',
       paymentStatus: 'unpaid',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       // Additional metadata
       bookingSource: 'public-link',
       package: selectedPackage || 'standard',
     };
 
-    await setDoc(bookingRef, bookingData);
+    await bookingRef.set(bookingData);
 
     console.log('Booking created successfully:', bookingId);
 

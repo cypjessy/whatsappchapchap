@@ -533,8 +533,8 @@ export default function BookingPage() {
             </>
           ) : (
             <>
-              <i className="fab fa-whatsapp mr-2"></i>
-              Book via WhatsApp
+              <i className="fas fa-calendar-check mr-2"></i>
+              Confirm Booking
             </>
           )}
         </button>
