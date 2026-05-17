@@ -12,11 +12,8 @@ import PaymentConfirmationModal from "./components/PaymentConfirmationModal";
 import BookingStats from "./components/BookingStats";
 import BookingAnalytics from "./components/BookingAnalytics";
 import BookingFilters from "./components/BookingFilters";
-import BookingCalendar from "./components/BookingCalendar";
-import BookingTimeline from "./components/BookingTimeline";
-import BookingListView from "./components/BookingListView";
-import BookingGridView from "./components/BookingGridView";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
+import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -725,7 +722,7 @@ export default function BookingsPage() {
           ) : (
             <>
               {viewMode === "calendar" && (
-                <BookingCalendar
+                <CalendarTab
                   bookings={filteredBookings}
                   selectedDate={selectedDate}
                   onDateSelect={setSelectedDate}
@@ -734,21 +731,21 @@ export default function BookingsPage() {
                 />
               )}
               {viewMode === "timeline" && (
-                <BookingTimeline
+                <TimelineTab
                   bookings={filteredBookings}
                   onViewBooking={setSelectedBooking}
                   isLoading={loading}
                 />
               )}
               {viewMode === "list" && (
-                <BookingListView
+                <ListTab
                   bookings={filteredBookings}
                   onViewBooking={setSelectedBooking}
                   isLoading={loading}
                 />
               )}
               {viewMode === "grid" && (
-                <BookingGridView
+                <GridTab
                   bookings={filteredBookings}
                   onViewBooking={setSelectedBooking}
                   isLoading={loading}
