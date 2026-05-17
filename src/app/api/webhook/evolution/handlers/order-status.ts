@@ -70,7 +70,8 @@ export async function handleOrderStatusLookup(
       .get();
     
     const currentPage = convDoc.data()?.flowState?.orderPage || 1;
-    await showRecentOrders(tenantId, phone, deps, currentPage + 1);
+    const lastOrderDocId = convDoc.data()?.flowState?.lastOrderDocId;  // ⭐ ADDED: Get cursor
+    await showRecentOrders(tenantId, phone, deps, currentPage + 1, lastOrderDocId);
     return;
   }
   
@@ -141,10 +142,11 @@ async function showRecentOrders(
   tenantId: string,
   phone: string,
   deps: OrderStatusDeps,
-  page: number = 1
+  page: number = 1,
+  lastDocId?: string  // ⭐ ADDED: Cursor for pagination
 ): Promise<void> {
   try {
-    console.log(`[OrderStatus] Fetching orders for phone: ${phone}, page: ${page}`);
+    console.log(`[OrderStatus] Fetching orders for phone: ${phone}, page: ${page}, lastDocId: ${lastDocId || 'none'}`);
     
     const db = getDb();
     const ORDERS_PER_PAGE = 5;
@@ -170,20 +172,26 @@ async function showRecentOrders(
       return;
     }
     
-    // Calculate offset
-    const offset = (page - 1) * ORDERS_PER_PAGE;
+    // ⭐ FIXED: Use cursor-based pagination with startAfter
+    let query = db.collection("orders")
+      .where("customerPhone", "==", phone)
+      .where("tenantId", "==", tenantId)
+      .orderBy("createdAt", "desc")
+      .limit(ORDERS_PER_PAGE);
+    
+    // Apply cursor for pages beyond 1
+    if (page > 1 && lastDocId) {
+      const lastDoc = await db.collection("orders").doc(lastDocId).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      }
+    }
     
     // Get paginated orders - requires composite index
     // Required index: tenantId (ASC) + customerPhone (ASC) + createdAt (DESC)
     let ordersSnap;
     try {
-      ordersSnap = await db
-        .collection("orders")
-        .where("customerPhone", "==", phone)
-        .where("tenantId", "==", tenantId)
-        .orderBy("createdAt", "desc")
-        .limit(ORDERS_PER_PAGE)
-        .get();
+      ordersSnap = await query.get();
     } catch (indexError) {
       console.error('[OrderStatus] Index error - please create composite index:', indexError);
       // Fallback: Get all and sort in memory (less efficient but works without index)
@@ -201,7 +209,7 @@ async function showRecentOrders(
           return bTime.getTime() - aTime.getTime();
         });
       
-      const paginatedOrders = allOrders.slice(offset, offset + ORDERS_PER_PAGE);
+      const paginatedOrders = allOrders.slice((page - 1) * ORDERS_PER_PAGE, page * ORDERS_PER_PAGE);
       ordersSnap = { docs: paginatedOrders.map((order: any) => ({ id: order.id, data: () => order })), size: paginatedOrders.length } as any;
     }
     
@@ -245,8 +253,8 @@ async function showRecentOrders(
     });
     
     // Pagination info
-    const startNum = offset + 1;
-    const endNum = Math.min(offset + ORDERS_PER_PAGE, totalOrders);
+    const startNum = (page - 1) * ORDERS_PER_PAGE + 1;
+    const endNum = Math.min(page * ORDERS_PER_PAGE, totalOrders);
     message += `*Showing orders ${startNum}-${endNum} of ${totalOrders}*\n\n`;
     
     message += `*Reply with a number (1-${ordersSnap.docs.length}) to see details,*\n`;
@@ -283,6 +291,7 @@ async function showRecentOrders(
           flowName: 'order_status_selection',
           currentStep: 'waiting_for_selection',
           orderPage: page,
+          lastOrderDocId: ordersSnap.docs[ordersSnap.docs.length - 1]?.id || null,  // ⭐ ADDED: Cursor for next page
           recentOrders: recentOrdersList,
           isActive: true,
           lastActivity: new Date().toISOString(),
