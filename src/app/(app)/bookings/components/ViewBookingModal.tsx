@@ -17,6 +17,7 @@ interface ViewBookingModalProps {
   onEdit?: (booking: Booking) => void;
   onConfirmPayment?: (bookingId: string, paymentProof: any) => Promise<void>;
   onOpenPaymentModal?: () => void;
+  onSendReminder?: (bookingId: string) => Promise<void>;
 }
 
 interface Toast {
@@ -221,6 +222,7 @@ export default function ViewBookingModal({
   onDelete,
   onEdit,
   onOpenPaymentModal,
+  onSendReminder,
 }: ViewBookingModalProps) {
   const { user } = useAuth();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -286,45 +288,18 @@ export default function ViewBookingModal({
     addToast("Booking ID copied to clipboard!", "success");
   }, [booking?.id, addToast]);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!booking || !user) return;
-    setSendingMessage(true);
-
-    const message = `Hello ${booking.client},\n\nThis is a reminder for your upcoming booking:\n\n Service: ${booking.service}\n📅 Date: ${formatDate(booking.date)}\n Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${formatCurrency(booking.price)}\n\nThank you!`;
-
-    try {
-      await sendEvolutionWhatsAppMessage(booking.phone, message, `tenant_${user.uid}`);
-      addToast("Message sent successfully!", "success");
-    } catch {
-      window.open(
-        `https://wa.me/${booking.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    } finally {
-      setSendingMessage(false);
-    }
-  }, [booking, user, addToast]);
-
   const handleSendReminder = useCallback(async () => {
-    if (!booking || !user) return;
+    if (!booking || !onSendReminder) return;
     setSendingMessage(true);
-
-    const message = `Hello ${booking.client},\n\n🔔 REMINDER: Your booking is coming up!\n\n📋 Service: ${booking.service}\n📅 Date: ${formatDate(booking.date)}\n⏰ Time: ${booking.time}\n📍 Location: ${booking.location}\n💰 Price: ${formatCurrency(booking.price)}\n\nPlease arrive 5 minutes early. See you soon! 😊`;
-
     try {
-      await sendEvolutionWhatsAppMessage(booking.phone, message, `tenant_${user.uid}`);
+      await onSendReminder(booking.id);
       addToast("Reminder sent successfully!", "success");
     } catch {
-      window.open(
-        `https://wa.me/${booking.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
+      addToast("Failed to send reminder", "error");
     } finally {
       setSendingMessage(false);
     }
-  }, [booking, user, addToast]);
+  }, [booking?.id, onSendReminder, addToast]);
 
   const handleStatusUpdate = useCallback((status: Booking["status"]) => {
     if (!booking) return;
@@ -674,24 +649,19 @@ export default function ViewBookingModal({
           {/* Footer Actions */}
           <div className="shrink-0 p-4 md:p-5 border-t border-[#e2e8f0] bg-white space-y-2">
             {/* Primary actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {onEdit && (
                 <ActionButton icon="fa-edit" label="Edit" variant="primary" onClick={() => onEdit(booking)} />
               )}
-              <ActionButton
-                icon="fa-bell"
-                label="Reminder"
-                variant="default"
-                onClick={handleSendReminder}
-                loading={sendingMessage}
-              />
-              <ActionButton
-                icon="fa-whatsapp"
-                label="Message"
-                variant="whatsapp"
-                onClick={handleSendMessage}
-                loading={sendingMessage}
-              />
+              {onSendReminder && (
+                <ActionButton
+                  icon="fa-bell"
+                  label="Reminder"
+                  variant="default"
+                  onClick={handleSendReminder}
+                  loading={sendingMessage}
+                />
+              )}
               {onOpenPaymentModal && booking.paymentStatus !== "paid" && (
                 <ActionButton
                   icon="fa-check-circle"

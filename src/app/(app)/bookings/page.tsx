@@ -15,7 +15,7 @@ import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
-import { getBookingStatusMessage, getBookingPaymentMessage } from "@/utils/bookingMessages";
+import { getBookingStatusMessage, getBookingPaymentMessage, getBookingReminderMessage } from "@/utils/bookingMessages";
 import {
   getWhatsAppPhone,
   normalizePhone,
@@ -417,6 +417,57 @@ export default function BookingsPage() {
       }
     },
     [user]
+  );
+
+  // Handle reminder sending: WhatsApp + update DB
+  const handleSendReminder = useCallback(
+    async (bookingId: string) => {
+      if (!user) return;
+      await impactMedium();
+      
+      const booking = bookings.find((b) => b.id === bookingId);
+      if (!booking) {
+        await notificationError();
+        await showToastNative({ text: 'Booking not found', position: 'top' });
+        return;
+      }
+
+      try {
+        // Send WhatsApp reminder
+        const message = getBookingReminderMessage(
+          booking.client,
+          booking.id,
+          booking.service,
+          booking.date,
+          booking.time,
+          booking.location
+        );
+
+        const normalizedPhone = normalizePhone(booking.phone);
+        const phone = getWhatsAppPhone({
+          customerPhone: normalizedPhone,
+        });
+
+        if (isValidWhatsAppPhone(phone)) {
+          await sendEvolutionWhatsAppMessage(phone, message, `tenant_${user.uid}`);
+        }
+
+        // Update booking with reminder sent flag
+        await bookingService.updateBooking(user, bookingId, {
+          reminderSent: true,
+          reminderSentAt: new Date(),
+        });
+
+        await notificationSuccess();
+        await showToastNative({ text: 'Reminder sent successfully!', duration: 'short' });
+        loadBookings();
+      } catch (error) {
+        console.error("Error sending reminder:", error);
+        await notificationError();
+        await showToastNative({ text: 'Failed to send reminder', position: 'top' });
+      }
+    },
+    [user, bookings, loadBookings, impactMedium, notificationSuccess, notificationError, showToastNative]
   );
 
   const handleDeleteBooking = async (bookingId: string) => {
@@ -871,6 +922,7 @@ export default function BookingsPage() {
         }}
         onConfirmPayment={handleConfirmPayment}
         onOpenPaymentModal={() => setPaymentModalOpen(true)}
+        onSendReminder={handleSendReminder}
       />
 
       <PaymentConfirmationModal
