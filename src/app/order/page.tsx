@@ -970,7 +970,7 @@ function OrderPageContent() {
   const total = getBasePrice() * quantity + deliveryCost;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
+    <div className="order-page-container" style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <div style={{ width: "100%", maxWidth: 960, margin: "0 auto", background: "white", minHeight: "100vh", boxShadow: "0 0 40px rgba(0,0,0,0.06)" }}>
 
         {/* Search Bar */}
@@ -1441,27 +1441,29 @@ function OrderPageContent() {
             <span style={{ fontSize: 14, color: "#64748b", fontWeight: 500 }}>Where should we deliver?</span>
           </div>
           
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Full Name <span style={{ color: "#ef4444" }}>*</span></label>
+          <div style={{ marginBottom: 20 }} className="md3-input-outlined">
             <input 
               type="text" 
+              id="customerName"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="John Doe"
-              style={{ width: "100%", padding: 16, border: `2px solid ${errors.name ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+              placeholder=" "
+              style={{ width: "100%", padding: 16, border: `2px solid ${errors.name ? "#ef4444" : "var(--md-sys-color-outline)"}`, borderRadius: 4, fontSize: 16, outline: "none", background: "transparent" }}
             />
+            <label htmlFor="customerName">Full Name *</label>
             {errors.name && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your full name</p>}
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>WhatsApp Number <span style={{ color: "#ef4444" }}>*</span></label>
+          <div style={{ marginBottom: 20 }} className="md3-input-outlined">
             <input 
               type="tel" 
+              id="customerPhone"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder="+254 712 345 678"
-              style={{ width: "100%", padding: 16, border: `2px solid ${errors.phone ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
+              placeholder=" "
+              style={{ width: "100%", padding: 16, border: `2px solid ${errors.phone ? "#ef4444" : "var(--md-sys-color-outline)"}`, borderRadius: 4, fontSize: 16, outline: "none", background: "transparent" }}
             />
+            <label htmlFor="customerPhone">WhatsApp Number *</label>
             <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>We'll send order updates via WhatsApp</p>
             {errors.phone && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your phone number</p>}
           </div>
@@ -1972,6 +1974,124 @@ function OrderPageContent() {
               width: 20px !important;
               height: 20px !important;
               font-size: 11px !important;
+            }
+          }
+          
+          /* ============================================
+             MATERIAL DESIGN 3 - MOBILE/CAPACITOR ANDROID
+             ============================================ */
+          @media (max-width: 768px) {
+            /* MD3 Surface Background */
+            .order-page-container {
+              background: var(--md-sys-color-background, #f8fafc) !important;
+            }
+            
+            /* MD3 Cards */
+            .order-left-col,
+            .order-right-col {
+              background: var(--md-sys-color-surface, white) !important;
+              border-radius: 16px !important;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+              margin-bottom: 16px !important;
+              border: none !important;
+            }
+            
+            /* MD3 Typography */
+            h1, h2, h3 {
+              color: var(--md-sys-color-on-surface, #1e293b) !important;
+              font-weight: 500 !important;
+            }
+            
+            /* MD3 Input Fields - Already using md3-input-outlined class */
+            .md3-input-outlined input,
+            .md3-input-outlined select,
+            .md3-input-outlined textarea {
+              padding: 16px !important;
+              border-radius: 4px !important;
+              font-size: 16px !important; /* Prevents zoom on iOS */
+            }
+            
+            /* MD3 Buttons */
+            button[style*="background.*#25D366"],
+            button[style*="background.*linear-gradient.*#25D366"] {
+              background: var(--md-sys-color-primary, #25D366) !important;
+              color: var(--md-sys-color-on-primary, white) !important;
+              border-radius: 20px !important; /* MD3 pill shape */
+              text-transform: uppercase !important;
+              letter-spacing: 0.5px !important;
+              font-weight: 500 !important;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            }
+            
+            button[style*="background.*#25D366"]:active,
+            button[style*="background.*linear-gradient.*#25D366"]:active {
+              transform: scale(0.98) !important;
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            /* MD3 Secondary Buttons */
+            button[style*="background.*white"],
+            button[style*="border.*#e2e8f0"] {
+              background: var(--md-sys-color-surface-variant, white) !important;
+              color: var(--md-sys-color-on-surface-variant, #1e293b) !important;
+              border: 1px solid var(--md-sys-color-outline, #e2e8f0) !important;
+              border-radius: 20px !important;
+            }
+            
+            /* MD3 Chips for Delivery/Payment Selection */
+            div[style*="cursor.*pointer"][style*="border"] {
+              border-radius: 8px !important;
+              transition: all 0.2s ease !important;
+            }
+            
+            /* MD3 Quantity Selector */
+            button[style*="borderRadius.*50%"] {
+              background: var(--md-sys-color-primary-container, #DCF8C6) !important;
+              color: var(--md-sys-color-on-primary-container, #00210B) !important;
+            }
+            
+            /* MD3 Order Summary Card */
+            div[style*="background.*linear-gradient.*rgba(37,211,102"] {
+              background: var(--md-sys-color-surface-variant, #f8fafc) !important;
+              border-radius: 12px !important;
+              padding: 20px !important;
+            }
+            
+            /* MD3 Section Headers */
+            div[style*="fontWeight.*700"][style*="marginBottom"] {
+              color: var(--md-sys-color-on-surface, #1e293b) !important;
+              font-weight: 500 !important;
+              font-size: 16px !important;
+            }
+            
+            /* MD3 Spacing */
+            .order-grid {
+              gap: 16px !important;
+              padding: 16px !important;
+            }
+            
+            /* MD3 Image Gallery */
+            .main-image-container {
+              border-radius: 16px !important;
+              overflow: hidden !important;
+            }
+            
+            .thumbnail {
+              border-radius: 8px !important;
+            }
+            
+            /* MD3 Error States */
+            p[style*="color.*#ef4444"] {
+              color: var(--md-sys-color-error, #ef4444) !important;
+              font-size: 12px !important;
+              margin-top: 4px !important;
+            }
+            
+            /* MD3 Helper Text */
+            p[style*="fontSize.*12"][style*="color.*#64748b"] {
+              color: var(--md-sys-color-on-surface-variant, #64748b) !important;
+              font-size: 12px !important;
             }
           }
         `}</style>

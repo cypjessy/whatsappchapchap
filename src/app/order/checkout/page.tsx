@@ -1044,6 +1044,7 @@ export default function CheckoutPage() {
         @media (max-width: 768px) {
           .checkout-page {
             min-height: 100vh;
+            background: var(--md-sys-color-background, #f8fafc) !important;
           }
           .checkout-main-container {
             padding: 0 !important;
@@ -1057,25 +1058,118 @@ export default function CheckoutPage() {
           }
           .checkout-grid {
             grid-template-columns: 1fr !important;
-            gap: 0 !important;
+            gap: 16px !important;
+            padding: 16px !important;
           }
+          
+          /* MD3 Cards */
           .checkout-card {
-            margin-bottom: 0 !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
+            margin-bottom: 16px !important;
+            border-radius: 16px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+            background: var(--md-sys-color-surface, white) !important;
+            border: none !important;
           }
           .checkout-card-inner {
-            padding: 16px !important;
+            padding: 20px !important;
           }
           .checkout-header {
             padding: 16px !important;
+            border-radius: 16px 16px 0 0 !important;
           }
           .checkout-sticky {
             position: static !important;
           }
-          .checkout-input {
-            padding: 14px !important;
+          
+          /* MD3 Input Fields */
+          .checkout-input,
+          input.checkout-input,
+          textarea.checkout-input,
+          select.checkout-input {
+            padding: 16px !important;
+            border-radius: 4px !important;
+            font-size: 16px !important; /* Prevents zoom on iOS */
+            border: 1px solid var(--md-sys-color-outline, #e2e8f0) !important;
+            background: transparent !important;
+          }
+          
+          .checkout-input:focus {
+            border-color: var(--md-sys-color-primary, #25D366) !important;
+            border-width: 2px !important;
+            outline: none !important;
+          }
+          
+          /* MD3 Buttons */
+          button[style*="background.*#25D366"],
+          button[style*="background.*linear-gradient.*#25D366"] {
+            background: var(--md-sys-color-primary, #25D366) !important;
+            color: var(--md-sys-color-on-primary, white) !important;
+            border-radius: 20px !important; /* MD3 pill shape */
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-weight: 500 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          
+          button[style*="background.*#25D366"]:active,
+          button[style*="background.*linear-gradient.*#25D366"]:active {
+            transform: scale(0.98) !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          }
+          
+          /* MD3 Secondary Buttons */
+          button[style*="background.*white"],
+          button[style*="border.*#e2e8f0"] {
+            background: var(--md-sys-color-surface-variant, white) !important;
+            color: var(--md-sys-color-on-surface-variant, #1e293b) !important;
+            border: 1px solid var(--md-sys-color-outline, #e2e8f0) !important;
+            border-radius: 20px !important;
+          }
+          
+          /* MD3 Typography */
+          h1, h2, h3 {
+            color: var(--md-sys-color-on-surface, #1e293b) !important;
+            font-weight: 500 !important;
+          }
+          
+          /* MD3 Section Headers */
+          div[style*="fontWeight.*700"][style*="marginBottom"] {
+            color: var(--md-sys-color-on-surface, #1e293b) !important;
+            font-weight: 500 !important;
             font-size: 16px !important;
+          }
+          
+          /* MD3 Cart Summary Header */
+          div[style*="background.*linear-gradient.*#3b82f6"] {
+            background: linear-gradient(135deg, var(--md-sys-color-primary, #3b82f6) 0%, var(--md-sys-color-primary-container, #2563eb) 100%) !important;
+            border-radius: 16px 16px 0 0 !important;
+          }
+          
+          /* MD3 Chips for Delivery/Payment Selection */
+          div[style*="cursor.*pointer"][style*="border"] {
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+          }
+          
+          /* MD3 Error States */
+          p[style*="color.*#ef4444"] {
+            color: var(--md-sys-color-error, #ef4444) !important;
+            font-size: 12px !important;
+            margin-top: 4px !important;
+          }
+          
+          /* MD3 Helper Text */
+          p[style*="fontSize.*12"][style*="color.*#64748b"] {
+            color: var(--md-sys-color-on-surface-variant, #64748b) !important;
+            font-size: 12px !important;
+          }
+          
+          /* MD3 Order Notes Textarea */
+          textarea[placeholder*="special instructions"] {
+            border-radius: 8px !important;
+            border: 1px solid var(--md-sys-color-outline, #e2e8f0) !important;
+            padding: 16px !important;
           }
         }
       `}</style>
