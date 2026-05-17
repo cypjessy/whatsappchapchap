@@ -135,28 +135,9 @@ export default function BookingPage() {
       }
 
       console.log('Booking saved successfully:', result.bookingId);
-
-      // Create WhatsApp message with booking details
-      const bookingMessage = `📅 *New Booking Request*\n\n` +
-        `*Service:* ${service?.name}\n` +
-        `*Package:* ${packageName}\n` +
-        `*Price:* ${formatCurrency(finalPrice)}\n` +
-        `*Date:* ${selectedDate.toLocaleDateString()}\n` +
-        `*Time:* ${selectedTime}\n` +
-        `*Location:* ${selectedLocation || "Not specified"}\n\n` +
-        `*Customer Details:*\n` +
-        `Name: ${customerName}\n` +
-        `Phone: ${customerPhone}\n` +
-        `Notes: ${customerNotes || "None"}\n\n` +
-        `*Booking ID:* ${result.bookingId}\n\n` +
-        `Sent via WhatsApp Chap Chap`;
-
-      // Open WhatsApp with pre-filled message
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(bookingMessage)}`;
-      window.open(whatsappUrl, "_blank");
       
       // Show success message
-      alert(`✅ Booking request created!\n\nBooking ID: ${result.bookingId}\n\nPlease send the WhatsApp message to confirm your appointment.`);
+      alert(`✅ Booking Confirmed!\n\nBooking ID: ${result.bookingId}\n\nService: ${service?.name}\nDate: ${selectedDate.toLocaleDateString()}\nTime: ${selectedTime}\n\nWe'll contact you shortly to confirm your appointment.`);
       
       // Reset form
       setSelectedDate(null);
