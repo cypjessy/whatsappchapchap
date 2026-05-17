@@ -10,6 +10,11 @@ import {
   handleOrderCancellation,
   type OrderStatusDeps 
 } from "./handlers/order-status";
+import {
+  startBookingStatusFlow,
+  handleBookingStatusLookup,
+  type BookingStatusDeps
+} from "./handlers/booking-status";
 import { 
   startServiceBrowseFlow, 
   handleServiceBrowseInput,
@@ -463,9 +468,10 @@ export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<
     `3️⃣ 🔍 Search Products\n` +
     `4️⃣ 🔍 Search Services\n` +
     `5️⃣ Check Order Status\n` +
-    `6️⃣ Payment Info\n` +
-    `7️⃣ Talk to Support${cartNote}\n\n` +
-    `*Reply with a number (1-7)*`;
+    `6️⃣ Check Booking Status\n` +
+    `7️⃣ Payment Info\n` +
+    `8️⃣ Talk to Support${cartNote}\n\n` +
+    `*Reply with a number (1-8)*`;
   
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, menuMsg);
@@ -511,7 +517,7 @@ function parseMenuSelection(message: string): number | null {
   const wordCount = trimmed.split(/\s+/).length;
   
   const num = parseInt(trimmed);
-  if (!isNaN(num) && num >= 1 && num <= 7) {
+  if (!isNaN(num) && num >= 1 && num <= 8) {
     return num;
   }
   
@@ -520,9 +526,10 @@ function parseMenuSelection(message: string): number | null {
     if (lower === 'products' || lower === 'browse' || lower === 'product') return 1;
     if (lower === 'services' || lower === 'service') return 2;
     if (lower === 'search' || lower === 'find') return 3;
-    if (lower === 'order' || lower === 'orders' || lower === 'track') return 4;
-    if (lower === 'payment' || lower === 'payments' || lower === 'pay') return 5;
-    if (lower === 'support' || lower === 'help') return 6;
+    if (lower === 'order' || lower === 'orders' || lower === 'track') return 5;
+    if (lower === 'booking' || lower === 'bookings' || lower === 'appointment') return 6;
+    if (lower === 'payment' || lower === 'payments' || lower === 'pay') return 7;
+    if (lower === 'support' || lower === 'help') return 8;
   }
   
   return null;
@@ -635,11 +642,16 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       break;
       
     case 6:
+      debugLog("[Webhook] Booking status requested");
+      await sendBookingStatusInfo(tenantId, phone);
+      break;
+      
+    case 7:
       debugLog("[Webhook] Payment info requested");
       await sendPaymentInfo(tenantId, phone);
       break;
       
-    case 7:
+    case 8:
       debugLog("[Webhook] Support requested");
       await sendSupportInfo(tenantId, phone);
       break;
@@ -856,6 +868,80 @@ async function handleFlowInput(
     };
     await handleOrderCancellation(tenantId, phone, message, flowState, deps);
     return;
+  }
+  
+  // Handle booking status lookup flow
+  if (flowName === 'booking_status_lookup') {
+    const deps: BookingStatusDeps = { 
+      sendMessage: sendEvolutionMessage,
+      startTyping: startTypingIndicator,
+      stopTyping: stopTypingIndicator,
+      sendWelcomeMenu: sendWelcomeMenu,
+    };
+    await handleBookingStatusLookup(tenantId, phone, message, deps);
+    return;
+  }
+  
+  // Handle booking status selection flow (when multiple bookings found)
+  if (flowName === 'booking_status_selection') {
+    if (currentStep === 'waiting_for_booking_selection') {
+      const num = parseInt(message.trim());
+      const bookings = flowState.bookings || [];
+      
+      if (isNaN(num) || num < 1 || num > bookings.length) {
+        await stopTypingIndicator(tenantId, phone);
+        await sendEvolutionMessage(
+          tenantId,
+          phone,
+          `❌ Invalid selection. Please reply with a number from 1-${bookings.length}, or *0* to go back.`
+        );
+        return;
+      }
+      
+      const selectedBooking = bookings[num - 1];
+      
+      // Send detailed booking info
+      const statusEmoji = getStatusEmoji(selectedBooking.status);
+      const paymentEmoji = getPaymentEmoji(selectedBooking.paymentStatus);
+      
+      let msg = `📅 *Booking Details*\n\n`;
+      msg += `*ID:* ${selectedBooking.id}\n`;
+      msg += `*Client:* ${selectedBooking.client}\n`;
+      msg += `*Service:* ${selectedBooking.service}\n\n`;
+      
+      msg += `📅 *Date & Time*\n`;
+      msg += `Date: ${formatDate(selectedBooking.date)}\n`;
+      msg += `Time: ${selectedBooking.time}\n\n`;
+      
+      msg += `📍 *Location*\n`;
+      msg += `${selectedBooking.location || 'N/A'}\n\n`;
+      
+      msg += `${statusEmoji} *Status: ${selectedBooking.status.toUpperCase()}*\n`;
+      msg += `💰 Amount: KES ${selectedBooking.price?.toLocaleString() || 'N/A'}\n\n`;
+      
+      if (selectedBooking.phone) {
+        msg += `📞 ${selectedBooking.phone}\n\n`;
+      }
+      
+      msg += `━━━━━━━━━━━━━━━\n\n`;
+      msg += `Reply *MENU* for main menu.`;
+      
+      await stopTypingIndicator(tenantId, phone);
+      await sendEvolutionMessage(tenantId, phone, msg);
+      
+      // Clear flow state
+      const adminDb = getAdminDb();
+      await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .set({
+          flowState: FieldValue.delete()
+        }, { merge: true });
+      
+      return;
+    }
   }
   
   if (flowName === 'product_search') {
@@ -1212,6 +1298,21 @@ async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, "🆘 Our support team is here to help! Please describe your issue and we'll assist you.");
+}
+
+async function sendBookingStatusInfo(tenantId: string, phone: string): Promise<void> {
+  await startTypingIndicator(tenantId, phone);
+  
+  const deps: BookingStatusDeps = { 
+    sendMessage: sendEvolutionMessage,
+    startTyping: startTypingIndicator,
+    stopTyping: stopTypingIndicator,
+    sendWelcomeMenu: sendWelcomeMenu,
+  };
+  
+  await startBookingStatusFlow(tenantId, phone, deps);
+  
+  await stopTypingIndicator(tenantId, phone);
 }
 
 async function handleViewCart(tenantId: string, phone: string): Promise<void> {
@@ -2075,6 +2176,53 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[Webhook] Error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
+  }
+}
+
+// ============================================
+// BOOKING STATUS HELPER FUNCTIONS
+// ============================================
+
+function getStatusEmoji(status: string): string {
+  switch (status?.toLowerCase()) {
+    case 'confirmed':
+      return '✅';
+    case 'pending':
+      return '⏳';
+    case 'completed':
+      return '✔️';
+    case 'cancelled':
+      return '❌';
+    default:
+      return '📋';
+  }
+}
+
+function getPaymentEmoji(status?: string): string {
+  switch (status?.toLowerCase()) {
+    case 'paid':
+      return '💚';
+    case 'partial':
+      return '💛';
+    case 'unpaid':
+      return '❤️';
+    default:
+      return '💰';
+  }
+}
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return 'N/A';
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", { 
+      weekday: 'long',
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  } catch {
+    return dateStr;
   }
 }
 
