@@ -6,6 +6,7 @@ import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeA
 import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import { serviceService, bookingService, Booking, Service } from "@/lib/db";
+import { db } from "@/lib/firebase";
 import ManualBookingModal from "./components/ManualBookingModal";
 import ViewBookingModal from "./components/ViewBookingModal";
 import PaymentConfirmationModal from "./components/PaymentConfirmationModal";
@@ -14,6 +15,7 @@ import BookingAnalytics from "./components/BookingAnalytics";
 import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
+import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getBookingStatusMessage, getBookingPaymentMessage, getBookingReminderMessage } from "@/utils/bookingMessages";
 import {
@@ -22,6 +24,8 @@ import {
   isValidWhatsAppPhone,
 } from "@/utils/phoneUtils";
 import { formatCurrency } from "@/lib/currency";
+
+const getTenantId = (user: any): string => `tenant_${user.uid}`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -167,6 +171,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isListening, setIsListening] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -245,12 +250,68 @@ export default function BookingsPage() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
+  const bookingsListenerRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (user) {
       loadServices();
-      loadBookings();
+      startBookingsListener();
     }
+    return () => {
+      // Cleanup listener on unmount
+      if (bookingsListenerRef.current) {
+        bookingsListenerRef.current();
+        bookingsListenerRef.current = null;
+      }
+    };
   }, [user, filterStatus]);
+
+  // Real-time Firestore listener for bookings
+  const startBookingsListener = useCallback(() => {
+    if (!user) return;
+    
+    const tenantId = getTenantId(user);
+    let q;
+    
+    if (filterStatus === "all") {
+      q = query(
+        collection(db, "bookings"),
+        where("tenantId", "==", tenantId),
+        orderBy("createdAt", "desc")
+      );
+    } else {
+      q = query(
+        collection(db, "bookings"),
+        where("tenantId", "==", tenantId),
+        where("status", "==", filterStatus),
+        orderBy("createdAt", "desc")
+      );
+    }
+
+    setIsListening(true);
+    bookingsListenerRef.current = onSnapshot(
+      q,
+      (snapshot) => {
+        const bookingsData = snapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            if (!data) return null;
+            return { id: doc.id, ...data } as Booking;
+          })
+          .filter((booking): booking is Booking => booking !== null && booking.service !== undefined);
+        
+        setBookings(bookingsData);
+        setLoading(false);
+        setIsListening(false);
+      },
+      (error) => {
+        console.error("Error listening to bookings:", error);
+        setLoading(false);
+        setIsListening(false);
+        addToast("Failed to load bookings", "error");
+      }
+    );
+  }, [user, filterStatus, addToast]);
 
   const loadServices = async () => {
     if (!user) return;
@@ -264,21 +325,8 @@ export default function BookingsPage() {
   };
 
   const loadBookings = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const bookingsData =
-        filterStatus === "all"
-          ? await bookingService.getBookings(user)
-          : await bookingService.getBookings(user, filterStatus);
-      // Filter out any null/undefined entries
-      setBookings(bookingsData.filter(b => b !== null && b !== undefined));
-    } catch (error) {
-      console.error("Error loading bookings:", error);
-      addToast("Failed to load bookings", "error");
-    } finally {
-      setLoading(false);
-    }
+    // Kept for manual reload if needed, but real-time listener handles updates automatically
+    startBookingsListener();
   };
 
   const handleBookingCreated = async () => {
