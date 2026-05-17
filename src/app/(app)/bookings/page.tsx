@@ -15,6 +15,13 @@ import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
+import { getBookingStatusMessage, getBookingPaymentMessage } from "@/utils/bookingMessages";
+import {
+  getWhatsAppPhone,
+  normalizePhone,
+  isValidWhatsAppPhone,
+} from "@/utils/phoneUtils";
+import { formatCurrency } from "@/lib/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -283,10 +290,21 @@ export default function BookingsPage() {
   const handleUpdateStatus = async (bookingId: string, newStatus: Booking["status"]) => {
     if (!user) return;
     
+    // Find the booking to get its data for WhatsApp message
+    const booking = bookings.find((b) => b.id === bookingId);
+    
     await impactMedium();
     
     try {
       await bookingService.updateBooking(user, bookingId, { status: newStatus });
+
+      // Send WhatsApp notifications for status changes (similar to orders logic)
+      if (["confirmed", "completed", "cancelled", "pending"].includes(newStatus) && booking) {
+        sendBookingWhatsAppNotification(booking, newStatus).catch((err) =>
+          console.error("Failed to send WhatsApp:", err)
+        );
+      }
+
       await notificationSuccess();
       await showToastNative({ text: `Booking ${newStatus}`, duration: 'short' });
       loadBookings();
@@ -298,8 +316,50 @@ export default function BookingsPage() {
     }
   };
 
+  // Send WhatsApp notification for booking status changes (similar to orders)
+  const sendBookingWhatsAppNotification = useCallback(
+    async (booking: Booking, status: Booking["status"]) => {
+      if (!user) return;
+      try {
+        // Format date and price for the message
+        const formattedDate = booking.date;
+        const formattedPrice = formatCurrency(booking.price);
+
+        const message = getBookingStatusMessage(
+          status,
+          booking.client,
+          booking.id,
+          booking.service,
+          formattedDate,
+          booking.time,
+          booking.location,
+          formattedPrice
+        );
+
+        // Get WhatsApp phone number
+        const normalizedPhone = normalizePhone(booking.phone);
+        const phone = getWhatsAppPhone({
+          customerPhone: normalizedPhone,
+        });
+
+        if (!isValidWhatsAppPhone(phone)) {
+          console.error("Invalid phone number for booking:", phone);
+          return;
+        }
+
+        await sendEvolutionWhatsAppMessage(phone, message, `tenant_${user.uid}`);
+      } catch (error) {
+        console.error("Error sending booking WhatsApp:", error);
+      }
+    },
+    [user]
+  );
+
   const handleConfirmPayment = async (bookingId: string, paymentProof: any) => {
     if (!user) return;
+    
+    // Find the booking to get its data for WhatsApp message
+    const booking = bookings.find((b) => b.id === bookingId);
     
     await notificationSuccess();
     
@@ -309,6 +369,14 @@ export default function BookingsPage() {
         paymentStatus: "paid",
         status: "confirmed",
       });
+
+      // Send WhatsApp notification for payment confirmation
+      if (booking) {
+        sendPaymentWhatsAppNotification(booking, paymentProof).catch((err) =>
+          console.error("Failed to send payment WhatsApp:", err)
+        );
+      }
+
       await showToastNative({ text: 'Payment confirmed!', duration: 'short' });
       loadBookings();
       setPaymentModalOpen(false);
@@ -319,6 +387,37 @@ export default function BookingsPage() {
       throw error;
     }
   };
+
+  // Send WhatsApp notification for payment confirmation
+  const sendPaymentWhatsAppNotification = useCallback(
+    async (booking: Booking, paymentProof: any) => {
+      if (!user) return;
+      try {
+        const message = getBookingPaymentMessage(
+          booking.client,
+          booking.id,
+          booking.service,
+          formatCurrency(paymentProof.amount || booking.price),
+          paymentProof.transactionId
+        );
+
+        const normalizedPhone = normalizePhone(booking.phone);
+        const phone = getWhatsAppPhone({
+          customerPhone: normalizedPhone,
+        });
+
+        if (!isValidWhatsAppPhone(phone)) {
+          console.error("Invalid phone number for payment notification:", phone);
+          return;
+        }
+
+        await sendEvolutionWhatsAppMessage(phone, message, `tenant_${user.uid}`);
+      } catch (error) {
+        console.error("Error sending payment WhatsApp:", error);
+      }
+    },
+    [user]
+  );
 
   const handleDeleteBooking = async (bookingId: string) => {
     if (!user) return;
