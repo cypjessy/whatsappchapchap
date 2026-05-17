@@ -337,3 +337,50 @@ export default function BookingGridView({
     </div>
   );
 }
+
+<style jsx global>{`
+  @media (max-width: 768px) {
+    /* MD3 Grid Container */
+    .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 { gap: 12px !important; }
+    
+    /* MD3 Grid Cards */
+    .md3-card-elevated { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; padding: 16px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    .md3-card-elevated:active { transform: scale(0.98) !important; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important; }
+    
+    /* MD3 Status Badges */
+    .rounded-full.px-3.py-1.text-xs { border-radius: 16px !important; font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; text-transform: uppercase !important; }
+    
+    /* MD3 Payment Badges */
+    .rounded-lg.px-2.py-1.text-xs.inline-flex.items-center.gap-1 { border-radius: 12px !important; font-size: 11px !important; font-weight: 500 !important; }
+    
+    /* MD3 Action Buttons */
+    button.w-10.h-10 { width: 40px !important; height: 40px !important; border-radius: 20px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    button.w-10.h-10:active { transform: scale(0.95) !important; opacity: 0.8 !important; }
+    
+    /* MD3 Typography */
+    .font-semibold { font-weight: 500 !important; }
+    .font-bold { font-weight: 600 !important; }
+    
+    /* MD3 Customer Name */
+    .text-base.font-semibold.text-gray-900 { color: var(--md-sys-color-on-surface, #1e293b) !important; font-size: 15px !important; }
+    
+    /* MD3 Phone Number */
+    .text-sm.text-gray-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    
+    /* MD3 Service Name */
+    .text-sm.text-gray-600 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    
+    /* MD3 Date/Time Display */
+    .text-xs.text-gray-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 12px !important; }
+    
+    /* MD3 Price Display */
+    .text-lg.font-bold.text-gray-900 { color: var(--md-sys-color-primary, #8b5cf6) !important; font-weight: 600 !important; font-size: 18px !important; }
+    
+    /* MD3 Avatar/Icon Circle */
+    .w-11.h-11.rounded-xl { border-radius: 24px !important; background: var(--md-sys-color-primary-container, #f3e8ff) !important; }
+    .w-11.h-11.rounded-xl i { color: var(--md-sys-color-primary, #8b5cf6) !important; font-size: 18px !important; }
+    
+    /* MD3 Divider */
+    .border-t.border-gray-100 { border-color: var(--md-sys-color-outline-variant, #e2e8f0) !important; }
+  }
+`}</style>

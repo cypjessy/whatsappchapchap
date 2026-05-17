@@ -440,3 +440,45 @@ export default function BookingTimeline({
     </div>
   );
 }
+
+<style jsx global>{`
+  @media (max-width: 768px) {
+    /* MD3 Timeline Container */
+    .relative.pl-12.md\:pl-16 { padding-left: 48px !important; }
+    
+    /* MD3 Timeline Line */
+    .absolute.left-5.md\:left-7.top-0.bottom-0 { left: 20px !important; width: 2px !important; background: linear-gradient(to bottom, var(--md-sys-color-primary, #8b5cf6), var(--md-sys-color-primary-container, #f3e8ff)) !important; }
+    
+    /* MD3 Date Headers */
+    .mb-6.md\:mb-8 { margin-bottom: 20px !important; }
+    
+    /* MD3 Timeline Cards */
+    .bg-white.rounded-xl.border { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; border: none !important; margin-bottom: 12px !important; padding: 16px !important; }
+    
+    /* MD3 Status Badges */
+    .rounded-full.px-3.py-1.text-xs { border-radius: 16px !important; font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; text-transform: uppercase !important; }
+    
+    /* MD3 Payment Badges */
+    .rounded-lg.px-2.py-1.text-xs { border-radius: 12px !important; font-size: 11px !important; font-weight: 500 !important; }
+    
+    /* MD3 Action Buttons */
+    button.w-8.h-8, button.w-9.h-9 { width: 36px !important; height: 36px !important; border-radius: 18px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    button.w-8.h-8:active, button.w-9.h-9:active { transform: scale(0.95) !important; opacity: 0.8 !important; }
+    
+    /* MD3 Typography */
+    .font-semibold { font-weight: 500 !important; }
+    .font-bold { font-weight: 600 !important; }
+    
+    /* MD3 Time Display */
+    .text-sm.text-gray-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    
+    /* MD3 Customer Name */
+    .font-medium.text-gray-900 { color: var(--md-sys-color-on-surface, #1e293b) !important; font-weight: 500 !important; }
+    
+    /* MD3 Service Name */
+    .text-sm.text-gray-600 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    
+    /* MD3 Price Display */
+    .font-bold.text-lg { font-weight: 600 !important; font-size: 18px !important; color: var(--md-sys-color-primary, #8b5cf6) !important; }
+  }
+`}</style>

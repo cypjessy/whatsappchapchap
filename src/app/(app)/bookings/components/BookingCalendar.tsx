@@ -563,3 +563,41 @@ export default function BookingCalendar({
     </div>
   );
 }
+
+<style jsx global>{`
+  @media (max-width: 768px) {
+    /* MD3 Calendar Container */
+    .bg-white.rounded-2xl.border { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; border: none !important; }
+    
+    /* MD3 Calendar Header */
+    .p-3.5.md\:p-5.border-b { padding: 16px !important; background: linear-gradient(135deg, var(--md-sys-color-primary-container, #f3e8ff) 0%, var(--md-sys-color-secondary-container, #fef3c7) 100%) !important; border-radius: 16px 16px 0 0 !important; }
+    
+    /* MD3 Month Navigation Buttons */
+    button.w-9.h-9.md\:w-10.md\:h-10 { width: 40px !important; height: 40px !important; border-radius: 20px !important; background: var(--md-sys-color-surface-variant, #f1f5f9) !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    button.w-9.h-9.md\:w-10.md\:h-10:active { transform: scale(0.95) !important; background: var(--md-sys-color-surface-variant, #e2e8f0) !important; }
+    
+    /* MD3 Calendar Grid */
+    .grid.grid-cols-7.gap-1.md\:gap-2 { gap: 4px !important; }
+    
+    /* MD3 Day Cells */
+    .aspect-square.flex.items-center.justify-center { aspect-ratio: 1 !important; border-radius: 12px !important; font-weight: 500 !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    .aspect-square.flex.items-center.justify-center:hover { background: var(--md-sys-color-primary-container, #f3e8ff) !important; }
+    .aspect-square.flex.items-center.justify-center:active { transform: scale(0.95) !important; }
+    
+    /* MD3 Selected Date */
+    .bg-\[\#8B5CF6\].text-white { background: var(--md-sys-color-primary, #8b5cf6) !important; color: var(--md-sys-color-on-primary, white) !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3) !important; }
+    
+    /* MD3 Today Indicator */
+    .border-2.border-\[\#8B5CF6\] { border-color: var(--md-sys-color-primary, #8b5cf6) !important; border-width: 2px !important; }
+    
+    /* MD3 Booking Cards in Calendar */
+    .bg-white.rounded-xl.border { border-radius: 12px !important; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important; margin-bottom: 8px !important; border: none !important; }
+    
+    /* MD3 Status Badges */
+    .rounded-full.px-2.py-0.5.text-xs { border-radius: 16px !important; font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; }
+    
+    /* MD3 Action Buttons */
+    button.bg-\[\#F3E8FF\], button.bg-white { border-radius: 20px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    button.bg-\[\#F3E8FF\]:active, button.bg-white:active { transform: scale(0.95) !important; opacity: 0.8 !important; }
+  }
+`}</style>
