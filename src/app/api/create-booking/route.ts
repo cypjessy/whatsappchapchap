@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { normalizePhone } from '@/utils/phoneUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,18 +57,21 @@ export async function POST(request: NextRequest) {
     const bookingRef = adminDb.collection('bookings').doc();
     const bookingId = bookingRef.id;
 
-    // Generate client initials
-    const nameParts = customerName.split(' ');
+    // Generate client initials (handle empty strings and trailing spaces)
+    const nameParts = customerName.trim().split(/\s+/).filter((n: string) => n.length > 0);
     const clientInitials = nameParts.length > 1
       ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-      : customerName.substring(0, 2).toUpperCase();
+      : nameParts[0]?.substring(0, 2).toUpperCase() || '??';
+
+    // Normalize phone to international format for WhatsApp compatibility
+    const normalizedPhone = normalizePhone(customerPhone);
 
     const bookingData = {
       id: bookingId,
       tenantId,
       client: customerName,
       clientInitials,
-      phone: customerPhone,
+      phone: normalizedPhone,
       service: serviceData.name || 'Unknown Service',
       serviceId,
       date: selectedDate,

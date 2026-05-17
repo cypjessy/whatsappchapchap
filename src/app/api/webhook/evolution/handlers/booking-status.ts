@@ -117,7 +117,9 @@ async function lookupBookingById(
         phone,
         `❌ Booking *${bookingId}* not found.\n\n` +
         `Please check the booking ID and try again.\n\n` +
-        `💡 Type *RECENT* to see your recent bookings, or *MENU* for main menu`
+        `━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `0️⃣ - Back to Main Menu\n` +
+        `RECENT - See your recent bookings`
       );
       return;
     }
@@ -133,7 +135,10 @@ async function lookupBookingById(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Error looking up booking. Please try again or type *RECENT* to see recent bookings.`
+      `❌ Error looking up booking. Please try again.\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `0️⃣ - Back to Main Menu\n` +
+      `RECENT - See your recent bookings`
     );
   }
 }
@@ -352,10 +357,11 @@ async function sendBookingDetails(
     message += `1️⃣ - Cancel Booking\n`;
   }
   
-  message += `Reply *MENU* for main menu`;
+  message += `━━━━━━━━━━━━━━━━━━━━\n\n` +
+  `0️ - Back to Main Menu`;
   
   if (canCancel) {
-    message += ` or reply with the number (1 or MENU)`;
+    message += `\n1️ - Cancel Booking`;
   }
   
   await deps.stopTyping(tenantId, phone);
@@ -552,7 +558,9 @@ export async function handleBookingCancellation(
       await deps.sendMessage(
         tenantId,
         phone,
-        `✅ Cancellation cancelled.\n\nReply *MENU* for main menu`
+        `✅ Cancellation cancelled.\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `0️⃣ - Back to Main Menu`
       );
       
       // Clear flow state
