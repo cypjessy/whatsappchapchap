@@ -71,6 +71,16 @@ function getPaymentConfig(status?: string) {
   return PAYMENT_CONFIG[status || "unpaid"] || PAYMENT_CONFIG.unpaid;
 }
 
+// Safe first letter helper - handles undefined, empty, or invalid client names
+function getSafeFirstLetter(booking: Booking): string {
+  const clientName = booking?.client || "";
+  if (!clientName) {
+    return "?";
+  }
+  // Return first character, uppercase
+  return clientName.charAt(0).toUpperCase();
+}
+
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
 function ShimmerCard() {
@@ -118,6 +128,7 @@ function BookingCard({
 
   const statusConfig = getStatusConfig(booking?.status || "pending");
   const paymentConfig = getPaymentConfig(booking?.paymentStatus);
+  const safeFirstLetter = getSafeFirstLetter(booking);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 80);
@@ -160,7 +171,7 @@ function BookingCard({
           <div
             className={`
               w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center 
-              font-medium text-xs md:text-sm shrink-0 transition-transform duration-200
+              font-bold text-base md:text-lg shrink-0 transition-transform duration-200
               ${isHovered ? "scale-105" : "scale-100"}
               ${booking.verified
                 ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
@@ -168,7 +179,7 @@ function BookingCard({
               }
             `}
           >
-            {booking?.clientInitials || "??"}
+            {safeFirstLetter}
           </div>
 
           <div className="min-w-0">

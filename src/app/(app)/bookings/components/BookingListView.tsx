@@ -74,6 +74,16 @@ function getPaymentConfig(status?: string) {
   return PAYMENT_CONFIG[status || "unpaid"] || PAYMENT_CONFIG.unpaid;
 }
 
+// Safe first letter helper - handles undefined, empty, or invalid client names
+function getSafeFirstLetter(booking: Booking): string {
+  const clientName = booking?.client || "";
+  if (!clientName) {
+    return "?";
+  }
+  // Return first character, uppercase
+  return clientName.charAt(0).toUpperCase();
+}
+
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
 function ShimmerRow() {
@@ -169,6 +179,7 @@ function DesktopRow({
   const [isHovered, setIsHovered] = useState(false);
   const statusConfig = getStatusConfig(booking.status);
   const paymentConfig = getPaymentConfig(booking.paymentStatus);
+  const safeFirstLetter = getSafeFirstLetter(booking);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 50);
@@ -208,7 +219,7 @@ function DesktopRow({
       {/* Client & Service - MD3 avatar */}
       <div className="flex items-center gap-3 min-w-0">
         <div className={`
-          w-9 h-9 rounded-xl flex items-center justify-center font-semibold text-xs shrink-0
+          w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base shrink-0
           transition-transform duration-200
           ${booking.verified
             ? "bg-[#F3E8FF] text-[#8B5CF6]"
@@ -216,7 +227,7 @@ function DesktopRow({
           }
           ${isHovered ? "scale-105" : "scale-100"}
         `}>
-          {booking.clientInitials}
+          {safeFirstLetter}
         </div>
         <div className="min-w-0">
           <div className="font-medium text-sm truncate flex items-center gap-1.5">
@@ -325,6 +336,7 @@ function MobileRow({
   const [isExpanded, setIsExpanded] = useState(false);
   const statusConfig = getStatusConfig(booking.status);
   const paymentConfig = getPaymentConfig(booking.paymentStatus);
+  const safeFirstLetter = getSafeFirstLetter(booking);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 60);
@@ -349,13 +361,13 @@ function MobileRow({
       {/* Main row - MD3 styling */}
       <div className="flex items-center gap-3">
         <div className={`
-          w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm shrink-0
+          w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0
           ${booking.verified
             ? "bg-[#F3E8FF] text-[#8B5CF6]"
             : "bg-[#F1F5F9] text-[#64748B]"
           }
         `}>
-          {booking.clientInitials}
+          {safeFirstLetter}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">

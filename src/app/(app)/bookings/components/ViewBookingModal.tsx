@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Booking } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
@@ -288,6 +288,16 @@ export default function ViewBookingModal({
     addToast("Booking ID copied to clipboard!", "success");
   }, [booking?.id, addToast]);
 
+  // Safe first letter helper - handles undefined, empty, or invalid client names
+  const safeFirstLetter = useMemo(() => {
+    const clientName = booking?.client || "";
+    if (!clientName) {
+      return "?";
+    }
+    // Return first character, uppercase
+    return clientName.charAt(0).toUpperCase();
+  }, [booking?.client]);
+
   const handleSendReminder = useCallback(async () => {
     if (!booking || !onSendReminder) return;
     setSendingMessage(true);
@@ -411,8 +421,8 @@ export default function ViewBookingModal({
             <div className="bg-gradient-to-br from-[#F3E8FF] to-[#F8FAFC] rounded-2xl p-4 md:p-5 border border-[#8B5CF6]/10">
               <div className="flex items-center gap-3 md:gap-4 mb-4">
                 {/* Avatar - MD3 shape system */}
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white flex items-center justify-center font-bold text-lg md:text-xl shrink-0 relative shadow-md shadow-[#8B5CF6]/20">
-                  {booking.clientInitials}
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white flex items-center justify-center font-bold text-xl md:text-2xl shrink-0 relative shadow-md shadow-[#8B5CF6]/20">
+                  {safeFirstLetter}
                   {booking.verified && (
                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#10B981] text-white rounded-full flex items-center justify-center text-[9px] border-2 border-white shadow-sm">
                       <i className="fas fa-check" />

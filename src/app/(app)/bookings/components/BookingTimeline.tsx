@@ -100,6 +100,16 @@ function getPaymentConfig(status?: string) {
   return PAYMENT_CONFIG[status || "unpaid"] || PAYMENT_CONFIG.unpaid;
 }
 
+// Safe first letter helper - handles undefined, empty, or invalid client names
+function getSafeFirstLetter(booking: Booking): string {
+  const clientName = booking?.client || "";
+  if (!clientName) {
+    return "?";
+  }
+  // Return first character, uppercase
+  return clientName.charAt(0).toUpperCase();
+}
+
 function groupBookingsByDate(bookings: Booking[]): GroupedBookings[] {
   const groups: Record<string, Booking[]> = {};
 
@@ -203,6 +213,7 @@ function TimelineItem({
   const [isHovered, setIsHovered] = useState(false);
   const statusConfig = getStatusConfig(booking?.status || "pending");
   const paymentConfig = getPaymentConfig(booking.paymentStatus);
+  const safeFirstLetter = getSafeFirstLetter(booking);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 80);
@@ -262,7 +273,7 @@ function TimelineItem({
         <div className="flex justify-between items-start mb-2.5 md:mb-3">
           <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
             <div className={`
-              w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0
+              w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0
               transition-transform duration-300
               ${booking.verified
                 ? "bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] text-[#8b5cf6]"
@@ -270,7 +281,7 @@ function TimelineItem({
               }
               ${isHovered ? "scale-110" : "scale-100"}
             `}>
-              {booking?.clientInitials || "??"}
+              {safeFirstLetter}
             </div>
             <div className="min-w-0">
               <div className="font-bold text-sm md:text-base truncate flex items-center gap-1.5">

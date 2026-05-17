@@ -61,6 +61,16 @@ function getBookingsForDate(bookings: Booking[], date: Date): Booking[] {
   return bookings.filter(b => b.date === dateStr);
 }
 
+// Safe first letter helper - handles undefined, empty, or invalid client names
+function getSafeFirstLetter(booking: Booking): string {
+  const clientName = booking?.client || "";
+  if (!clientName) {
+    return "?";
+  }
+  // Return first character, uppercase
+  return clientName.charAt(0).toUpperCase();
+}
+
 function getDaysInMonth(year: number, month: number): DayItem[] {
   const days: DayItem[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -306,6 +316,7 @@ function BookingCard({ booking, index, onViewBooking }: {
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const safeFirstLetter = getSafeFirstLetter(booking);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 60);
@@ -330,14 +341,14 @@ function BookingCard({ booking, index, onViewBooking }: {
           {/* Avatar - MD3 shape system */}
           <div className={`
             w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center 
-            font-semibold text-xs md:text-sm shrink-0 transition-transform duration-200
+            font-bold text-base md:text-lg shrink-0 transition-transform duration-200
             ${booking.verified
               ? "bg-[#F3E8FF] text-[#8B5CF6]"
               : "bg-[#F1F5F9] text-[#64748B]"
             }
             ${isHovered ? "scale-105" : "scale-100"}
           `}>
-            {booking.clientInitials}
+            {safeFirstLetter}
           </div>
           <div className="min-w-0">
             <div className="font-medium text-sm md:text-base truncate">{booking.client}</div>
