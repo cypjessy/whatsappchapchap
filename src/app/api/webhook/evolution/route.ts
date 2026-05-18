@@ -1452,6 +1452,9 @@ async function handleProductSearch(
     const results = scoredProducts.slice(0, 5);
     const totalResults = scoredProducts.length;
     
+    // Stop typing indicator before sending messages
+    await stopTypingIndicator(tenantId, phone);
+    
     let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
     await sendEvolutionMessage(tenantId, phone, headerMessage);
     
