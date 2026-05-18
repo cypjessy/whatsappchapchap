@@ -34,11 +34,6 @@ import {
   handleServiceSearch as handleServiceSearchHandler,
   type Deps as ServiceSearchDeps
 } from "./handlers/service-search";
-import {
-  sendPaymentInfo as sendPaymentInfoHandler,
-  type PaymentInfoDeps
-} from "./handlers/payment-info";
-
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
 let adminApp: App | null = null;
@@ -473,10 +468,8 @@ export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<
     `3️⃣ 🔍 Search Products\n` +
     `4️⃣ 🔍 Search Services\n` +
     `5️⃣ Check Order Status\n` +
-    `6️⃣ Check Booking Status\n` +
-    `7️⃣ Payment Info\n` +
-    `8️⃣ Talk to Support${cartNote}\n\n` +
-    `*Reply with a number (1-8)*`;
+    `6️⃣ Check Booking Status${cartNote}\n\n` +
+    `*Reply with a number (1-6)*`;
   
   await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, menuMsg);
@@ -651,24 +644,9 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       await sendBookingStatusInfo(tenantId, phone);
       break;
       
-    case 7:
-      debugLog("[Webhook] Payment info requested");
-      const paymentDeps: PaymentInfoDeps = {
-        sendMessage: sendEvolutionMessage,
-        startTyping: startTypingIndicator,
-        stopTyping: stopTypingIndicator,
-      };
-      await sendPaymentInfoHandler(tenantId, phone, paymentDeps);
-      break;
-      
-    case 8:
-      debugLog("[Webhook] Support requested");
-      await sendSupportInfo(tenantId, phone);
-      break;
-      
     default:
       debugLog("[Webhook] Unknown menu selection:", selection);
-      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number 1-7.");
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number 1-6.");
   }
 }
 
@@ -1795,7 +1773,7 @@ async function processWithAI(
             debugLog("[Webhook] Invalid main menu input:", message);
             await stopTypingIndicator(tenantId, phone);
             await sendEvolutionMessage(tenantId, phone, 
-              "Please reply with a number *1-7* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Search Services\n5 Check Order Status\n6 Payment Info\n7 Talk to Support"
+              "Please reply with a number *1-6* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Search Services\n5 Check Order Status\n6 Check Booking Status"
             );
           }
         }
