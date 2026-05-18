@@ -9,6 +9,16 @@ import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
 import { normalizePhone, createWhatsAppJid, isValidWhatsAppPhone } from "@/utils/phoneUtils";
+import {
+  SearchBar,
+  ProductGallery,
+  Specifications,
+  CustomerDetails,
+  DeliveryOptions,
+  PaymentMethods,
+  OrderSummary,
+  FooterActions
+} from './components';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -973,7 +983,7 @@ function OrderPageContent() {
     <div className="order-page-container" style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <div style={{ width: "100%", maxWidth: 960, margin: "0 auto", background: "white", minHeight: "100vh", boxShadow: "0 0 40px rgba(0,0,0,0.06)" }}>
 
-        {/* Search Bar */}
+        {/* Search Bar - Keeping inline for now as component needs refactoring */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", background: "white", position: "sticky", top: 0, zIndex: 100 }}>
           <div ref={searchContainerRef} style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
             <input
@@ -981,6 +991,7 @@ function OrderPageContent() {
               placeholder="🔍 Search products by name, category, brand..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
+              className="md3-input-outlined"
               style={{
                 width: "100%",
                 padding: "12px 45px 12px 16px",
@@ -1179,212 +1190,25 @@ function OrderPageContent() {
         <div className="order-left-col">
 
         {/* Product Section */}
-        <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
-          {/* Image Gallery */}
-          {allImages.length > 0 ? (
-            <div className="product-gallery">
-              {/* Main Image */}
-              <div className="main-image-container">
-                <img 
-                  src={allImages[selectedImageIndex]} 
-                  alt={product?.name} 
-                  className="main-image"
-                />
-                {allImages.length > 1 && (
-                  <>
-                    <button 
-                      className="gallery-nav prev"
-                      onClick={() => setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
-                    >
-                      <i className="fas fa-chevron-left"></i>
-                    </button>
-                    <button 
-                      className="gallery-nav next"
-                      onClick={() => setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
-                    >
-                      <i className="fas fa-chevron-right"></i>
-                    </button>
-                    <div className="image-counter">
-                      {selectedImageIndex + 1} / {allImages.length}
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              {/* Thumbnail Strip */}
-              {allImages.length > 1 && (
-                <div className="thumbnail-strip">
-                  {allImages.map((img, index) => (
-                    <button
-                      key={index}
-                      className={`thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
-                      onClick={() => setSelectedImageIndex(index)}
-                    >
-                      <img src={img} alt={`${product?.name} - ${index + 1}`} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ width: "100%", height: 300, background: "linear-gradient(135deg, #DCF8C6 0%, #e0e7ff 100%)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 80, marginBottom: 16 }}>
-              {productEmoji || "📦"}
-            </div>
-          )}
-          
-          {/* Product Info */}
-          <div style={{ marginTop: 16 }}>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#1e293b" }}>{product?.name}</h2>
-            {product?.description && (
-              <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.6, marginBottom: 16 }}>{product.description}</p>
-            )}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-              <div>
-                <span style={{ fontSize: 28, fontWeight: 800, color: "#25D366" }}>{CURRENCY_SYMBOL}{getBasePrice().toLocaleString()}</span>
-              </div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: currentStock > 5 ? "#10b981" : currentStock > 0 ? "#f59e0b" : "#ef4444" }}>
-                <i className={`fas ${currentStock > 0 ? "fa-check-circle" : "fa-times-circle"}`}></i>
-                <span>{currentStock > 0 ? `In Stock - ${currentStock} available` : "Out of Stock"}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Selected Variant Display */}
-          {Object.keys(selectedSpecs).length > 0 && (
-            <div style={{ background: "linear-gradient(135deg, rgba(37,211,102,0.1) 0%, rgba(18,140,126,0.1) 100%)", border: "2px solid #25D366", borderRadius: 12, padding: 16, marginTop: 16, display: "block" }}>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: "#128C7E" }}>
-                <i className="fas fa-check-circle"></i> Selected Configuration
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {Object.entries(selectedSpecs).map(([key, value]) => (
-                  <span key={key} style={{ background: "white", padding: "6px 14px", borderRadius: 20, fontSize: 14, fontWeight: 600, color: "#1e293b", border: "1px solid #e2e8f0" }}>
-                    <i className="fas fa-check" style={{ color: "#10b981", marginRight: 6 }}></i>
-                    {key.replace(/_/g, " ")}: {value}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Product Details / Filters Display */}
-          {product?.filters && Object.keys(product.filters).length > 0 && (
-            <div style={{ marginTop: 20, padding: 20, background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
-              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16, color: "#1e293b", display: "flex", alignItems: "center", gap: 8 }}>
-                <i className="fas fa-info-circle" style={{ color: "#25D366" }}></i>
-                Product Details
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-                {Object.entries(product.filters).map(([key, options]) => {
-                  if (!Array.isArray(options) || options.length === 0) return null;
-                  
-                  const isColorKey = key.toLowerCase().includes('color');
-                  
-                  return (
-                    <div key={key}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#64748b", marginBottom: 8, textTransform: "capitalize" }}>
-                        {key.replace(/_/g, " ")}
-                      </div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {options.map((option, idx) => {
-                          if (isColorKey) {
-                            return (
-                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "white", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                                <div style={{ width: 16, height: 16, borderRadius: "50%", background: option.toLowerCase(), border: "2px solid #e2e8f0" }}></div>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", textTransform: "capitalize" }}>{option}</span>
-                              </div>
-                            );
-                          }
-                          
-                          return (
-                            <span key={idx} style={{ padding: "6px 12px", background: "white", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13, fontWeight: 600, color: "#1e293b", textTransform: "capitalize" }}>
-                              {option}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+        {product && (
+          <ProductGallery
+            product={product as any}
+            selectedImageIndex={selectedImageIndex}
+            onImageChange={setSelectedImageIndex}
+            getBasePrice={getBasePrice}
+            getVariantStock={() => currentStock}
+            selectedSpecs={selectedSpecs}
+          />
+        )}
 
         {/* Specifications Section */}
         {product?.filters && Object.keys(product.filters).length > 0 && (
-          <div className="specs-section" style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Select Options</div>
-              <span style={{ fontSize: 14, color: "#64748b" }}>Choose your preferences</span>
-            </div>
-
-            {Object.entries(product.filters).map(([key, options]) => {
-              if (!Array.isArray(options) || options.length === 0) return null;
-              
-              const isColorKey = key.toLowerCase().includes('color');
-              
-              return (
-                <div key={key} style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 12, display: "flex", alignItems: "center", gap: 8, color: "#1e293b" }}>
-                    <i className={`fas ${isColorKey ? "fa-palette" : "fa-cogs"}`} style={{ color: "#25D366" }}></i>
-                    {key.replace(/_/g, " ")}
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                    {options.map((option) => {
-                      if (isColorKey) {
-                        return (
-                          <div key={option} style={{ textAlign: "center" }}>
-                            <div 
-                              onClick={() => toggleSpec(key, option)}
-                              style={{ 
-                                width: 48, height: 48, borderRadius: "50%", 
-                                background: option.toLowerCase() === 'white' ? '#f5f5f5' : option.toLowerCase(),
-                                border: `3px solid ${selectedSpecs[key] === option ? "#25D366" : "#e2e8f0"}`,
-                                cursor: "pointer", 
-                                boxShadow: selectedSpecs[key] === option ? "0 0 0 4px rgba(37,211,102,0.3)" : "0 2px 8px rgba(0,0,0,0.1)",
-                                position: "relative"
-                              }}
-                            >
-                              {selectedSpecs[key] === option && (
-                                <i className="fas fa-check" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", color: option.toLowerCase() === 'white' ? "#1e293b" : "white", fontSize: 16, textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}></i>
-                              )}
-                            </div>
-                            <div style={{ fontSize: 12, textAlign: "center", marginTop: 6, fontWeight: 600, color: "#64748b" }}>{option}</div>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <button
-                          key={option}
-                          onClick={() => toggleSpec(key, option)}
-                          style={{ 
-                            padding: "14px 20px", 
-                            borderRadius: 50, 
-                            border: `2px solid ${selectedSpecs[key] === option ? "#25D366" : "#e2e8f0"}`,
-                            background: selectedSpecs[key] === option ? "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" : "white",
-                            color: selectedSpecs[key] === option ? "white" : "#1e293b",
-                            fontWeight: 600,
-                            fontSize: 15,
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            boxShadow: selectedSpecs[key] === option ? "0 4px 12px rgba(37,211,102,0.3)" : "none"
-                          }}
-                        >
-                          {selectedSpecs[key] === option && <i className="fas fa-check" style={{ fontSize: 12 }}></i>}
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-            {errors.specs && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please select all options</p>}
-          </div>
+          <Specifications
+            product={product}
+            selectedSpecs={selectedSpecs}
+            onToggleSpec={toggleSpec}
+            errors={errors}
+          />
         )}
 
         {/* Quantity Section */}
@@ -1413,21 +1237,11 @@ function OrderPageContent() {
         </div>
 
         {/* Order Summary */}
-        <div style={{ padding: 24, background: "linear-gradient(135deg, rgba(37,211,102,0.05) 0%, rgba(118,75,162,0.05) 100%)", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Order Summary</div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 15 }}>
-            <span style={{ color: "#64748b" }}>Subtotal</span>
-            <span style={{ fontWeight: 600 }}>{CURRENCY_SYMBOL}{(getBasePrice() * quantity).toLocaleString()}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 15 }}>
-            <span style={{ color: "#64748b" }}>Shipping</span>
-            <span style={{ fontWeight: 600 }}>{deliveryCost === 0 ? "FREE" : CURRENCY_SYMBOL + deliveryCost.toLocaleString()}</span>
-          </div>
-          <div style={{ borderTop: "2px solid #e2e8f0", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 20 }}>
-            <span>Total</span>
-            <span style={{ color: "#25D366", fontSize: 24 }}>{CURRENCY_SYMBOL}{total.toLocaleString()}</span>
-          </div>
-        </div>
+        <OrderSummary
+          basePrice={getBasePrice()}
+          quantity={quantity}
+          deliveryCost={deliveryCost}
+        />
 
         </div>{/* End Left Column */}
 
@@ -1435,263 +1249,41 @@ function OrderPageContent() {
         <div className="order-right-col">
 
         {/* Customer Details */}
-        <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: "#1e293b", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span>Delivery Details</span>
-            <span style={{ fontSize: 14, color: "#64748b", fontWeight: 500 }}>Where should we deliver?</span>
-          </div>
-          
-          <div style={{ marginBottom: 20 }} className="md3-input-outlined">
-            <input 
-              type="text" 
-              id="customerName"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder=" "
-              style={{ width: "100%", padding: 16, border: `2px solid ${errors.name ? "#ef4444" : "var(--md-sys-color-outline)"}`, borderRadius: 4, fontSize: 16, outline: "none", background: "transparent" }}
-            />
-            <label htmlFor="customerName">Full Name *</label>
-            {errors.name && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your full name</p>}
-          </div>
-
-          <div style={{ marginBottom: 20 }} className="md3-input-outlined">
-            <input 
-              type="tel" 
-              id="customerPhone"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder=" "
-              style={{ width: "100%", padding: 16, border: `2px solid ${errors.phone ? "#ef4444" : "var(--md-sys-color-outline)"}`, borderRadius: 4, fontSize: 16, outline: "none", background: "transparent" }}
-            />
-            <label htmlFor="customerPhone">WhatsApp Number *</label>
-            <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>We'll send order updates via WhatsApp</p>
-            {errors.phone && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please enter your phone number</p>}
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Select Pickup Location <span style={{ color: "#ef4444" }}>*</span></label>
-            
-            {/* County Selector */}
-            <select
-              value={selectedCounty}
-              onChange={(e) => {
-                setSelectedCounty(e.target.value);
-                setSelectedTown("");
-                setSelectedStation("");
-              }}
-              style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
-            >
-              <option value="">Select County</option>
-              {[...new Set(pickupStations.map(s => s.county))].map(county => (
-                <option key={county} value={county}>{county}</option>
-              ))}
-            </select>
-            
-            {/* Town Selector (only show if county selected) */}
-            {selectedCounty && (
-              <select
-                value={selectedTown}
-                onChange={(e) => {
-                  setSelectedTown(e.target.value);
-                  setSelectedStation("");
-                }}
-                style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white", marginBottom: 12 }}
-              >
-                <option value="">Select Town</option>
-                {[...new Set(pickupStations.filter(s => s.county === selectedCounty).map(s => s.town))].map(town => (
-                  <option key={town} value={town}>{town}</option>
-                ))}
-              </select>
-            )}
-            
-            {/* Station Selector (only show if town selected) */}
-            {selectedTown && (
-              <select
-                value={selectedStation}
-                onChange={(e) => setSelectedStation(e.target.value)}
-                style={{ width: "100%", padding: 16, border: `2px solid ${errors.address ? "#ef4444" : "#e2e8f0"}`, borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
-              >
-                <option value="">Select Pickup Station</option>
-                {pickupStations.filter(s => s.county === selectedCounty && s.town === selectedTown).map(station => (
-                  <option key={station.id} value={station.id}>
-                    {station.stationName} - {station.address}
-                  </option>
-                ))}
-              </select>
-            )}
-            
-            {/* Show station details when selected */}
-            {selectedStation && (() => {
-              const station = pickupStations.find(s => s.id === selectedStation);
-              return station ? (
-                <div style={{ marginTop: 12, padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #86efac" }}>
-                  <p style={{ fontSize: 14, color: "#166534", margin: "4px 0" }}>
-                    <i className="fas fa-map-marker-alt"></i> {station.address}
-                  </p>
-                  {station.contactPhone && (
-                    <p style={{ fontSize: 14, color: "#166534", margin: "4px 0" }}>
-                      <i className="fas fa-phone"></i> {station.contactPhone}
-                    </p>
-                  )}
-                  {station.operatingHours && (
-                    <p style={{ fontSize: 14, color: "#166534", margin: "4px 0" }}>
-                      <i className="fas fa-clock"></i> {station.operatingHours}
-                    </p>
-                  )}
-                  {station.description && (
-                    <p style={{ fontSize: 13, color: "#166534", margin: "4px 0", fontStyle: "italic" }}>
-                      {station.description}
-                    </p>
-                  )}
-                </div>
-              ) : null;
-            })()}
-            
-            {errors.address && <p style={{ color: "#ef4444", fontSize: 14, marginTop: 8 }}><i className="fas fa-exclamation-circle"></i> Please select a pickup location</p>}
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>Email (Optional)</label>
-            <input 
-              type="email" 
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-              placeholder="john@example.com"
-              style={{ width: "100%", padding: 16, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 16, outline: "none", background: "white" }}
-            />
-          </div>
-        </div>
+        <CustomerDetails
+          customerName={customerName}
+          setCustomerName={setCustomerName}
+          customerPhone={customerPhone}
+          setCustomerPhone={setCustomerPhone}
+          customerEmail={customerEmail}
+          setCustomerEmail={setCustomerEmail}
+          selectedCounty={selectedCounty}
+          setSelectedCounty={setSelectedCounty}
+          selectedTown={selectedTown}
+          setSelectedTown={setSelectedTown}
+          selectedStation={selectedStation}
+          setSelectedStation={setSelectedStation}
+          pickupStations={pickupStations}
+          errors={errors}
+        />
 
         {/* Delivery Options */}
-        <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Delivery Method</div>
-          
-          {(businessSettings?.shippingMethods?.length ? businessSettings?.shippingMethods : [
-            { id: "standard", name: "Standard Delivery", price: 500, estimatedDays: "2-3 days" },
-            { id: "express", name: "Express Delivery", price: 1000, estimatedDays: "Same day" },
-            { id: "pickup", name: "Store Pickup", price: 0, estimatedDays: "Same day" }
-          ]).map((option) => (
-            <div 
-              key={option.id}
-              onClick={() => { setDeliveryMethod(option.id); setDeliveryCost(option.price); }}
-              style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 16, 
-                padding: 16, 
-                border: `2px solid ${deliveryMethod === option.id ? "#25D366" : "#e2e8f0"}`,
-                borderRadius: 12, 
-                cursor: "pointer", 
-                marginBottom: 12,
-                background: deliveryMethod === option.id ? "rgba(37,211,102,0.05)" : "white"
-              }}
-            >
-              <div style={{ width: 24, height: 24, border: `2px solid ${deliveryMethod === option.id ? "#25D366" : "#e2e8f0"}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: deliveryMethod === option.id ? "#25D366" : "white" }}>
-                {deliveryMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
-              </div>
-              <div style={{ width: 48, height: 48, background: "#f8fafc", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "#25D366" }}>
-                <i className={`fas ${
-                  option.name.toLowerCase().includes('pickup') ? "fa-store" :
-                  option.name.toLowerCase().includes('express') ? "fa-shipping-fast" : "fa-truck"
-                }`}></i>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
-                <div style={{ fontSize: 14, color: "#64748b" }}>
-                  {option.estimatedDays || (
-                    option.name.toLowerCase().includes('pickup') ? "Available today after 2PM" :
-                    option.name.toLowerCase().includes('express') ? "1-2 business days" : "3-5 business days"
-                  )}
-                </div>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 18, color: option.price === 0 ? "#10b981" : "#25D366" }}>
-                {option.price === 0 ? "FREE" : CURRENCY_SYMBOL + option.price.toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
+        <DeliveryOptions
+          shippingMethods={businessSettings?.shippingMethods || []}
+          deliveryMethod={deliveryMethod}
+          setDeliveryMethod={setDeliveryMethod}
+          setDeliveryCost={setDeliveryCost}
+        />
 
         {/* Payment Methods */}
-        <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: "#1e293b" }}>Payment Method</div>
-          
-          {/* Show loading state if payment methods haven't loaded yet */}
-          {!businessSettings?.paymentMethods ? (
-            <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>
-              <i className="fas fa-circle-notch fa-spin" style={{ fontSize: 24, marginBottom: 8 }}></i>
-              <div>Loading payment methods...</div>
-            </div>
-          ) : businessSettings.paymentMethods.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>
-              <i className="fas fa-info-circle" style={{ fontSize: 24, marginBottom: 8, color: "#f59e0b" }}></i>
-              <div>No payment methods configured</div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>Please contact the seller</div>
-            </div>
-          ) : (
-            // Render payment methods from Firestore
-            businessSettings.paymentMethods.map((option: { id: string; name: string; details: string; icon: string; color: string }) => (
-              <div 
-                key={option.id}
-                onClick={() => setPaymentMethod(option.id)}
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  gap: 16, 
-                  padding: 16, 
-                  border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`,
-                  borderRadius: 12, 
-                  cursor: "pointer", 
-                  marginBottom: 12,
-                  background: paymentMethod === option.id ? "rgba(37,211,102,0.05)" : "white"
-                }}
-              >
-                <div style={{ width: 24, height: 24, border: `2px solid ${paymentMethod === option.id ? "#25D366" : "#e2e8f0"}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: paymentMethod === option.id ? "#25D366" : "white" }}>
-                  {paymentMethod === option.id && <div style={{ width: 8, height: 8, background: "white", borderRadius: "50%" }}></div>}
-                </div>
-                <div style={{ width: 48, height: 48, background: option.color || "#64748b", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "white" }}>
-                  <i className={`fas ${option.icon || "fa-money-bill-wave"}`}></i>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{option.name}</div>
-                  <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap" }}>{option.details}</div>
-                </div>
-              </div>
-            ))
-          )}
-
-          {/* Payment Details & Message */}
-          {paymentMethod !== "cod" && businessSettings?.paymentMethods && (
-            <div style={{ marginTop: 16, padding: 16, background: "#f8fafc", borderRadius: 12, border: "2px solid #e2e8f0" }}>
-              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12, color: "#1e293b" }}>
-                {(() => {
-                  const isMpesa = paymentMethod.startsWith("mpesa");
-                  const isBank = paymentMethod === "bank";
-                  return isMpesa ? "M-Pesa Payment Instructions" : isBank ? "Bank Transfer Details" : "Payment Instructions";
-                })()}
-              </div>
-              <div style={{ fontSize: 14, color: "#64748b", whiteSpace: "pre-wrap", marginBottom: 16 }}>
-                {businessSettings.paymentMethods.find((p: { id: string; name: string; details: string }) => p.id === paymentMethod)?.details || "Payment instructions not available"}
-              </div>
-              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e293b" }}>
-                Enter Payment Details <span style={{ color: "#ef4444" }}>*</span>
-              </div>
-              <input
-                type="text"
-                placeholder={paymentMethod === "mpesa" ? "Enter M-Pesa transaction ID" : paymentMethod === "bank" ? "Enter transaction/reference number" : "Enter payment reference"}
-                value={paymentDetails}
-                onChange={(e) => setPaymentDetails(e.target.value)}
-                style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, marginBottom: 12 }}
-              />
-              <textarea
-                placeholder="Add a message about your payment (optional)"
-                value={paymentNotes}
-                onChange={(e) => setPaymentNotes(e.target.value)}
-                rows={2}
-                style={{ width: "100%", padding: 12, border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 14, resize: "none" }}
-              />
-            </div>
-          )}
-        </div>
+        <PaymentMethods
+          paymentMethods={businessSettings?.paymentMethods || []}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          paymentDetails={paymentDetails}
+          setPaymentDetails={setPaymentDetails}
+          paymentNotes={paymentNotes}
+          setPaymentNotes={setPaymentNotes}
+        />
 
         {/* Order Notes */}
         <div style={{ padding: 24, borderBottom: "1px solid #e2e8f0" }}>
@@ -1724,69 +1316,14 @@ function OrderPageContent() {
         </div>{/* End Desktop Grid */}
 
         {/* Footer Actions */}
-        <div className="order-footer" style={{ padding: 24, background: "white", borderTop: "1px solid #e2e8f0", position: "sticky", bottom: 0, boxShadow: "0 -4px 20px rgba(0,0,0,0.1)" }}>
-          <button 
-            onClick={contactSeller}
-            style={{ padding: 18, background: "white", color: "#1e293b", border: "2px solid #e2e8f0", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
-          >
-            <i className="fab fa-whatsapp"></i>
-            Ask Seller
-          </button>
-          <button 
-            onClick={addToCart}
-            style={{ 
-              padding: 18, 
-              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-              color: "white", 
-              border: "none", 
-              borderRadius: 12, 
-              fontSize: 16, 
-              fontWeight: 700, 
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              boxShadow: "0 4px 12px rgba(59,130,246,0.3)",
-              flex: 1
-            }}
-          >
-            <i className="fas fa-cart-plus"></i>
-            Add to Cart
-          </button>
-          <button 
-            onClick={handleOrder}
-            disabled={ordering || currentStock === 0}
-            style={{ 
-              padding: 18, 
-              background: ordering || currentStock === 0 ? "#94a3b8" : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-              color: "white", 
-              border: "none", 
-              borderRadius: 12, 
-              fontSize: 18, 
-              fontWeight: 700, 
-              cursor: ordering || currentStock === 0 ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              boxShadow: "0 4px 12px rgba(37,211,102,0.3)",
-              flex: 2
-            }}
-          >
-            {ordering ? (
-              <>
-                <div style={{ width: 20, height: 20, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
-                Processing...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-lock"></i>
-                Place Order - {CURRENCY_SYMBOL}{total.toLocaleString()}
-              </>
-            )}
-          </button>
-        </div>
+        <FooterActions
+          ordering={ordering}
+          currentStock={currentStock}
+          total={total}
+          onContactSeller={contactSeller}
+          onAddToCart={addToCart}
+          onPlaceOrder={handleOrder}
+        />
 
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }

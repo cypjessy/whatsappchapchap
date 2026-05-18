@@ -1,0 +1,139 @@
+/* Footer Actions Component Styles */
+
+/* Safe Area Support for Mobile Devices */
+.h-safe-area-inset-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* Spin Animation */
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Footer Container */
+.footer-actions-container {
+  padding: 24px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Action Buttons Base Styles */
+.action-button {
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+/* Contact Seller Button */
+.contact-seller-button {
+  background: white;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
+  flex: 1;
+}
+
+.contact-seller-button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Add to Cart Button */
+.add-to-cart-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  flex: 1;
+}
+
+.add-to-cart-button:hover {
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.add-to-cart-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Place Order Button */
+.place-order-button {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+  flex: 2;
+}
+
+.place-order-button:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+  transform: translateY(-1px);
+}
+
+.place-order-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Disabled State */
+.place-order-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .footer-actions-container {
+    flex-direction: row;
+    gap: 16px;
+  }
+}
+
+/* Mobile Safe Area Padding */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .footer-actions-container {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Icon Styles */
+.action-button i {
+  font-size: inherit;
+}
+
+/* Button Text */
+.button-text {
+  white-space: nowrap;
+}
