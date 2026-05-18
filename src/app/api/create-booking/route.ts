@@ -16,7 +16,9 @@ export async function POST(request: NextRequest) {
       selectedLocation,
       selectedPackage,
       packagePrice,
-      notes
+      notes,
+      paymentMethod,
+      paymentDetails
     } = body;
 
     // Validate required fields
@@ -89,7 +91,8 @@ export async function POST(request: NextRequest) {
       notes: notes || '',
       deposit: 0,
       balance: packagePrice || 0,
-      paymentMethod: 'cash',
+      paymentMethod: paymentMethod || 'cash',
+      paymentDetails: paymentDetails || undefined,
       paymentStatus: 'unpaid',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

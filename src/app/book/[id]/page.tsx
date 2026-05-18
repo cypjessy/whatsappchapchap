@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Service } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
@@ -25,8 +25,14 @@ export default function BookingPage() {
   const [providerName, setProviderName] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingNumber, setBookingNumber] = useState("");
+  
+  // Payment method state
+  const [paymentMethods, setPaymentMethods] = useState<Array<{ id: string; name: string; details: string; icon: string; color: string }>>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState("");
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
 
-  // Load service data
+  // Load service data and payment methods
   useEffect(() => {
     if (serviceId) {
       loadService();
@@ -50,6 +56,11 @@ export default function BookingPage() {
           const firstPackage = Object.keys(serviceData.packagePrices)[0];
           setSelectedPackage(firstPackage);
         }
+        
+        // Fetch payment methods from business profile
+        if (serviceData.tenantId) {
+          await loadPaymentMethods(serviceData.tenantId);
+        }
       } else {
         console.error("Service not found:", serviceId);
         alert("Service not found");
@@ -60,6 +71,99 @@ export default function BookingPage() {
       alert("Failed to load service");
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const loadPaymentMethods = async (tenantId: string) => {
+    try {
+      setLoadingPaymentMethods(true);
+      
+      // Fetch business profile for payment methods
+      const profileQuery = query(collection(db, "businessProfiles"), where("tenantId", "==", tenantId));
+      const profileSnap = await getDocs(profileQuery);
+      const profileData = !profileSnap.empty ? profileSnap.docs[0].data() : null;
+      
+      console.log('🔍 Booking - Profile data found:', !!profileData);
+      console.log('💳 Booking - Payment methods from profile:', profileData?.paymentMethods);
+      
+      // Build payment methods array from business profile
+      const paymentMethodsArray: Array<{ id: string; name: string; details: string; icon: string; color: string }> = [];
+      const pm = profileData?.paymentMethods;
+      
+      if (pm?.mpesa?.enabled) {
+        // Each M-Pesa subtype becomes its own payment card
+        if (pm.mpesa.buyGoods?.tillNumber) {
+          paymentMethodsArray.push({
+            id: "mpesa-buygoods",
+            name: "M-Pesa Buy Goods",
+            details: `Till Number: ${pm.mpesa.buyGoods.tillNumber}${pm.mpesa.buyGoods.businessName ? ` (${pm.mpesa.buyGoods.businessName})` : ''}`,
+            icon: "fa-store",
+            color: "#00A650"
+          });
+        }
+        
+        if (pm.mpesa.paybill?.paybillNumber) {
+          paymentMethodsArray.push({
+            id: "mpesa-paybill",
+            name: "M-Pesa Paybill",
+            details: `Paybill: ${pm.mpesa.paybill.paybillNumber}${pm.mpesa.paybill.accountNumber ? ` (Acc: ${pm.mpesa.paybill.accountNumber})` : ''}${pm.mpesa.paybill.businessName ? ` (${pm.mpesa.paybill.businessName})` : ''}`,
+            icon: "fa-building",
+            color: "#059669"
+          });
+        }
+        
+        if (pm.mpesa.personal?.phoneNumber) {
+          paymentMethodsArray.push({
+            id: "mpesa-personal",
+            name: "M-Pesa Send Money",
+            details: `Phone: ${pm.mpesa.personal.phoneNumber}${pm.mpesa.personal.accountName ? ` (${pm.mpesa.personal.accountName})` : ''}`,
+            icon: "fa-user",
+            color: "#10b981"
+          });
+        }
+      }
+      
+      if (pm?.bank?.enabled) {
+        paymentMethodsArray.push({
+          id: "bank",
+          name: "Bank Transfer",
+          details: `${pm.bank.bankName || ''}\nAccount: ${pm.bank.accountNumber || ''}${pm.bank.branch ? `\nBranch: ${pm.bank.branch}` : ''}`,
+          icon: "fa-university",
+          color: "#64748b"
+        });
+      }
+      
+      if (pm?.card?.enabled) {
+        paymentMethodsArray.push({
+          id: "card",
+          name: "Card Payment",
+          details: pm.card.description || "Pay with credit/debit card",
+          icon: "fa-credit-card",
+          color: "#3b82f6"
+        });
+      }
+      
+      if (pm?.cash?.enabled) {
+        paymentMethodsArray.push({
+          id: "cash",
+          name: "Cash on Delivery",
+          details: pm.cash.description || "Pay with cash upon delivery",
+          icon: "fa-money-bill-wave",
+          color: "#10b981"
+        });
+      }
+      
+      console.log('✅ Booking - Payment methods loaded:', paymentMethodsArray.length);
+      setPaymentMethods(paymentMethodsArray);
+      
+      // Auto-select first payment method if available
+      if (paymentMethodsArray.length > 0) {
+        setSelectedPaymentMethod(paymentMethodsArray[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading payment methods:', error);
+    } finally {
+      setLoadingPaymentMethods(false);
     }
   };
 
@@ -126,7 +230,9 @@ export default function BookingPage() {
           selectedLocation: selectedLocation || "Not specified",
           selectedPackage,
           packagePrice: finalPrice,
-          notes: customerNotes
+          notes: customerNotes,
+          paymentMethod: selectedPaymentMethod || "cash",
+          paymentDetails: paymentDetails || undefined,
         })
       });
 
@@ -565,6 +671,90 @@ export default function BookingPage() {
             </div>
           </div>
         </form>
+
+        {/* Payment Methods */}
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-[#e2e8f0]">
+          <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
+            <i className="fas fa-credit-card text-[#8b5cf6]"></i>
+            Payment Method
+          </h2>
+          
+          {loadingPaymentMethods ? (
+            <div className="text-center py-6">
+              <i className="fas fa-circle-notch fa-spin text-2xl text-[#8b5cf6] mb-2"></i>
+              <p className="text-sm text-[#64748b]">Loading payment methods...</p>
+            </div>
+          ) : paymentMethods.length === 0 ? (
+            <div className="text-center py-6">
+              <i className="fas fa-info-circle text-2xl text-yellow-500 mb-2"></i>
+              <p className="text-sm text-[#64748b]">No payment methods configured</p>
+              <p className="text-xs text-[#94a3b8] mt-1">Cash payment will be used</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {paymentMethods.map((option) => (
+                <div
+                  key={option.id}
+                  onClick={() => setSelectedPaymentMethod(option.id)}
+                  className={`flex items-center gap-3 p-3 md:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    selectedPaymentMethod === option.id
+                      ? "border-[#8b5cf6] bg-[#ede9fe]"
+                      : "border-[#e2e8f0] hover:border-[#8b5cf6]"
+                  }`}
+                >
+                  {/* Radio Button */}
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    selectedPaymentMethod === option.id ? "border-[#8b5cf6] bg-[#8b5cf6]" : "border-[#e2e8f0] bg-white"
+                  }`}>
+                    {selectedPaymentMethod === option.id && (
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    )}
+                  </div>
+                  
+                  {/* Icon */}
+                  <div 
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: option.color }}
+                  >
+                    <i className={`fas ${option.icon} text-white text-lg`}></i>
+                  </div>
+                  
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm md:text-base text-[#1e293b]">{option.name}</div>
+                    <div className="text-xs md:text-sm text-[#64748b] whitespace-pre-wrap">{option.details}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Payment Details Input for non-cash methods */}
+          {selectedPaymentMethod && selectedPaymentMethod !== "cash" && paymentMethods.length > 0 && (
+            <div className="mt-4 p-3 md:p-4 bg-gray-50 rounded-xl border-2 border-[#e2e8f0]">
+              <div className="text-sm font-semibold text-[#1e293b] mb-2">
+                Enter Payment Details
+              </div>
+              <input
+                type="text"
+                placeholder={
+                  selectedPaymentMethod.includes("mpesa") 
+                    ? "Enter M-Pesa transaction ID" 
+                    : selectedPaymentMethod === "bank" 
+                    ? "Enter transaction/reference number" 
+                    : "Enter payment reference"
+                }
+                value={paymentDetails}
+                onChange={(e) => setPaymentDetails(e.target.value)}
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
+              />
+              <p className="text-xs text-[#64748b] mt-2">
+                <i className="fas fa-info-circle mr-1"></i>
+                Please provide your payment confirmation details
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Submit Button */}
         <button
