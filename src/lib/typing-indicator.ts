@@ -28,7 +28,7 @@ export async function sendTypingIndicator(
       return;
     }
 
-    const typingAction = action === "composing" ? "composing" : "paused";
+    const typingAction = action;
 
     await fetch(`${evolutionApiUrl}/chat/sendPresence/${tenantId}`, {
       method: "POST",
