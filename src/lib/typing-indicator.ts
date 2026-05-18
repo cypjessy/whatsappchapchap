@@ -30,7 +30,7 @@ export async function sendTypingIndicator(
 
     const typingAction = action === "composing" ? "composing" : "paused";
 
-    await fetch(`${evolutionApiUrl}/chat/updatePresence/${tenantId}`, {
+    await fetch(`${evolutionApiUrl}/chat/sendPresence/${tenantId}`, {
       method: "POST",
       headers: {
         apikey: evolutionApiKey,
@@ -38,7 +38,10 @@ export async function sendTypingIndicator(
       },
       body: JSON.stringify({
         number: phoneNumber,
-        presence: typingAction,
+        options: {
+          presence: typingAction,
+          delay: 1000,
+        },
       }),
     });
     
