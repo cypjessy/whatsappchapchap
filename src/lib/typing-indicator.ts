@@ -28,8 +28,6 @@ export async function sendTypingIndicator(
       return;
     }
 
-    const typingAction = action;
-
     await fetch(`${evolutionApiUrl}/chat/sendPresence/${tenantId}`, {
       method: "POST",
       headers: {
@@ -39,13 +37,13 @@ export async function sendTypingIndicator(
       body: JSON.stringify({
         number: phoneNumber,
         options: {
-          presence: typingAction,
+          presence: action,
           delay: 1000,
         },
       }),
     });
     
-    console.log(`[TypingIndicator] Sent: ${typingAction} to ${phoneNumber}`);
+    console.log(`[TypingIndicator] Sent: ${action} to ${phoneNumber}`);
   } catch (error) {
     console.error(`[TypingIndicator] Error:`, error);
   }
