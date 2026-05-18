@@ -4,6 +4,11 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { generateAIResponse, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { 
+  startTypingIndicator,
+  stopTypingIndicator,
+  sendTypingIndicator
+} from "@/lib/typing-indicator";
+import { 
   startOrderStatusFlow, 
   handleOrderStatusLookup,
   handleOrderStatusSelection,
@@ -40,9 +45,6 @@ let adminApp: App | null = null;
 
 const DEBUG = process.env.DEBUG_MODE === 'true';
 const FLOW_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-
-// Track active typing indicator intervals to prevent memory leaks
-const activeTypingIntervals = new Map<string, NodeJS.Timeout>();
 
 function debugLog(...args: any[]) {
   if (DEBUG) {
@@ -185,74 +187,6 @@ function isFuzzyMatch(str: string, searchTerm: string, maxDistance: number = 2):
   }
   
   return false;
-}
-
-/**
- * Send typing indicator to show "..." in WhatsApp
- */
-async function sendTypingIndicator(
-  tenantId: string,
-  phoneNumber: string,
-  action: "composing" | "paused" | "recording" = "composing"
-): Promise<void> {
-  try {
-    const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
-    const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
-
-    if (!evolutionApiUrl || !evolutionApiKey) {
-      return;
-    }
-
-    const typingAction = action === "composing" ? "composing" : "paused";
-
-    await fetch(`${evolutionApiUrl}/chat/updatePresence/${tenantId}`, {
-      method: "POST",
-      headers: {
-        apikey: evolutionApiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        number: phoneNumber,
-        presence: typingAction,
-      }),
-    });
-    
-    debugLog(`[Webhook] Typing indicator sent: ${typingAction}`);
-  } catch (error) {
-    debugLog(`[Webhook] Typing indicator error:`, error);
-  }
-}
-
-/**
- * Start continuous typing indicator that refreshes every 4 seconds
- */
-async function startTypingIndicator(tenantId: string, phone: string): Promise<void> {
-  const existingInterval = activeTypingIntervals.get(phone);
-  if (existingInterval) {
-    clearInterval(existingInterval);
-  }
-  
-  await sendTypingIndicator(tenantId, phone, "composing");
-  
-  const interval = setInterval(async () => {
-    await sendTypingIndicator(tenantId, phone, "composing");
-  }, 4000);
-  
-  activeTypingIntervals.set(phone, interval);
-  debugLog(`[Webhook] Started typing indicator for ${phone}`);
-}
-
-/**
- * Stop typing indicator and clean up interval
- */
-async function stopTypingIndicator(tenantId: string, phone: string): Promise<void> {
-  const interval = activeTypingIntervals.get(phone);
-  if (interval) {
-    clearInterval(interval);
-    activeTypingIntervals.delete(phone);
-  }
-  await sendTypingIndicator(tenantId, phone, "paused");
-  debugLog(`[Webhook] Stopped typing indicator for ${phone}`);
 }
 
 async function getBusinessContext(tenantId: string): Promise<AIContext> {
