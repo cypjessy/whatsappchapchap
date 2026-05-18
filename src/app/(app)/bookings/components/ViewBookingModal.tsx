@@ -184,11 +184,11 @@ function ActionButton({
   loading?: boolean;
 }) {
   const variants = {
-    default: "bg-white text-[#64748B] border border-[#E2E8F0] hover:border-[#8B5CF6] hover:text-[#8B5CF6]",
-    danger: "bg-[#EF4444] text-white hover:bg-[#DC2626] shadow-md shadow-[#EF4444]/20",
-    success: "bg-[#10B981] text-white hover:bg-[#059669] shadow-md shadow-[#10B981]/20",
-    whatsapp: "bg-[#25D366] text-white hover:bg-[#128C7E] shadow-md shadow-[#25D366]/20",
-    primary: "bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-md shadow-[#8B5CF6]/20",
+    default: "bg-[var(--md-sys-color-surface-variant,white)] text-[var(--md-sys-color-on-surface-variant,#64748B)] border border-[var(--md-sys-color-outline,#E2E8F0)] hover:bg-[var(--md-sys-color-surface-variant-hover,#F1F5F9)]",
+    danger: "bg-[var(--md-sys-color-error,#EF4444)] text-[var(--md-sys-color-on-error,white)] hover:bg-[var(--md-sys-color-error-hover,#DC2626)] shadow-sm",
+    success: "bg-[var(--md-sys-color-tertiary,#10B981)] text-[var(--md-sys-color-on-tertiary,white)] hover:bg-[var(--md-sys-color-tertiary-hover,#059669)] shadow-sm",
+    whatsapp: "bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm",
+    primary: "bg-[var(--md-sys-color-primary,#8B5CF6)] text-[var(--md-sys-color-on-primary,white)] hover:bg-[var(--md-sys-color-primary-hover,#7C3AED)] shadow-sm",
   };
 
   return (
@@ -196,18 +196,18 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm
-        transition-all duration-200 active:scale-95
+        flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium text-sm md:text-base
+        transition-all duration-200 active:scale-95 w-full
         ${variants[variant]}
         ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}
       `}
     >
       {loading ? (
-        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
       ) : (
-        <i className={`fas ${icon} text-xs`} />
+        <i className={`fas ${icon} text-sm`} />
       )}
-      <span className="hidden sm:inline">{label}</span>
+      <span>{label}</span>
     </button>
   );
 }
@@ -346,70 +346,71 @@ export default function ViewBookingModal({
         <div
           ref={modalRef}
           className={`
-            relative bg-white w-full max-w-[640px] max-h-[92vh] sm:max-h-[85vh]
-            rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col
-            transition-all duration-500 ease-out
+            relative w-full max-w-[640px] max-h-[92vh] sm:max-h-[85vh]
+            rounded-t-[28px] sm:rounded-[28px] shadow-lg overflow-hidden flex flex-col
+            transition-all duration-300 ease-out
             ${isVisible ? "opacity-100 translate-y-0 sm:scale-100" : "opacity-0 translate-y-8 sm:scale-95"}
+            bg-[var(--md-sys-color-surface,white)]
           `}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Mobile drag handle - MD3 styling */}
-          <div className="flex justify-center pt-3 pb-1 sm:hidden">
-            <div className="w-10 h-1 bg-[#E2E8F0] rounded-full" />
+          <div className="flex justify-center pt-3 pb-2 sm:hidden">
+            <div className="w-10 h-1 bg-[var(--md-sys-color-outline-variant,#E2E8F0)] rounded-full" />
           </div>
 
           {/* Header - MD3 styling */}
-          <div className="shrink-0 px-5 md:px-6 py-4 border-b border-[#E2E8F0]">
+          <div className="shrink-0 px-5 md:px-6 py-4 border-b border-[var(--md-sys-color-outline-variant,#E2E8F0)]">
             <div className="flex justify-between items-start gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`
-                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide border
-                    ${config.bg} ${config.text} ${config.border}
+                    inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium uppercase tracking-wide
+                    ${config.bg} ${config.text}
                   `}>
                     <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
-                    <i className={`fas ${config.icon} text-[8px]`} />
+                    <i className={`fas ${config.icon} text-[9px]`} />
                     {booking.status}
                   </span>
                   {booking.verified && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-[#D1FAE5] text-[#059669] border border-[#059669]/20">
-                      <i className="fas fa-badge-check text-[8px]" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#D1FAE5] text-[#059669]">
+                      <i className="fas fa-badge-check text-[9px]" />
                       Verified
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg md:text-xl font-bold text-[#1E293B] leading-tight truncate">
+                <h2 className="text-xl md:text-2xl font-normal text-[var(--md-sys-color-on-surface,#1E293B)] leading-tight truncate">
                   {booking.service || 'N/A'}
                 </h2>
-                <p className="text-xs md:text-sm text-[#64748B] flex items-center gap-2 mt-1 flex-wrap">
-                  <i className="fas fa-calendar-alt text-[10px]" />
+                <p className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748B)] flex items-center gap-2 mt-1.5 flex-wrap">
+                  <i className="fas fa-calendar-alt text-xs opacity-70" />
                   {formatDate(booking.date)}
-                  <span className="text-[#E2E8F0]">•</span>
-                  <i className="fas fa-clock text-[10px]" />
+                  <span className="text-[var(--md-sys-color-outline,#E2E8F0)]">•</span>
+                  <i className="fas fa-clock text-xs opacity-70" />
                   {booking.time}
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Mobile actions menu toggle - MD3 styling */}
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Mobile actions menu toggle - MD3 icon button */}
                 <button
                   onClick={() => setShowActionsMenu(!showActionsMenu)}
-                  className="sm:hidden w-9 h-9 rounded-xl bg-white text-[#64748B] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white transition-all"
+                  className="sm:hidden w-11 h-11 rounded-full bg-transparent text-[var(--md-sys-color-on-surface-variant,#64748B)] flex items-center justify-center hover:bg-[var(--md-sys-color-surface-variant,#F1F5F9)] active:bg-[var(--md-sys-color-surface-variant,#F1F5F9)] transition-all"
                 >
-                  <i className="fas fa-ellipsis-v text-sm" />
+                  <i className="fas fa-ellipsis-v text-base" />
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="w-9 h-9 rounded-xl bg-white text-[#64748B] flex items-center justify-center hover:bg-[#EF4444] hover:text-white transition-all active:scale-95"
+                  className="w-11 h-11 rounded-full bg-transparent text-[var(--md-sys-color-on-surface-variant,#64748B)] flex items-center justify-center hover:bg-[var(--md-sys-color-error-container,#FEE2E2)] hover:text-[var(--md-sys-color-error,#EF4444)] active:bg-[var(--md-sys-color-error-container,#FEE2E2)] transition-all"
                   title="Delete"
                 >
-                  <i className="fas fa-trash-alt text-sm" />
+                  <i className="fas fa-trash-alt text-base" />
                 </button>
                 <button
                   onClick={onClose}
-                  className="w-9 h-9 rounded-xl bg-white text-[#64748B] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white transition-all active:scale-95"
+                  className="w-11 h-11 rounded-full bg-transparent text-[var(--md-sys-color-on-surface-variant,#64748B)] flex items-center justify-center hover:bg-[var(--md-sys-color-surface-variant,#F1F5F9)] active:bg-[var(--md-sys-color-surface-variant,#F1F5F9)] transition-all"
                 >
-                  <i className="fas fa-times text-sm" />
+                  <i className="fas fa-times text-base" />
                 </button>
               </div>
             </div>
@@ -417,29 +418,29 @@ export default function ViewBookingModal({
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto px-5 md:px-6 py-4 md:py-5 space-y-5 md:space-y-6">
-            {/* Client Card - MD3 styling */}
-            <div className="bg-gradient-to-br from-[#F3E8FF] to-[#F8FAFC] rounded-2xl p-4 md:p-5 border border-[#8B5CF6]/10">
+            {/* Client Card - MD3 elevated card */}
+            <div className="bg-gradient-to-br from-[var(--md-sys-color-primary-container,#F3E8FF)] to-[var(--md-sys-color-surface,#F8FAFC)] rounded-[16px] p-4 md:p-5 border border-[var(--md-sys-color-outline-variant,#E2E8F0)] shadow-sm">
               <div className="flex items-center gap-3 md:gap-4 mb-4">
-                {/* Avatar - MD3 shape system */}
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white flex items-center justify-center font-bold text-xl md:text-2xl shrink-0 relative shadow-md shadow-[#8B5CF6]/20">
+                {/* Avatar - MD3 large avatar */}
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[16px] bg-gradient-to-br from-[var(--md-sys-color-primary,#8B5CF6)] to-[var(--md-sys-color-on-primary,#7C3AED)] text-[var(--md-sys-color-on-primary,white)] flex items-center justify-center font-medium text-2xl md:text-3xl shrink-0 relative shadow-md">
                   {safeFirstLetter}
                   {booking.verified && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#10B981] text-white rounded-full flex items-center justify-center text-[9px] border-2 border-white shadow-sm">
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--md-sys-color-tertiary,#10B981)] text-white rounded-full flex items-center justify-center text-xs border-2 border-white">
                       <i className="fas fa-check" />
                     </div>
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="font-bold text-base md:text-lg text-[#1E293B] truncate">
+                  <div className="font-medium text-lg md:text-xl text-[var(--md-sys-color-on-surface,#1E293B)] truncate">
                     {booking.client}
                   </div>
-                  <div className="text-xs md:text-sm text-[#64748B] flex items-center gap-1.5">
-                    <i className="fab fa-whatsapp text-[#25D366] text-xs" />
+                  <div className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748B)] flex items-center gap-2">
+                    <i className="fab fa-whatsapp text-[#25D366] text-sm" />
                     <span className="truncate">{booking.phone}</span>
                   </div>
                   {booking.email && (
-                    <div className="text-xs text-[#64748B] flex items-center gap-1.5 mt-0.5">
-                      <i className="fas fa-envelope text-[#8B5CF6] text-[10px]" />
+                    <div className="text-sm text-[var(--md-sys-color-on-surface-variant,#64748B)] flex items-center gap-2 mt-0.5">
+                      <i className="fas fa-envelope text-[var(--md-sys-color-primary,#8B5CF6)] text-xs" />
                       <span className="truncate">{booking.email}</span>
                     </div>
                   )}
@@ -451,16 +452,16 @@ export default function ViewBookingModal({
                   href={`https://wa.me/${booking.phone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/80 text-[#25D366] rounded-xl font-bold text-xs md:text-sm hover:bg-[#25D366] hover:text-white transition-all active:scale-95 border border-white/50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--md-sys-color-secondary-container,#DCFCE7)] text-[var(--md-sys-color-on-secondary-container,#059669)] rounded-full font-medium text-sm md:text-base hover:bg-[var(--md-sys-color-secondary,#10B981)] hover:text-white transition-all active:scale-95 border-none"
                 >
-                  <i className="fab fa-whatsapp text-sm" />
+                  <i className="fab fa-whatsapp text-base" />
                   WhatsApp
                 </a>
                 <a
                   href={`tel:${booking.phone}`}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/80 text-[#475569] rounded-xl font-bold text-xs md:text-sm hover:bg-[#8b5cf6] hover:text-white transition-all active:scale-95 border border-white/50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--md-sys-color-surface-variant,#F1F5F9)] text-[var(--md-sys-color-on-surface-variant,#475569)] rounded-full font-medium text-sm md:text-base hover:bg-[var(--md-sys-color-primary,#8b5cf6)] hover:text-white transition-all active:scale-95 border-none"
                 >
-                  <i className="fas fa-phone text-xs" />
+                  <i className="fas fa-phone text-sm" />
                   Call
                 </a>
               </div>
@@ -468,85 +469,85 @@ export default function ViewBookingModal({
 
             {/* Details Grid */}
             <div>
-              <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-3 flex items-center gap-2">
+              <h3 className="text-xs md:text-sm font-medium text-[var(--md-sys-color-on-surface-variant,#94a3b8)] mb-3 flex items-center gap-2">
                 <i className="fas fa-info-circle" />
                 Booking Details
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-                <DetailCard icon="fa-calendar" iconBg="bg-[#ede9fe]" iconColor="text-[#8b5cf6]" label="Date" value={formatDate(booking.date)} />
-                <DetailCard icon="fa-clock" iconBg="bg-[#d1fae5]" iconColor="text-[#10b981]" label="Time" value={booking.time} subValue={booking.duration} />
-                <DetailCard icon="fa-map-marker-alt" iconBg="bg-[#ffedd5]" iconColor="text-[#f97316]" label="Location" value={booking.location} />
+                <DetailCard icon="fa-calendar" iconBg="bg-[var(--md-sys-color-primary-container,#ede9fe)]" iconColor="text-[var(--md-sys-color-on-primary-container,#8b5cf6)]" label="Date" value={formatDate(booking.date)} />
+                <DetailCard icon="fa-clock" iconBg="bg-[var(--md-sys-color-tertiary-container,#d1fae5)]" iconColor="text-[var(--md-sys-color-on-tertiary-container,#10b981)]" label="Time" value={booking.time} subValue={booking.duration} />
+                <DetailCard icon="fa-map-marker-alt" iconBg="bg-[var(--md-sys-color-secondary-container,#ffedd5)]" iconColor="text-[var(--md-sys-color-on-secondary-container,#f97316)]" label="Location" value={booking.location} />
                 {booking.packageTier && (
-                  <DetailCard icon="fa-layer-group" iconBg="bg-[#ede9fe]" iconColor="text-[#8b5cf6]" label="Package" value={booking.packageTier} />
+                  <DetailCard icon="fa-layer-group" iconBg="bg-[var(--md-sys-color-primary-container,#ede9fe)]" iconColor="text-[var(--md-sys-color-on-primary-container,#8b5cf6)]" label="Package" value={booking.packageTier} />
                 )}
                 {booking.source && (
                   <DetailCard
                     icon={booking.source === "whatsapp" ? "fa-whatsapp" : booking.source === "online" ? "fa-globe" : "fa-phone"}
-                    iconBg="bg-[#dbeafe]"
-                    iconColor="text-[#3b82f6]"
+                    iconBg="bg-[var(--md-sys-color-surface-variant,#dbeafe)]"
+                    iconColor="text-[var(--md-sys-color-primary,#3b82f6)]"
                     label="Source"
                     value={booking.source}
                   />
                 )}
                 {booking.assignedTo && (
-                  <DetailCard icon="fa-user-tie" iconBg="bg-[#ede9fe]" iconColor="text-[#8b5cf6]" label="Assigned" value={booking.assignedTo} />
+                  <DetailCard icon="fa-user-tie" iconBg="bg-[var(--md-sys-color-primary-container,#ede9fe)]" iconColor="text-[var(--md-sys-color-on-primary-container,#8b5cf6)]" label="Assigned" value={booking.assignedTo} />
                 )}
               </div>
             </div>
 
             {/* Payment Section */}
             <div>
-              <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-3 flex items-center gap-2">
+              <h3 className="text-xs md:text-sm font-medium text-[var(--md-sys-color-on-surface-variant,#94a3b8)] mb-3 flex items-center gap-2">
                 <i className="fas fa-credit-card" />
                 Payment
               </h3>
-              <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-5 border border-[#e2e8f0] space-y-3">
-                <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
-                  <span className="text-sm text-[#64748b]">Total Price</span>
-                  <span className="font-extrabold text-lg md:text-xl text-[#8b5cf6]">{formatCurrency(booking.price)}</span>
+              <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] md:rounded-[20px] p-4 md:p-5 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-sm space-y-3">
+                <div className="flex justify-between items-center pb-3 border-b border-[var(--md-sys-color-outline-variant,#e2e8f0)]">
+                  <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Total Price</span>
+                  <span className="font-medium text-xl md:text-2xl text-[var(--md-sys-color-primary,#8b5cf6)]">{formatCurrency(booking.price)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#64748b]">Deposit Paid</span>
-                  <span className="font-bold text-[#10b981]">{formatCurrency(booking.deposit || 0)}</span>
+                  <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Deposit Paid</span>
+                  <span className="font-medium text-[var(--md-sys-color-tertiary,#10b981)]">{formatCurrency(booking.deposit || 0)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#64748b]">Balance Due</span>
-                  <span className={`font-bold ${balanceDue > 0 ? "text-[#f59e0b]" : "text-[#10b981]"}`}>
+                  <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Balance Due</span>
+                  <span className={`font-medium ${balanceDue > 0 ? "text-[var(--md-sys-color-error,#f59e0b)]" : "text-[var(--md-sys-color-tertiary,#10b981)]"}`}>
                     {formatCurrency(balanceDue)}
                   </span>
                 </div>
 
-                {/* Payment progress bar */}
+                {/* Payment progress bar - MD3 linear progress indicator */}
                 <div className="pt-2">
-                  <div className="h-2 bg-[#e2e8f0] rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[var(--md-sys-color-surface-variant,#e2e8f0)] rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#10b981] transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-[var(--md-sys-color-primary,#8b5cf6)] to-[var(--md-sys-color-tertiary,#10b981)] transition-all duration-500"
                       style={{ width: `${Math.min(((booking.deposit || 0) / booking.price) * 100, 100)}%` }}
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-2 border-t border-[#e2e8f0]">
-                  <span className="text-sm text-[#64748b]">Status</span>
+                <div className="flex justify-between items-center pt-2 border-t border-[var(--md-sys-color-outline-variant,#e2e8f0)]">
+                  <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Status</span>
                   <span className={`
-                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border
-                    ${payConfig.bg} ${payConfig.text} ${payConfig.border}
+                    inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium uppercase
+                    ${payConfig.bg} ${payConfig.text}
                   `}>
-                    <i className={`fas ${payConfig.icon} text-[8px]`} />
+                    <i className={`fas ${payConfig.icon} text-[9px]`} />
                     {booking.paymentStatus || "Unpaid"}
                   </span>
                 </div>
 
                 {booking.paymentMethod && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#64748b]">Method</span>
-                    <span className="text-sm font-semibold text-[#1e293b] capitalize flex items-center gap-1.5">
+                    <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Method</span>
+                    <span className="text-sm md:text-base font-medium text-[var(--md-sys-color-on-surface,#1e293b)] capitalize flex items-center gap-1.5">
                       <i className={`fas ${
                         booking.paymentMethod === "mpesa" ? "fa-mobile-alt" :
                         booking.paymentMethod === "card" ? "fa-credit-card" :
                         booking.paymentMethod === "bank" ? "fa-university" :
                         "fa-money-bill-wave"
-                      } text-[#8b5cf6] text-xs`} />
+                      } text-[var(--md-sys-color-primary,#8b5cf6)] text-sm`} />
                       {booking.paymentMethod}
                     </span>
                   </div>
@@ -557,32 +558,32 @@ export default function ViewBookingModal({
             {/* Payment Proof */}
             {booking.paymentProof && (
               <div>
-                <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#10b981] mb-3 flex items-center gap-2">
+                <h3 className="text-xs md:text-sm font-medium text-[var(--md-sys-color-tertiary,#10b981)] mb-3 flex items-center gap-2">
                   <i className="fas fa-check-circle" />
                   Payment Confirmed
                 </h3>
-                <div className="bg-gradient-to-br from-[#f0fdf4] to-[#ecfdf5] rounded-xl md:rounded-2xl p-4 md:p-5 border border-[#10b981]/20 space-y-3">
+                <div className="bg-gradient-to-br from-[var(--md-sys-color-tertiary-container,#f0fdf4)] to-[var(--md-sys-color-surface,#ecfdf5)] rounded-[16px] md:rounded-[20px] p-4 md:p-5 border border-[var(--md-sys-color-tertiary,#10b981)]/20 shadow-sm space-y-3">
                   {booking.paymentProof.transactionId && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-[#64748b]">Transaction ID</span>
-                      <span className="font-mono font-semibold text-sm text-[#1e293b]">{booking.paymentProof.transactionId}</span>
+                      <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Transaction ID</span>
+                      <span className="font-mono font-medium text-sm md:text-base text-[var(--md-sys-color-on-surface,#1e293b)]">{booking.paymentProof.transactionId}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#64748b]">Amount Paid</span>
-                    <span className="font-bold text-[#10b981]">{formatCurrency(booking.paymentProof.amount)}</span>
+                    <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Amount Paid</span>
+                    <span className="font-medium text-[var(--md-sys-color-tertiary,#10b981)]">{formatCurrency(booking.paymentProof.amount)}</span>
                   </div>
                   {booking.paymentProof.confirmedBy && (
-                    <div className="flex justify-between items-center pt-2 border-t border-[#10b981]/10">
-                      <span className="text-sm text-[#64748b]">Confirmed By</span>
-                      <span className="text-sm font-semibold text-[#1e293b]">{booking.paymentProof.confirmedBy}</span>
+                    <div className="flex justify-between items-center pt-2 border-t border-[var(--md-sys-color-tertiary,#10b981)]/10">
+                      <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Confirmed By</span>
+                      <span className="text-sm md:text-base font-medium text-[var(--md-sys-color-on-surface,#1e293b)]">{booking.paymentProof.confirmedBy}</span>
                     </div>
                   )}
                   {booking.paymentProof.proofImage && (
-                    <div className="pt-2 border-t border-[#10b981]/10">
-                      <div className="text-sm text-[#64748b] mb-2">Proof</div>
+                    <div className="pt-2 border-t border-[var(--md-sys-color-tertiary,#10b981)]/10">
+                      <div className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)] mb-2">Proof</div>
                       <div
-                        className="rounded-xl overflow-hidden border border-[#10b981]/20 cursor-pointer hover:opacity-90 transition-opacity"
+                        className="rounded-[12px] overflow-hidden border border-[var(--md-sys-color-tertiary,#10b981)]/20 cursor-pointer hover:opacity-90 transition-opacity"
                         onClick={() => setLightboxImage(booking.paymentProof!.proofImage!)}
                       >
                         <img src={booking.paymentProof.proofImage} alt="Payment proof" className="w-full h-32 object-cover" />
@@ -596,12 +597,12 @@ export default function ViewBookingModal({
             {/* Notes */}
             {booking.notes && (
               <div>
-                <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-3 flex items-center gap-2">
+                <h3 className="text-xs md:text-sm font-medium text-[var(--md-sys-color-on-surface-variant,#94a3b8)] mb-3 flex items-center gap-2">
                   <i className="fas fa-sticky-note" />
                   Notes
                 </h3>
-                <div className="bg-white rounded-xl p-4 border border-[#e2e8f0]">
-                  <p className="text-sm text-[#64748b] leading-relaxed">{booking.notes}</p>
+                <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] p-4 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-sm">
+                  <p className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)] leading-relaxed">{booking.notes}</p>
                 </div>
               </div>
             )}
@@ -609,45 +610,45 @@ export default function ViewBookingModal({
             {/* Cancellation Reason */}
             {isCancelled && booking.cancellationReason && (
               <div>
-                <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#ef4444] mb-3 flex items-center gap-2">
+                <h3 className="text-xs md:text-sm font-medium text-[var(--md-sys-color-error,#ef4444)] mb-3 flex items-center gap-2">
                   <i className="fas fa-exclamation-triangle" />
                   Cancellation Reason
                 </h3>
-                <div className="bg-[#fef2f2] rounded-xl p-4 border border-[#ef4444]/20">
-                  <p className="text-sm text-[#ef4444] leading-relaxed">{booking.cancellationReason}</p>
+                <div className="bg-[var(--md-sys-color-error-container,#fef2f2)] rounded-[16px] p-4 border border-[var(--md-sys-color-error,#ef4444)]/20 shadow-sm">
+                  <p className="text-sm md:text-base text-[var(--md-sys-color-error,#ef4444)] leading-relaxed">{booking.cancellationReason}</p>
                 </div>
               </div>
             )}
 
             {/* Booking Reference */}
             <div>
-              <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-3 flex items-center gap-2">
+              <h3 className="text-xs md:text-sm font-medium text-[var(--md-sys-color-on-surface-variant,#94a3b8)] mb-3 flex items-center gap-2">
                 <i className="fas fa-fingerprint" />
                 Reference
               </h3>
-              <div className="bg-white rounded-xl p-4 border border-[#e2e8f0] space-y-3">
+              <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] p-4 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <code className="text-xs md:text-sm font-mono text-[#8b5cf6] font-semibold truncate max-w-[200px]">
+                  <code className="text-sm md:text-base font-mono text-[var(--md-sys-color-primary,#8b5cf6)] font-medium truncate max-w-[200px]">
                     {booking.id}
                   </code>
                   <button
                     onClick={handleCopyId}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ede9fe] text-[#8b5cf6] rounded-lg text-xs font-bold hover:bg-[#8b5cf6] hover:text-white transition-all active:scale-95 shrink-0 ml-2"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-[var(--md-sys-color-primary-container,#ede9fe)] text-[var(--md-sys-color-on-primary-container,#8b5cf6)] rounded-full text-sm font-medium hover:bg-[var(--md-sys-color-primary,#8b5cf6)] hover:text-white transition-all active:scale-95 shrink-0 ml-2"
                   >
-                    <i className="fas fa-copy text-[10px]" />
+                    <i className="fas fa-copy text-xs" />
                     Copy
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#e2e8f0] text-xs">
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--md-sys-color-outline-variant,#e2e8f0)] text-sm">
                   <div>
-                    <div className="text-[#94a3b8] font-medium mb-0.5">Created</div>
-                    <div className="font-semibold text-[#1e293b]">
+                    <div className="text-[var(--md-sys-color-on-surface-variant,#94a3b8)] font-medium mb-0.5">Created</div>
+                    <div className="font-medium text-[var(--md-sys-color-on-surface,#1e293b)]">
                       {booking.createdAt?.toDate ? booking.createdAt.toDate().toLocaleDateString() : "Recent"}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[#94a3b8] font-medium mb-0.5">Updated</div>
-                    <div className="font-semibold text-[#1e293b]">
+                    <div className="text-[var(--md-sys-color-on-surface-variant,#94a3b8)] font-medium mb-0.5">Updated</div>
+                    <div className="font-medium text-[var(--md-sys-color-on-surface,#1e293b)]">
                       {booking.updatedAt?.toDate ? booking.updatedAt.toDate().toLocaleDateString() : "—"}
                     </div>
                   </div>
@@ -656,59 +657,83 @@ export default function ViewBookingModal({
             </div>
           </div>
 
-          {/* Footer Actions */}
-          <div className="shrink-0 p-4 md:p-5 border-t border-[#e2e8f0] bg-white space-y-2">
-            {/* Primary actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {/* Footer Actions - MD3 buttons optimized for mobile */}
+          <div className="shrink-0 p-4 md:p-5 border-t border-[var(--md-sys-color-outline-variant,#e2e8f0)] bg-[var(--md-sys-color-surface,white)]">
+            {/* Mobile: Single column with clear labels | Desktop: Grid layout */}
+            <div className="flex flex-col gap-2">
+              {/* Primary Action - Edit (if available) */}
               {onEdit && (
-                <ActionButton icon="fa-edit" label="Edit" variant="primary" onClick={() => onEdit(booking)} />
+                <ActionButton 
+                  icon="fa-edit" 
+                  label="Edit Booking" 
+                  variant="primary" 
+                  onClick={() => onEdit(booking)} 
+                />
               )}
+              
+              {/* Payment Action (if unpaid) */}
+              {onOpenPaymentModal && booking.paymentStatus !== "paid" && (
+                <ActionButton
+                  icon="fa-check-circle"
+                  label="Confirm Payment"
+                  variant="success"
+                  onClick={onOpenPaymentModal}
+                />
+              )}
+              
+              {/* Reminder Button */}
               {onSendReminder && (
                 <ActionButton
                   icon="fa-bell"
-                  label="Reminder"
+                  label="Send Reminder"
                   variant="default"
                   onClick={handleSendReminder}
                   loading={sendingMessage}
                 />
               )}
-              {onOpenPaymentModal && booking.paymentStatus !== "paid" && (
-                <ActionButton
-                  icon="fa-check-circle"
-                  label="Payment"
-                  variant="success"
-                  onClick={onOpenPaymentModal}
-                />
-              )}
-            </div>
-
-            {/* Status actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              
+              {/* Divider for status actions */}
               {!isCompleted && !isCancelled && (
-                <ActionButton
-                  icon="fa-check"
-                  label="Complete"
-                  variant="success"
-                  onClick={() => handleStatusUpdate("completed")}
-                />
+                <div className="h-px bg-[var(--md-sys-color-outline-variant,#e2e8f0)] my-1" />
               )}
-              {!isCancelled && (
-                <ActionButton
-                  icon="fa-times"
-                  label="Cancel"
-                  variant="danger"
-                  onClick={() => handleStatusUpdate("cancelled")}
+              
+              {/* Status Change Actions - Only show relevant ones */}
+              <div className="grid grid-cols-2 gap-2">
+                {!isCompleted && !isCancelled && booking.status !== "confirmed" && (
+                  <ActionButton
+                    icon="fa-check-circle"
+                    label="Confirm"
+                    variant="primary"
+                    onClick={() => handleStatusUpdate("confirmed")}
+                  />
+                )}
+                
+                {!isCompleted && !isCancelled && (
+                  <ActionButton
+                    icon="fa-check"
+                    label="Complete"
+                    variant="success"
+                    onClick={() => handleStatusUpdate("completed")}
+                  />
+                )}
+                
+                {!isCancelled && (
+                  <ActionButton
+                    icon="fa-times"
+                    label="Cancel"
+                    variant="danger"
+                    onClick={() => handleStatusUpdate("cancelled")}
+                  />
+                )}
+                
+                {/* Close button - always visible */}
+                <ActionButton 
+                  icon="fa-times" 
+                  label="Close" 
+                  variant="default" 
+                  onClick={onClose} 
                 />
-              )}
-              {!isCompleted && !isCancelled && booking.status !== "confirmed" && (
-                <ActionButton
-                  icon="fa-check-circle"
-                  label="Confirm"
-                  variant="primary"
-                  onClick={() => handleStatusUpdate("confirmed")}
-                />
-              )}
-              <ActionButton icon="fa-times" label="Close" variant="default" onClick={onClose} />
+              </div>
             </div>
           </div>
         </div>
