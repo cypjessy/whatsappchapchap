@@ -58,7 +58,8 @@ export async function sendTypingIndicator(
  * @param phone - The phone number to show typing indicator for
  */
 export async function startTypingIndicator(tenantId: string, phone: string): Promise<void> {
-  const existingInterval = activeTypingIntervals.get(phone);
+  const key = `${tenantId}:${phone}`;
+  const existingInterval = activeTypingIntervals.get(key);
   if (existingInterval) {
     clearInterval(existingInterval);
   }
@@ -69,8 +70,8 @@ export async function startTypingIndicator(tenantId: string, phone: string): Pro
     await sendTypingIndicator(tenantId, phone, "composing");
   }, 4000); // Refresh every 4 seconds
   
-  activeTypingIntervals.set(phone, interval);
-  console.log(`[TypingIndicator] Started for ${phone}`);
+  activeTypingIntervals.set(key, interval);
+  console.log(`[TypingIndicator] Started for ${key}`);
 }
 
 /**
@@ -80,22 +81,23 @@ export async function startTypingIndicator(tenantId: string, phone: string): Pro
  * @param phone - The phone number to stop typing indicator for
  */
 export async function stopTypingIndicator(tenantId: string, phone: string): Promise<void> {
-  const interval = activeTypingIntervals.get(phone);
+  const key = `${tenantId}:${phone}`;
+  const interval = activeTypingIntervals.get(key);
   if (interval) {
     clearInterval(interval);
-    activeTypingIntervals.delete(phone);
+    activeTypingIntervals.delete(key);
   }
   await sendTypingIndicator(tenantId, phone, "paused");
-  console.log(`[TypingIndicator] Stopped for ${phone}`);
+  console.log(`[TypingIndicator] Stopped for ${key}`);
 }
 
 /**
  * Clean up all active typing intervals (useful for cleanup/shutdown)
  */
 export function cleanupAllTypingIndicators(): void {
-  activeTypingIntervals.forEach((interval, phone) => {
+  activeTypingIntervals.forEach((interval, key) => {
     clearInterval(interval);
-    console.log(`[TypingIndicator] Cleaned up interval for ${phone}`);
+    console.log(`[TypingIndicator] Cleaned up interval for ${key}`);
   });
   activeTypingIntervals.clear();
 }
