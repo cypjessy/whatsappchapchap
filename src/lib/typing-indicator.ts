@@ -66,8 +66,15 @@ export async function startTypingIndicator(tenantId: string, phone: string): Pro
   
   await sendTypingIndicator(tenantId, phone, "composing");
   
+  let isSending = false;
   const interval = setInterval(async () => {
-    await sendTypingIndicator(tenantId, phone, "composing");
+    if (isSending) return;
+    isSending = true;
+    try {
+      await sendTypingIndicator(tenantId, phone, "composing");
+    } finally {
+      isSending = false;
+    }
   }, 4000); // Refresh every 4 seconds
   
   activeTypingIntervals.set(key, interval);
@@ -87,8 +94,11 @@ export async function stopTypingIndicator(tenantId: string, phone: string): Prom
     clearInterval(interval);
     activeTypingIntervals.delete(key);
   }
-  await sendTypingIndicator(tenantId, phone, "paused");
-  console.log(`[TypingIndicator] Stopped for ${key}`);
+  try {
+    await sendTypingIndicator(tenantId, phone, "paused");
+  } catch (error) {
+    console.error(`[TypingIndicator] Failed to send paused signal:`, error);
+  }
 }
 
 /**
