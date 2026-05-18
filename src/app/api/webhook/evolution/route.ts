@@ -34,6 +34,10 @@ import {
   handleServiceSearch as handleServiceSearchHandler,
   type Deps as ServiceSearchDeps
 } from "./handlers/service-search";
+import {
+  sendPaymentInfo as sendPaymentInfoHandler,
+  type PaymentInfoDeps
+} from "./handlers/payment-info";
 
 // Initialize Firebase Admin SDK
 let adminDb: ReturnType<typeof getFirestore> | null = null;
@@ -649,7 +653,12 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       
     case 7:
       debugLog("[Webhook] Payment info requested");
-      await sendPaymentInfo(tenantId, phone);
+      const paymentDeps: PaymentInfoDeps = {
+        sendMessage: sendEvolutionMessage,
+        startTyping: startTypingIndicator,
+        stopTyping: stopTypingIndicator,
+      };
+      await sendPaymentInfoHandler(tenantId, phone, paymentDeps);
       break;
       
     case 8:
@@ -1218,31 +1227,6 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
   await startOrderStatusFlow(tenantId, phone, deps);
   
   await stopTypingIndicator(tenantId, phone);
-}
-
-async function sendPaymentInfo(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
-  try {
-    const adminDb = getAdminDb();
-    const profileSnap = await adminDb.collection("businessProfiles").doc(tenantId).get();
-    const paymentMethods = profileSnap.exists ? profileSnap.data()?.paymentMethods : null;
-    
-    let response: string;
-    if (paymentMethods && paymentMethods.length > 0) {
-      const paymentList = paymentMethods.map((method: any) => `• ${method.name}${method.details ? ` - ${method.details}` : ''}`).join('\n');
-      response = `💳 *Payment Methods*\n\n${paymentList}\n\nWhich payment method would you like to use?`;
-    } else {
-      response = "💳 We accept:\n\n• M-Pesa\n• Bank Transfer\n• Cash on Delivery\n\nWhich payment method would you like to use?";
-    }
-    
-    await stopTypingIndicator(tenantId, phone);
-    await sendEvolutionMessage(tenantId, phone, response);
-  } catch (error) {
-    console.error('[Webhook] Error fetching payment methods:', error);
-    await stopTypingIndicator(tenantId, phone);
-    await sendEvolutionMessage(tenantId, phone, "💳 We accept:\n\n• M-Pesa\n• Bank Transfer\n• Cash on Delivery\n\nWhich payment method would you like to use?");
-  }
 }
 
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
