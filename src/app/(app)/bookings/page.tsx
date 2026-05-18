@@ -14,8 +14,11 @@ import BookingStats from "./components/BookingStats";
 import BookingAnalytics from "./components/BookingAnalytics";
 import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
+import BookingCancellationRequests from "./components/BookingCancellationRequests";
 import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
-import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, where, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
+import { app as firebaseApp } from "@/lib/firebase";
+import { getFirestore } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getBookingStatusMessage, getBookingPaymentMessage, getBookingReminderMessage } from "@/utils/bookingMessages";
 import {
@@ -29,7 +32,7 @@ const getTenantId = (user: any): string => `tenant_${user.uid}`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ViewMode = "calendar" | "timeline" | "list" | "grid";
+type ViewMode = "calendar" | "timeline" | "list" | "grid" | "cancellations";
 
 interface Toast {
   id: number;
@@ -44,6 +47,7 @@ const VIEW_TABS = [
   { id: "timeline" as ViewMode, label: "Timeline", icon: "fa-stream", desc: "Chronological" },
   { id: "list" as ViewMode, label: "List", icon: "fa-list", desc: "Detailed rows" },
   { id: "grid" as ViewMode, label: "Grid", icon: "fa-th-large", desc: "Card view" },
+  { id: "cancellations" as ViewMode, label: "Cancellations", icon: "fa-exclamation-triangle", desc: "Pending requests" },
 ];
 
 const STATUS_CHIPS = [
@@ -141,6 +145,7 @@ function EmptyState({ viewMode }: { viewMode: ViewMode }) {
     timeline: "fa-stream",
     list: "fa-list",
     grid: "fa-th-large",
+    cancellations: "fa-exclamation-triangle",
   };
 
   return (
@@ -187,6 +192,8 @@ export default function BookingsPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [cancellationRequests, setCancellationRequests] = useState<any[]>([]);
+  const [cancellationFilter, setCancellationFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
   // Status bar: green when at top, white when scrolled
   useStatusBar({
@@ -256,6 +263,7 @@ export default function BookingsPage() {
     if (user) {
       loadServices();
       startBookingsListener();
+      loadCancellationRequests();
     }
     return () => {
       // Cleanup listener on unmount
@@ -535,6 +543,99 @@ export default function BookingsPage() {
       await showToastNative({ text: 'Failed to delete booking', position: 'top' });
     }
   };
+
+  // Load cancellation requests
+  const loadCancellationRequests = useCallback(async () => {
+    if (!user) return;
+    try {
+      const db = getFirestore(firebaseApp);
+      const tenantId = `tenant_${user.uid}`;
+
+      const q = query(
+        collection(db, "cancellation_requests"),
+        where("tenantId", "==", tenantId),
+        where("type", "==", "booking"),
+        orderBy("requestedAt", "desc")
+      );
+
+      const snap = await getDocs(q);
+      const requests = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCancellationRequests(requests);
+    } catch (error) {
+      console.error("Error loading cancellation requests:", error);
+    }
+  }, [user]);
+
+  // Handle booking cancellation action (approve/reject)
+  const handleBookingCancellationAction = useCallback(
+    async (requestId: string, bookingId: string, action: "approve" | "reject") => {
+      if (!user) return;
+      const isApproving = action === "approve";
+      const responseNote = window.prompt(
+        isApproving
+          ? "Add approval note (optional):"
+          : "Add rejection reason (optional):"
+      );
+
+      try {
+        const db = getFirestore(firebaseApp);
+        const tenantId = `tenant_${user.uid}`;
+
+        // Update cancellation request
+        const cancelRef = doc(db, "cancellation_requests", requestId);
+        await updateDoc(cancelRef, {
+          status: isApproving ? "approved" : "rejected",
+          respondedAt: new Date(),
+          responseNote:
+            responseNote ||
+            (isApproving
+              ? "Cancellation approved by merchant"
+              : "Cancellation rejected by merchant"),
+        });
+
+        // Find and update booking
+        const bookingsRef = collection(db, "bookings");
+        const bookingQuery = query(bookingsRef, where("tenantId", "==", tenantId), where("id", "==", bookingId));
+        const bookingSnap = await getDocs(bookingQuery);
+
+        if (!bookingSnap.empty) {
+          const bookingDoc = bookingSnap.docs[0];
+          const bookingData = bookingDoc.data();
+          await updateDoc(bookingDoc.ref, {
+            status: isApproving ? "cancelled" : "confirmed",
+            cancellationStatus: isApproving ? "approved" : "rejected",
+            cancelledAt: isApproving ? new Date() : null,
+            updatedAt: new Date(),
+          });
+
+          // Send WhatsApp notification to customer
+          const customerPhone = bookingData?.phone;
+          const customerName = bookingData?.client || "Customer";
+          const bookingService = bookingData?.service || "Service";
+          const bookingDate = bookingData?.date || "N/A";
+          const bookingTime = bookingData?.time || "N/A";
+
+          if (customerPhone && isValidWhatsAppPhone(customerPhone)) {
+            const message = isApproving
+              ? `✅ *BOOKING CANCELLED* ✅\n\nDear ${customerName},\n\nYour cancellation request for booking *${bookingId}* has been approved.\n\n📅 Service: ${bookingService}\n📆 Date: ${bookingDate} at ${bookingTime}\n\nIf you have any questions, please contact us.\n\nThank you! 🙏`
+              : `ℹ️ *CANCELLATION UPDATE*\n\nDear ${customerName},\n\nYour cancellation request for booking *${bookingId}* was not approved.\n\n📅 Service: ${bookingService}\n📆 Date: ${bookingDate} at ${bookingTime}\n\nYour booking remains confirmed as scheduled.\n\nThank you for understanding!`;
+
+            await sendEvolutionWhatsAppMessage(customerPhone, message, user.uid);
+          }
+        }
+
+        await loadCancellationRequests();
+        await loadBookings();
+        await notificationSuccess();
+        await showToastNative({ text: `Cancellation ${isApproving ? 'approved' : 'rejected'}`, duration: 'short' });
+      } catch (error) {
+        console.error("Error handling booking cancellation:", error);
+        await notificationError();
+        await showToastNative({ text: 'Failed to process cancellation', position: 'top' });
+      }
+    },
+    [user, loadCancellationRequests, loadBookings, notificationSuccess, notificationError, showToastNative]
+  );
 
   const handleSendMessage = async (booking: Booking) => {
     if (!booking) return;
@@ -910,7 +1011,15 @@ export default function BookingsPage() {
 
         {/* Content Area */}
         <div className="min-h-[300px]">
-          {loading ? (
+          {viewMode === "cancellations" ? (
+            <BookingCancellationRequests
+              cancellationRequests={cancellationRequests}
+              cancellationFilter={cancellationFilter}
+              setCancellationFilter={setCancellationFilter}
+              onAction={handleBookingCancellationAction}
+              isLoading={loading}
+            />
+          ) : loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-10 h-10 border-3 border-[#e2e8f0] border-t-[#1e293b] rounded-full animate-spin mb-4" />
               <p className="text-sm text-[#64748b] font-medium">Loading bookings...</p>
