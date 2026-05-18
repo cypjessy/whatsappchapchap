@@ -1127,18 +1127,14 @@ async function handleServiceSearchInput(
 }
 
 async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
   const deps: OrderStatusDeps = { 
     sendMessage: sendEvolutionMessage,
     startTyping: startTypingIndicator,
     stopTyping: stopTypingIndicator,
-    sendWelcomeMenu: sendWelcomeMenu,  // ⭐ ADDED
+    sendWelcomeMenu: sendWelcomeMenu,
   };
   
   await startOrderStatusFlow(tenantId, phone, deps);
-  
-  await stopTypingIndicator(tenantId, phone);
 }
 
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
@@ -1148,8 +1144,6 @@ async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
 }
 
 async function sendBookingStatusInfo(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
   const deps: BookingStatusDeps = { 
     sendMessage: sendEvolutionMessage,
     startTyping: startTypingIndicator,
@@ -1158,8 +1152,6 @@ async function sendBookingStatusInfo(tenantId: string, phone: string): Promise<v
   };
   
   await startBookingStatusFlow(tenantId, phone, deps);
-  
-  await stopTypingIndicator(tenantId, phone);
 }
 
 async function handleViewCart(tenantId: string, phone: string): Promise<void> {
