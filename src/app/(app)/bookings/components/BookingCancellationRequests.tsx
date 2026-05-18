@@ -157,7 +157,7 @@ function RequestCard({
       <div className="flex items-start justify-between mb-4 gap-3">
         <div className="min-w-0 flex-1">
           <div className="font-bold text-[#25D366] text-lg sm:text-xl truncate">
-            {request.bookingId}
+            {request.bookingData?.bookingNumber || request.bookingId}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-[#64748b] mt-1.5">
             <i className="fas fa-calendar-alt text-[10px]" />

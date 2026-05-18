@@ -384,7 +384,7 @@ export default function BookingsPage() {
         const message = getBookingStatusMessage(
           status,
           booking.client,
-          booking.id,
+          booking.bookingNumber || booking.id,
           booking.service,
           formattedDate,
           booking.time,
@@ -451,7 +451,7 @@ export default function BookingsPage() {
       try {
         const message = getBookingPaymentMessage(
           booking.client,
-          booking.id,
+          booking.bookingNumber || booking.id,
           booking.service,
           formatCurrency(paymentProof.amount || booking.price),
           paymentProof.transactionId
@@ -492,7 +492,7 @@ export default function BookingsPage() {
         // Send WhatsApp reminder
         const message = getBookingReminderMessage(
           booking.client,
-          booking.id,
+          booking.bookingNumber || booking.id,
           booking.service,
           booking.date,
           booking.time,
@@ -551,15 +551,23 @@ export default function BookingsPage() {
       const db = getFirestore(firebaseApp);
       const tenantId = `tenant_${user.uid}`;
 
+      console.log('[loadCancellationRequests] Loading requests for tenant:', tenantId);
+
+      // Query all booking cancellation requests for this tenant
       const q = query(
         collection(db, "cancellation_requests"),
         where("tenantId", "==", tenantId),
-        where("type", "==", "booking"),
         orderBy("requestedAt", "desc")
       );
 
       const snap = await getDocs(q);
-      const requests = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      console.log('[loadCancellationRequests] Total documents:', snap.size);
+      
+      // Filter for booking type on client side to avoid composite index requirement
+      const allRequests = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as any));
+      const requests = allRequests.filter((req) => req.type === 'booking');
+      
+      console.log('[loadCancellationRequests] Filtered booking requests:', requests.length);
       setCancellationRequests(requests);
     } catch (error) {
       console.error("Error loading cancellation requests:", error);
@@ -571,11 +579,6 @@ export default function BookingsPage() {
     async (requestId: string, bookingId: string, action: "approve" | "reject") => {
       if (!user) return;
       const isApproving = action === "approve";
-      const responseNote = window.prompt(
-        isApproving
-          ? "Add approval note (optional):"
-          : "Add rejection reason (optional):"
-      );
 
       try {
         const db = getFirestore(firebaseApp);
@@ -587,10 +590,9 @@ export default function BookingsPage() {
           status: isApproving ? "approved" : "rejected",
           respondedAt: new Date(),
           responseNote:
-            responseNote ||
-            (isApproving
+            isApproving
               ? "Cancellation approved by merchant"
-              : "Cancellation rejected by merchant"),
+              : "Cancellation rejected by merchant",
         });
 
         // Find and update booking
@@ -611,14 +613,15 @@ export default function BookingsPage() {
           // Send WhatsApp notification to customer
           const customerPhone = bookingData?.phone;
           const customerName = bookingData?.client || "Customer";
+          const bookingNumber = bookingData?.bookingNumber || bookingId;
           const bookingService = bookingData?.service || "Service";
           const bookingDate = bookingData?.date || "N/A";
           const bookingTime = bookingData?.time || "N/A";
 
           if (customerPhone && isValidWhatsAppPhone(customerPhone)) {
             const message = isApproving
-              ? `✅ *BOOKING CANCELLED* ✅\n\nDear ${customerName},\n\nYour cancellation request for booking *${bookingId}* has been approved.\n\n📅 Service: ${bookingService}\n📆 Date: ${bookingDate} at ${bookingTime}\n\nIf you have any questions, please contact us.\n\nThank you! 🙏`
-              : `ℹ️ *CANCELLATION UPDATE*\n\nDear ${customerName},\n\nYour cancellation request for booking *${bookingId}* was not approved.\n\n📅 Service: ${bookingService}\n📆 Date: ${bookingDate} at ${bookingTime}\n\nYour booking remains confirmed as scheduled.\n\nThank you for understanding!`;
+              ? `✅ *BOOKING CANCELLED* ✅\n\nDear ${customerName},\n\nYour cancellation request for booking *${bookingNumber}* has been approved.\n\n📅 Service: ${bookingService}\n Date: ${bookingDate} at ${bookingTime}\n\nIf you have any questions, please contact us.\n\nThank you! 🙏`
+              : `ℹ️ *CANCELLATION UPDATE*\n\nDear ${customerName},\n\nYour cancellation request for booking *${bookingNumber}* was not approved.\n\n📅 Service: ${bookingService}\n Date: ${bookingDate} at ${bookingTime}\n\nYour booking remains confirmed as scheduled.\n\nThank you for understanding!`;
 
             await sendEvolutionWhatsAppMessage(customerPhone, message, user.uid);
           }

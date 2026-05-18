@@ -219,6 +219,7 @@ export interface Service {
 export interface Booking {
   id: string;
   tenantId: string;
+  bookingNumber?: string; // Human-readable booking number (e.g., BK-1705123456-ABC123)
   client: string;
   clientInitials: string;
   phone: string;

@@ -23,6 +23,8 @@ export default function BookingPage() {
   const [customerNotes, setCustomerNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [providerName, setProviderName] = useState("");
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingNumber, setBookingNumber] = useState("");
 
   // Load service data
   useEffect(() => {
@@ -136,16 +138,9 @@ export default function BookingPage() {
 
       console.log('Booking saved successfully:', result.bookingId);
       
-      // Show success message
-      alert(`✅ Booking Confirmed!\n\nBooking ID: ${result.bookingId}\n\nService: ${service?.name}\nDate: ${selectedDate.toLocaleDateString()}\nTime: ${selectedTime}\n\nWe'll contact you shortly to confirm your appointment.`);
-      
-      // Reset form
-      setSelectedDate(null);
-      setSelectedTime("");
-      setSelectedLocation("");
-      setCustomerName("");
-      setCustomerPhone("");
-      setCustomerNotes("");
+      // Show success screen with booking number
+      setBookingNumber(result.bookingNumber || result.bookingId);
+      setBookingSuccess(true);
       
     } catch (error) {
       console.error("Error submitting booking:", error);
@@ -154,6 +149,76 @@ export default function BookingPage() {
       setSubmitting(false);
     }
   };
+
+  if (bookingSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] pb-8">
+        {/* Success Header */}
+        <div className="bg-gradient-to-br from-[#10b981] to-[#059669] text-white p-8 text-center">
+          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i className="fas fa-check text-4xl"></i>
+          </div>
+          <h1 className="text-3xl font-extrabold mb-2">Booking Confirmed!</h1>
+          <p className="text-lg opacity-90">Thank you for your booking</p>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-2xl mx-auto px-4 -mt-4 relative z-10">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Booking Number Card */}
+            <div className="p-8 bg-gradient-to-br from-[#10b981] to-[#059669] text-white">
+              <div className="text-sm opacity-90 mb-2">Booking Number</div>
+              <div className="text-3xl font-extrabold tracking-wide">{bookingNumber}</div>
+            </div>
+            
+            {/* What's Next Section */}
+            <div className="p-8">
+              <h3 className="text-xl font-bold text-[#1e293b] mb-6">What's Next?</h3>
+              <ul className="space-y-4">
+                <li className="flex gap-4 pb-4 border-b border-[#e2e8f0]">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-envelope text-blue-600"></i>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#1e293b] mb-1">Confirmation Sent</div>
+                    <div className="text-sm text-[#64748b]">Check your WhatsApp for booking details</div>
+                  </div>
+                </li>
+                <li className="flex gap-4 pb-4 border-b border-[#e2e8f0]">
+                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-calendar-check text-purple-600"></i>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#1e293b] mb-1">Preparing Your Appointment</div>
+                    <div className="text-sm text-[#64748b]">We're getting everything ready for you</div>
+                  </div>
+                </li>
+                <li className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-phone text-green-600"></i>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#1e293b] mb-1">Reminder Coming</div>
+                    <div className="text-sm text-[#64748b]">You'll receive updates via WhatsApp</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Info Box */}
+            <div className="px-8 pb-8">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5">
+                <p className="text-sm text-blue-800 m-0">
+                  <i className="fas fa-info-circle mr-2"></i>
+                  You can book more services anytime. Save this booking number for reference.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

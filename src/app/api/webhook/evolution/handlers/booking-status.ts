@@ -103,12 +103,21 @@ async function lookupBookingById(
     
     const adminDb = getFirestore();
     
-    // Query by id field
-    const bookingQuery = await adminDb
+    // Query by bookingNumber field first, fallback to id if not found
+    let bookingQuery = await adminDb
       .collection("bookings")
-      .where("id", "==", bookingId)
+      .where("bookingNumber", "==", bookingId)
       .where("tenantId", "==", tenantId)
       .get();
+    
+    // If not found by bookingNumber, try searching by document ID
+    if (bookingQuery.empty) {
+      bookingQuery = await adminDb
+        .collection("bookings")
+        .where("id", "==", bookingId)
+        .where("tenantId", "==", tenantId)
+        .get();
+    }
     
     if (bookingQuery.empty) {
       await deps.stopTyping(tenantId, phone);
@@ -310,7 +319,7 @@ async function sendBookingDetails(
   const paymentEmoji = getPaymentEmoji(booking.paymentStatus);
   
   let message = `📅 *Booking Details*\n\n`;
-  message += `*ID:* ${booking.id}\n`;
+  message += `*Booking Number:* ${booking.bookingNumber || booking.id}\n`;
   message += `*Client:* ${booking.client}\n`;
   message += `*Service:* ${booking.service}\n\n`;
   
@@ -381,8 +390,10 @@ async function sendBookingDetails(
           flowName: 'booking_cancellation',
           currentStep: 'waiting_for_cancel_selection',
           bookingId: booking.id,
+          bookingNumber: booking.bookingNumber || booking.id,
           bookingData: {
             id: booking.id,
+            bookingNumber: booking.bookingNumber || booking.id,
             client: booking.client,
             service: booking.service,
             date: booking.date,
@@ -651,7 +662,7 @@ async function processBookingCancellation(
       tenantId,
       phone,
       `✅ *Cancellation Request Submitted*\n\n` +
-      `Your cancellation request for booking *${bookingId}* has been submitted.\n\n` +
+      `Your cancellation request for booking *${flowState.bookingNumber || bookingId}* has been submitted.\n\n` +
       `Our team will review your request and confirm the cancellation shortly.\n\n` +
       `You will receive a confirmation once the cancellation is processed.\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
