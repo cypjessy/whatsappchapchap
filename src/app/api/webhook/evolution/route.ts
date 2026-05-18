@@ -1139,8 +1139,8 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
 
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
   await startTypingIndicator(tenantId, phone);
-  await stopTypingIndicator(tenantId, phone);
   await sendEvolutionMessage(tenantId, phone, "🆘 Our support team is here to help! Please describe your issue and we'll assist you.");
+  await stopTypingIndicator(tenantId, phone);
 }
 
 async function sendBookingStatusInfo(tenantId: string, phone: string): Promise<void> {
@@ -1634,8 +1634,6 @@ async function processWithAI(
 ): Promise<void> {
   const processStart = Date.now();
   
-  await startTypingIndicator(tenantId, phone);
-  
   try {
     console.log("[Webhook] Processing message with AI...");
     debugLog("[Webhook] Phone:", phone, "Message:", message.substring(0, 50) + (message.length > 50 ? '...' : ''));
@@ -1656,7 +1654,6 @@ async function processWithAI(
           flowState: FieldValue.delete()
         }, { merge: true });
       
-      await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
@@ -1670,7 +1667,6 @@ async function processWithAI(
       
       if (isStale) {
         console.log("[Webhook] Flow state expired, sending welcome menu");
-        await stopTypingIndicator(tenantId, phone);
         await sendWelcomeMenu(tenantId, phone);
         return;
       }
@@ -1697,7 +1693,6 @@ async function processWithAI(
             );
           } else {
             debugLog("[Webhook] Invalid main menu input:", message);
-            await stopTypingIndicator(tenantId, phone);
             await sendEvolutionMessage(tenantId, phone, 
               "Please reply with a number *1-6* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Search Services\n5 Check Order Status\n6 Check Booking Status"
             );
@@ -1714,7 +1709,6 @@ async function processWithAI(
     const isGreeting = checkIfGreeting(message);
     if (isGreeting) {
       console.log("[Webhook] Greeting detected, sending welcome menu");
-      await stopTypingIndicator(tenantId, phone);
       await sendWelcomeMenu(tenantId, phone);
       return;
     }
@@ -1757,6 +1751,9 @@ async function processWithAI(
     
     console.log("[Webhook] Calling AI for natural language query...");
     const aiStart = Date.now();
+    
+    // Start typing indicator ONLY for AI path (handlers manage their own)
+    await startTypingIndicator(tenantId, phone);
     
     const aiPromise = generateAIResponse(message, enhancedContext, []);
     const timeoutPromise = new Promise((_, reject) => 
