@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-import './CustomerDetails.css';
-
 interface PickupStation {
   id: string;
   county: string;
