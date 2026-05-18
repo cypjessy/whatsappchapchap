@@ -507,6 +507,22 @@ export default function OrdersPage() {
         <title>Invoice #${order.orderNumber || order.id.substring(0, 8)}</title>
         <style>
           body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #1e293b; }
+          .back-button { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 10px 20px; 
+            background: #25D366; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-bottom: 20px;
+            text-decoration: none;
+            transition: all 0.2s;
+          }
+          .back-button:hover { background: #128C7E; transform: translateY(-1px); }
           .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #25D366; padding-bottom: 20px; }
           .logo { font-size: 32px; font-weight: 900; color: #25D366; letter-spacing: -1px; }
           .invoice-meta { display: flex; justify-content: space-between; margin: 20px 0; padding: 20px; background: #f8fafc; border-radius: 12px; }
@@ -515,10 +531,18 @@ export default function OrdersPage() {
           td { padding: 16px 12px; border-bottom: 1px solid #e2e8f0; }
           .total-row { font-size: 20px; font-weight: 900; color: #25D366; border-top: 3px solid #e2e8f0; }
           .footer { margin-top: 60px; text-align: center; color: #64748b; font-size: 14px; }
-          @media print { body { padding: 0; } }
+          @media print { 
+            body { padding: 0; } 
+            .back-button { display: none !important; }
+          }
         </style>
       </head>
       <body>
+        <button class="back-button" onclick="window.close()">
+          <span>←</span>
+          <span>Back to Orders</span>
+        </button>
+        
         <div class="header">
           <div class="logo">INVOICE</div>
           <div style="color: #64748b; margin-top: 8px;">Order #${order.orderNumber || order.id.substring(0, 8)}</div>

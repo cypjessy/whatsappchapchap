@@ -854,6 +854,48 @@ export default function OrderDetailModal({
                     </div>
                   )}
 
+                  {/* Payment Proof / Transaction Details */}
+                  {order.paymentProof && (
+                    <div className="mt-3 p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                      <div className="flex items-center gap-2 mb-3">
+                        <i className="fas fa-check-circle text-green-600" />
+                        <div className="text-xs font-bold uppercase text-green-800">Payment Submitted</div>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        {order.paymentProof.transactionId && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-700 text-xs">Transaction ID:</span>
+                            <span className="font-mono font-semibold text-green-900 text-xs">{order.paymentProof.transactionId}</span>
+                          </div>
+                        )}
+                        {order.paymentProof.amount && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-700 text-xs">Amount Paid:</span>
+                            <span className="font-bold text-green-900">{formatCurrency(order.paymentProof.amount)}</span>
+                          </div>
+                        )}
+                        {order.paymentProof.paidAt && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-700 text-xs">Paid At:</span>
+                            <span className="text-green-900 text-xs">{formatDate(order.paymentProof.paidAt)} {formatTime(order.paymentProof.paidAt)}</span>
+                          </div>
+                        )}
+                        {order.paymentProof.confirmedBy && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-700 text-xs">Confirmed By:</span>
+                            <span className="font-semibold text-green-900 text-xs">{order.paymentProof.confirmedBy}</span>
+                          </div>
+                        )}
+                        {order.paymentProof.notes && (
+                          <div className="mt-2 pt-2 border-t border-green-200">
+                            <div className="text-green-700 text-xs mb-1">Notes:</div>
+                            <div className="text-green-900 text-xs whitespace-pre-wrap">{order.paymentProof.notes}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {order.orderNotes && (
                     <div className="mt-3 p-3 bg-[#fffbeb] border border-[#fde68a] rounded-lg">
                       <div className="text-[10px] font-bold uppercase text-[#92400e] mb-1">Customer Notes</div>
