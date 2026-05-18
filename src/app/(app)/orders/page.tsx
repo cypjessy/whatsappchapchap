@@ -479,6 +479,9 @@ export default function OrdersPage() {
           duration: 'short' 
         });
         
+        // Close modal before reloading to avoid stale data display
+        setModalOpen(false);
+        
         loadOrders();
         loadCounts();
       } catch (error) {
