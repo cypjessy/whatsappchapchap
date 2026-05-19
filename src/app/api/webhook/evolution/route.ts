@@ -2065,7 +2065,48 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const test = searchParams.get('test');
+  
+  if (test === 'typing') {
+    const tenantId = searchParams.get('tenant') || '';
+    const phone = searchParams.get('phone') || '';
+    
+    if (!tenantId || !phone) {
+      return NextResponse.json({ error: 'Missing tenant or phone' });
+    }
+    
+    const evolutionApiUrl = process.env.EVOLUTION_API_URL || '';
+    const evolutionApiKey = process.env.EVOLUTION_API_KEY || '';
+    
+    // Test raw Evolution API call directly
+    const result = await fetch(`${evolutionApiUrl}/chat/sendPresence/${tenantId}`, {
+      method: 'POST',
+      headers: {
+        apikey: evolutionApiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        number: phone,
+        options: {
+          presence: 'composing',
+          delay: 5000,
+        },
+      }),
+    });
+    
+    const data = await result.json();
+    return NextResponse.json({ 
+      status: result.status, 
+      ok: result.ok,
+      response: data,
+      url: `${evolutionApiUrl}/chat/sendPresence/${tenantId}`,
+      phone,
+      tenantId,
+    });
+  }
+  
   return NextResponse.json({
     status: "Webhook active",
     message: "POST to receive WhatsApp messages",
