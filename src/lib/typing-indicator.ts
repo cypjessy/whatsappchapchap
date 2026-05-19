@@ -36,10 +36,8 @@ export async function sendTypingIndicator(
       },
       body: JSON.stringify({
         number: phoneNumber,
-        options: {
-          presence: action,
-          delay: 1000,
-        },
+        presence: action,
+        delay: 1000,
       }),
     });
     

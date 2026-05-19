@@ -2089,10 +2089,8 @@ export async function GET(req: NextRequest) {
       },
       body: JSON.stringify({
         number: phone,
-        options: {
-          presence: 'composing',
-          delay: 5000,
-        },
+        presence: 'composing',
+        delay: 5000,
       }),
     });
     
