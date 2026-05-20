@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const tenantId = userDoc.data()?.tenantId;
 
     if (!tenantId) {
-      return NextResponse.json({ error: "User not associated with a tenant" }, { status: 403 });
+      return NextResponse.json({ error: "Tenant not found for user" }, { status: 403 });
     }
 
     const doc = await adminDb
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     const tenantId = userDoc.data()?.tenantId;
 
     if (!tenantId) {
-      return NextResponse.json({ error: "User not associated with a tenant" }, { status: 403 });
+      return NextResponse.json({ error: "Tenant not found for user" }, { status: 403 });
     }
 
     const { publicKey, secretKey, webhookSecret, isLive } = await req.json();

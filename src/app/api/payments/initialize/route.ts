@@ -57,11 +57,20 @@ export async function POST(req: NextRequest) {
 
     const { email, amount, orderId, metadata } = await req.json();
 
-    // Validation
-    if (!email || !amount || !orderId) {
+    // Validation - explicit check for amount > 0
+    if (!email || amount == null || amount <= 0 || !orderId) {
       return NextResponse.json(
-        { error: "Email, amount, and orderId are required" },
+        { error: "Email, amount (must be > 0), and orderId are required" },
         { status: 400 }
+      );
+    }
+
+    // Fail loudly if APP_URL not configured
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+      return NextResponse.json(
+        { error: "APP_URL not configured" },
+        { status: 500 }
       );
     }
 
@@ -79,7 +88,7 @@ export async function POST(req: NextRequest) {
         email,
         amount: Math.round(amount * 100), // Convert to kobo/pesewas (smallest currency unit)
         reference: `order_${orderId}_${Date.now()}`,
-        callback_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/payments/callback`,
+        callback_url: `${appUrl}/api/payments/callback`,
         metadata: { 
           orderId, 
           tenantId,
@@ -91,7 +100,12 @@ export async function POST(req: NextRequest) {
     const data = await response.json();
     
     if (!data.status) {
-      throw new Error(data.message || "Failed to initialize payment");
+      // Handle duplicate reference gracefully (409 Conflict)
+      const statusCode = data.message?.includes("Duplicate") ? 409 : 500;
+      return NextResponse.json(
+        { error: data.message || "Failed to initialize payment" },
+        { status: statusCode }
+      );
     }
 
     return NextResponse.json({ 
