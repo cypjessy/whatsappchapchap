@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 // GET — return only public key to client (never expose secretKey)
 export async function GET(req: NextRequest) {
@@ -13,17 +14,21 @@ export async function GET(req: NextRequest) {
 
     const token = authHeader.split("Bearer ")[1];
     const decodedToken = await getAdminAuth().verifyIdToken(token);
-    const tenantId = decodedToken.tenantId;
-
-    if (!tenantId) {
-      return NextResponse.json({ error: "No tenant ID in token" }, { status: 403 });
-    }
+    const uid = decodedToken.uid;
 
     if (!adminDb) {
       return NextResponse.json(
         { error: "Database not configured" },
         { status: 500 }
       );
+    }
+
+    // Fetch tenantId from user's Firestore record
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    const tenantId = userDoc.data()?.tenantId;
+
+    if (!tenantId) {
+      return NextResponse.json({ error: "User not associated with a tenant" }, { status: 403 });
     }
 
     const doc = await adminDb
@@ -65,11 +70,7 @@ export async function POST(req: NextRequest) {
 
     const token = authHeader.split("Bearer ")[1];
     const decodedToken = await getAdminAuth().verifyIdToken(token);
-    const tenantId = decodedToken.tenantId;
-
-    if (!tenantId) {
-      return NextResponse.json({ error: "No tenant ID in token" }, { status: 403 });
-    }
+    const uid = decodedToken.uid;
 
     if (!adminDb) {
       return NextResponse.json(
@@ -78,12 +79,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Fetch tenantId from user's Firestore record
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    const tenantId = userDoc.data()?.tenantId;
+
+    if (!tenantId) {
+      return NextResponse.json({ error: "User not associated with a tenant" }, { status: 403 });
+    }
+
     const { publicKey, secretKey, webhookSecret, isLive } = await req.json();
 
     // Validation
     if (!publicKey || !secretKey || !webhookSecret) {
       return NextResponse.json(
         { error: "All fields are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate isLive is a boolean
+    if (typeof isLive !== "boolean") {
+      return NextResponse.json(
+        { error: "isLive must be a boolean (true for live, false for test)" },
         { status: 400 }
       );
     }
@@ -106,20 +123,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Save to Firestore
-    await adminDb
+    // Check if document already exists to preserve createdAt
+    const ref = adminDb
       .collection("tenants")
       .doc(tenantId)
       .collection("settings")
-      .doc("paystack")
-      .set({
-        publicKey,
-        secretKey,   // stored server-side, never returned to client
-        webhookSecret,
-        isLive,
-        updatedAt: new Date(),
-        createdAt: new Date(), // Set on first creation
-      }, { merge: true });
+      .doc("paystack");
+
+    const existing = await ref.get();
+
+    // Save to Firestore - only set createdAt on first creation
+    await ref.set({
+      publicKey,
+      secretKey,   // stored server-side, never returned to client
+      webhookSecret,
+      isLive,
+      updatedAt: FieldValue.serverTimestamp(),
+      // Only set createdAt if document doesn't exist yet
+      ...(!existing.exists && { createdAt: FieldValue.serverTimestamp() }),
+    }, { merge: true });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -38,10 +38,21 @@ export async function POST(req: NextRequest) {
 
     const token = authHeader.split("Bearer ")[1];
     const decodedToken = await getAdminAuth().verifyIdToken(token);
-    const tenantId = decodedToken.tenantId;
+    const uid = decodedToken.uid;
+
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 500 }
+      );
+    }
+
+    // Fetch tenantId from user's Firestore record
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    const tenantId = userDoc.data()?.tenantId;
 
     if (!tenantId) {
-      return NextResponse.json({ error: "No tenant ID in token" }, { status: 403 });
+      return NextResponse.json({ error: "User not associated with a tenant" }, { status: 403 });
     }
 
     const { email, amount, orderId, metadata } = await req.json();
