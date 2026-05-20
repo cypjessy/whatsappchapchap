@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated and belongs to tenant
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isTenantOwner(tenantId) {
+      return isAuthenticated() && request.auth.token.tenantId == tenantId;
+    }
+    
+    // Tenants collection
+    match /tenants/{tenantId} {
+      allow read, write: if isTenantOwner(tenantId);
+      
+      // Tenant settings subcollection
+      match /settings/{settingId} {
+        // Block all client access to settings - only server (Admin SDK) can read/write
+        allow read, write: if false;
+      }
+      
+      // Orders subcollection
+      match /orders/{orderId} {
+        allow read, write: if isTenantOwner(tenantId);
+      }
+      
+      // Conversations subcollection
+      match /conversations/{conversationId} {
+        allow read, write: if isTenantOwner(tenantId);
+      }
+    }
+    
+    // Business profiles
+    match /businessProfiles/{profileId} {
+      allow read: if true; // Public read for browsing
+      allow write: if isAuthenticated() && resource.data.tenantId == request.auth.token.tenantId;
+    }
+    
+    // Products
+    match /products/{productId} {
+      allow read: if true; // Public read for browsing
+      allow write: if isAuthenticated() && resource.data.tenantId == request.auth.token.tenantId;
+    }
+    
+    // Shipping methods
+    match /shippingMethods/{methodId} {
+      allow read: if true; // Public read
+      allow write: if isAuthenticated() && resource.data.tenantId == request.auth.token.tenantId;
+    }
+    
+    // Pickup stations
+    match /pickupStations/{stationId} {
+      allow read: if true; // Public read
+      allow write: if isAuthenticated() && resource.data.tenantId == request.auth.token.tenantId;
+    }
+  }
+}
