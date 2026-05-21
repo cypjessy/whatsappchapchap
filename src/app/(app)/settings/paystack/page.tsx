@@ -501,7 +501,7 @@ export default function PaystackSettingsPage() {
 
       {/* Header */}
       <div className="bg-white border-b border-[#e2e8f0] sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4 md:py-5 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
@@ -532,7 +532,7 @@ export default function PaystackSettingsPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6">
         {/* Mode Toggle */}
         <div className={`
           bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
@@ -818,7 +818,7 @@ export default function PaystackSettingsPage() {
 
       {/* Sticky Save Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#e2e8f0] z-40">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-[#64748b]">
             <i className="fas fa-info-circle text-[10px]" />
             <span className="hidden sm:inline">
