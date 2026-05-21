@@ -382,12 +382,13 @@ async function showServicesForCategory(
   
   await deps.startTyping(tenantId, phone);
   
-  // Query services by businessType
+  // Query services by businessType (limit to 50 to prevent flooding Firebase reads)
   const servicesSnap = await adminDb
     .collection("services")
     .where("tenantId", "==", tenantId)
     .where("businessType", "==", categorySlug)
     .where("status", "==", "active")
+    .limit(50)
     .get();
   
   const services = servicesSnap.docs.map((doc: any) => ({
@@ -461,6 +462,7 @@ async function showServicesForSubcategory(
       .where("businessType", "==", categorySlug)
       .where("subcategoryName", "==", subcategoryName)
       .where("status", "==", "active")
+      .limit(50)
       .get();
   } catch (error: any) {
     console.error(`[ServiceBrowse] Firestore query error:`, error.message);
@@ -537,14 +539,17 @@ async function showServiceBatch(
   services: Service[],
   startIndex: number,
   context: { name: string; type: string },
-  deps: ServiceBrowseDeps
+  deps: ServiceBrowseDeps,
+  displayOffset?: number // Optional: overrides the header display offset for paginated views
 ): Promise<void> {
   const batchSize = 5;
   const batch = services.slice(startIndex, startIndex + batchSize);
   const totalServices = services.length;
+  const headerStart = displayOffset !== undefined ? displayOffset + 1 : startIndex + 1;
+  const headerEnd = displayOffset !== undefined ? Math.min(displayOffset + batchSize, totalServices) : Math.min(startIndex + batchSize, totalServices);
   
   let headerMessage = `🛠️ *${context.name}*\n\n`;
-  headerMessage += `Showing ${startIndex + 1}-${Math.min(startIndex + batchSize, totalServices)} of ${totalServices} services:\n\n`;
+  headerMessage += `Showing ${headerStart}-${headerEnd} of ${totalServices} services:\n\n`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, headerMessage);
@@ -730,7 +735,8 @@ async function handleServiceListing(
       nextServices,
       0,
       { name: contextName, type: listingType },
-      deps
+      deps,
+      nextIndex // Pass the actual starting index for correct header display
     );
     
     // Update index

@@ -49,7 +49,7 @@ interface CheckoutData {
 export default function CheckoutPageWrapper() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
           <p className="text-on-surface-variant">Loading checkout...</p>
@@ -282,7 +282,7 @@ function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
           <p className="text-on-surface-variant">Loading checkout...</p>
@@ -293,7 +293,7 @@ function CheckoutPage() {
 
   if (error || !checkoutData) {
     return (
-      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-exclamation-circle text-red-500 text-2xl"></i>
@@ -313,7 +313,7 @@ function CheckoutPage() {
 
   return (
     <div className={`
-      min-h-screen bg-surface-container-lowest pb-32 transition-all duration-500
+      min-h-screen pb-32 transition-all duration-500
       ${isVisible ? "opacity-100" : "opacity-0"}
     `}>
       {/* Header */}

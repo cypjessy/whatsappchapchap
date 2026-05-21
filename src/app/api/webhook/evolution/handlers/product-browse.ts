@@ -746,7 +746,7 @@ async function showProductsForSelection(
     query = query.where('category', '==', selections.categoryId);
   }
   
-  const productsSnap = await query.get();
+  const productsSnap = await query.limit(50).get();
   if (deps.debugLog) {
     deps.debugLog(`[ProductBrowse] Found ${productsSnap.size} products for category ${selections.categorySlug || selections.categoryId}`);
   }
@@ -1069,7 +1069,9 @@ async function showNextProductPage(
   const pageSize = selections.pageSize || 5;
   const lastDocId = selections.lastDocId; // Last document ID from previous page
   
-  // Build query with filters
+  // Build query with reliable Firestore fields only
+  // NOTE: brand and type are NOT included in Firestore query because
+  // they may be stored in filters.brand[0] / filters.type[0] instead of top-level fields
   let query = adminDb.collection('products')
     .where('tenantId', '==', tenantId)
     .where('status', '==', 'active');
@@ -1080,14 +1082,6 @@ async function showNextProductPage(
   
   if (selections.subcategory) {
     query = query.where('subcategory', '==', selections.subcategory);
-  }
-  
-  if (selections.type) {
-    query = query.where('type', '==', selections.type);
-  }
-  
-  if (selections.brand) {
-    query = query.where('brand', '==', selections.brand);
   }
   
   // Order by createdAt for consistent pagination
@@ -1101,8 +1095,9 @@ async function showNextProductPage(
     }
   }
   
-  // Fetch next page
-  const productsSnap = await query.limit(pageSize).get();
+  // Fetch a larger batch to allow for in-memory filtering (brand/type may be in filters field)
+  const FETCH_BATCH = 20;
+  const productsSnap = await query.limit(FETCH_BATCH).get();
   
   if (productsSnap.empty) {
     await deps.stopTyping(tenantId, phone);
@@ -1110,26 +1105,48 @@ async function showNextProductPage(
     return;
   }
   
-  const productsToShow = productsSnap.docs.map((doc: any) => ({
+  let productsToShow = productsSnap.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
   }));
   
+  // In-memory filtering for type (check both top-level and filters field)
+  if (selections.type) {
+    productsToShow = productsToShow.filter((p: any) => 
+      p.type === selections.type || p.filters?.type?.[0] === selections.type
+    );
+  }
+  
+  // In-memory filtering for brand (check both top-level and filters field)
+  if (selections.brand) {
+    productsToShow = productsToShow.filter((p: any) => 
+      p.brand === selections.brand || p.filters?.brand?.[0] === selections.brand
+    );
+  }
+  
+  // Limit to page size
+  const displayProducts = productsToShow.slice(0, pageSize);
+  
+  if (displayProducts.length === 0) {
+    await deps.stopTyping(tenantId, phone);
+    await deps.sendMessage(tenantId, phone, "✅ You've seen all available products! Reply *0* to go back.");
+    return;
+  }
+  
   const totalProducts = selections.totalProducts || 0;
-  const shownSoFar = (currentPage + 1) * pageSize + productsToShow.length;
   
   let headerMessage = `🛍️ *${selections.categoryName || selections.categorySlug}`;
   if (selections.subcategory) headerMessage += ` → ${selections.subcategory}`;
   if (selections.type) headerMessage += ` → ${selections.type}`;
   if (selections.brand) headerMessage += ` → ${selections.brand}`;
-  headerMessage += `*\n\nPage ${currentPage + 2} - Showing ${productsToShow.length} more products:\n\n`;
+  headerMessage += `*\n\nPage ${currentPage + 2} - Showing ${displayProducts.length} more products:\n\n`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, headerMessage);
   
-  // Send each product
-  for (let idx = 0; idx < productsToShow.length; idx++) {
-    const product = productsToShow[idx];
+  // Send each product (only the display batch)
+  for (let idx = 0; idx < displayProducts.length; idx++) {
+    const product = displayProducts[idx];
     const imageUrl = product.images?.[0] || product.imageUrl || product.image;
     
     let productText = `*${idx + 1}. ${product.name}*\n`;
@@ -1209,23 +1226,30 @@ async function showNextProductPage(
       await deps.sendMessage(tenantId, phone, productText);
     }
     
-    if (idx < productsToShow.length - 1) {
+    if (idx < displayProducts.length - 1) {
       await new Promise(resolve => setTimeout(resolve, 600));
     }
   }
   
   // Calculate if there are more products
-  const hasMoreProducts = productsToShow.length === pageSize;
+  // We have more if we received a full Firestore batch — there could be matching products deeper in the index
+  const hasMoreProducts = productsSnap.docs.length === FETCH_BATCH;
   let replyMessage = '';
   if (hasMoreProducts) {
-    replyMessage = `\n*Reply with a number:*\n1️⃣ - View More\n0️⃣ - Go back\n*Or* send a product number to order`;
+    const shownSoFar = (currentPage + 1) * pageSize + displayProducts.length;
+    const estimatedRemaining = totalProducts > 0 ? totalProducts - shownSoFar : 0;
+    if (estimatedRemaining > 0) {
+      replyMessage = `\n*Reply with a number:*\n1️⃣ - View More (${estimatedRemaining} more)\n0️⃣ - Go back\n*Or* send a product number to order`;
+    } else {
+      replyMessage = `\n*Reply with a number:*\n1️⃣ - View More\n0️⃣ - Go back\n*Or* send a product number to order`;
+    }
   } else {
     replyMessage = `\n*Reply with a number:*\n0️⃣ - Go back\n*Or* send a product number to order`;
   }
   
   await deps.sendMessage(tenantId, phone, replyMessage);
   
-  // Update flow state with new cursor
+  // Update flow state with new cursor (use last display product for cursor, not last Firestore doc)
   await adminDb
     .collection("tenants")
     .doc(tenantId)
@@ -1239,7 +1263,7 @@ async function showNextProductPage(
         selections: {
           ...selections,
           currentPage: currentPage + 1,
-          lastDocId: productsToShow.length > 0 ? productsToShow[productsToShow.length - 1].id : null,
+          lastDocId: displayProducts.length > 0 ? displayProducts[displayProducts.length - 1].id : null,
         },
         lastActivity: new Date().toISOString(),
       }
