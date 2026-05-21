@@ -49,10 +49,10 @@ interface CheckoutData {
 export default function CheckoutPageWrapper() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
-          <p className="text-[#64748b]">Loading checkout...</p>
+          <p className="text-on-surface-variant">Loading checkout...</p>
         </div>
       </div>
     }>
@@ -282,10 +282,10 @@ function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
-          <p className="text-[#64748b]">Loading checkout...</p>
+          <p className="text-on-surface-variant">Loading checkout...</p>
         </div>
       </div>
     );
@@ -293,13 +293,13 @@ function CheckoutPage() {
 
   if (error || !checkoutData) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-exclamation-circle text-red-500 text-2xl"></i>
           </div>
-          <h2 className="text-xl font-bold text-[#1e293b] mb-2">Checkout Error</h2>
-          <p className="text-[#64748b] mb-6">{error || "Invalid checkout data"}</p>
+          <h2 className="text-xl font-bold text-on-surface mb-2">Checkout Error</h2>
+          <p className="text-on-surface-variant mb-6">{error || "Invalid checkout data"}</p>
           <button
             onClick={() => router.back()}
             className="px-6 py-3 bg-[#8b5cf6] text-white rounded-xl font-bold hover:bg-[#7c3aed] transition-colors"
@@ -313,21 +313,21 @@ function CheckoutPage() {
 
   return (
     <div className={`
-      min-h-screen bg-[#f8fafc] pb-32 transition-all duration-500
+      min-h-screen bg-surface-container-lowest pb-32 transition-all duration-500
       ${isVisible ? "opacity-100" : "opacity-0"}
     `}>
       {/* Header */}
-      <div className="bg-white border-b border-[#e2e8f0] sticky top-0 z-30">
+      <div className="bg-white border-b border-outline-variant sticky top-0 z-30">
         <div className="px-3 md:px-6 py-4 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="w-9 h-9 rounded-lg border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+            className="w-9 h-9 rounded-lg border border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
           >
             <i className="fas fa-arrow-left text-sm" />
           </button>
           <div>
-            <h1 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Checkout</h1>
-            <p className="text-xs text-[#64748b]">Review and complete your order</p>
+            <h1 className="text-lg md:text-xl font-extrabold text-on-surface">Checkout</h1>
+            <p className="text-xs text-on-surface-variant">Review and complete your order</p>
           </div>
         </div>
       </div>
@@ -338,11 +338,11 @@ function CheckoutPage() {
           <div className="space-y-6">
             {/* Product Card */}
             <div className={`
-              bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm
+              bg-white rounded-xl p-4 border border-outline-variant shadow-sm
               transition-all duration-500
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
             `}>
-              <h3 className="font-bold text-sm text-[#64748b] uppercase tracking-wider mb-3">
+              <h3 className="font-bold text-sm text-on-surface-variant uppercase tracking-wider mb-3">
                 {isCartOrder ? `Order Items (${checkoutData.cartItems!.length})` : 'Order Item'}
               </h3>
               
@@ -350,8 +350,8 @@ function CheckoutPage() {
                 // Cart items display
                 <div className="space-y-3">
                   {checkoutData.cartItems!.map((item, index) => (
-                    <div key={index} className="flex gap-3 pb-3 border-b border-[#e2e8f0] last:border-0 last:pb-0">
-                      <div className="w-16 h-16 rounded-lg bg-[#f8fafc] flex items-center justify-center shrink-0 overflow-hidden border border-[#e2e8f0]">
+                    <div key={index} className="flex gap-3 pb-3 border-b border-outline-variant last:border-0 last:pb-0">
+                      <div className="w-16 h-16 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 overflow-hidden border border-outline-variant">
                         {item.image ? (
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
@@ -359,14 +359,14 @@ function CheckoutPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm text-[#1e293b] truncate">{item.name}</h4>
+                        <h4 className="font-bold text-sm text-on-surface truncate">{item.name}</h4>
                         {Object.keys(item.specs).length > 0 && (
-                          <p className="text-xs text-[#64748b] mt-0.5">
+                          <p className="text-xs text-on-surface-variant mt-0.5">
                             {Object.entries(item.specs).map(([key, val]) => `${key}: ${val}`).join(', ')}
                           </p>
                         )}
                         <div className="flex items-center justify-between mt-1.5">
-                          <span className="text-xs text-[#64748b]">Qty: {item.quantity}</span>
+                          <span className="text-xs text-on-surface-variant">Qty: {item.quantity}</span>
                           <span className="text-xs font-semibold text-[#8b5cf6]">@ {CURRENCY_SYMBOL}{item.price.toLocaleString()}</span>
                         </div>
                       </div>
@@ -376,7 +376,7 @@ function CheckoutPage() {
               ) : (
                 // Single product display
                 <div className="flex gap-3 md:gap-4">
-                  <div className="w-20 h-20 rounded-lg bg-[#f8fafc] flex items-center justify-center shrink-0 overflow-hidden border border-[#e2e8f0]">
+                  <div className="w-20 h-20 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 overflow-hidden border border-outline-variant">
                     {checkoutData.productImage ? (
                       <img src={checkoutData.productImage} alt={checkoutData.productName} className="w-full h-full object-cover" />
                     ) : (
@@ -384,14 +384,14 @@ function CheckoutPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-base text-[#1e293b] truncate">{checkoutData.productName}</h4>
+                    <h4 className="font-bold text-base text-on-surface truncate">{checkoutData.productName}</h4>
                     {checkoutData.selectedSpecs && Object.keys(checkoutData.selectedSpecs).length > 0 && (
-                      <p className="text-xs text-[#64748b] mt-1">
+                      <p className="text-xs text-on-surface-variant mt-1">
                         {Object.entries(checkoutData.selectedSpecs).map(([key, val]) => `${key}: ${val}`).join(', ')}
                       </p>
                     )}
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm text-[#64748b]">Qty: {checkoutData.quantity}</span>
+                      <span className="text-sm text-on-surface-variant">Qty: {checkoutData.quantity}</span>
                       <span className="text-sm font-semibold text-[#8b5cf6]">@ {CURRENCY_SYMBOL}{(checkoutData.price || 0).toLocaleString()}</span>
                     </div>
                   </div>
@@ -401,21 +401,21 @@ function CheckoutPage() {
 
             {/* Customer Info */}
             <div className={`
-              bg-white rounded-xl p-4 md:p-5 border border-[#e2e8f0] shadow-sm
+              bg-white rounded-xl p-4 md:p-5 border border-outline-variant shadow-sm
               transition-all duration-500 delay-100
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
             `}>
-              <h3 className="font-bold text-sm text-[#64748b] uppercase tracking-wider mb-3">
+              <h3 className="font-bold text-sm text-on-surface-variant uppercase tracking-wider mb-3">
                 Customer Details
               </h3>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#f1f5f9] flex items-center justify-center shrink-0">
-                    <i className="fas fa-user text-[#94a3b8] text-xs" />
+                  <div className="w-8 h-8 rounded-lg bg-surface-variant flex items-center justify-center shrink-0">
+                    <i className="fas fa-user text-outline text-xs" />
                   </div>
                   <div>
-                    <p className="text-xs text-[#64748b] font-medium">Name</p>
-                    <p className="text-sm font-semibold text-[#1e293b]">{checkoutData.customerName}</p>
+                    <p className="text-xs text-on-surface-variant font-medium">Name</p>
+                    <p className="text-sm font-semibold text-on-surface">{checkoutData.customerName}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -423,8 +423,8 @@ function CheckoutPage() {
                     <i className="fab fa-whatsapp text-[#25D366] text-xs" />
                   </div>
                   <div>
-                    <p className="text-xs text-[#64748b] font-medium">Phone</p>
-                    <p className="text-sm text-[#1e293b]">{checkoutData.customerPhone}</p>
+                    <p className="text-xs text-on-surface-variant font-medium">Phone</p>
+                    <p className="text-sm text-on-surface">{checkoutData.customerPhone}</p>
                   </div>
                 </div>
                 {checkoutData.customerEmail && (
@@ -433,8 +433,8 @@ function CheckoutPage() {
                       <i className="fas fa-envelope text-[#3b82f6] text-xs" />
                     </div>
                     <div>
-                      <p className="text-xs text-[#64748b] font-medium">Email</p>
-                      <p className="text-sm text-[#1e293b]">{checkoutData.customerEmail}</p>
+                      <p className="text-xs text-on-surface-variant font-medium">Email</p>
+                      <p className="text-sm text-on-surface">{checkoutData.customerEmail}</p>
                     </div>
                   </div>
                 )}
@@ -443,8 +443,8 @@ function CheckoutPage() {
                     <i className="fas fa-map-marker-alt text-[#f59e0b] text-xs" />
                   </div>
                   <div>
-                    <p className="text-xs text-[#64748b] font-medium">Delivery Address</p>
-                    <p className="text-sm text-[#1e293b]">{checkoutData.address || "Not specified"}</p>
+                    <p className="text-xs text-on-surface-variant font-medium">Delivery Address</p>
+                    <p className="text-sm text-on-surface">{checkoutData.address || "Not specified"}</p>
                   </div>
                 </div>
               </div>
@@ -452,11 +452,11 @@ function CheckoutPage() {
 
             {/* Payment Method Selection */}
             <div className={`
-              bg-white rounded-xl p-4 md:p-5 border border-[#e2e8f0] shadow-sm
+              bg-white rounded-xl p-4 md:p-5 border border-outline-variant shadow-sm
               transition-all duration-500 delay-200
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
             `}>
-              <h3 className="font-bold text-sm text-[#64748b] uppercase tracking-wider mb-3">
+              <h3 className="font-bold text-sm text-on-surface-variant uppercase tracking-wider mb-3">
                 Payment Method
               </h3>
               
@@ -468,7 +468,7 @@ function CheckoutPage() {
                     transition-all duration-200
                     ${paymentMethod === "paystack"
                       ? "border-[#09A5DB] bg-[#09A5DB]/5"
-                      : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                      : "border-outline-variant bg-white hover:border-outline-variant"
                     }
                  `}>
                     <input
@@ -483,18 +483,18 @@ function CheckoutPage() {
                       <i className="fas fa-credit-card text-white text-lg" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-[#1e293b]">Pay with Card/M-Pesa</p>
-                      <p className="text-xs text-[#64748b]">Secure online payment via Paystack</p>
+                      <p className="font-bold text-sm text-on-surface">Pay with Card/M-Pesa</p>
+                      <p className="text-xs text-on-surface-variant">Secure online payment via Paystack</p>
                     </div>
                   </label>
 
                   {/* Divider */}
                   <div className="relative py-2">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-[#e2e8f0]"></div>
+                      <div className="w-full border-t border-outline-variant"></div>
                     </div>
                     <div className="relative flex justify-center">
-                      <span className="bg-white px-3 text-xs text-[#94a3b8]">or use other methods</span>
+                      <span className="bg-white px-3 text-xs text-outline">or use other methods</span>
                     </div>
                   </div>
 
@@ -538,8 +538,8 @@ function CheckoutPage() {
                           <i className={`fas ${method.icon} text-white text-lg`} />
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-sm text-[#1e293b]">{method.name}</p>
-                          <p className="text-xs text-[#64748b] line-clamp-1">{method.details}</p>
+                          <p className="font-bold text-sm text-on-surface">{method.name}</p>
+                          <p className="text-xs text-on-surface-variant line-clamp-1">{method.details}</p>
                         </div>
                       </label>
                     );
@@ -554,7 +554,7 @@ function CheckoutPage() {
                     transition-all duration-200
                     ${paymentMethod === "paystack"
                       ? "border-[#09A5DB] bg-[#09A5DB]/5"
-                      : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                      : "border-outline-variant bg-white hover:border-outline-variant"
                     }
                  `}>
                     <input
@@ -569,8 +569,8 @@ function CheckoutPage() {
                       <i className="fas fa-credit-card text-white text-lg" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-[#1e293b]">Pay with Card/M-Pesa</p>
-                      <p className="text-xs text-[#64748b]">Secure online payment via Paystack</p>
+                      <p className="font-bold text-sm text-on-surface">Pay with Card/M-Pesa</p>
+                      <p className="text-xs text-on-surface-variant">Secure online payment via Paystack</p>
                     </div>
                   </label>
 
@@ -580,7 +580,7 @@ function CheckoutPage() {
                     transition-all duration-200
                     ${paymentMethod === "mpesa"
                       ? "border-[#25D366] bg-[#25D366]/5"
-                      : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                      : "border-outline-variant bg-white hover:border-outline-variant"
                     }
                   `}>
                     <input
@@ -595,8 +595,8 @@ function CheckoutPage() {
                       <i className="fas fa-mobile-alt text-white text-lg" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-[#1e293b]">M-Pesa</p>
-                      <p className="text-xs text-[#64748b]">Pay via M-Pesa mobile money</p>
+                      <p className="font-bold text-sm text-on-surface">M-Pesa</p>
+                      <p className="text-xs text-on-surface-variant">Pay via M-Pesa mobile money</p>
                     </div>
                   </label>
 
@@ -606,7 +606,7 @@ function CheckoutPage() {
                     transition-all duration-200
                     ${paymentMethod === "bank"
                       ? "border-[#3b82f6] bg-[#3b82f6]/5"
-                      : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                      : "border-outline-variant bg-white hover:border-outline-variant"
                     }
                   `}>
                     <input
@@ -621,8 +621,8 @@ function CheckoutPage() {
                       <i className="fas fa-university text-white text-lg" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-[#1e293b]">Bank Transfer</p>
-                      <p className="text-xs text-[#64748b]">Direct bank transfer</p>
+                      <p className="font-bold text-sm text-on-surface">Bank Transfer</p>
+                      <p className="text-xs text-on-surface-variant">Direct bank transfer</p>
                     </div>
                   </label>
 
@@ -632,7 +632,7 @@ function CheckoutPage() {
                     transition-all duration-200
                     ${paymentMethod === "cod"
                       ? "border-[#10b981] bg-[#10b981]/5"
-                      : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+                      : "border-outline-variant bg-white hover:border-outline-variant"
                     }
                   `}>
                     <input
@@ -647,8 +647,8 @@ function CheckoutPage() {
                       <i className="fas fa-money-bill-wave text-white text-lg" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-[#1e293b]">Cash on Delivery</p>
-                      <p className="text-xs text-[#64748b]">Pay when you receive</p>
+                      <p className="font-bold text-sm text-on-surface">Cash on Delivery</p>
+                      <p className="text-xs text-on-surface-variant">Pay when you receive</p>
                     </div>
                   </label>
                 </div>
@@ -657,7 +657,7 @@ function CheckoutPage() {
               {/* Payment Details Input - Hide for COD and Paystack (auto-confirmed) */}
               {paymentMethod && paymentMethod !== "cod" && paymentMethod !== "paystack" && (
                 <div className="mt-4">
-                  <label className="block text-xs font-bold text-[#64748b] mb-2">
+                  <label className="block text-xs font-bold text-on-surface-variant mb-2">
                     Transaction Reference <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -665,9 +665,9 @@ function CheckoutPage() {
                     value={paymentDetails}
                     onChange={(e) => setPaymentDetails(e.target.value)}
                     placeholder={paymentMethod === "mpesa" ? "Enter M-Pesa transaction ID" : "Enter bank transfer reference"}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm outline-none focus:border-[#8b5cf6] placeholder:text-[#cbd5e1]"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] placeholder:text-[#cbd5e1]"
                   />
-                  <p className="text-xs text-[#94a3b8] mt-2">
+                  <p className="text-xs text-outline mt-2">
                     {paymentMethod === "mpesa" 
                       ? "After paying via M-Pesa, enter the transaction ID here"
                       : "After making the bank transfer, enter the reference number here"}
@@ -680,25 +680,25 @@ function CheckoutPage() {
           {/* Right Column - Summary */}
           <div className="space-y-6">
             <div className={`
-              bg-white rounded-2xl p-5 md:p-6 border border-[#e2e8f0] shadow-sm sticky top-24
+              bg-white rounded-2xl p-5 md:p-6 border border-outline-variant shadow-sm sticky top-24
               transition-all duration-500 delay-300
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
             `}>
-              <h3 className="font-bold text-base text-[#1e293b] mb-4">Order Summary</h3>
+              <h3 className="font-bold text-base text-on-surface mb-4">Order Summary</h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#64748b]">Subtotal</span>
-                  <span className="font-semibold text-[#1e293b]">{CURRENCY_SYMBOL}{subtotal.toLocaleString()}</span>
+                  <span className="text-on-surface-variant">Subtotal</span>
+                  <span className="font-semibold text-on-surface">{CURRENCY_SYMBOL}{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#64748b]">Delivery Fee</span>
-                  <span className="font-semibold text-[#1e293b]">{CURRENCY_SYMBOL}{checkoutData.deliveryCost.toLocaleString()}</span>
+                  <span className="text-on-surface-variant">Delivery Fee</span>
+                  <span className="font-semibold text-on-surface">{CURRENCY_SYMBOL}{checkoutData.deliveryCost.toLocaleString()}</span>
                 </div>
-                <div className="border-t-2 border-[#e2e8f0] pt-3 mt-3">
+                <div className="border-t-2 border-outline-variant pt-3 mt-3">
                   <div className="flex justify-between">
-                    <span className="font-bold text-[#1e293b]">Total</span>
-                    <span className="font-extrabold text-xl text-[#1e293b]">{CURRENCY_SYMBOL}{total.toLocaleString()}</span>
+                    <span className="font-bold text-on-surface">Total</span>
+                    <span className="font-extrabold text-xl text-on-surface">{CURRENCY_SYMBOL}{total.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -711,7 +711,7 @@ function CheckoutPage() {
                   w-full flex items-center justify-center gap-2.5 py-3.5 md:py-4 rounded-xl font-bold text-sm md:text-base mt-6
                   transition-all duration-200 active:scale-[0.98]
                   ${!paymentMethod || isProcessing || (paymentMethod !== "cod" && paymentMethod !== "paystack" && !paymentDetails.trim())
-                    ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+                    ? "bg-surface-variant text-outline cursor-not-allowed"
                     : "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:shadow-[#25D366]/30 hover:-translate-y-0.5"
                   }
                 `}
@@ -730,7 +730,7 @@ function CheckoutPage() {
               </button>
 
               {/* Security Badge */}
-              <div className="flex items-center justify-center gap-2 mt-4 text-[#94a3b8]">
+              <div className="flex items-center justify-center gap-2 mt-4 text-outline">
                 <i className="fas fa-shield-alt text-xs" />
                 <span className="text-[10px] font-medium">Secure & Encrypted</span>
               </div>

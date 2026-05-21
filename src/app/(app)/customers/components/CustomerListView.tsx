@@ -23,8 +23,8 @@ interface CustomerListViewProps {
 function getCustomerTier(totalSpent: number = 0): { label: string; icon: string; color: string } {
   if (totalSpent >= 50000) return { label: "VIP", icon: "fa-crown", color: "text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/20" };
   if (totalSpent >= 20000) return { label: "Gold", icon: "fa-star", color: "text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/20" };
-  if (totalSpent >= 5000) return { label: "Silver", icon: "fa-medal", color: "text-[#94a3b8] bg-[#94a3b8]/10 border-[#94a3b8]/20" };
-  return { label: "Regular", icon: "fa-user", color: "text-[#64748b] bg-[#64748b]/10 border-[#64748b]/20" };
+  if (totalSpent >= 5000) return { label: "Silver", icon: "fa-medal", color: "text-outline bg-[#94a3b8]/10 border-[#94a3b8]/20" };
+  return { label: "Regular", icon: "fa-user", color: "text-on-surface-variant bg-[#64748b]/10 border-[#64748b]/20" };
 }
 
 function getDaysSince(date?: string): string {
@@ -41,16 +41,16 @@ function getDaysSince(date?: string): string {
 
 function ShimmerCard() {
   return (
-    <div className="bg-white rounded-xl p-3.5 border border-[#e2e8f0] overflow-hidden relative">
+    <div className="bg-surface rounded-xl p-3.5 border border-outline-variant overflow-hidden relative">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-full bg-[#f1f5f9] shrink-0" />
+        <div className="w-11 h-11 rounded-full bg-surface-variant shrink-0" />
         <div className="flex-1 space-y-2">
           <div className="flex justify-between">
-            <div className="h-4 bg-[#f1f5f9] rounded-lg w-32" />
-            <div className="h-4 bg-[#f1f5f9] rounded-lg w-20" />
+            <div className="h-4 bg-surface-variant rounded-lg w-32" />
+            <div className="h-4 bg-surface-variant rounded-lg w-20" />
           </div>
-          <div className="h-3 bg-[#f1f5f9] rounded-lg w-24" />
+          <div className="h-3 bg-surface-variant rounded-lg w-24" />
         </div>
       </div>
     </div>
@@ -127,10 +127,10 @@ function CustomerCard({
         relative overflow-hidden rounded-xl border transition-all duration-300
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isSelected
-          ? "border-[#8b5cf6] bg-[#ede9fe]/30 shadow-md shadow-[#8b5cf6]/10"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+          ? "border-[#8b5cf6] bg-[#ede9fe]/30 shadow-md3-level2 shadow-[#8b5cf6]/10"
+          : "border-outline-variant bg-surface hover:border-outline-variant"
         }
-        ${isHovered && !bulkMode ? "shadow-lg shadow-[#e2e8f0]/40 -translate-y-0.5" : "shadow-sm"}
+        ${isHovered && !bulkMode ? "shadow-md3-level3 shadow-[#e2e8f0]/40 -translate-y-0.5" : "shadow-md3-level1"}
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -147,7 +147,7 @@ function CustomerCard({
             onShareWhatsApp(customer);
             setSwipeOffset(0);
           }}
-          className="w-12 h-12 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+          className="w-12 h-12 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-md3-level3 active:scale-90 transition-transform"
         >
           <i className="fab fa-whatsapp text-lg" />
         </button>
@@ -157,7 +157,7 @@ function CustomerCard({
             onPrintProfile(customer);
             setSwipeOffset(0);
           }}
-          className="w-12 h-12 rounded-xl bg-[#3b82f6] text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+          className="w-12 h-12 rounded-xl bg-[#3b82f6] text-white flex items-center justify-center shadow-md3-level3 active:scale-90 transition-transform"
         >
           <i className="fas fa-print text-lg" />
         </button>
@@ -165,7 +165,7 @@ function CustomerCard({
 
       {/* Main card content */}
       <div
-        className="relative z-10 bg-white transition-transform duration-200 ease-out"
+        className="relative z-10 bg-surface transition-transform duration-200 ease-out"
         style={{ transform: `translateX(-${swipeOffset}px)` }}
         onClick={handleCardClick}
       >
@@ -178,7 +178,7 @@ function CustomerCard({
                   w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200
                   ${isSelected
                     ? "bg-[#8b5cf6] border-[#8b5cf6]"
-                    : "border-[#e2e8f0] bg-white"
+                    : "border-outline-variant bg-surface"
                   }
                 `}
                 onClick={(e) => {
@@ -224,14 +224,14 @@ function CustomerCard({
               </div>
 
               <div className="flex items-center justify-between mt-1.5">
-                <div className="flex items-center gap-2 text-[11px] text-[#64748b]">
+                <div className="flex items-center gap-2 text-[11px] text-on-surface-variant">
                   <span className="flex items-center gap-1">
                     <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
                     {customer.phone}
                   </span>
                   <span className="text-[#e2e8f0]">•</span>
                   <span className="flex items-center gap-1">
-                    <i className="fas fa-clock text-[10px] text-[#94a3b8]" />
+                    <i className="fas fa-clock text-[10px] text-outline" />
                     {lastVisit}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ function CustomerCard({
                   className={`
                     w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                     text-[#25D366] bg-[rgba(37,211,102,0.1)]
-                    hover:bg-[#25D366] hover:text-white hover:shadow-md hover:shadow-[#25D366]/20
+                    hover:bg-[#25D366] hover:text-white hover:shadow-md3-level2 hover:shadow-[#25D366]/20
                   `}
                   title="Share via WhatsApp"
                   aria-label="Share via WhatsApp"
@@ -264,7 +264,7 @@ function CustomerCard({
                   className={`
                     w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                     text-[#3b82f6] bg-[#eff6ff]
-                    hover:bg-[#3b82f6] hover:text-white hover:shadow-md hover:shadow-[#3b82f6]/20
+                    hover:bg-[#3b82f6] hover:text-white hover:shadow-md3-level2 hover:shadow-[#3b82f6]/20
                   `}
                   title="Print Profile"
                   aria-label="Print Profile"
@@ -303,12 +303,12 @@ export default function CustomerListView({
 
   if (customers.length === 0) {
     return (
-      <div className="md:hidden flex flex-col items-center justify-center py-16 text-[#64748b] animate-fadeIn">
+      <div className="md:hidden flex flex-col items-center justify-center py-16 text-on-surface-variant animate-fadeIn">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-4 shadow-inner">
           <i className="fas fa-users text-2xl text-[#cbd5e1]" />
         </div>
-        <p className="text-sm font-bold text-[#475569]">No customers found</p>
-        <p className="text-xs text-[#94a3b8] mt-1">Try adjusting your search</p>
+        <p className="text-sm font-bold text-on-surface-variant">No customers found</p>
+        <p className="text-xs text-outline mt-1">Try adjusting your search</p>
       </div>
     );
   }

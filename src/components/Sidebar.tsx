@@ -84,7 +84,7 @@ function Tooltip({ label, children }: { label: string; children: React.ReactNode
         <div className={`
           absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5
           bg-[#1e293b] text-white text-xs font-semibold rounded-lg
-          whitespace-nowrap z-50 shadow-lg
+          whitespace-nowrap z-50 shadow-md3-level3
           animate-fadeIn
         `}>
           {label}
@@ -118,19 +118,19 @@ function NavLink({
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       className={`
-        group relative flex items-center gap-3 py-2.5 rounded-xl font-medium text-sm
+        sidebar-nav-link group relative flex items-center gap-3 py-2.5 rounded-xl font-medium text-sm
         transition-all duration-200 mx-2
         ${isCollapsed ? "justify-center px-2" : "px-4"}
         ${isActive
-          ? "bg-[#E8F5E9] text-[#25D366]"
-          : "text-[#64748b] hover:bg-[#F1F5F9] hover:text-[#1e293b]"
+          ? "bg-primary-container text-primary"
+          : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
         }
-        ${isPressed ? "scale-95" : "scale-100"}
+        ${isPressed ? "scale-[0.97]" : "scale-100"}
       `}
     >
       {/* MD3 Active indicator - pill-shaped bar */}
       {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#25D366] rounded-r-full" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 bg-primary rounded-r-full animate-indicatorSlide" />
       )}
 
       {/* Icon container - MD3 tonal system */}
@@ -138,25 +138,26 @@ function NavLink({
         w-10 h-10 rounded-xl flex items-center justify-center shrink-0
         transition-all duration-200
         ${isActive
-          ? "bg-[#25D366]/10"
+          ? "bg-primary/10"
           : isHovered
-            ? "bg-[#F1F5F9]"
+            ? "bg-surface-container"
             : "bg-transparent"
         }
       `}>
-        <i className={`fas ${item.icon} text-base ${isActive ? "text-[#25D366]" : ""}`} />
+        <i className={`fas ${item.icon} text-base ${isActive ? "text-primary" : "text-on-surface-variant"}`} />
       </div>
 
       {/* Label */}
       {!isCollapsed && (
-        <span className="truncate transition-opacity duration-200">{item.label}</span>
+        <span className="truncate transition-all duration-200 font-medium">{item.label}</span>
       )}
 
       {/* Badge - MD3 chip styling */}
       {!isCollapsed && item.badge && (
         <span className={`
-          ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0
-          ${isActive ? "bg-[#25D366] text-white" : "bg-[#EF4444] text-white"}
+          ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0
+          ${isActive ? "bg-primary text-white" : "bg-error text-white"}
+          shadow-level1
         `}>
           {item.badge}
         </span>
@@ -165,8 +166,8 @@ function NavLink({
       {/* Collapsed badge dot */}
       {isCollapsed && item.badge && (
         <span className={`
-          absolute top-2 right-2 w-2 h-2 rounded-full
-          ${isActive ? "bg-[#25D366]" : "bg-[#EF4444]"}
+          absolute top-2 right-2 w-2.5 h-2.5 rounded-full ring-2 ring-white
+          ${isActive ? "bg-primary" : "bg-error"}
         `} />
       )}
     </Link>
@@ -257,10 +258,11 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   return (
     <aside
       className={`
-        bg-white border-r border-[#E2E8F0] flex flex-col overflow-hidden
-        transition-all duration-300 ease-out shadow-sm
+        bg-white border-r border-surface-container-high flex flex-col overflow-hidden
+        transition-all duration-300 ease-out
+        shadow-level1
         ${isCollapsed ? "w-20" : "w-[260px]"}
-        ${isExpanded ? "shadow-xl" : ""}
+        ${isExpanded ? "shadow-level3" : ""}
       `}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -268,7 +270,7 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
     >
       {/* Logo - MD3 styling */}
       <div className={`
-        border-b border-[#E2E8F0] flex items-center shrink-0
+        border-b border-surface-container-high flex items-center shrink-0
         transition-all duration-300
         ${isCollapsed ? "p-3 justify-center" : "p-4 gap-3"}
       `}>
@@ -282,8 +284,8 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
         >
           <div className={`
             shrink-0 flex items-center justify-center text-white
-            bg-[#25D366] rounded-xl
-            transition-all duration-300 shadow-sm
+            bg-primary rounded-xl
+            transition-all duration-300 shadow-level1
             ${isCollapsed ? "w-10 h-10 text-lg" : "w-11 h-11 text-xl"}
           `}>
             <i className="fab fa-whatsapp" />
@@ -291,8 +293,8 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
 
           {!isCollapsed && (
             <div className="overflow-hidden">
-              <div className="text-xl font-extrabold text-[#1e293b] whitespace-nowrap animate-fadeIn">
-                Chap<span className="text-[#25D366]">Chap</span>
+              <div className="text-xl font-extrabold text-on-surface whitespace-nowrap animate-fadeIn">
+                Chap<span className="text-primary">Chap</span>
               </div>
             </div>
           )}
@@ -305,8 +307,10 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
           <div key={section.title} className="mb-1">
             {/* Section label (only when expanded) - MD3 typography */}
             {!isCollapsed && (
-              <div className="px-6 py-2 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">
-                {section.title}
+              <div className="sidebar-section-label px-6 py-2">
+                <span className="md3-label-small text-on-surface-variant uppercase tracking-widest">
+                  {section.title}
+                </span>
               </div>
             )}
 
@@ -325,19 +329,19 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
 
       {/* Profile Card */}
       <div className={`
-        border-t border-[#E2E8F0] shrink-0
+        border-t border-surface-container-high shrink-0
         transition-all duration-300
         ${isCollapsed ? "p-3" : "p-4"}
       `}>
         <div className={`
           group flex items-center rounded-xl cursor-pointer
-          transition-all duration-200 hover:bg-[#F1F5F9]
+          transition-all duration-200 hover:bg-surface-dim
           ${isCollapsed ? "justify-center p-2" : "gap-3 p-3"}
         `}>
           <div className={`
-            shrink-0 rounded-full bg-[#25D366]
+            shrink-0 rounded-full bg-primary
             flex items-center justify-center text-white font-semibold
-            transition-all duration-300 shadow-sm
+            transition-all duration-300 shadow-level1
             ${isCollapsed ? "w-9 h-9 text-xs" : "w-10 h-10 text-sm"}
           `}>
             JD
@@ -345,10 +349,10 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
 
           {!isCollapsed && (
             <div className="flex-1 min-w-0 animate-fadeIn">
-              <div className="font-semibold text-sm text-[#1e293b] truncate">{businessName}</div>
-              <div className="text-[11px] text-[#64748b] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-                <span className="font-medium">Premium Seller</span>
+              <div className="md3-body-medium font-semibold text-on-surface truncate">{businessName}</div>
+              <div className="md3-label-small text-on-surface-variant flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span>Online</span>
               </div>
             </div>
           )}
@@ -356,10 +360,10 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
           {!isCollapsed && (
             <button
               onClick={handleLogout}
-              className="p-2 rounded-xl hover:bg-[#FEE2E2] hover:text-[#EF4444] active:bg-[#FECACA] transition-colors shrink-0"
+              className="p-2 rounded-xl hover:bg-error-container hover:text-error active:bg-error-container transition-colors shrink-0 group"
               title="Logout"
             >
-              <i className="fas fa-sign-out-alt text-[#94A3B8]" />
+              <i className="fas fa-sign-out-alt text-outline group-hover:text-error transition-colors" />
             </button>
           )}
         </div>

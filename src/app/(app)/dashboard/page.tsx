@@ -27,7 +27,7 @@ function UpdatesButton({ onCheckUpdate, hasUpdate }: {
       className="
         fixed bottom-6 left-6 z-40 w-12 h-12 rounded-full
         bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white
-        shadow-lg shadow-[#F59E0B]/30 hover:shadow-xl hover:shadow-[#F59E0B]/40
+        shadow-md3-level3 shadow-[#F59E0B]/30 hover:shadow-md3-level4 hover:shadow-[#F59E0B]/40
         hover:-translate-y-0.5 active:scale-95
         flex items-center justify-center
         transition-all duration-300

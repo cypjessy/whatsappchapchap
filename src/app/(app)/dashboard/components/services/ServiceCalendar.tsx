@@ -4,17 +4,17 @@ export default function ServiceCalendar() {
   const today = 1;
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-4 md:p-5">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-4 md:p-5">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-[#1e293b] flex items-center gap-2">
+        <h3 className="font-bold text-on-surface flex items-center gap-2">
           <i className="fas fa-calendar text-[#3b82f6]"></i>
           April 2026
         </h3>
         <div className="flex gap-2">
-          <button className="text-[#64748b] hover:text-[#8b5cf6]">
+          <button className="text-on-surface-variant hover:text-[#8b5cf6]">
             <i className="fas fa-chevron-left"></i>
           </button>
-          <button className="text-[#64748b] hover:text-[#8b5cf6]">
+          <button className="text-on-surface-variant hover:text-[#8b5cf6]">
             <i className="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -22,7 +22,7 @@ export default function ServiceCalendar() {
       
       <div className="grid grid-cols-7 gap-1 text-center mb-2">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-          <div key={day} className="text-xs font-bold text-[#64748b] py-1">{day}</div>
+          <div key={day} className="text-xs font-bold text-on-surface-variant py-1">{day}</div>
         ))}
       </div>
       
@@ -40,7 +40,7 @@ export default function ServiceCalendar() {
                 ${isEmpty ? "invisible" : ""}
                 ${isToday ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white" : ""}
                 ${hasBooking && !isToday ? "bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] relative" : ""}
-                ${!isToday && !hasBooking ? "text-[#64748b] hover:bg-[#f1f5f9]" : ""}
+                ${!isToday && !hasBooking ? "text-on-surface-variant hover:bg-surface-variant" : ""}
               `}
             >
               {day}
@@ -52,14 +52,14 @@ export default function ServiceCalendar() {
         })}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex items-center gap-4 text-xs">
+      <div className="mt-4 pt-4 border-t border-outline-variant flex items-center gap-4 text-xs">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#8b5cf6]"></span>
-          <span className="text-[#64748b]">Has booking</span>
+          <span className="text-on-surface-variant">Has booking</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#ef4444]"></span>
-          <span className="text-[#64748b]">Pending</span>
+          <span className="text-on-surface-variant">Pending</span>
         </div>
       </div>
     </div>

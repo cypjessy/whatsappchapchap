@@ -31,7 +31,7 @@ const STATUS_CONFIG: Record<string, { bg: string; dot: string; label: string }> 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
 
 function getStatusConfig(status: string = "active") {
-  return STATUS_CONFIG[status] || { bg: "bg-white0", dot: "bg-white0", label: status };
+  return STATUS_CONFIG[status] || { bg: "bg-surface", dot: "bg-surface", label: status };
 }
 
 function getLocationIcon(location: string): string {
@@ -47,17 +47,17 @@ function getLocationIcon(location: string): string {
 
 function ShimmerCard() {
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden relative">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden relative">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-      <div className="h-40 md:h-44 bg-[#f1f5f9]" />
+      <div className="h-40 md:h-44 bg-surface-variant" />
       <div className="p-4 space-y-3">
-        <div className="h-5 bg-[#f1f5f9] rounded-lg w-3/4" />
+        <div className="h-5 bg-surface-variant rounded-lg w-3/4" />
         <div className="flex gap-2">
-          <div className="h-4 bg-[#f1f5f9] rounded-lg w-16" />
-          <div className="h-4 bg-[#f1f5f9] rounded-lg w-16" />
+          <div className="h-4 bg-surface-variant rounded-lg w-16" />
+          <div className="h-4 bg-surface-variant rounded-lg w-16" />
         </div>
-        <div className="h-6 bg-[#f1f5f9] rounded-lg w-24" />
-        <div className="h-8 bg-[#f1f5f9] rounded-lg w-full" />
+        <div className="h-6 bg-surface-variant rounded-lg w-24" />
+        <div className="h-8 bg-surface-variant rounded-lg w-full" />
       </div>
     </div>
   );
@@ -93,14 +93,14 @@ function ActionButton({
           transition-all duration-200 active:scale-90
           ${bgColor} ${iconColor}
           ${hoverBg} ${hoverText}
-          hover:shadow-md
+          hover:shadow-md3-level2
         `}
         aria-label={label}
       >
         <Icon className="w-4 h-4" />
       </button>
       {showTooltip && (
-        <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1e293b] text-white text-[10px] font-bold rounded-md whitespace-nowrap shadow-lg animate-fadeIn">
+        <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1e293b] text-white text-[10px] font-bold rounded-md whitespace-nowrap shadow-md3-level3 animate-fadeIn">
           {label}
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] rotate-45" />
         </div>
@@ -160,8 +160,8 @@ function ServiceCard({
         transition-all duration-300 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
         ${isSelected
-          ? "ring-2 ring-[var(--md-sys-color-primary)] shadow-lg"
-          : "hover:shadow-xl hover:-translate-y-1"
+          ? "ring-2 ring-[var(--md-sys-color-primary)] shadow-md3-level3"
+          : "hover:shadow-md3-level4 hover:-translate-y-1"
         }
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
@@ -235,7 +235,7 @@ function ServiceCard({
               }}
               className={`
                 w-9 h-9 rounded-full bg-[var(--md-sys-color-surface)] flex items-center justify-center
-                text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:text-[var(--md-sys-color-primary)] transition-all duration-200 shadow-sm
+                text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] hover:text-[var(--md-sys-color-primary)] transition-all duration-200 shadow-md3-level1
                 ${isHovered || showActions ? "opacity-100" : "opacity-0"}
               `}
             >
@@ -247,10 +247,10 @@ function ServiceCard({
         {/* Status Badge */}
         <div className="absolute top-3 right-3 z-10">
           <span className={`
-            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide shadow-md
+            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide shadow-md3-level2
             ${statusConfig.bg}
           `}>
-            <span className={`w-1.5 h-1.5 rounded-full bg-white/80`} />
+            <span className={`w-1.5 h-1.5 rounded-full bg-surface/80`} />
             {statusConfig.label}
           </span>
         </div>
@@ -266,7 +266,7 @@ function ServiceCard({
               e.stopPropagation();
               onShareService(service);
             }}
-            className="px-3 py-1.5 rounded-lg bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-primary)] text-xs font-medium hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-3 py-1.5 rounded-lg bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-primary)] text-xs font-medium hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex items-center gap-1.5 shadow-md3-level1"
           >
             <Link className="w-3 h-3" />
             Copy Link
@@ -276,7 +276,7 @@ function ServiceCard({
               e.stopPropagation();
               onToggleStatus(service);
             }}
-            className="px-3 py-1.5 rounded-lg bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-success)] text-xs font-medium hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-3 py-1.5 rounded-lg bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-success)] text-xs font-medium hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex items-center gap-1.5 shadow-md3-level1"
           >
             {service.status === "active" ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             {service.status === "active" ? "Pause" : "Activate"}

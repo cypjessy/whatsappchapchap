@@ -46,9 +46,9 @@ function AnalyticsCard({ label, value, icon, color, trend, delay = 0 }: Analytic
     <div
       className={`
         group relative bg-gradient-to-br from-white to-[#f8fafc] 
-        p-3 sm:p-4 md:p-5 rounded-xl border border-[#e2e8f0] 
+        p-3 sm:p-4 md:p-5 rounded-xl border border-outline-variant 
         transition-all duration-300 ease-out cursor-default
-        hover:shadow-lg hover:shadow-[#e2e8f0]/60 hover:border-[#cbd5e1] hover:-translate-y-0.5
+        hover:shadow-md3-level3 hover:shadow-[#e2e8f0]/60 hover:border-outline-variant hover:-translate-y-0.5
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
       `}
       style={{ transitionDelay: `${delay}s` }}
@@ -69,7 +69,7 @@ function AnalyticsCard({ label, value, icon, color, trend, delay = 0 }: Analytic
           `}>
             <i className={`fas ${icon} ${color} text-sm`} />
           </div>
-          <div className="text-[11px] sm:text-xs font-semibold text-[#64748b] uppercase tracking-wider">
+          <div className="text-[11px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
             {label}
           </div>
         </div>
@@ -94,7 +94,7 @@ function AnalyticsCard({ label, value, icon, color, trend, delay = 0 }: Analytic
       </div>
 
       {/* Bottom progress hint bar */}
-      <div className="mt-3 h-1 bg-[#e2e8f0] rounded-full overflow-hidden">
+      <div className="mt-3 h-1 bg-surface-variant rounded-full overflow-hidden">
         <div 
           className={`h-full rounded-full ${color.replace("text-", "bg-")} transition-all duration-700 ease-out`}
           style={{ 

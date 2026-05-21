@@ -79,9 +79,9 @@ function formatDate(dateStr: string) {
 
 function getStatusConfig(status: string) {
   return STATUS_CONFIG[status] || {
-    bg: "bg-[#F1F5F9]",
-    text: "text-[#64748B]",
-    border: "border-[#E2E8F0]",
+    bg: "bg-surface-variant",
+    text: "text-on-surface-variant",
+    border: "border-outline-variant",
     icon: "fa-question",
     dot: "bg-[#94A3B8]",
   };
@@ -109,7 +109,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
         <div
           key={toast.id}
           className={`
-            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg
+            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md3-level3
             text-sm font-semibold animate-slideInRight
             ${toast.type === "success" ? "bg-[#10B981] text-white" : ""}
             ${toast.type === "error" ? "bg-[#EF4444] text-white" : ""}
@@ -143,13 +143,13 @@ function DetailCard({
   subValue?: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-3.5 md:p-4 border border-[#E2E8F0] hover:border-[#8B5CF6]/30 transition-all duration-200 group">
+    <div className="bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant hover:border-[#8B5CF6]/30 transition-all duration-200 group">
       <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform`}>
         <i className={`fas ${icon} text-xs md:text-sm`} />
       </div>
-      <div className="text-[10px] md:text-xs text-[#94A3B8] font-semibold uppercase tracking-wide mb-0.5">{label}</div>
-      <div className="font-bold text-xs md:text-sm text-[#1E293B] truncate">{value}</div>
-      {subValue && <div className="text-[10px] text-[#94A3B8] mt-0.5">{subValue}</div>}
+      <div className="text-[10px] md:text-xs text-outline font-semibold uppercase tracking-wide mb-0.5">{label}</div>
+      <div className="font-bold text-xs md:text-sm text-on-surface truncate">{value}</div>
+      {subValue && <div className="text-[10px] text-outline mt-0.5">{subValue}</div>}
     </div>
   );
 }
@@ -160,7 +160,7 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
       <img src={src} alt="Payment proof" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-surface/10 text-white flex items-center justify-center hover:bg-surface/20 transition-colors"
       >
         <i className="fas fa-times" />
       </button>
@@ -185,10 +185,10 @@ function ActionButton({
 }) {
   const variants = {
     default: "bg-[var(--md-sys-color-surface-variant,white)] text-[var(--md-sys-color-on-surface-variant,#64748B)] border border-[var(--md-sys-color-outline,#E2E8F0)] hover:bg-[var(--md-sys-color-surface-variant-hover,#F1F5F9)]",
-    danger: "bg-[var(--md-sys-color-error,#EF4444)] text-[var(--md-sys-color-on-error,white)] hover:bg-[var(--md-sys-color-error-hover,#DC2626)] shadow-sm",
-    success: "bg-[var(--md-sys-color-tertiary,#10B981)] text-[var(--md-sys-color-on-tertiary,white)] hover:bg-[var(--md-sys-color-tertiary-hover,#059669)] shadow-sm",
-    whatsapp: "bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm",
-    primary: "bg-[var(--md-sys-color-primary,#8B5CF6)] text-[var(--md-sys-color-on-primary,white)] hover:bg-[var(--md-sys-color-primary-hover,#7C3AED)] shadow-sm",
+    danger: "bg-[var(--md-sys-color-error,#EF4444)] text-[var(--md-sys-color-on-error,white)] hover:bg-[var(--md-sys-color-error-hover,#DC2626)] shadow-md3-level1",
+    success: "bg-[var(--md-sys-color-tertiary,#10B981)] text-[var(--md-sys-color-on-tertiary,white)] hover:bg-[var(--md-sys-color-tertiary-hover,#059669)] shadow-md3-level1",
+    whatsapp: "bg-[#25D366] text-white hover:bg-[#128C7E] shadow-md3-level1",
+    primary: "bg-[var(--md-sys-color-primary,#8B5CF6)] text-[var(--md-sys-color-on-primary,white)] hover:bg-[var(--md-sys-color-primary-hover,#7C3AED)] shadow-md3-level1",
   };
 
   return (
@@ -347,7 +347,7 @@ export default function ViewBookingModal({
           ref={modalRef}
           className={`
             relative w-full max-w-[640px] max-h-[92vh] sm:max-h-[85vh]
-            rounded-t-[28px] sm:rounded-[28px] shadow-lg overflow-hidden flex flex-col
+            rounded-t-[28px] sm:rounded-[28px] shadow-md3-level3 overflow-hidden flex flex-col
             transition-all duration-300 ease-out
             ${isVisible ? "opacity-100 translate-y-0 sm:scale-100" : "opacity-0 translate-y-8 sm:scale-95"}
             bg-[var(--md-sys-color-surface,white)]
@@ -419,10 +419,10 @@ export default function ViewBookingModal({
           {/* Body */}
           <div className="flex-1 overflow-y-auto px-5 md:px-6 py-4 md:py-5 space-y-5 md:space-y-6">
             {/* Client Card - MD3 elevated card */}
-            <div className="bg-gradient-to-br from-[var(--md-sys-color-primary-container,#F3E8FF)] to-[var(--md-sys-color-surface,#F8FAFC)] rounded-[16px] p-4 md:p-5 border border-[var(--md-sys-color-outline-variant,#E2E8F0)] shadow-sm">
+            <div className="bg-gradient-to-br from-[var(--md-sys-color-primary-container,#F3E8FF)] to-[var(--md-sys-color-surface,#F8FAFC)] rounded-[16px] p-4 md:p-5 border border-[var(--md-sys-color-outline-variant,#E2E8F0)] shadow-md3-level1">
               <div className="flex items-center gap-3 md:gap-4 mb-4">
                 {/* Avatar - MD3 large avatar */}
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[16px] bg-gradient-to-br from-[var(--md-sys-color-primary,#8B5CF6)] to-[var(--md-sys-color-on-primary,#7C3AED)] text-[var(--md-sys-color-on-primary,white)] flex items-center justify-center font-medium text-2xl md:text-3xl shrink-0 relative shadow-md">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-[16px] bg-gradient-to-br from-[var(--md-sys-color-primary,#8B5CF6)] to-[var(--md-sys-color-on-primary,#7C3AED)] text-[var(--md-sys-color-on-primary,white)] flex items-center justify-center font-medium text-2xl md:text-3xl shrink-0 relative shadow-md3-level2">
                   {safeFirstLetter}
                   {booking.verified && (
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--md-sys-color-tertiary,#10B981)] text-white rounded-full flex items-center justify-center text-xs border-2 border-white">
@@ -501,7 +501,7 @@ export default function ViewBookingModal({
                 <i className="fas fa-credit-card" />
                 Payment
               </h3>
-              <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] md:rounded-[20px] p-4 md:p-5 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-sm space-y-3">
+              <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] md:rounded-[20px] p-4 md:p-5 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-md3-level1 space-y-3">
                 <div className="flex justify-between items-center pb-3 border-b border-[var(--md-sys-color-outline-variant,#e2e8f0)]">
                   <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Total Price</span>
                   <span className="font-medium text-xl md:text-2xl text-[var(--md-sys-color-primary,#8b5cf6)]">{formatCurrency(booking.price)}</span>
@@ -562,7 +562,7 @@ export default function ViewBookingModal({
                   <i className="fas fa-check-circle" />
                   Payment Confirmed
                 </h3>
-                <div className="bg-gradient-to-br from-[var(--md-sys-color-tertiary-container,#f0fdf4)] to-[var(--md-sys-color-surface,#ecfdf5)] rounded-[16px] md:rounded-[20px] p-4 md:p-5 border border-[var(--md-sys-color-tertiary,#10b981)]/20 shadow-sm space-y-3">
+                <div className="bg-gradient-to-br from-[var(--md-sys-color-tertiary-container,#f0fdf4)] to-[var(--md-sys-color-surface,#ecfdf5)] rounded-[16px] md:rounded-[20px] p-4 md:p-5 border border-[var(--md-sys-color-tertiary,#10b981)]/20 shadow-md3-level1 space-y-3">
                   {booking.paymentProof.transactionId && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)]">Transaction ID</span>
@@ -601,7 +601,7 @@ export default function ViewBookingModal({
                   <i className="fas fa-sticky-note" />
                   Notes
                 </h3>
-                <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] p-4 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-sm">
+                <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] p-4 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-md3-level1">
                   <p className="text-sm md:text-base text-[var(--md-sys-color-on-surface-variant,#64748b)] leading-relaxed">{booking.notes}</p>
                 </div>
               </div>
@@ -614,7 +614,7 @@ export default function ViewBookingModal({
                   <i className="fas fa-exclamation-triangle" />
                   Cancellation Reason
                 </h3>
-                <div className="bg-[var(--md-sys-color-error-container,#fef2f2)] rounded-[16px] p-4 border border-[var(--md-sys-color-error,#ef4444)]/20 shadow-sm">
+                <div className="bg-[var(--md-sys-color-error-container,#fef2f2)] rounded-[16px] p-4 border border-[var(--md-sys-color-error,#ef4444)]/20 shadow-md3-level1">
                   <p className="text-sm md:text-base text-[var(--md-sys-color-error,#ef4444)] leading-relaxed">{booking.cancellationReason}</p>
                 </div>
               </div>
@@ -626,7 +626,7 @@ export default function ViewBookingModal({
                 <i className="fas fa-fingerprint" />
                 Reference
               </h3>
-              <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] p-4 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-sm space-y-3">
+              <div className="bg-[var(--md-sys-color-surface,white)] rounded-[16px] p-4 border border-[var(--md-sys-color-outline-variant,#e2e8f0)] shadow-md3-level1 space-y-3">
                 <div className="flex items-center justify-between">
                   <code className="text-sm md:text-base font-mono text-[var(--md-sys-color-primary,#8b5cf6)] font-medium truncate max-w-[200px]">
                     {booking.id}

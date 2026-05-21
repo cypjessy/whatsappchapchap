@@ -60,11 +60,11 @@ function SelectField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-[#64748b] mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 appearance-none bg-white cursor-pointer"
+        className="w-full px-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 appearance-none bg-surface cursor-pointer"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -152,7 +152,7 @@ export default function ProductFilterBottomSheet({
 
       {/* Bottom Sheet */}
       <div
-        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl animate-slideUp max-h-[85vh] flex flex-col"
+        className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl shadow-2xl animate-slideUp max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag Handle */}
@@ -161,16 +161,16 @@ export default function ProductFilterBottomSheet({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pb-3 border-b border-[#e2e8f0]">
+        <div className="flex items-center justify-between px-5 pb-3 border-b border-outline-variant">
           <div>
-            <h3 className="font-bold text-base text-[#1e293b]">Filters</h3>
+            <h3 className="font-bold text-base text-on-surface">Filters</h3>
             {activeFilterCount > 0 && (
-              <p className="text-xs text-[#64748b] mt-0.5">{activeFilterCount} active</p>
+              <p className="text-xs text-on-surface-variant mt-0.5">{activeFilterCount} active</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors"
           >
             <i className="fas fa-times text-sm" />
           </button>
@@ -180,20 +180,20 @@ export default function ProductFilterBottomSheet({
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {/* Search */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-1.5">Search</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">Search</label>
             <div className="relative">
-              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-sm" />
+              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm" />
               <input
                 type="text"
                 placeholder="Search products..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="w-full pl-9 pr-9 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
+                className="w-full pl-9 pr-9 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
               />
               {localSearch && (
                 <button
                   onClick={() => setLocalSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant"
                 >
                   <i className="fas fa-times-circle text-sm" />
                 </button>
@@ -219,26 +219,26 @@ export default function ProductFilterBottomSheet({
 
           {/* Price Range */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-1.5">Price Range</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">Price Range</label>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative">
-                <i className="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs" />
+                <i className="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xs" />
                 <input
                   type="number"
                   placeholder="Min"
                   value={localPriceMin}
                   onChange={(e) => setLocalPriceMin(e.target.value ? Number(e.target.value) : "")}
-                  className="w-full pl-9 pr-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
+                  className="w-full pl-9 pr-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
                 />
               </div>
               <div className="relative">
-                <i className="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs" />
+                <i className="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xs" />
                 <input
                   type="number"
                   placeholder="Max"
                   value={localPriceMax}
                   onChange={(e) => setLocalPriceMax(e.target.value ? Number(e.target.value) : "")}
-                  className="w-full pl-9 pr-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
+                  className="w-full pl-9 pr-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
                 />
               </div>
             </div>
@@ -246,24 +246,24 @@ export default function ProductFilterBottomSheet({
 
           {/* Date Range */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-1.5">Date Range</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">Date Range</label>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative">
-                <i className="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs" />
+                <i className="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xs" />
                 <input
                   type="date"
                   value={localDateStart}
                   onChange={(e) => setLocalDateStart(e.target.value)}
-                  className="w-full pl-9 pr-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
+                  className="w-full pl-9 pr-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
                 />
               </div>
               <div className="relative">
-                <i className="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs" />
+                <i className="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xs" />
                 <input
                   type="date"
                   value={localDateEnd}
                   onChange={(e) => setLocalDateEnd(e.target.value)}
-                  className="w-full pl-9 pr-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
+                  className="w-full pl-9 pr-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
                 />
               </div>
             </div>
@@ -271,23 +271,23 @@ export default function ProductFilterBottomSheet({
 
           {/* Quick Date Presets */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-1.5">Quick Filters</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">Quick Filters</label>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleQuickDate(0)}
-                className="px-3 py-1.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+                className="px-3 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
               >
                 Today
               </button>
               <button
                 onClick={() => handleQuickDate(7)}
-                className="px-3 py-1.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+                className="px-3 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
               >
                 Last 7 days
               </button>
               <button
                 onClick={() => handleQuickDate(30)}
-                className="px-3 py-1.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+                className="px-3 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
               >
                 Last 30 days
               </button>
@@ -296,16 +296,16 @@ export default function ProductFilterBottomSheet({
         </div>
 
         {/* Sticky Footer */}
-        <div className="flex gap-3 px-5 py-4 border-t border-[#e2e8f0] bg-white">
+        <div className="flex gap-3 px-5 py-4 border-t border-outline-variant bg-surface">
           <button
             onClick={handleClearAll}
-            className="flex-1 py-3 rounded-xl border-2 border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:border-red-300 hover:text-red-500 transition-all active:scale-95"
+            className="flex-1 py-3 rounded-xl border-2 border-outline-variant text-sm font-semibold text-on-surface-variant hover:border-red-300 hover:text-red-500 transition-all active:scale-95"
           >
             Clear All
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 py-3 rounded-xl bg-[#25D366] text-white text-sm font-semibold shadow-lg shadow-[#25D366]/25 hover:opacity-90 transition-all active:scale-95"
+            className="flex-1 py-3 rounded-xl bg-[#25D366] text-white text-sm font-semibold shadow-md3-level3 shadow-[#25D366]/25 hover:opacity-90 transition-all active:scale-95"
           >
             Apply Filters
           </button>

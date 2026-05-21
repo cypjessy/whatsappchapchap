@@ -88,14 +88,14 @@ export default function RevenueChart() {
   const totalBookings = revenueData.reduce((sum, d) => sum + d.bookings, 0);
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden">
-      <div className="p-4 md:p-5 border-b border-[#e2e8f0] flex justify-between items-center flex-wrap gap-3">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden">
+      <div className="p-4 md:p-5 border-b border-outline-variant flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h3 className="font-bold text-[#1e293b] flex items-center gap-2">
+          <h3 className="font-bold text-on-surface flex items-center gap-2">
             <i className="fas fa-chart-line text-[#10b981]"></i>
             Revenue Overview
           </h3>
-          <p className="text-xs text-[#64748b] mt-1">
+          <p className="text-xs text-on-surface-variant mt-1">
             {formatCurrency(totalRevenue)} • {totalBookings} bookings
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function RevenueChart() {
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               period === "week"
                 ? "bg-[#8b5cf6] text-white"
-                : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
+                : "bg-surface-variant text-on-surface-variant hover:bg-surface-variant"
             }`}
           >
             This Week
@@ -115,7 +115,7 @@ export default function RevenueChart() {
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               period === "month"
                 ? "bg-[#8b5cf6] text-white"
-                : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
+                : "bg-surface-variant text-on-surface-variant hover:bg-surface-variant"
             }`}
           >
             This Month
@@ -144,26 +144,26 @@ export default function RevenueChart() {
                         </div>
                       </div>
                     </div>
-                    <span className="text-[10px] text-[#64748b] font-medium">{data.label}</span>
+                    <span className="text-[10px] text-on-surface-variant font-medium">{data.label}</span>
                   </div>
                 );
               })}
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-center gap-4 pt-3 border-t border-[#e2e8f0]">
+            <div className="flex items-center justify-center gap-4 pt-3 border-t border-outline-variant">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-gradient-to-r from-[#8b5cf6] to-[#a78bfa]"></div>
-                <span className="text-xs text-[#64748b]">Revenue</span>
+                <span className="text-xs text-on-surface-variant">Revenue</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-[#10b981]"></div>
-                <span className="text-xs text-[#64748b]">Bookings</span>
+                <span className="text-xs text-on-surface-variant">Bookings</span>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-center py-12 text-[#64748b]">
+          <div className="text-center py-12 text-on-surface-variant">
             <i className="fas fa-chart-area text-5xl mb-3 opacity-30"></i>
             <p className="font-semibold">No revenue data yet</p>
             <p className="text-sm mt-1">Revenue chart will appear as you complete bookings</p>

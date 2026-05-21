@@ -95,7 +95,7 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border-2 transition-all duration-200
           ${isFocused
-            ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+            ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
             : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
           }
         `}
@@ -120,7 +120,7 @@ function SearchInput({
               onChange("");
               inputRef.current?.focus();
             }}
-            className="absolute right-3 w-6 h-6 rounded-full bg-[#e2e8f0] text-[#64748b] flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all duration-150"
+            className="absolute right-3 w-6 h-6 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center hover:bg-[#8b5cf6] hover:text-white transition-all duration-150"
           >
             <X className="w-3 h-3" />
           </button>
@@ -151,7 +151,7 @@ function PriceRangeInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 flex-1
         ${minFocused
-          ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+          ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
           : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
         }
       `}>
@@ -177,7 +177,7 @@ function PriceRangeInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 flex-1
         ${maxFocused
-          ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+          ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
           : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
         }
       `}>
@@ -231,25 +231,25 @@ function SortDropdown({
           w-full flex items-center justify-between px-3 py-2.5 rounded-xl border-2 text-sm font-medium
           transition-all duration-200
           ${isOpen || isFocused
-            ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10 bg-white"
-            : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+            ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10 bg-surface"
+            : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
       >
         <div className="flex items-center gap-2">
           <i className={`fas ${selectedOption?.icon || "fa-sort"} text-[#8b5cf6] text-xs`} />
-          <span className={value ? "text-[#1e293b]" : "text-[#94a3b8]"}>
+          <span className={value ? "text-on-surface" : "text-outline"}>
             {selectedOption?.label || "Sort By"}
           </span>
         </div>
         <ChevronDown className={`
           w-4 h-4 transition-transform duration-200
-          ${isOpen ? "rotate-180 text-[#8b5cf6]" : "text-[#94a3b8]"}
+          ${isOpen ? "rotate-180 text-[#8b5cf6]" : "text-outline"}
         `} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-1 w-full bg-white rounded-xl border-2 border-[#e2e8f0] shadow-xl shadow-black/5 overflow-hidden animate-fadeIn">
+        <div className="absolute z-20 mt-1 w-full bg-surface rounded-xl border-2 border-outline-variant shadow-md3-level4 shadow-black/5 overflow-hidden animate-fadeIn">
           {SORT_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -261,7 +261,7 @@ function SortDropdown({
                 w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition-all duration-150
                 ${value === option.value
                   ? "bg-[#ede9fe] text-[#8b5cf6]"
-                  : "text-[#64748b] hover:bg-white hover:text-[#1e293b]"
+                  : "text-on-surface-variant hover:bg-surface hover:text-on-surface"
                 }
               `}
             >
@@ -281,10 +281,10 @@ function SortDropdown({
 function ShimmerFilters() {
   return (
     <div className="space-y-3 mb-6 animate-pulse">
-      <div className="h-12 bg-[#f1f5f9] rounded-xl" />
+      <div className="h-12 bg-surface-variant rounded-xl" />
       <div className="flex gap-2">
-        <div className="h-10 bg-[#f1f5f9] rounded-xl w-32" />
-        <div className="h-10 bg-[#f1f5f9] rounded-xl w-24" />
+        <div className="h-10 bg-surface-variant rounded-xl w-32" />
+        <div className="h-10 bg-surface-variant rounded-xl w-24" />
       </div>
     </div>
   );
@@ -395,8 +395,8 @@ export default function ServiceFilters({
             md:hidden flex items-center gap-2 px-3 py-3 rounded-xl font-semibold text-sm shrink-0
             transition-all duration-200 active:scale-95
             ${hasActiveFilters
-              ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/25"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"
+              ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/25"
+              : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
             }
           `}
         >
@@ -404,7 +404,7 @@ export default function ServiceFilters({
           {activeFilterCount > 0 && (
             <span className={`
               px-1.5 py-0.5 rounded-full text-[10px] font-bold
-              ${hasActiveFilters ? "bg-white/20" : "bg-[#25D366]/10 text-[#25D366]"}
+              ${hasActiveFilters ? "bg-surface/20" : "bg-[#25D366]/10 text-[#25D366]"}
             `}>
               {activeFilterCount}
             </span>
@@ -418,8 +418,8 @@ export default function ServiceFilters({
             hidden md:flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm shrink-0
             transition-all duration-200 active:scale-95
             ${showAdvanced || hasActiveFilters
-              ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25"
-              : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+              ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/25"
+              : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
             }
           `}
         >
@@ -428,7 +428,7 @@ export default function ServiceFilters({
           {activeFilterCount > 0 && (
             <span className={`
               px-1.5 py-0.5 rounded-full text-[10px] font-bold
-              ${showAdvanced || hasActiveFilters ? "bg-white/20" : "bg-[#8b5cf6]/10 text-[#8b5cf6]"}
+              ${showAdvanced || hasActiveFilters ? "bg-surface/20" : "bg-[#8b5cf6]/10 text-[#8b5cf6]"}
             `}>
               {activeFilterCount}
             </span>
@@ -439,7 +439,7 @@ export default function ServiceFilters({
       {/* Active Filter Pills */}
       {activeFilters.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 animate-fadeIn">
-          <span className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider">
+          <span className="text-[10px] font-semibold text-outline uppercase tracking-wider">
             Active:
           </span>
           {activeFilters.map((filter, idx) => (
@@ -460,11 +460,11 @@ export default function ServiceFilters({
         overflow-hidden transition-all duration-300 ease-out
         ${showAdvanced ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}
       `}>
-        <div className="bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-[#e2e8f0] shadow-sm space-y-3 md:space-y-4">
+        <div className="bg-surface p-3 md:p-4 rounded-xl md:rounded-2xl border border-outline-variant shadow-md3-level1 space-y-3 md:space-y-4">
           {/* Top row: Business Type + Sort */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] md:text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1.5">
+              <label className="block text-[10px] md:text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                 Business Type
               </label>
               <div className={`
@@ -496,7 +496,7 @@ export default function ServiceFilters({
             </div>
 
             <div>
-              <label className="block text-[10px] md:text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1.5">
+              <label className="block text-[10px] md:text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                 Sort By
               </label>
               <SortDropdown value={sortBy} onChange={setSortBy} />
@@ -505,7 +505,7 @@ export default function ServiceFilters({
 
           {/* Price Range */}
           <div>
-            <label className="block text-[10px] md:text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1.5">
+            <label className="block text-[10px] md:text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
               Price Range
             </label>
             <PriceRangeInput
@@ -518,7 +518,7 @@ export default function ServiceFilters({
 
           {/* Results count hint */}
           <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-            <span className="text-[11px] text-[#94a3b8]">
+            <span className="text-[11px] text-outline">
               {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""} active
             </span>
             {hasActiveFilters && (

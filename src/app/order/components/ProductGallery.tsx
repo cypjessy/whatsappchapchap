@@ -94,7 +94,7 @@ function getColorStyle(colorName: string): string {
 
 function ImageSkeleton() {
   return (
-    <div className="relative w-full aspect-square rounded-xl md:rounded-2xl bg-[#f1f5f9] overflow-hidden">
+    <div className="relative w-full aspect-square rounded-xl md:rounded-2xl bg-surface-variant overflow-hidden">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
     </div>
   );
@@ -141,7 +141,7 @@ function MainImage({
 
   return (
     <div
-      className="relative w-full aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-[#f8fafc] group"
+      className="relative w-full aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-surface-container-lowest group"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onMouseMove={handleMouseMove}
@@ -167,14 +167,14 @@ function MainImage({
         <>
           <button
             onClick={(e) => { e.stopPropagation(); onPrev(); }}
-            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-[#64748b] hover:bg-white hover:text-[#1e293b] transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-on-surface transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
             aria-label="Previous image"
           >
             <i className="fas fa-chevron-left text-sm" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onNext(); }}
-            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-[#64748b] hover:bg-white hover:text-[#1e293b] transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-on-surface transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
             aria-label="Next image"
           >
             <i className="fas fa-chevron-right text-sm" />
@@ -295,8 +295,8 @@ function SelectedVariantCard({ specs }: { specs: Record<string, string> }) {
           <span
             key={key}
             className={`
-              inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#e2e8f0]
-              text-xs md:text-sm font-semibold text-[#1e293b] shadow-sm
+              inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-outline-variant
+              text-xs md:text-sm font-semibold text-on-surface shadow-sm
               transition-all duration-200 delay-${index * 50}
               ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"}
             `}
@@ -321,7 +321,7 @@ function ProductDetails({ filters }: { filters: Record<string, string[]> }) {
 
   return (
     <div className={`
-      mt-5 md:mt-6 p-4 md:p-5 bg-[#f8fafc] rounded-xl md:rounded-2xl border border-[#e2e8f0]
+      mt-5 md:mt-6 p-4 md:p-5 bg-surface-container-lowest rounded-xl md:rounded-2xl border border-outline-variant
       transition-all duration-500
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
@@ -329,7 +329,7 @@ function ProductDetails({ filters }: { filters: Record<string, string[]> }) {
         <div className="w-7 h-7 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
           <i className="fas fa-info-circle text-[#25D366] text-xs" />
         </div>
-        <h3 className="font-bold text-sm md:text-base text-[#1e293b]">Product Details</h3>
+        <h3 className="font-bold text-sm md:text-base text-on-surface">Product Details</h3>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
@@ -346,7 +346,7 @@ function ProductDetails({ filters }: { filters: Record<string, string[]> }) {
               `}
               style={{ transitionDelay: `${sectionIndex * 100}ms` }}
             >
-              <div className="text-[11px] md:text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">
+              <div className="text-[11px] md:text-xs font-bold text-outline uppercase tracking-wider mb-2">
                 {key.replace(/_/g, " ")}
               </div>
               <div className="flex flex-wrap gap-1.5 md:gap-2">
@@ -358,7 +358,7 @@ function ProductDetails({ filters }: { filters: Record<string, string[]> }) {
                     return (
                       <div
                         key={idx}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-[#e2e8f0] text-xs font-semibold text-[#1e293b]"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-outline-variant text-xs font-semibold text-on-surface"
                       >
                         <div
                           className="w-3.5 h-3.5 rounded-full border-2 shrink-0"
@@ -375,7 +375,7 @@ function ProductDetails({ filters }: { filters: Record<string, string[]> }) {
                   return (
                     <span
                       key={idx}
-                      className="inline-flex px-2.5 py-1.5 bg-white rounded-lg border border-[#e2e8f0] text-xs font-semibold text-[#1e293b] capitalize"
+                      className="inline-flex px-2.5 py-1.5 bg-white rounded-lg border border-outline-variant text-xs font-semibold text-on-surface capitalize"
                     >
                       {option}
                     </span>
@@ -423,7 +423,7 @@ export default function ProductGallery({
   return (
     <div
       className={`
-        p-4 md:p-6 border-b border-[#e2e8f0] transition-all duration-500
+        p-4 md:p-6 border-b border-outline-variant transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
     >
@@ -452,19 +452,19 @@ export default function ProductGallery({
 
       {/* Product Info */}
       <div className="mt-4 md:mt-5">
-        <h2 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[#1e293b] mb-2 md:mb-3 leading-tight">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface mb-2 md:mb-3 leading-tight">
           {product?.name}
         </h2>
 
         {product?.description && (
-          <p className="text-sm md:text-[15px] text-[#64748b] leading-relaxed mb-4 md:mb-5 line-clamp-3 md:line-clamp-none">
+          <p className="text-sm md:text-[15px] text-on-surface-variant leading-relaxed mb-4 md:mb-5 line-clamp-3 md:line-clamp-none">
             {product.description}
           </p>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-baseline gap-1">
-            <span className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider">Price</span>
+            <span className="text-xs text-outline font-bold uppercase tracking-wider">Price</span>
             <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#25D366] tracking-tight">
               KES {getBasePrice().toLocaleString()}
             </span>

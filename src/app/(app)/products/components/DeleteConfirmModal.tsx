@@ -186,7 +186,7 @@ export default function DeleteConfirmModal({
         aria-labelledby="delete-modal-title"
         aria-describedby="delete-modal-desc"
         className={`
-          relative bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden
+          relative bg-surface rounded-2xl w-full max-w-md shadow-2xl overflow-hidden
           transition-all duration-300 ease-out
           ${isVisible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"}
           ${shake ? "animate-shake" : ""}
@@ -198,7 +198,7 @@ export default function DeleteConfirmModal({
         <button
           onClick={onClose}
           disabled={isLoading}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-[#94a3b8] hover:text-[#64748b] hover:bg-[#f1f5f9] transition-all disabled:opacity-50 z-10"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-variant transition-all disabled:opacity-50 z-10"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -216,7 +216,7 @@ export default function DeleteConfirmModal({
               {isLoading && (
                 <div className="absolute -inset-1 rounded-full border-2 border-red-200 border-t-red-500 animate-spin" />
               )}
-              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center border-2 border-red-200 shadow-sm">
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center border-2 border-red-200 shadow-md3-level1">
                 {isLoading ? (
                   <Loader2 className="w-7 h-7 text-red-500 animate-spin" strokeWidth={2.5} />
                 ) : (
@@ -227,7 +227,7 @@ export default function DeleteConfirmModal({
 
             <h3
               id="delete-modal-title"
-              className="text-xl font-bold text-[#1e293b] mb-2 tracking-tight"
+              className="text-xl font-bold text-on-surface mb-2 tracking-tight"
             >
               Delete {isPlural ? `${itemCount} ` : ""}
               {typeConfig.label}
@@ -235,15 +235,15 @@ export default function DeleteConfirmModal({
             </h3>
 
             {productName && !isPlural && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#e2e8f0] mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-outline-variant mb-3">
                 <span className="w-2 h-2 rounded-full bg-[#25D366]" />
-                <span className="text-sm font-semibold text-[#1e293b] truncate max-w-[200px]">
+                <span className="text-sm font-semibold text-on-surface truncate max-w-[200px]">
                   {productName}
                 </span>
               </div>
             )}
 
-            <p id="delete-modal-desc" className="text-[#64748b] text-sm leading-relaxed">
+            <p id="delete-modal-desc" className="text-on-surface-variant text-sm leading-relaxed">
               This action{" "}
               <span className="font-semibold text-red-500">cannot be undone</span>.{" "}
               {isPlural
@@ -255,9 +255,9 @@ export default function DeleteConfirmModal({
           {/* Type-to-confirm safety feature */}
           {requiresTyping && (
             <div className="mb-5 space-y-2">
-              <label className="block text-xs font-semibold text-[#64748b] uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
                 Type{" "}
-                <span className="text-[#1e293b] font-bold font-mono bg-[#f1f5f9] px-1.5 py-0.5 rounded">
+                <span className="text-on-surface font-bold font-mono bg-surface-variant px-1.5 py-0.5 rounded">
                   {confirmText}
                 </span>{" "}
                 to confirm
@@ -275,10 +275,10 @@ export default function DeleteConfirmModal({
                     focus:outline-none focus:ring-4 focus:ring-red-500/10
                     disabled:opacity-50
                     ${typedConfirm === confirmText
-                      ? "border-red-500 bg-red-50/50 text-red-700 shadow-sm shadow-red-500/10"
+                      ? "border-red-500 bg-red-50/50 text-red-700 shadow-md3-level1 shadow-red-500/10"
                       : typedConfirm.length > 0
-                        ? "border-red-300 bg-white text-[#1e293b]"
-                        : "border-[#e2e8f0] bg-white text-[#1e293b] focus:border-red-300"
+                        ? "border-red-300 bg-surface text-on-surface"
+                        : "border-outline-variant bg-surface text-on-surface focus:border-red-300"
                     }
                   `}
                 />
@@ -322,7 +322,7 @@ export default function DeleteConfirmModal({
               disabled={isLoading}
               className={`
                 flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all
-                border-2 border-[#e2e8f0] text-[#64748b]
+                border-2 border-outline-variant text-on-surface-variant
                 hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:bg-[#f5f3ff]
                 active:scale-95
                 disabled:opacity-50 disabled:cursor-not-allowed
@@ -340,7 +340,7 @@ export default function DeleteConfirmModal({
                 flex items-center justify-center gap-2
                 active:scale-95
                 ${canConfirm && !isLoading
-                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-md3-level3 shadow-red-500/25 hover:shadow-red-500/40"
                   : "bg-red-300 cursor-not-allowed"
                 }
               `}
@@ -360,17 +360,17 @@ export default function DeleteConfirmModal({
           </div>
 
           {/* Keyboard hint */}
-          <p className="text-center text-[11px] text-[#94a3b8] mt-4 flex items-center justify-center gap-1.5">
+          <p className="text-center text-[11px] text-outline mt-4 flex items-center justify-center gap-1.5">
             <span className="w-1 h-1 rounded-full bg-[#94a3b8]" />
             Press
-            <kbd className="px-1.5 py-0.5 rounded-md bg-[#f1f5f9] border border-[#e2e8f0] text-[10px] font-mono font-bold">
+            <kbd className="px-1.5 py-0.5 rounded-md bg-surface-variant border border-outline-variant text-[10px] font-mono font-bold">
               Esc
             </kbd>
             to cancel
             {canConfirm && !isLoading && (
               <>
                 <span className="mx-1">•</span>
-                <kbd className="px-1.5 py-0.5 rounded-md bg-[#f1f5f9] border border-[#e2e8f0] text-[10px] font-mono font-bold">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-surface-variant border border-outline-variant text-[10px] font-mono font-bold">
                   Enter
                 </kbd>
                 to confirm

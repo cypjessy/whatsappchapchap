@@ -106,7 +106,7 @@ function getStepValidation(step: number, data: NewCustomerData): boolean {
 
 function StepIndicator({ currentStep, data }: { currentStep: number; data: NewCustomerData }) {
   return (
-    <div className="flex items-center justify-between px-2 md:px-4 py-3 md:py-4 bg-white border-b border-[#e2e8f0] overflow-x-auto scrollbar-hide">
+    <div className="flex items-center justify-between px-2 md:px-4 py-3 md:py-4 bg-surface border-b border-outline-variant overflow-x-auto scrollbar-hide">
       {WIZARD_STEPS.map((step, idx) => {
         const isActive = step.id === currentStep;
         const isCompleted = step.id < currentStep;
@@ -121,12 +121,12 @@ function StepIndicator({ currentStep, data }: { currentStep: number; data: NewCu
                   w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
                   text-[10px] md:text-xs font-bold transition-all duration-300
                   ${isActive
-                    ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/25 scale-110"
+                    ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/25 scale-110"
                     : isCompleted
                       ? isValid
                         ? "bg-[#10b981] text-white"
                         : "bg-[#f59e0b] text-white"
-                      : "bg-[#e2e8f0] text-[#94a3b8]"
+                      : "bg-surface-variant text-outline"
                   }
                 `}
               >
@@ -139,7 +139,7 @@ function StepIndicator({ currentStep, data }: { currentStep: number; data: NewCu
               <span
                 className={`
                   text-[8px] md:text-[9px] font-bold uppercase tracking-wider transition-colors
-                  ${isActive ? "text-[#25D366]" : isCompleted ? "text-[#10b981]" : "text-[#94a3b8]"}
+                  ${isActive ? "text-[#25D366]" : isCompleted ? "text-[#10b981]" : "text-outline"}
                 `}
               >
                 {step.label}
@@ -152,7 +152,7 @@ function StepIndicator({ currentStep, data }: { currentStep: number; data: NewCu
               <div
                 className={`
                   w-3 md:w-6 h-[2px] mx-0.5 md:mx-1 rounded-full transition-colors duration-300 shrink-0
-                  ${isCompleted ? "bg-[#10b981]" : "bg-[#e2e8f0]"}
+                  ${isCompleted ? "bg-[#10b981]" : "bg-surface-variant"}
                 `}
               />
             )}
@@ -246,7 +246,7 @@ function ToggleSwitch({ label, description, checked, onChange }: {
       >
         <div
           className={`
-            absolute top-1 w-6 h-6 bg-white rounded-full shadow-md
+            absolute top-1 w-6 h-6 bg-surface rounded-full shadow-md3-level2
             transition-transform duration-200
             ${checked ? "translate-x-7" : "translate-x-1"}
           `}
@@ -473,13 +473,13 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
             className={`
               relative p-5 rounded-xl border-2 text-center transition-all duration-200
               ${data.customerType === type.id
-                ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] shadow-md"
+                ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] shadow-md3-level2"
                 : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
               }
             `}
           >
             {data.customerType === type.id && (
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--md-sys-color-primary)] rounded-full flex items-center justify-center shadow-sm">
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--md-sys-color-primary)] rounded-full flex items-center justify-center shadow-md3-level1">
                 <i className="fas fa-check text-white text-xs" />
               </div>
             )}
@@ -642,13 +642,13 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
           {data.tags.map((tag, i) => (
             <span
               key={`${tag}-${i}`}
-              className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-medium shadow-sm hover:shadow-md transition-all"
+              className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-medium shadow-md3-level1 hover:shadow-md3-level2 transition-all"
             >
               {tag}
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors"
+                className="w-4 h-4 rounded-full bg-surface/20 flex items-center justify-center hover:bg-surface/40 transition-colors"
               >
                 <i className="fas fa-times text-[8px]" />
               </button>
@@ -736,7 +736,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
         <div className="sticky top-0 z-10 bg-[var(--md-sys-color-surface)]">
           <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)]">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md3-level3">
                 <i className="fas fa-user-plus text-lg" />
               </div>
               <div>

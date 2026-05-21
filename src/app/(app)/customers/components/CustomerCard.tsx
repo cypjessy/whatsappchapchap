@@ -35,9 +35,9 @@ const STATUS_CONFIG: Record<string, { bg: string; dot: string; label: string; ic
 
 const ACTIONS = [
   { id: "message", label: "Message", icon: "fab fa-whatsapp", color: "text-[#25D366]", bg: "bg-[#DCF8C6]", hover: "hover:bg-[#25D366] hover:text-white" },
-  { id: "share", label: "Share", icon: "fas fa-share-alt", color: "text-[#64748b]", bg: "bg-[#f1f5f9]", hover: "hover:bg-[#25D366] hover:text-white" },
-  { id: "duplicate", label: "Duplicate", icon: "fas fa-copy", color: "text-[#64748b]", bg: "bg-[#f1f5f9]", hover: "hover:bg-[#3b82f6] hover:text-white" },
-  { id: "print", label: "Print", icon: "fas fa-print", color: "text-[#64748b]", bg: "bg-[#f1f5f9]", hover: "hover:bg-[#3b82f6] hover:text-white" },
+  { id: "share", label: "Share", icon: "fas fa-share-alt", color: "text-on-surface-variant", bg: "bg-surface-variant", hover: "hover:bg-[#25D366] hover:text-white" },
+  { id: "duplicate", label: "Duplicate", icon: "fas fa-copy", color: "text-on-surface-variant", bg: "bg-surface-variant", hover: "hover:bg-[#3b82f6] hover:text-white" },
+  { id: "print", label: "Print", icon: "fas fa-print", color: "text-on-surface-variant", bg: "bg-surface-variant", hover: "hover:bg-[#3b82f6] hover:text-white" },
 ];
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ function StatCard({ value, label, icon, color, delay = 0 }: {
 
   return (
     <div className={`
-      text-center p-2.5 rounded-lg bg-white border border-[#e2e8f0]
+      text-center p-2.5 rounded-lg bg-surface border border-outline-variant
       transition-all duration-300
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
     `}>
@@ -66,7 +66,7 @@ function StatCard({ value, label, icon, color, delay = 0 }: {
         <i className={`fas ${icon}`} />
       </div>
       <div className={`font-extrabold text-base md:text-lg ${color}`}>{value}</div>
-      <div className="text-[9px] md:text-[10px] text-[#94a3b8] uppercase font-bold tracking-wider">{label}</div>
+      <div className="text-[9px] md:text-[10px] text-outline uppercase font-bold tracking-wider">{label}</div>
     </div>
   );
 }
@@ -117,8 +117,8 @@ function ActionMenu({
         className={`
           w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200
           ${isOpen
-            ? "bg-[#8b5cf6] text-white shadow-md"
-            : "text-[#64748b] hover:bg-[#f1f5f9]"
+            ? "bg-[#8b5cf6] text-white shadow-md3-level2"
+            : "text-on-surface-variant hover:bg-surface-variant"
           }
         `}
       >
@@ -126,7 +126,7 @@ function ActionMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl border border-[#e2e8f0] shadow-xl z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute right-0 top-full mt-2 w-44 bg-surface rounded-xl border border-outline-variant shadow-md3-level4 z-50 overflow-hidden animate-fadeIn">
           {ACTIONS.map((action) => (
             <button
               key={action.id}
@@ -135,8 +135,8 @@ function ActionMenu({
                 handleAction(action.id);
               }}
               className={`
-                w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-[#475569]
-                hover:bg-white transition-colors text-left
+                w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-on-surface-variant
+                hover:bg-surface transition-colors text-left
               `}
             >
               <div className={`w-7 h-7 rounded-lg ${action.bg} ${action.color} flex items-center justify-center`}>
@@ -195,7 +195,7 @@ export default function CustomerCard({
         group relative md3-card-elevated p-4 md:p-5
         transition-all duration-300 ease-out cursor-pointer overflow-hidden
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}
-        ${!bulkMode && isHovered ? "shadow-xl -translate-y-1" : "shadow-sm hover:shadow-md"}
+        ${!bulkMode && isHovered ? "shadow-md3-level4 -translate-y-1" : "shadow-md3-level1 hover:shadow-md3-level2"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -229,7 +229,7 @@ export default function CustomerCard({
                   w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer
                   transition-all duration-200
                   ${isSelected
-                    ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] shadow-sm text-[var(--md-sys-color-on-primary)]"
+                    ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] shadow-md3-level1 text-[var(--md-sys-color-on-primary)]"
                     : "border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-primary)]"
                   }
                 `}
@@ -251,7 +251,7 @@ export default function CustomerCard({
             {/* Status dot */}
             <div className={`
               absolute -bottom-0.5 -right-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-white
-              ${statusConfig.dot} shadow-sm
+              ${statusConfig.dot} shadow-md3-level1
             `}>
               <i className={`fas ${statusConfig.icon} text-white text-[6px] md:text-[7px] absolute inset-0 flex items-center justify-center`} />
             </div>

@@ -46,7 +46,7 @@ function getKeyStatus(key: string, mode: "test" | "live", type: "public" | "secr
   message: string;
   color: string;
 } {
-  if (!key) return { valid: false, message: "Required", color: "text-[#94a3b8]" };
+  if (!key) return { valid: false, message: "Required", color: "text-outline" };
   if (validateKey(key, mode, type)) return { valid: true, message: "Valid format", color: "text-[#10b981]" };
   const expectedPrefix = mode === "test"
     ? (type === "public" ? "pk_test_" : "sk_test_")
@@ -71,7 +71,7 @@ function ModeToggle({ mode, onChange }: { mode: "test" | "live"; onChange: (m: "
   };
 
   return (
-    <div className="bg-[#f8fafc] rounded-2xl p-1.5 flex gap-1.5 relative">
+    <div className="bg-surface-container-lowest rounded-2xl p-1.5 flex gap-1.5 relative">
       {/* Sliding background */}
       <div
         className={`
@@ -85,7 +85,7 @@ function ModeToggle({ mode, onChange }: { mode: "test" | "live"; onChange: (m: "
         className={`
           relative z-10 flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
           font-bold text-sm transition-colors duration-200
-          ${mode === "test" ? "text-white" : "text-[#64748b] hover:text-[#1e293b]"}
+          ${mode === "test" ? "text-white" : "text-on-surface-variant hover:text-on-surface"}
         `}
       >
         <i className="fas fa-flask text-xs" />
@@ -96,7 +96,7 @@ function ModeToggle({ mode, onChange }: { mode: "test" | "live"; onChange: (m: "
         className={`
           relative z-10 flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
           font-bold text-sm transition-colors duration-200
-          ${mode === "live" ? "text-white" : "text-[#64748b] hover:text-[#1e293b]"}
+          ${mode === "live" ? "text-white" : "text-on-surface-variant hover:text-on-surface"}
         `}
       >
         <i className="fas fa-rocket text-xs" />
@@ -131,7 +131,7 @@ function KeyInput({
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider">
+        <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
           {label}
         </label>
         <span className={`text-[10px] font-bold flex items-center gap-1 ${status.color}`}>
@@ -141,14 +141,14 @@ function KeyInput({
       </div>
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200
-        ${isFocused ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10" : "border-[#e2e8f0]"}
-        ${!status.valid && value ? "bg-[#fef2f2]" : "bg-white"}
+        ${isFocused ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10" : "border-outline-variant"}
+        ${!status.valid && value ? "bg-[#fef2f2]" : "bg-surface"}
       `}>
         <div className={`
-          w-10 h-10 flex items-center justify-center shrink-0 border-r-2 border-[#e2e8f0]
+          w-10 h-10 flex items-center justify-center shrink-0 border-r-2 border-outline-variant
           ${type === "secret" ? "bg-[#fef3c7]/30" : "bg-[#dbeafe]/30"}
         `}>
-          <i className={`fas fa-${type === "secret" ? "lock" : "key"} text-[#94a3b8] text-xs`} />
+          <i className={`fas fa-${type === "secret" ? "lock" : "key"} text-outline text-xs`} />
         </div>
         <input
           type={showValue ? "text" : "password"}
@@ -161,7 +161,7 @@ function KeyInput({
         />
         <button
           onClick={onToggleVisibility}
-          className="w-10 h-10 flex items-center justify-center text-[#94a3b8] hover:text-[#64748b] transition-colors"
+          className="w-10 h-10 flex items-center justify-center text-outline hover:text-on-surface-variant transition-colors"
           type="button"
           aria-label={showValue ? "Hide key" : "Show key"}
         >
@@ -357,10 +357,10 @@ export default function PaystackSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
-          <p className="text-[#64748b]">Loading settings...</p>
+          <p className="text-on-surface-variant">Loading settings...</p>
         </div>
       </div>
     );
@@ -368,12 +368,12 @@ export default function PaystackSettingsPage() {
 
   return (
     <div className={`
-      min-h-screen bg-[#f8fafc] pb-24 transition-all duration-500
+      min-h-screen bg-surface-container-lowest pb-24 transition-all duration-500
       ${isVisible ? "opacity-100" : "opacity-0"}
     `}>
       {/* Error Message */}
       {error && (
-        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
+        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-xl p-4 shadow-md3-level3">
           <div className="flex items-center gap-2">
             <i className="fas fa-exclamation-circle text-red-500"></i>
             <span className="text-sm text-red-800 font-medium">{error}</span>
@@ -385,21 +385,21 @@ export default function PaystackSettingsPage() {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-[#e2e8f0] sticky top-0 z-30">
+      <div className="bg-surface border-b border-outline-variant sticky top-0 z-30">
         <div className="px-3 md:px-6 py-4 md:py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-xl hover:bg-surface-variant flex items-center justify-center transition-colors"
             >
-              <i className="fas fa-arrow-left text-[#64748b]"></i>
+              <i className="fas fa-arrow-left text-on-surface-variant"></i>
             </button>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#10b981]/10 to-[#059669]/10 flex items-center justify-center">
               <i className="fas fa-credit-card text-[#10b981] text-lg" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Paystack Settings</h1>
-              <p className="text-xs text-[#64748b] hidden sm:block">Configure payment gateway integration</p>
+              <h1 className="text-lg md:text-xl font-extrabold text-on-surface">Paystack Settings</h1>
+              <p className="text-xs text-on-surface-variant hidden sm:block">Configure payment gateway integration</p>
             </div>
           </div>
         </div>
@@ -408,7 +408,7 @@ export default function PaystackSettingsPage() {
       <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 space-y-6">
         {/* Mode Toggle */}
         <div className={`
-          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-md3-level1
           transition-all duration-500 delay-100
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}>
@@ -417,14 +417,14 @@ export default function PaystackSettingsPage() {
 
         {/* API Keys */}
         <div className={`
-          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-md3-level1
           transition-all duration-500 delay-200
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <i className="fas fa-key text-[#f59e0b] text-sm" />
-              <h2 className="font-bold text-[#1e293b]">API Keys</h2>
+              <h2 className="font-bold text-on-surface">API Keys</h2>
             </div>
           </div>
 
@@ -452,7 +452,7 @@ export default function PaystackSettingsPage() {
             />
           </div>
 
-          <div className="h-px bg-[#e2e8f0] my-5" />
+          <div className="h-px bg-surface-variant my-5" />
 
           {/* Live Keys */}
           <div className={settings.mode === "test" ? "opacity-50 pointer-events-none" : ""}>
@@ -487,8 +487,8 @@ export default function PaystackSettingsPage() {
                 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm
                 transition-all duration-200 active:scale-95
                 ${!currentModeKeysValid
-                  ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/20 hover:shadow-xl hover:-translate-y-0.5"
+                  ? "bg-surface-variant text-outline cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md3-level3 shadow-[#8b5cf6]/20 hover:shadow-md3-level4 hover:-translate-y-0.5"
                 }
               `}
             >
@@ -500,21 +500,21 @@ export default function PaystackSettingsPage() {
 
         {/* Webhook URL */}
         <div className={`
-          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-md3-level1
           transition-all duration-500 delay-300
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}>
           <div className="flex items-center gap-2 mb-4">
             <i className="fas fa-webhook text-[#8b5cf6] text-sm" />
-            <h2 className="font-bold text-[#1e293b]">Webhook URL</h2>
+            <h2 className="font-bold text-on-surface">Webhook URL</h2>
           </div>
 
           <div className={`
-            flex items-center rounded-xl border-2 border-[#e2e8f0] bg-white overflow-hidden
-            focus-within:border-[#8b5cf6] focus-within:shadow-md focus-within:shadow-[#8b5cf6]/10
+            flex items-center rounded-xl border-2 border-outline-variant bg-surface overflow-hidden
+            focus-within:border-[#8b5cf6] focus-within:shadow-md3-level2 focus-within:shadow-[#8b5cf6]/10
           `}>
-            <div className="w-10 h-10 flex items-center justify-center border-r-2 border-[#e2e8f0] bg-[#f8fafc] shrink-0">
-              <i className="fas fa-link text-[#94a3b8] text-xs" />
+            <div className="w-10 h-10 flex items-center justify-center border-r-2 border-outline-variant bg-surface-container-lowest shrink-0">
+              <i className="fas fa-link text-outline text-xs" />
             </div>
             <input
               type="url"
@@ -525,13 +525,13 @@ export default function PaystackSettingsPage() {
             />
             <button
               onClick={() => navigator.clipboard.writeText(settings.webhookUrl)}
-              className="px-3 py-2 text-[#64748b] hover:text-[#8b5cf6] transition-colors text-xs font-bold"
+              className="px-3 py-2 text-on-surface-variant hover:text-[#8b5cf6] transition-colors text-xs font-bold"
               type="button"
             >
               <i className="fas fa-copy mr-1" />Copy
             </button>
           </div>
-          <p className="text-[10px] text-[#94a3b8] mt-2">
+          <p className="text-[10px] text-outline mt-2">
             Add this URL to your Paystack Dashboard → Settings → Webhooks
           </p>
         </div>
@@ -546,9 +546,9 @@ export default function PaystackSettingsPage() {
       </div>
 
       {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#e2e8f0] z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-surface/80 backdrop-blur-md border-t border-outline-variant z-40">
         <div className="px-3 md:px-6 py-3 md:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-[#64748b]">
+          <div className="flex items-center gap-2 text-sm text-on-surface-variant">
             <i className="fas fa-info-circle text-[10px]" />
             <span className="hidden sm:inline">
               {saveStatus === "saved" ? "Settings saved successfully" : "Unsaved changes"}
@@ -568,8 +568,8 @@ export default function PaystackSettingsPage() {
                 flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
                 transition-all duration-200 active:scale-95
                 ${isSaving || !currentModeKeysValid
-                  ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-lg shadow-[#10b981]/20 hover:shadow-xl hover:-translate-y-0.5"
+                  ? "bg-surface-variant text-outline cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-md3-level3 shadow-[#10b981]/20 hover:shadow-md3-level4 hover:-translate-y-0.5"
                 }
               `}
             >
@@ -587,7 +587,7 @@ export default function PaystackSettingsPage() {
             </button>
           </div>
         </div>
-        <div className="h-safe-area-inset-bottom bg-white/80" />
+        <div className="h-safe-area-inset-bottom bg-surface/80" />
       </div>
 
       {/* Premium Payment Success Modal */}

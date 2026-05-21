@@ -52,17 +52,17 @@ function BulkActionBar({
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   return (
-    <div className="bg-white border-y border-[#e2e8f0] px-4 py-3 animate-fadeIn">
+    <div className="bg-surface border-y border-outline-variant px-4 py-3 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
             <CheckSquare className="w-4 h-4 text-[#8b5cf6]" />
           </div>
           <div>
-            <span className="text-sm font-bold text-[#1e293b]">
+            <span className="text-sm font-bold text-on-surface">
               {selectedCount} of {totalCount} selected
             </span>
-            <p className="text-[10px] text-[#94a3b8]">Choose an action below</p>
+            <p className="text-[10px] text-outline">Choose an action below</p>
           </div>
         </div>
 
@@ -83,7 +83,7 @@ function BulkActionBar({
               </button>
               <button
                 onClick={() => setShowConfirmDelete(false)}
-                className="px-3 py-2 bg-[#f1f5f9] text-[#64748b] rounded-lg text-xs font-bold hover:bg-[#e2e8f0] transition-all"
+                className="px-3 py-2 bg-surface-variant text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-variant transition-all"
               >
                 Cancel
               </button>
@@ -93,7 +93,7 @@ function BulkActionBar({
               <button
                 onClick={onActivate}
                 disabled={isLoading || selectedCount === 0}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#10b981] text-white rounded-lg text-xs font-bold hover:bg-[#059669] transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#10b981] text-white rounded-lg text-xs font-bold hover:bg-[#059669] transition-all active:scale-95 disabled:opacity-50 shadow-md3-level1"
               >
                 {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
                 Activate
@@ -106,10 +106,10 @@ function BulkActionBar({
                 <Trash2 className="w-3 h-3" />
                 Delete
               </button>
-              <div className="w-px h-6 bg-[#e2e8f0] mx-1" />
+              <div className="w-px h-6 bg-surface-variant mx-1" />
               <button
                 onClick={onCancel}
-                className="px-3 py-2 text-xs font-bold text-[#64748b] hover:text-[#1e293b] transition-colors"
+                className="px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -142,9 +142,9 @@ function IconButton({
 
   const variants = {
     default: isActive
-      ? "bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/25"
-      : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]",
-    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/40",
+      ? "bg-[#8b5cf6] text-white shadow-md3-level3 shadow-[#8b5cf6]/25"
+      : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]",
+    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/40",
     danger: "bg-[#ef4444] text-white hover:bg-[#dc2626]",
   };
 
@@ -171,7 +171,7 @@ function IconButton({
         <span className={`
           absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full 
           flex items-center justify-center text-[10px] font-bold
-          ${variant === "primary" || variant === "danger" ? "bg-white text-[#1e293b]" : "bg-[#8b5cf6] text-white"}
+          ${variant === "primary" || variant === "danger" ? "bg-surface text-on-surface" : "bg-[#8b5cf6] text-white"}
         `}>
           {badge > 99 ? "99+" : badge}
         </span>
@@ -221,13 +221,13 @@ export default function ServicesHeader({
   }, [setBulkMode]);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-[#e2e8f0]">
+    <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-outline-variant">
       <div className="px-4 md:px-6 py-3 md:py-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
           {/* Left: Title */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative shrink-0">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/20">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md3-level3 shadow-[#8b5cf6]/20">
                 <Layers className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               {/* Subtle pulse ring */}
@@ -235,10 +235,10 @@ export default function ServicesHeader({
             </div>
 
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg md:text-2xl font-extrabold text-[#1e293b] tracking-tight">
+              <h1 className="text-lg md:text-2xl font-extrabold text-on-surface tracking-tight">
                 Services
               </h1>
-              <p className="text-xs md:text-sm text-[#94a3b8] mt-0.5 font-medium">
+              <p className="text-xs md:text-sm text-outline mt-0.5 font-medium">
                 {servicesCount.toLocaleString()} service{servicesCount !== 1 ? "s" : ""} total
               </p>
             </div>

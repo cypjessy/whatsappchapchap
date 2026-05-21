@@ -7,10 +7,10 @@ import { CURRENCY_SYMBOL } from "@/lib/currency";
 export default function OrderSuccessWrapper() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
-          <p className="text-[#64748b]">Loading...</p>
+          <p className="text-on-surface-variant">Loading...</p>
         </div>
       </div>
     }>
@@ -43,30 +43,30 @@ function OrderSuccessPage() {
 
   return (
     <div className={`
-      min-h-screen bg-[#f8fafc] flex items-center justify-center px-4
+      min-h-screen bg-surface-container-lowest flex items-center justify-center px-4
       transition-all duration-500
       ${isVisible ? "opacity-100" : "opacity-0"}
     `}>
       <div className="max-w-md w-full">
         {/* Success Card */}
-        <div className="bg-white rounded-2xl p-8 shadow-lg border border-[#e2e8f0] text-center">
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-outline-variant text-center">
           {/* Success Icon */}
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center mx-auto mb-6 animate-bounce">
             <i className="fas fa-check text-white text-3xl"></i>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[#1e293b] mb-2">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface mb-2">
             Order Placed!
           </h1>
           
-          <p className="text-[#64748b] mb-6">
+          <p className="text-on-surface-variant mb-6">
             Your order has been successfully placed
           </p>
 
           {/* Order Number */}
-          <div className="bg-[#f8fafc] rounded-xl p-4 mb-6 border border-[#e2e8f0]">
-            <p className="text-xs text-[#64748b] font-medium uppercase tracking-wider mb-1">
+          <div className="bg-surface-container-lowest rounded-xl p-4 mb-6 border border-outline-variant">
+            <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider mb-1">
               Order Number
             </p>
             <p className="text-xl font-bold text-[#8b5cf6] font-mono">
@@ -101,7 +101,7 @@ function OrderSuccessPage() {
             
             <button
               onClick={handleBackToHome}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-[0.98]"
             >
               <i className="fas fa-home"></i>
               Back to Home
@@ -110,7 +110,7 @@ function OrderSuccessPage() {
         </div>
 
         {/* Trust Badges */}
-        <div className="flex items-center justify-center gap-4 mt-6 text-[#94a3b8]">
+        <div className="flex items-center justify-center gap-4 mt-6 text-outline">
           <div className="flex items-center gap-1.5 text-xs">
             <i className="fas fa-shield-alt"></i>
             <span>Secure</span>

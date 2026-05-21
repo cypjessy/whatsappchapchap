@@ -166,7 +166,7 @@ export default function DashboardLayout({
   return (
     <>
       {/* Material Design 3 Page Background */}
-      <div className="min-h-screen bg-surface">
+      <div className="app-layout-surface">
         {/* Premium Offline Modal - Mobile/Android Only */}
         {showOfflineBanner && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 lg:hidden">
@@ -174,10 +174,10 @@ export default function DashboardLayout({
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn" />
             
             {/* Modal */}
-            <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
+            <div className="relative w-full max-w-sm bg-surface rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
             {/* Gradient Header */}
             <div className="bg-gradient-to-br from-red-500 to-orange-500 p-6 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-surface/20 backdrop-blur-sm flex items-center justify-center">
                 <i className="fas fa-wifi-slash text-4xl text-white" />
               </div>
               <h2 className="text-2xl font-black text-white mb-1">No Internet</h2>
@@ -192,8 +192,8 @@ export default function DashboardLayout({
                     <i className="fas fa-exclamation-triangle text-red-500 text-sm" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-800 mb-1">You're Offline</p>
-                    <p className="text-xs text-gray-600 leading-relaxed">
+                    <p className="text-sm font-bold text-on-surface mb-1">You're Offline</p>
+                    <p className="text-xs text-on-surface-variant leading-relaxed">
                       Some features require an internet connection. You can still view cached content.
                     </p>
                   </div>
@@ -204,8 +204,8 @@ export default function DashboardLayout({
                     <i className="fas fa-lightbulb text-blue-500 text-sm" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-800 mb-1">Quick Tip</p>
-                    <p className="text-xs text-gray-600 leading-relaxed">
+                    <p className="text-sm font-bold text-on-surface mb-1">Quick Tip</p>
+                    <p className="text-xs text-on-surface-variant leading-relaxed">
                       Check your Wi-Fi or mobile data settings and try again.
                     </p>
                   </div>
@@ -215,7 +215,7 @@ export default function DashboardLayout({
               {/* Action Button */}
               <button
                 onClick={() => setShowOfflineBanner(false)}
-                className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <i className="fas fa-check-circle" />
                 Got It

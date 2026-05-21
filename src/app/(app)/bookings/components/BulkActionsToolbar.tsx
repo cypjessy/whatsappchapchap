@@ -49,24 +49,24 @@ function DeleteConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scaleIn">
+      <div className="relative bg-surface rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scaleIn">
         <div className="w-14 h-14 rounded-full bg-[#ef4444]/10 flex items-center justify-center mx-auto mb-4">
           <i className="fas fa-exclamation-triangle text-[#ef4444] text-xl" />
         </div>
-        <h3 className="text-lg font-bold text-center text-[#1e293b] mb-2">Delete Bookings?</h3>
-        <p className="text-sm text-[#64748b] text-center mb-6">
+        <h3 className="text-lg font-bold text-center text-on-surface mb-2">Delete Bookings?</h3>
+        <p className="text-sm text-on-surface-variant text-center mb-6">
           Are you sure you want to delete <span className="font-bold text-[#ef4444]">{count}</span> selected booking{count !== 1 ? "s" : ""}? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl border-2 border-[#e2e8f0] text-[#64748b] font-semibold text-sm hover:bg-white transition-all active:scale-95"
+            className="flex-1 px-4 py-2.5 rounded-xl border-2 border-outline-variant text-on-surface-variant font-semibold text-sm hover:bg-surface transition-all active:scale-95"
           >
             Keep
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-[#ef4444] text-white font-semibold text-sm hover:bg-[#dc2626] transition-all active:scale-95 shadow-lg shadow-[#ef4444]/20"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#ef4444] text-white font-semibold text-sm hover:bg-[#dc2626] transition-all active:scale-95 shadow-md3-level3 shadow-[#ef4444]/20"
           >
             Delete
           </button>
@@ -90,14 +90,14 @@ function ActionBtn({
 
   const variants = {
     default: isHovered
-      ? "bg-white text-[#8b5cf6] shadow-lg shadow-white/20"
-      : "bg-white/15 text-white hover:bg-white/25",
+      ? "bg-surface text-[#8b5cf6] shadow-md3-level3 shadow-white/20"
+      : "bg-surface/15 text-white hover:bg-surface/25",
     danger: isHovered
-      ? "bg-[#dc2626] text-white shadow-lg shadow-[#ef4444]/30"
+      ? "bg-[#dc2626] text-white shadow-md3-level3 shadow-[#ef4444]/30"
       : "bg-[#ef4444]/80 text-white hover:bg-[#ef4444]",
     ghost: isHovered
-      ? "bg-white/30 text-white"
-      : "bg-white/10 text-white/80 hover:bg-white/20",
+      ? "bg-surface/30 text-white"
+      : "bg-surface/10 text-white/80 hover:bg-surface/20",
   };
 
   return (
@@ -191,21 +191,21 @@ export default function BulkActionsToolbar({
         className={`
           relative overflow-hidden rounded-xl md:rounded-2xl p-3 md:p-4 mb-6
           bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed]
-          shadow-lg shadow-[#8b5cf6]/20
+          shadow-md3-level3 shadow-[#8b5cf6]/20
           transition-all duration-500 ease-out
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}
         `}
       >
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/20 blur-2xl" />
-          <div className="absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-surface/20 blur-2xl" />
+          <div className="absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-surface/10 blur-xl" />
         </div>
 
         {/* Progress bar at top */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-white/10">
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-surface/10">
           <div
-            className="h-full bg-white/40 rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-surface/40 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -214,7 +214,7 @@ export default function BulkActionsToolbar({
           {/* Left: Selection info */}
           <div className="flex items-center gap-3 md:gap-4">
             <div className={`
-              w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/15 flex items-center justify-center
+              w-9 h-9 md:w-10 md:h-10 rounded-xl bg-surface/15 flex items-center justify-center
               transition-transform duration-300
               ${isVisible ? "scale-100" : "scale-75"}
             `}>
@@ -250,7 +250,7 @@ export default function BulkActionsToolbar({
             ))}
 
             {/* Divider */}
-            <div className="w-px h-6 bg-white/20 mx-0.5 hidden sm:block" />
+            <div className="w-px h-6 bg-surface/20 mx-0.5 hidden sm:block" />
 
             {/* Delete */}
             <ActionBtn

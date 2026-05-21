@@ -172,7 +172,7 @@ function StatCard({
   return (
     <div
       className={`
-        bg-white rounded-2xl p-3 md:p-4 border border-[#E2E8F0]
+        bg-surface rounded-2xl p-3 md:p-4 border border-outline-variant
         transition-all duration-200
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
       `}
@@ -180,7 +180,7 @@ function StatCard({
     >
       <div className="flex items-center gap-2 mb-1.5">
         <i className={`fas ${icon} ${color} text-xs`} />
-        <span className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wide">{label}</span>
+        <span className="text-[10px] font-semibold text-outline uppercase tracking-wide">{label}</span>
       </div>
       <div className={`font-bold text-lg md:text-xl ${color}`}>
         {prefix}{animatedValue.toLocaleString()}{suffix}
@@ -193,8 +193,8 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-md shadow-black/5 p-3 min-w-[140px]">
-      <div className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide mb-2">
+    <div className="bg-surface rounded-xl border border-outline-variant shadow-md3-level2 shadow-black/5 p-3 min-w-[140px]">
+      <div className="text-[11px] font-semibold text-outline uppercase tracking-wide mb-2">
         {label}
       </div>
       {payload.map((entry: any, index: number) => (
@@ -204,11 +204,11 @@ function CustomTooltip({ active, payload, label }: any) {
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-xs font-medium text-[#64748B]">
+            <span className="text-xs font-medium text-on-surface-variant">
               {entry.name === "sales" ? "Sales" : "Orders"}
             </span>
           </div>
-          <span className="text-sm font-bold text-[#1E293B]">
+          <span className="text-sm font-bold text-on-surface">
             {entry.name === "sales" ? formatCurrency(entry.value) : entry.value}
           </span>
         </div>
@@ -300,21 +300,21 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
   return (
     <div
       className={`
-        bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden
+        bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden
         transition-all duration-300
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
     >
       {/* Header - MD3 styling */}
-      <div className="p-4 md:p-5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+      <div className="p-4 md:p-5 border-b border-outline-variant bg-surface-container-lowest">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#E8F5E9] flex items-center justify-center">
               <i className="fas fa-chart-line text-[#25D366] text-sm" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm md:text-base text-[#1E293B]">Sales Analytics</h3>
-              <span className="text-[10px] text-[#94A3B8] font-medium">
+              <h3 className="font-semibold text-sm md:text-base text-on-surface">Sales Analytics</h3>
+              <span className="text-[10px] text-outline font-medium">
                 {PERIODS[period].label} overview
               </span>
             </div>
@@ -322,7 +322,7 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
 
           <div className="flex items-center gap-2">
             {/* Period selector - MD3 segmented buttons */}
-            <div className="flex bg-[#F1F5F9] rounded-xl p-1">
+            <div className="flex bg-surface-variant rounded-xl p-1">
               {(Object.keys(PERIODS) as Period[]).map((p) => (
                 <button
                   key={p}
@@ -330,8 +330,8 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
                   className={`
                     px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200
                     ${period === p
-                      ? "bg-white text-[#1E293B] shadow-sm"
-                      : "text-[#64748B] hover:text-[#1E293B]"
+                      ? "bg-surface text-on-surface shadow-md3-level1"
+                      : "text-on-surface-variant hover:text-on-surface"
                     }
                   `}
                 >
@@ -347,8 +347,8 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
               className={`
                 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
                 ${isExporting
-                  ? "bg-[#f1f5f9] text-[#8b5cf6]"
-                  : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
+                  ? "bg-surface-variant text-[#8b5cf6]"
+                  : "text-on-surface-variant hover:bg-surface-variant hover:text-on-surface"
                 }
                 disabled:opacity-40 disabled:cursor-not-allowed
               `}
@@ -367,7 +367,7 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
 
       {/* Stats Summary */}
       {!loading && salesData.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 md:gap-3 p-3 md:p-4 border-b border-[#e2e8f0]">
+        <div className="grid grid-cols-3 gap-2 md:gap-3 p-3 md:p-4 border-b border-outline-variant">
           <StatCard
             label="Total Sales"
             value={totalSales}
@@ -399,12 +399,12 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
         {loading ? (
           <ShimmerChart />
         ) : salesData.length === 0 ? (
-          <div className="h-[220px] md:h-[320px] flex flex-col items-center justify-center text-[#64748b] animate-fadeIn">
+          <div className="h-[220px] md:h-[320px] flex flex-col items-center justify-center text-on-surface-variant animate-fadeIn">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-3 shadow-inner">
               <i className="fas fa-chart-bar text-xl text-[#cbd5e1]" />
             </div>
             <p className="font-semibold text-sm">No sales data</p>
-            <p className="text-xs text-[#94a3b8] mt-1">Start making sales to see analytics</p>
+            <p className="text-xs text-outline mt-1">Start making sales to see analytics</p>
           </div>
         ) : (
           <>

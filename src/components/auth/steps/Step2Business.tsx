@@ -26,7 +26,7 @@ export default function Step2Business({
   return (
     <div className="animate-[fadeIn_0.4s_ease]">
       <h3 className="text-xl md:text-2xl font-extrabold mb-1 md:mb-2">Business Information</h3>
-      <p className="text-[#64748b] mb-4 md:mb-6 text-sm md:text-base">Tell us about your business</p>
+      <p className="text-on-surface-variant mb-4 md:mb-6 text-sm md:text-base">Tell us about your business</p>
 
       <div className="mb-4 md:mb-6">
         <label className="block text-xs md:text-sm font-semibold mb-2 md:mb-3">Business Type</label>
@@ -40,8 +40,8 @@ export default function Step2Business({
                 active:scale-95 select-none
                 ${
                 selectedBusinessType === type.id
-                  ? "border-[#25D366] bg-[#f0fdf4] text-[#25D366] shadow-md"
-                  : "border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:shadow-sm"
+                  ? "border-[#25D366] bg-[#f0fdf4] text-[#25D366] shadow-md3-level2"
+                  : "border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:shadow-md3-level1"
               }`}
             >
               <i className={`fas ${type.icon} text-lg md:text-xl transition-transform duration-300 ${
@@ -60,9 +60,9 @@ export default function Step2Business({
           id="businessName"
           value={formData.businessName}
           onChange={onChange}
-          className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-[#e2e8f0] rounded-xl 
+          className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           placeholder="Your Business Name"
         />
@@ -74,9 +74,9 @@ export default function Step2Business({
           id="category"
           value={formData.category}
           onChange={onChange}
-          className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-[#e2e8f0] rounded-xl 
+          className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
         >
           <option value="">Select a category</option>
@@ -97,9 +97,9 @@ export default function Step2Business({
             id="country"
             value={formData.country}
             onChange={onChange}
-            className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-[#e2e8f0] rounded-xl 
+            className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
               focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
+              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
               bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           >
             <option value="KE">Kenya</option>
@@ -118,7 +118,7 @@ export default function Step2Business({
             id="currency"
             value={formData.currency}
             onChange={onChange}
-            className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-[#e2e8f0] rounded-xl 
+            className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
               focus:border-[#25D366] focus:outline-none text-sm md:text-base 
               bg-white cursor-not-allowed"
             readOnly

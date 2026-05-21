@@ -82,7 +82,7 @@ function MethodCard({
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
         ${isSelected
           ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] shadow-md shadow-[#25D366]/10"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:shadow-sm"
+          : "border-outline-variant bg-white hover:border-outline-variant hover:shadow-sm"
         }
         ${isPressed ? "scale-[0.98]" : "scale-100"}
         ${isSelected && !isPressed ? "-translate-y-0.5" : "translate-y-0"}
@@ -101,7 +101,7 @@ function MethodCard({
         transition-all duration-200
         ${isSelected
           ? "border-[#25D366] bg-[#25D366]"
-          : "border-[#e2e8f0] bg-white"
+          : "border-outline-variant bg-white"
         }
       `}>
         <div className={`
@@ -116,7 +116,7 @@ function MethodCard({
         transition-all duration-200
         ${isSelected
           ? "bg-[#25D366]/10 text-[#25D366]"
-          : "bg-[#f8fafc] text-[#94a3b8]"
+          : "bg-surface-container-lowest text-outline"
         }
       `}>
         <i className={`fas ${icon} text-base md:text-xl`} />
@@ -125,7 +125,7 @@ function MethodCard({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-sm md:text-base text-[#1e293b] truncate">
+          <span className="font-bold text-sm md:text-base text-on-surface truncate">
             {option.name}
           </span>
           {isSelected && (
@@ -134,7 +134,7 @@ function MethodCard({
             </span>
           )}
         </div>
-        <p className="text-xs md:text-sm text-[#64748b] mt-0.5 truncate">
+        <p className="text-xs md:text-sm text-on-surface-variant mt-0.5 truncate">
           {description}
         </p>
       </div>
@@ -179,7 +179,7 @@ export default function DeliveryOptions({
 
   return (
     <div className={`
-      p-4 md:p-6 border-b border-[#e2e8f0] transition-all duration-500
+      p-4 md:p-6 border-b border-outline-variant transition-all duration-500
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
       {/* Header */}
@@ -187,7 +187,7 @@ export default function DeliveryOptions({
         <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 flex items-center justify-center">
           <i className="fas fa-shipping-fast text-[#25D366] text-sm" />
         </div>
-        <h2 className="text-base md:text-lg font-extrabold text-[#1e293b]">Delivery Method</h2>
+        <h2 className="text-base md:text-lg font-extrabold text-on-surface">Delivery Method</h2>
       </div>
 
       {/* Options */}

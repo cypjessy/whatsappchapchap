@@ -59,7 +59,7 @@ export default function ServiceSchedule() {
       case "pending": return "bg-[rgba(245,158,11,0.1)] text-[#f59e0b]";
       case "completed": return "bg-[rgba(59,130,246,0.1)] text-[#3b82f6]";
       case "cancelled": return "bg-[rgba(239,68,68,0.1)] text-[#ef4444]";
-      default: return "bg-[rgba(100,116,139,0.1)] text-[#64748b]";
+      default: return "bg-[rgba(100,116,139,0.1)] text-on-surface-variant";
     }
   };
 
@@ -97,33 +97,33 @@ export default function ServiceSchedule() {
   }
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden">
-      <div className="p-4 md:p-5 border-b border-[#e2e8f0] flex justify-between items-center flex-wrap gap-3">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden">
+      <div className="p-4 md:p-5 border-b border-outline-variant flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h3 className="font-bold text-[#1e293b] flex items-center gap-2">
+          <h3 className="font-bold text-on-surface flex items-center gap-2">
             <i className="fas fa-calendar-day text-[#8b5cf6]"></i>
             {formatDate(selectedDate)}
           </h3>
-          <p className="text-xs text-[#64748b] mt-1">
+          <p className="text-xs text-on-surface-variant mt-1">
             {bookings.length} booking{bookings.length !== 1 ? 's' : ''} scheduled
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => changeDate(-1)}
-            className="w-8 h-8 rounded-lg bg-[#f1f5f9] hover:bg-[#8b5cf6] hover:text-white transition-all flex items-center justify-center"
+            className="w-8 h-8 rounded-lg bg-surface-variant hover:bg-[#8b5cf6] hover:text-white transition-all flex items-center justify-center"
           >
             <i className="fas fa-chevron-left text-sm"></i>
           </button>
           <button 
             onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-            className="px-3 py-1.5 text-xs font-semibold text-[#8b5cf6] hover:bg-[#f1f5f9] rounded-lg transition-all"
+            className="px-3 py-1.5 text-xs font-semibold text-[#8b5cf6] hover:bg-surface-variant rounded-lg transition-all"
           >
             Today
           </button>
           <button 
             onClick={() => changeDate(1)}
-            className="w-8 h-8 rounded-lg bg-[#f1f5f9] hover:bg-[#8b5cf6] hover:text-white transition-all flex items-center justify-center"
+            className="w-8 h-8 rounded-lg bg-surface-variant hover:bg-[#8b5cf6] hover:text-white transition-all flex items-center justify-center"
           >
             <i className="fas fa-chevron-right text-sm"></i>
           </button>
@@ -136,13 +136,13 @@ export default function ServiceSchedule() {
       <div className="divide-y divide-[#e2e8f0]">
         {bookings.length > 0 ? (
           bookings.map((booking) => (
-            <div key={booking.id} className="p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:bg-white transition-colors group cursor-pointer">
+            <div key={booking.id} className="p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:bg-surface transition-colors group cursor-pointer">
               <div className="text-center min-w-[50px] md:min-w-[60px]">
                 <div className="font-bold text-base md:text-lg text-[#8b5cf6]">{booking.time}</div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm md:text-base text-[#1e293b]">{booking.service}</div>
-                <div className="text-xs md:text-sm text-[#64748b] flex items-center gap-2 flex-wrap">
+                <div className="font-semibold text-sm md:text-base text-on-surface">{booking.service}</div>
+                <div className="text-xs md:text-sm text-on-surface-variant flex items-center gap-2 flex-wrap">
                   <span><i className="fas fa-user mr-1"></i>{booking.client}</span>
                   <span className="hidden md:inline">•</span>
                   <span>
@@ -161,13 +161,13 @@ export default function ServiceSchedule() {
             </div>
           ))
         ) : (
-          <div className="p-8 text-center text-[#64748b]">
+          <div className="p-8 text-center text-on-surface-variant">
             <i className="fas fa-calendar-check text-4xl mb-3 opacity-30"></i>
             <p className="font-semibold">No bookings for {formatDate(selectedDate)}</p>
             <p className="text-sm mt-1">Use the calendar to view other dates or add new bookings</p>
             <a 
               href="/bookings?new=true" 
-              className="inline-block mt-3 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+              className="inline-block mt-3 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:shadow-md3-level3 transition-all"
             >
               <i className="fas fa-plus mr-2"></i>Add Booking
             </a>

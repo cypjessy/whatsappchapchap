@@ -23,7 +23,7 @@ const ACTIONS = [
   { id: "vip", label: "Set VIP", icon: "fa-crown", color: "bg-[#f59e0b]/10 text-[#f59e0b] hover:bg-[#f59e0b] hover:text-white", border: "border-[#f59e0b]/20" },
   { id: "tag", label: "Add Tag", icon: "fa-tag", color: "bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6] hover:text-white", border: "border-[#8b5cf6]/20" },
   { id: "message", label: "Message", icon: "fa-comment", color: "bg-[#3b82f6]/10 text-[#3b82f6] hover:bg-[#3b82f6] hover:text-white", border: "border-[#3b82f6]/20" },
-  { id: "export", label: "Export", icon: "fa-file-export", color: "bg-[#64748b]/10 text-[#64748b] hover:bg-[#64748b] hover:text-white", border: "border-[#64748b]/20" },
+  { id: "export", label: "Export", icon: "fa-file-export", color: "bg-[#64748b]/10 text-on-surface-variant hover:bg-[#64748b] hover:text-white", border: "border-[#64748b]/20" },
   { id: "delete", label: "Delete", icon: "fa-trash-alt", color: "bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444] hover:text-white", border: "border-[#ef4444]/20" },
 ] as const;
 
@@ -64,8 +64,8 @@ function SelectionCheckbox({
           w-5 h-5 rounded-md border-2 flex items-center justify-center
           transition-all duration-200
           ${checked || indeterminate
-            ? "bg-[#25D366] border-[#25D366] shadow-sm shadow-[#25D366]/20"
-            : "border-[#e2e8f0] bg-white group-hover:border-[#cbd5e1]"
+            ? "bg-[#25D366] border-[#25D366] shadow-md3-level1 shadow-[#25D366]/20"
+            : "border-outline-variant bg-surface group-hover:border-outline-variant"
           }
         `}>
           {checked && <i className="fas fa-check text-white text-[10px]" />}
@@ -73,10 +73,10 @@ function SelectionCheckbox({
         </div>
       </div>
       <div className="flex flex-col">
-        <span className="text-sm font-bold text-[#1e293b]">
+        <span className="text-sm font-bold text-on-surface">
           {checked ? "All Selected" : indeterminate ? `${count} Selected` : "Select All"}
         </span>
-        <span className="text-[10px] text-[#94a3b8] font-medium">
+        <span className="text-[10px] text-outline font-medium">
           {count} of {total} customers
         </span>
       </div>
@@ -104,7 +104,7 @@ function ActionButton({
         border transition-all duration-200 active:scale-95
         ${disabled
           ? "opacity-40 cursor-not-allowed border-transparent"
-          : `${action.color} ${action.border} hover:shadow-md`
+          : `${action.color} ${action.border} hover:shadow-md3-level2`
         }
       `}
     >
@@ -151,8 +151,8 @@ function MobileActionMenu({
           flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold
           transition-all duration-200 active:scale-95
           ${isOpen
-            ? "bg-[#8b5cf6] text-white shadow-md"
-            : "bg-white border-2 border-[#e2e8f0] text-[#64748b]"
+            ? "bg-[#8b5cf6] text-white shadow-md3-level2"
+            : "bg-surface border-2 border-outline-variant text-on-surface-variant"
           }
         `}
       >
@@ -164,7 +164,7 @@ function MobileActionMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-[#e2e8f0] shadow-xl z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-xl border border-outline-variant shadow-md3-level4 z-50 overflow-hidden animate-fadeIn">
           {availableActions.map((action) => (
             <button
               key={action.id}
@@ -179,8 +179,8 @@ function MobileActionMenu({
               }}
               className={`
                 w-full flex items-center gap-3 px-4 py-3 text-xs font-bold
-                hover:bg-white transition-colors text-left
-                ${action.id === "delete" ? "text-[#ef4444]" : "text-[#475569]"}
+                hover:bg-surface transition-colors text-left
+                ${action.id === "delete" ? "text-[#ef4444]" : "text-on-surface-variant"}
               `}
             >
               <div className={`
@@ -235,7 +235,7 @@ export default function BulkOperationsBar({
 
   if (!isVisible && selectedCount === 0) {
     return (
-      <div className="mb-4 bg-white border border-[#e2e8f0] rounded-xl p-3 flex items-center justify-between animate-fadeIn">
+      <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 flex items-center justify-between animate-fadeIn">
         <SelectionCheckbox
           checked={allSelected}
           indeterminate={indeterminate}
@@ -243,7 +243,7 @@ export default function BulkOperationsBar({
           total={filteredCustomersCount}
           onChange={onSelectAll}
         />
-        <span className="text-xs text-[#94a3b8] font-medium">
+        <span className="text-xs text-outline font-medium">
           {filteredCustomersCount} total
         </span>
       </div>
@@ -251,7 +251,7 @@ export default function BulkOperationsBar({
   }
 
   return (
-    <div className="mb-4 bg-white border border-[#e2e8f0] rounded-xl p-3 md:p-4 shadow-sm animate-slideDown">
+    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-md3-level1 animate-slideDown">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Left: Selection */}
         <div className="flex items-center gap-3">
@@ -315,7 +315,7 @@ export default function BulkOperationsBar({
                 isConfirming={confirmingAction === "export"}
               />
             )}
-            <div className="w-px h-6 bg-[#e2e8f0] mx-1" />
+            <div className="w-px h-6 bg-surface-variant mx-1" />
             <ActionButton
               action={ACTIONS[5]}
               disabled={selectedCount === 0}
@@ -339,7 +339,7 @@ export default function BulkOperationsBar({
           {selectedCount > 0 && (
             <button
               onClick={onSelectAll}
-              className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#94a3b8] flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all duration-200 active:scale-90"
+              className="w-8 h-8 rounded-lg bg-surface-variant text-outline flex items-center justify-center hover:bg-[#ef4444] hover:text-white transition-all duration-200 active:scale-90"
               title="Clear selection"
             >
               <i className="fas fa-times text-xs" />
@@ -350,10 +350,10 @@ export default function BulkOperationsBar({
 
       {/* Confirmation hint */}
       {confirmingAction && (
-        <div className="mt-3 pt-3 border-t border-[#e2e8f0] flex items-center gap-2 text-xs text-[#f59e0b] font-semibold animate-fadeIn">
+        <div className="mt-3 pt-3 border-t border-outline-variant flex items-center gap-2 text-xs text-[#f59e0b] font-semibold animate-fadeIn">
           <i className="fas fa-exclamation-triangle" />
           Click again to confirm {ACTIONS.find(a => a.id === confirmingAction)?.label.toLowerCase()}
-          <span className="ml-auto text-[10px] text-[#94a3b8]">Auto-cancels in 3s</span>
+          <span className="ml-auto text-[10px] text-outline">Auto-cancels in 3s</span>
         </div>
       )}
     </div>

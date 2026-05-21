@@ -280,7 +280,7 @@ function OrderPageContent() {
       <div className="min-h-screen bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#64748b]">Loading your order...</p>
+          <p className="text-on-surface-variant">Loading your order...</p>
         </div>
       </div>
     );
@@ -295,8 +295,8 @@ function OrderPageContent() {
             <div className="w-20 h-20 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <i className="fas fa-shopping-cart text-3xl text-white"></i>
             </div>
-            <h1 className="text-2xl font-bold text-[#1e293b] mb-2">What would you like to do?</h1>
-            <p className="text-[#64748b]">{products[0]?.name}</p>
+            <h1 className="text-2xl font-bold text-on-surface mb-2">What would you like to do?</h1>
+            <p className="text-on-surface-variant">{products[0]?.name}</p>
           </div>
           
           <div className="space-y-3">
@@ -325,7 +325,7 @@ function OrderPageContent() {
                   setShowCartChoice(false);
                   setShowCart(true);
                 }}
-                className="w-full py-3 bg-white border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-semibold hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-white border-2 border-outline-variant text-on-surface-variant rounded-xl font-semibold hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center justify-center gap-2"
               >
                 <i className="fas fa-shopping-bag"></i>
                 View Cart ({cart.length} items)
@@ -333,7 +333,7 @@ function OrderPageContent() {
             )}
           </div>
           
-          <p className="text-xs text-center text-[#64748b] mt-6">
+          <p className="text-xs text-center text-on-surface-variant mt-6">
             {cart.length > 0 
               ? `You already have ${cart.length} item(s) in your cart` 
               : 'Your cart is empty'}
@@ -350,8 +350,8 @@ function OrderPageContent() {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-exclamation-triangle text-2xl text-red-500"></i>
           </div>
-          <h1 className="text-xl font-bold text-[#1e293b] mb-2">Oops!</h1>
-          <p className="text-[#64748b]">{error}</p>
+          <h1 className="text-xl font-bold text-on-surface mb-2">Oops!</h1>
+          <p className="text-on-surface-variant">{error}</p>
         </div>
       </div>
     );
@@ -364,21 +364,21 @@ function OrderPageContent() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-check text-2xl text-green-500"></i>
           </div>
-          <h1 className="text-2xl font-bold text-[#1e293b] mb-2">Order Confirmed!</h1>
-          <p className="text-[#64748b] mb-4">Your order has been placed successfully.</p>
+          <h1 className="text-2xl font-bold text-on-surface mb-2">Order Confirmed!</h1>
+          <p className="text-on-surface-variant mb-4">Your order has been placed successfully.</p>
           
           <div className="bg-white rounded-xl p-4 mb-4">
             <div className="flex justify-between mb-2">
-              <span className="text-[#64748b]">Order ID</span>
+              <span className="text-on-surface-variant">Order ID</span>
               <span className="font-bold text-[#25D366]">#{orderDetails.orderId.substring(0, 8)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#64748b]">Total</span>
+              <span className="text-on-surface-variant">Total</span>
               <span className="font-bold text-xl">{CURRENCY_SYMBOL}{orderDetails.total.toLocaleString()}</span>
             </div>
           </div>
 
-          <p className="text-sm text-[#64748b]">
+          <p className="text-sm text-on-surface-variant">
             The seller will contact you at <strong>{customerPhone}</strong> for confirmation.
           </p>
           
@@ -430,7 +430,7 @@ function OrderPageContent() {
             {/* Cart Items */}
             <div className="p-6">
               {cart.map((item, idx) => (
-                <div key={idx} className="flex gap-4 mb-4 pb-4 border-b border-[#e2e8f0] last:border-b-0">
+                <div key={idx} className="flex gap-4 mb-4 pb-4 border-b border-outline-variant last:border-b-0">
                   {/* Product Image */}
                   <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
                     {item.image || (item.images && item.images.length > 0) ? (
@@ -441,23 +441,23 @@ function OrderPageContent() {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-[#1e293b] text-sm truncate">{item.name}</h3>
+                    <h3 className="font-bold text-on-surface text-sm truncate">{item.name}</h3>
                     {item.size && (
-                      <p className="text-xs text-[#64748b]">Size: {item.size}</p>
+                      <p className="text-xs text-on-surface-variant">Size: {item.size}</p>
                     )}
                     
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => updateCartItemQuantity(idx, item.quantity - 1)}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors text-sm"
+                          className="w-7 h-7 rounded-lg bg-white border border-outline-variant flex items-center justify-center font-bold hover:bg-surface-variant transition-colors text-sm"
                         >
                           -
                         </button>
                         <span className="w-6 text-center font-bold text-sm">{item.quantity}</span>
                         <button 
                           onClick={() => updateCartItemQuantity(idx, item.quantity + 1)}
-                          className="w-7 h-7 rounded-lg bg-white border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors text-sm"
+                          className="w-7 h-7 rounded-lg bg-white border border-outline-variant flex items-center justify-center font-bold hover:bg-surface-variant transition-colors text-sm"
                         >
                           +
                         </button>
@@ -471,7 +471,7 @@ function OrderPageContent() {
                   {/* Remove Button */}
                   <button 
                     onClick={() => removeFromCart(idx)}
-                    className="w-8 h-8 flex items-center justify-center text-[#64748b] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                    className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
                   >
                     <i className="fas fa-trash-alt text-sm"></i>
                   </button>
@@ -480,15 +480,15 @@ function OrderPageContent() {
 
               {/* Cart Totals */}
               <div className="bg-white rounded-xl p-4 mt-4">
-                <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
-                  <span className="text-[#64748b]">Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                <div className="flex justify-between py-2 border-b border-dashed border-outline-variant">
+                  <span className="text-on-surface-variant">Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
                   <span className="font-semibold">{CURRENCY_SYMBOL}{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
-                  <span className="text-[#64748b]">Tax (16%)</span>
+                <div className="flex justify-between py-2 border-b border-dashed border-outline-variant">
+                  <span className="text-on-surface-variant">Tax (16%)</span>
                   <span className="font-semibold">{CURRENCY_SYMBOL}{Math.round(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.16).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between pt-3 mt-2 border-t-2 border-[#e2e8f0] text-xl font-extrabold">
+                <div className="flex justify-between pt-3 mt-2 border-t-2 border-outline-variant text-xl font-extrabold">
                   <span>Total</span>
                   <span className="text-[#25D366]">{CURRENCY_SYMBOL}{Math.round(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.16).toLocaleString()}</span>
                 </div>
@@ -498,7 +498,7 @@ function OrderPageContent() {
               <div className="flex gap-2 mt-4">
                 <button 
                   onClick={clearCart}
-                  className="flex-1 py-3 bg-white border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-semibold hover:border-red-300 hover:text-red-500 transition-all"
+                  className="flex-1 py-3 bg-white border-2 border-outline-variant text-on-surface-variant rounded-xl font-semibold hover:border-red-300 hover:text-red-500 transition-all"
                 >
                   <i className="fas fa-trash-alt mr-2"></i>Clear Cart
                 </button>
@@ -522,12 +522,12 @@ function OrderPageContent() {
 
           {/* Products */}
           <div className="p-6">
-            <h2 className="font-bold text-[#1e293b] mb-4 flex items-center gap-2">
+            <h2 className="font-bold text-on-surface mb-4 flex items-center gap-2">
               <i className="fas fa-box text-[#25D366]"></i>Order Items
             </h2>
             
             {products.map((product, idx) => (
-              <div key={idx} className="mb-6 pb-6 border-b border-[#e2e8f0] last:border-b-0">
+              <div key={idx} className="mb-6 pb-6 border-b border-outline-variant last:border-b-0">
                 {/* Product Image Gallery */}
                 <div className="w-full h-64 rounded-xl bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] flex items-center justify-center overflow-hidden shadow-md relative mb-4">
                   {product.image || (product.images && product.images.length > 0) ? (
@@ -544,11 +544,11 @@ function OrderPageContent() {
                 </div>
                 
                 <div>
-                  <h3 className="font-bold text-xl text-[#1e293b] mb-2">{product.name}</h3>
+                  <h3 className="font-bold text-xl text-on-surface mb-2">{product.name}</h3>
                   
                   {/* Product Description */}
                   {product.description && (
-                    <p className="text-sm text-[#64748b] mb-3 line-clamp-3">{product.description}</p>
+                    <p className="text-sm text-on-surface-variant mb-3 line-clamp-3">{product.description}</p>
                   )}
                   
                   {/* Product Details Grid */}
@@ -556,32 +556,32 @@ function OrderPageContent() {
                     {/* Category */}
                     {product.categoryName && (
                       <div className="bg-white rounded-lg p-2">
-                        <div className="text-xs text-[#64748b] mb-1">Category</div>
-                        <div className="text-sm font-semibold text-[#1e293b] capitalize">{product.categoryName}</div>
+                        <div className="text-xs text-on-surface-variant mb-1">Category</div>
+                        <div className="text-sm font-semibold text-on-surface capitalize">{product.categoryName}</div>
                       </div>
                     )}
                     
                     {/* Brand */}
                     {product.brand && (
                       <div className="bg-white rounded-lg p-2">
-                        <div className="text-xs text-[#64748b] mb-1">Brand</div>
-                        <div className="text-sm font-semibold text-[#1e293b]">{product.brand}</div>
+                        <div className="text-xs text-on-surface-variant mb-1">Brand</div>
+                        <div className="text-sm font-semibold text-on-surface">{product.brand}</div>
                       </div>
                     )}
                     
                     {/* Condition */}
                     {product.condition && (
                       <div className="bg-white rounded-lg p-2">
-                        <div className="text-xs text-[#64748b] mb-1">Condition</div>
-                        <div className="text-sm font-semibold text-[#1e293b] capitalize">{product.condition}</div>
+                        <div className="text-xs text-on-surface-variant mb-1">Condition</div>
+                        <div className="text-sm font-semibold text-on-surface capitalize">{product.condition}</div>
                       </div>
                     )}
                     
                     {/* SKU */}
                     {product.sku && (
                       <div className="bg-white rounded-lg p-2">
-                        <div className="text-xs text-[#64748b] mb-1">SKU</div>
-                        <div className="text-sm font-semibold text-[#1e293b] font-mono">{product.sku}</div>
+                        <div className="text-xs text-on-surface-variant mb-1">SKU</div>
+                        <div className="text-sm font-semibold text-on-surface font-mono">{product.sku}</div>
                       </div>
                     )}
                   </div>
@@ -589,14 +589,14 @@ function OrderPageContent() {
                   {/* Filters (Colors, Sizes, Custom) */}
                   {product.filters && Object.keys(product.filters).length > 0 && (
                     <div className="mb-3">
-                      <div className="text-xs font-semibold text-[#64748b] mb-2 uppercase tracking-wide">Available Options</div>
+                      <div className="text-xs font-semibold text-on-surface-variant mb-2 uppercase tracking-wide">Available Options</div>
                       <div className="space-y-2">
                         {Object.entries(product.filters).map(([filterName, filterValues]) => {
                           if (!filterValues || !Array.isArray(filterValues) || filterValues.length === 0) return null;
                           
                           return (
                             <div key={filterName}>
-                              <div className="text-xs text-[#64748b] mb-1 capitalize">{filterName.replace(/([A-Z])/g, ' $1').trim()}</div>
+                              <div className="text-xs text-on-surface-variant mb-1 capitalize">{filterName.replace(/([A-Z])/g, ' $1').trim()}</div>
                               <div className="flex flex-wrap gap-2">
                                 {filterValues.map((value: string, vIdx: number) => {
                                   // Check if this is a color filter
@@ -608,13 +608,13 @@ function OrderPageContent() {
                                     return (
                                       <div 
                                         key={vIdx}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e2e8f0] bg-white"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-white"
                                       >
                                         <div 
-                                          className="w-4 h-4 rounded-full border border-[#e2e8f0]" 
+                                          className="w-4 h-4 rounded-full border border-outline-variant" 
                                           style={{ backgroundColor: colorValue }}
                                         />
-                                        <span className="text-xs font-semibold text-[#1e293b] capitalize">{value}</span>
+                                        <span className="text-xs font-semibold text-on-surface capitalize">{value}</span>
                                       </div>
                                     );
                                   }
@@ -623,7 +623,7 @@ function OrderPageContent() {
                                   return (
                                     <span 
                                       key={vIdx}
-                                      className="px-3 py-1.5 rounded-lg border border-[#e2e8f0] bg-white text-xs font-semibold text-[#1e293b] capitalize"
+                                      className="px-3 py-1.5 rounded-lg border border-outline-variant bg-white text-xs font-semibold text-on-surface capitalize"
                                     >
                                       {value}
                                     </span>
@@ -640,7 +640,7 @@ function OrderPageContent() {
                   {/* Selected Size (from URL params) */}
                   {selectedSize && (
                     <div className="bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 rounded-lg p-3 mb-3 border border-[#25D366]/20">
-                      <div className="text-xs text-[#64748b] mb-1">Selected Option</div>
+                      <div className="text-xs text-on-surface-variant mb-1">Selected Option</div>
                       <div className="text-sm font-bold text-[#25D366]">{selectedSize}</div>
                     </div>
                   )}
@@ -648,12 +648,12 @@ function OrderPageContent() {
                   {/* Product Variants (if available) */}
                   {product.variants && product.variants.length > 0 && (
                     <div className="mb-3">
-                      <div className="text-xs font-semibold text-[#64748b] mb-2 uppercase tracking-wide">Product Variants</div>
+                      <div className="text-xs font-semibold text-on-surface-variant mb-2 uppercase tracking-wide">Product Variants</div>
                       <div className="space-y-2">
                         {product.variants.slice(0, 3).map((variant: any, vIdx: number) => (
-                          <div key={vIdx} className="bg-white rounded-lg p-3 border border-[#e2e8f0]">
+                          <div key={vIdx} className="bg-white rounded-lg p-3 border border-outline-variant">
                             <div className="flex justify-between items-start mb-1">
-                              <div className="text-sm font-semibold text-[#1e293b]">
+                              <div className="text-sm font-semibold text-on-surface">
                                 {Object.entries(variant.specs || {}).map(([key, val]) => (
                                   <span key={key} className="capitalize">{key}: {val as string}</span>
                                 )).reduce((prev, curr) => [prev, ', ', curr] as any)}
@@ -662,13 +662,13 @@ function OrderPageContent() {
                                 {CURRENCY_SYMBOL}{variant.price?.toLocaleString()}
                               </div>
                             </div>
-                            <div className="text-xs text-[#64748b]">
+                            <div className="text-xs text-on-surface-variant">
                               SKU: {variant.sku} • Stock: {variant.stock}
                             </div>
                           </div>
                         ))}
                         {product.variants.length > 3 && (
-                          <div className="text-xs text-[#64748b] text-center">+{product.variants.length - 3} more variants</div>
+                          <div className="text-xs text-on-surface-variant text-center">+{product.variants.length - 3} more variants</div>
                         )}
                       </div>
                     </div>
@@ -677,24 +677,24 @@ function OrderPageContent() {
                   {/* Additional Info (Warranty, Weight, etc.) */}
                   {(product.warranty || product.weight || product.barcode) && (
                     <div className="bg-white rounded-lg p-3 mb-3">
-                      <div className="text-xs font-semibold text-[#64748b] mb-2 uppercase tracking-wide">Additional Info</div>
+                      <div className="text-xs font-semibold text-on-surface-variant mb-2 uppercase tracking-wide">Additional Info</div>
                       <div className="space-y-1 text-sm">
                         {product.warranty && (
                           <div className="flex justify-between">
-                            <span className="text-[#64748b]">Warranty</span>
-                            <span className="font-semibold text-[#1e293b]">{product.warranty}</span>
+                            <span className="text-on-surface-variant">Warranty</span>
+                            <span className="font-semibold text-on-surface">{product.warranty}</span>
                           </div>
                         )}
                         {product.weight && (
                           <div className="flex justify-between">
-                            <span className="text-[#64748b]">Weight</span>
-                            <span className="font-semibold text-[#1e293b]">{product.weight} {product.weightUnit || 'kg'}</span>
+                            <span className="text-on-surface-variant">Weight</span>
+                            <span className="font-semibold text-on-surface">{product.weight} {product.weightUnit || 'kg'}</span>
                           </div>
                         )}
                         {product.barcode && (
                           <div className="flex justify-between">
-                            <span className="text-[#64748b]">Barcode</span>
-                            <span className="font-semibold text-[#1e293b] font-mono">{product.barcode}</span>
+                            <span className="text-on-surface-variant">Barcode</span>
+                            <span className="font-semibold text-on-surface font-mono">{product.barcode}</span>
                           </div>
                         )}
                       </div>
@@ -710,7 +710,7 @@ function OrderPageContent() {
                         </div>
                       )}
                       {product.images.map((img: string, imgIdx: number) => (
-                        <div key={imgIdx} className="w-16 h-16 rounded-lg overflow-hidden border border-[#e2e8f0] flex-shrink-0">
+                        <div key={imgIdx} className="w-16 h-16 rounded-lg overflow-hidden border border-outline-variant flex-shrink-0">
                           <img src={img} alt={`Photo ${imgIdx + 1}`} className="w-full h-full object-cover" />
                         </div>
                       ))}
@@ -718,24 +718,24 @@ function OrderPageContent() {
                   )}
                   
                   {/* Quantity Selector and Price */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[#e2e8f0]">
+                  <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
-                        className="w-10 h-10 rounded-xl bg-white border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
+                        className="w-10 h-10 rounded-xl bg-white border border-outline-variant flex items-center justify-center font-bold hover:bg-surface-variant transition-colors"
                       >
                         -
                       </button>
                       <span className="w-12 text-center font-bold text-lg">{selectedQuantity}</span>
                       <button 
                         onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-[#e2e8f0] flex items-center justify-center font-bold hover:bg-[#e2e8f0] transition-colors"
+                        className="w-10 h-10 rounded-xl bg-white border border-outline-variant flex items-center justify-center font-bold hover:bg-surface-variant transition-colors"
                       >
                         +
                       </button>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-[#64748b] mb-1">Total Price</div>
+                      <div className="text-xs text-on-surface-variant mb-1">Total Price</div>
                       <div className="font-bold text-2xl text-[#25D366]">
                         {CURRENCY_SYMBOL}{(product.price * selectedQuantity).toLocaleString()}
                       </div>
@@ -747,15 +747,15 @@ function OrderPageContent() {
 
             {/* Totals */}
             <div className="bg-white rounded-xl p-4 mt-4">
-              <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
-                <span className="text-[#64748b]">Subtotal</span>
+              <div className="flex justify-between py-2 border-b border-dashed border-outline-variant">
+                <span className="text-on-surface-variant">Subtotal</span>
                 <span className="font-semibold">{CURRENCY_SYMBOL}{calculateTotal().toLocaleString()}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-dashed border-[#e2e8f0]">
-                <span className="text-[#64748b]">Tax (16%)</span>
+              <div className="flex justify-between py-2 border-b border-dashed border-outline-variant">
+                <span className="text-on-surface-variant">Tax (16%)</span>
                 <span className="font-semibold">{CURRENCY_SYMBOL}{Math.round(calculateTotal() * 0.16).toLocaleString()}</span>
               </div>
-              <div className="flex justify-between pt-3 mt-2 border-t-2 border-[#e2e8f0] text-xl font-extrabold">
+              <div className="flex justify-between pt-3 mt-2 border-t-2 border-outline-variant text-xl font-extrabold">
                 <span>Total</span>
                 <span className="text-[#25D366]">{CURRENCY_SYMBOL}{Math.round(calculateTotal() * 1.16).toLocaleString()}</span>
               </div>
@@ -767,39 +767,39 @@ function OrderPageContent() {
         {/* Customer Details */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-4">
           <div className="p-6">
-            <h2 className="font-bold text-[#1e293b] mb-4 flex items-center gap-2">
+            <h2 className="font-bold text-on-surface mb-4 flex items-center gap-2">
               <i className="fas fa-user text-[#25D366]"></i>Your Details
             </h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-[#1e293b] mb-2">Your Name</label>
+                <label className="block text-sm font-semibold text-on-surface mb-2">Your Name</label>
                 <input 
                   type="text" 
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366]"
+                  className="w-full px-4 py-3 border-2 border-outline-variant rounded-xl focus:outline-none focus:border-[#25D366]"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-[#1e293b] mb-2">Delivery Address</label>
+                <label className="block text-sm font-semibold text-on-surface mb-2">Delivery Address</label>
                 <textarea 
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                   placeholder="Enter delivery address"
                   rows={3}
-                  className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366] resize-none"
+                  className="w-full px-4 py-3 border-2 border-outline-variant rounded-xl focus:outline-none focus:border-[#25D366] resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-[#1e293b] mb-2">Payment Method</label>
+                <label className="block text-sm font-semibold text-on-surface mb-2">Payment Method</label>
                 <select 
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#25D366] bg-white"
+                  className="w-full px-4 py-3 border-2 border-outline-variant rounded-xl focus:outline-none focus:border-[#25D366] bg-white"
                 >
                   <option value="Cash on Delivery">Cash on Delivery</option>
                   <option value="M-Pesa">M-Pesa</option>
@@ -834,7 +834,7 @@ function OrderPageContent() {
           )}
         </button>
 
-        <p className="text-center text-xs text-[#64748b] mt-4">
+        <p className="text-center text-xs text-on-surface-variant mt-4">
           By confirming, you agree to the terms and conditions
         </p>
       </div>

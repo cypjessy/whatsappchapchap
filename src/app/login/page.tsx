@@ -77,8 +77,8 @@ function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss:
                 <i className="fas fa-exclamation-triangle text-red-500 text-sm" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-800 mb-1">Invalid Credentials</p>
-                <p className="text-xs text-gray-600 leading-relaxed">
+                <p className="text-sm font-bold text-on-surface mb-1">Invalid Credentials</p>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
                   The email or password you entered is incorrect. Please check your details and try again.
                 </p>
               </div>
@@ -89,8 +89,8 @@ function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss:
                 <i className="fas fa-lightbulb text-blue-500 text-sm" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-800 mb-1">Need Help?</p>
-                <p className="text-xs text-gray-600 leading-relaxed">
+                <p className="text-sm font-bold text-on-surface mb-1">Need Help?</p>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
                   Forgot your password? Try resetting it or contact support for assistance.
                 </p>
               </div>

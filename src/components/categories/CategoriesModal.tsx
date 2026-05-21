@@ -220,56 +220,56 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
         <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-sm md:max-w-2xl lg:max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-[slideUp_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={e => e.stopPropagation()}>
           
           {/* Header */}
-          <div className="p-4 md:p-7 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-gradient-to-r from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)]">
+          <div className="p-4 md:p-7 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-gradient-to-r from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)]">
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] rounded-lg md:rounded-[12px] flex items-center justify-center text-white text-lg md:text-2xl shadow-lg">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] rounded-lg md:rounded-[12px] flex items-center justify-center text-white text-lg md:text-2xl shadow-md3-level3">
                 <i className="fas fa-layer-group"></i>
               </div>
               <div>
-                <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Categories</h2>
-                <p className="text-xs md:text-sm text-[#64748b] hidden md:block">Organize your products</p>
+                <h2 className="text-lg md:text-xl font-extrabold text-on-surface">Categories</h2>
+                <p className="text-xs md:text-sm text-on-surface-variant hidden md:block">Organize your products</p>
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-lg md:rounded-[8px]">
+              <button className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-on-surface-variant hover:bg-surface-variant rounded-lg md:rounded-[8px]">
                 <i className="fas fa-question-circle"></i>
               </button>
-              <button className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#64748b] hover:bg-[#ef4444] hover:text-white rounded-lg md:rounded-[8px] transition-all" onClick={onClose}>
+              <button className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-on-surface-variant hover:bg-[#ef4444] hover:text-white rounded-lg md:rounded-[8px] transition-all" onClick={onClose}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
           </div>
 
           {/* Toolbar */}
-          <div className="p-3 md:p-5 border-b border-[#e2e8f0] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div className="p-3 md:p-5 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
             <div className="flex gap-2 md:gap-4 items-center w-full md:flex-1">
               <div className="relative flex-1 md:w-[280px]">
-                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]"></i>
+                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"></i>
                 <input 
                   type="text" 
                   placeholder="Search..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2.5 md:py-3 bg-white border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:bg-white transition-all"
+                  className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2.5 md:py-3 bg-white border-2 border-outline-variant rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:bg-white transition-all"
                 />
               </div>
-              <div className="flex bg-white rounded-lg md:rounded-[8px] p-1 border-2 border-[#e2e8f0]">
+              <div className="flex bg-white rounded-lg md:rounded-[8px] p-1 border-2 border-outline-variant">
                 <button 
                   onClick={() => setViewMode("grid")} 
-                  className={`px-2 md:px-4 py-1.5 md:py-2 rounded text-sm transition-all ${viewMode === "grid" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-[#64748b]"}`}
+                  className={`px-2 md:px-4 py-1.5 md:py-2 rounded text-sm transition-all ${viewMode === "grid" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-on-surface-variant"}`}
                 >
                   <i className="fas fa-th-large"></i>
                 </button>
                 <button 
                   onClick={() => setViewMode("list")} 
-                  className={`px-2 md:px-4 py-1.5 md:py-2 rounded text-sm transition-all ${viewMode === "list" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-[#64748b]"}`}
+                  className={`px-2 md:px-4 py-1.5 md:py-2 rounded text-sm transition-all ${viewMode === "list" ? "bg-white shadow text-[#8b5cf6] font-semibold" : "text-on-surface-variant"}`}
                 >
                   <i className="fas fa-list"></i>
                 </button>
               </div>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
-              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[44px]" onClick={openAddModal}>
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-md3-level3 flex items-center justify-center gap-2 hover:shadow-md3-level4 transition-all min-h-[44px]" onClick={openAddModal}>
                 <i className="fas fa-plus"></i>
                 <span className="md:hidden">Add</span>
                 <span className="hidden md:inline">Add Category</span>
@@ -282,21 +282,21 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
             
             {/* Stats - Grid on mobile, 4 cols desktop */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
-              <div className="bg-white rounded-xl md:rounded-[12px] p-3 md:p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] transition-all">
+              <div className="bg-white rounded-xl md:rounded-[12px] p-3 md:p-5 text-center border-2 border-outline-variant hover:border-[#8b5cf6] transition-all">
                 <div className="text-2xl md:text-4xl font-extrabold text-[#8b5cf6] mb-1">{categories.length}</div>
-                <div className="text-xs md:text-sm font-semibold text-[#64748b]">Total</div>
+                <div className="text-xs md:text-sm font-semibold text-on-surface-variant">Total</div>
               </div>
-              <div className="bg-white rounded-xl md:rounded-[12px] p-3 md:p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] transition-all">
+              <div className="bg-white rounded-xl md:rounded-[12px] p-3 md:p-5 text-center border-2 border-outline-variant hover:border-[#8b5cf6] transition-all">
                 <div className="text-2xl md:text-4xl font-extrabold text-[#8b5cf6] mb-1">{totalProducts}</div>
-                <div className="text-xs md:text-sm font-semibold text-[#64748b]">Products</div>
+                <div className="text-xs md:text-sm font-semibold text-on-surface-variant">Products</div>
               </div>
-              <div className="bg-white rounded-[12px] p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
+              <div className="bg-white rounded-[12px] p-5 text-center border-2 border-outline-variant hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
                 <div className="text-4xl font-extrabold text-[#10b981] mb-1">{activeCount}</div>
-                <div className="text-sm font-semibold text-[#64748b]">Active</div>
+                <div className="text-sm font-semibold text-on-surface-variant">Active</div>
               </div>
-              <div className="bg-white rounded-[12px] p-5 text-center border-2 border-[#e2e8f0] hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
-                <div className="text-4xl font-extrabold text-[#64748b] mb-1">{hiddenCount}</div>
-                <div className="text-sm font-semibold text-[#64748b]">Hidden</div>
+              <div className="bg-white rounded-[12px] p-5 text-center border-2 border-outline-variant hover:border-[#8b5cf6] hover:-translate-y-0.5 transition-all">
+                <div className="text-4xl font-extrabold text-on-surface-variant mb-1">{hiddenCount}</div>
+                <div className="text-sm font-semibold text-on-surface-variant">Hidden</div>
               </div>
             </div>
 
@@ -306,7 +306,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                 {filteredCategories.map(category => (
                   <div 
                     key={category.id} 
-                    className={`bg-white border-2 border-[#e2e8f0] rounded-[12px] p-6 cursor-pointer transition-all hover:border-[#8b5cf6] hover:-translate-y-1 hover:shadow-lg relative overflow-hidden ${selectedCategory?.id === category.id ? "border-[#8b5cf6] bg-gradient-to-br from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)] shadow-md" : ""}`}
+                    className={`bg-white border-2 border-outline-variant rounded-[12px] p-6 cursor-pointer transition-all hover:border-[#8b5cf6] hover:-translate-y-1 hover:shadow-md3-level3 relative overflow-hidden ${selectedCategory?.id === category.id ? "border-[#8b5cf6] bg-gradient-to-br from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)] shadow-md3-level2" : ""}`}
                     onClick={() => setSelectedCategory(category)}
                   >
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] opacity-0 transition-opacity"></div>
@@ -319,13 +319,13 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                       </div>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
-                          className="w-8 h-8 rounded-[8px] border-none bg-white text-[#64748b] cursor-pointer flex items-center justify-center text-sm hover:bg-[#8b5cf6] hover:text-white transition-all"
+                          className="w-8 h-8 rounded-[8px] border-none bg-white text-on-surface-variant cursor-pointer flex items-center justify-center text-sm hover:bg-[#8b5cf6] hover:text-white transition-all"
                           onClick={(e) => editCategory(category, e)}
                         >
                           <i className="fas fa-edit"></i>
                         </button>
                         <button 
-                          className="w-8 h-8 rounded-[8px] border-none bg-white text-[#64748b] cursor-pointer flex items-center justify-center text-sm hover:bg-[#ef4444] hover:text-white transition-all"
+                          className="w-8 h-8 rounded-[8px] border-none bg-white text-on-surface-variant cursor-pointer flex items-center justify-center text-sm hover:bg-[#ef4444] hover:text-white transition-all"
                           onClick={(e) => deleteCategory(category, e)}
                         >
                           <i className="fas fa-trash"></i>
@@ -333,8 +333,8 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-base font-bold mb-2 text-[#1e293b]">{category.name}</h3>
-                      <div className="flex gap-4 text-sm text-[#64748b]">
+                      <h3 className="text-base font-bold mb-2 text-on-surface">{category.name}</h3>
+                      <div className="flex gap-4 text-sm text-on-surface-variant">
                         <span className="flex items-center gap-1">
                           <i className="fas fa-box"></i> {category.productCount} products
                         </span>
@@ -343,7 +343,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                         </span>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-[20px] text-xs font-bold uppercase mt-4 ${category.status === "active" ? "bg-[rgba(37,211,102,0.1)] text-[#10b981]" : "bg-[rgba(100,116,139,0.1)] text-[#64748b]"}`}>
+                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-[20px] text-xs font-bold uppercase mt-4 ${category.status === "active" ? "bg-[rgba(37,211,102,0.1)] text-[#10b981]" : "bg-[rgba(100,116,139,0.1)] text-on-surface-variant"}`}>
                       {category.status === "active" ? <><i className="fas fa-check-circle"></i> Active</> : <><i className="fas fa-eye-slash"></i> Hidden</>}
                     </span>
                   </div>
@@ -351,21 +351,21 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                 
                 {/* Add New Card - Mobile Responsive */}
                 <button 
-                  className="border-2 border-dashed border-[#e2e8f0] bg-transparent rounded-xl md:rounded-[12px] p-4 md:p-6 cursor-pointer flex flex-col items-center justify-center min-h-[120px] md:min-h-[180px] hover:border-[#8b5cf6] hover:bg-[rgba(139,92,246,0.02)] transition-all"
+                  className="border-2 border-dashed border-outline-variant bg-transparent rounded-xl md:rounded-[12px] p-4 md:p-6 cursor-pointer flex flex-col items-center justify-center min-h-[120px] md:min-h-[180px] hover:border-[#8b5cf6] hover:bg-[rgba(139,92,246,0.02)] transition-all"
                   onClick={openAddModal}
                 >
                   <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center text-lg md:text-2xl text-[#8b5cf6] mb-2 md:mb-4 transition-all hover:bg-[#8b5cf6] hover:text-white hover:scale-110">
                     <i className="fas fa-plus"></i>
                   </div>
-                  <div className="font-bold text-sm md:text-base text-[#1e293b]">Add Category</div>
-                  <div className="text-xs md:text-sm text-[#64748b] mt-0.5 md:mt-1 hidden md:block">Create a new category</div>
+                  <div className="font-bold text-sm md:text-base text-on-surface">Add Category</div>
+                  <div className="text-xs md:text-sm text-on-surface-variant mt-0.5 md:mt-1 hidden md:block">Create a new category</div>
                 </button>
               </div>
             ) : (
               /* List View */
-              <div className="border-2 border-[#e2e8f0] rounded-[12px] overflow-hidden">
+              <div className="border-2 border-outline-variant rounded-[12px] overflow-hidden">
                 {filteredCategories.map(category => (
-                  <div key={category.id} className="flex items-center gap-4 p-5 border-b border-[#e2e8f0] hover:bg-white transition-all last:border-b-0">
+                  <div key={category.id} className="flex items-center gap-4 p-5 border-b border-outline-variant hover:bg-white transition-all last:border-b-0">
                     <div 
                       className="w-12 h-12 rounded-[8px] flex items-center justify-center text-xl bg-white"
                       style={{ backgroundColor: category.color }}
@@ -374,21 +374,21 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold mb-1">{category.name}</h4>
-                      <span className="text-sm text-[#64748b]">{category.productCount} products • {formatNumber(category.views)} views • {category.status}</span>
+                      <span className="text-sm text-on-surface-variant">{category.productCount} products • {formatNumber(category.views)} views • {category.status}</span>
                     </div>
                     <div className="text-center px-4">
                       <div className="text-xl font-extrabold text-[#8b5cf6]">{category.productCount}</div>
-                      <div className="text-xs text-[#64748b] uppercase">Products</div>
+                      <div className="text-xs text-on-surface-variant uppercase">Products</div>
                     </div>
                     <div className="flex gap-2">
                       <button 
-                        className="w-8 h-8 rounded-[8px] border-none bg-white text-[#64748b] cursor-pointer flex items-center justify-center text-sm hover:bg-[#8b5cf6] hover:text-white transition-all"
+                        className="w-8 h-8 rounded-[8px] border-none bg-white text-on-surface-variant cursor-pointer flex items-center justify-center text-sm hover:bg-[#8b5cf6] hover:text-white transition-all"
                         onClick={(e) => editCategory(category, e)}
                       >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button 
-                        className="w-8 h-8 rounded-[8px] border-none bg-white text-[#64748b] cursor-pointer flex items-center justify-center text-sm hover:bg-[#ef4444] hover:text-white transition-all"
+                        className="w-8 h-8 rounded-[8px] border-none bg-white text-on-surface-variant cursor-pointer flex items-center justify-center text-sm hover:bg-[#ef4444] hover:text-white transition-all"
                         onClick={(e) => deleteCategory(category, e)}
                       >
                         <i className="fas fa-trash"></i>
@@ -401,17 +401,17 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
           </div>
 
           {/* Footer */}
-          <div className="p-3 md:p-5 border-t border-[#e2e8f0] flex flex-col md:flex-row justify-between items-center gap-3 md:items-center bg-white">
-            <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-[#64748b]">
+          <div className="p-3 md:p-5 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-3 md:items-center bg-white">
+            <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-on-surface-variant">
               <i className="fas fa-info-circle text-[#8b5cf6] hidden md:inline"></i>
               <span className="hidden md:inline">Drag and drop to reorder</span>
               <span className="md:hidden">Reorder categories</span>
             </div>
             <div className="flex gap-2 md:gap-3 w-full md:w-auto">
-              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[44px]" onClick={onClose}>
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-white border-2 border-outline-variant rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[44px]" onClick={onClose}>
                 Cancel
               </button>
-              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[44px]" onClick={saveChanges}>
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-md3-level3 flex items-center justify-center gap-2 hover:shadow-md3-level4 transition-all min-h-[44px]" onClick={saveChanges}>
                 <i className="fas fa-save"></i>
                 <span className="md:hidden">Save</span>
                 <span className="hidden md:inline">Save Changes</span>
@@ -427,39 +427,39 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
           <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-[480px] p-4 md:p-8 shadow-2xl animate-[slideUp_0.3s_ease]" onClick={e => e.stopPropagation()}>
             <div className="mb-4 md:mb-6">
               <h3 className="text-lg md:text-lg font-extrabold mb-1 md:mb-2">{editingCategory ? "Edit Category" : "Add Category"}</h3>
-              <p className="text-xs md:text-sm text-[#64748b]">{editingCategory ? "Update details" : "Create a new category"}</p>
+              <p className="text-xs md:text-sm text-on-surface-variant">{editingCategory ? "Update details" : "Create a new category"}</p>
             </div>
 
             <div className="space-y-4 md:space-y-5">
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Name</label>
+                <label className="block font-bold text-sm mb-2 text-on-surface">Name</label>
                 <input 
                   type="text" 
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-3 border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
+                  className="w-full px-3 md:px-4 py-3 border-2 border-outline-variant rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
                   placeholder="e.g., Electronics"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Description</label>
+                <label className="block font-bold text-sm mb-2 text-on-surface">Description</label>
                 <input 
                   type="text" 
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-3 border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
+                  className="w-full px-3 md:px-4 py-3 border-2 border-outline-variant rounded-lg md:rounded-[8px] text-sm focus:outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_4px_rgba(139,92,246,0.1)] transition-all"
                   placeholder="Brief description"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Icon</label>
+                <label className="block font-bold text-sm mb-2 text-on-surface">Icon</label>
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
                   {icons.map(icon => (
                     <button
                       key={icon}
-                      className={`aspect-square border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] flex items-center justify-center text-xl md:text-2xl cursor-pointer transition-all hover:border-[#8b5cf6] hover:scale-110 ${formData.icon === icon ? "border-[#8b5cf6] bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] text-white" : "bg-white"}`}
+                      className={`aspect-square border-2 border-outline-variant rounded-lg md:rounded-[8px] flex items-center justify-center text-xl md:text-2xl cursor-pointer transition-all hover:border-[#8b5cf6] hover:scale-110 ${formData.icon === icon ? "border-[#8b5cf6] bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] text-white" : "bg-white"}`}
                       onClick={() => setFormData(prev => ({ ...prev, icon }))}
                     >
                       {icon}
@@ -469,7 +469,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
               </div>
 
               <div>
-                <label className="block font-bold text-sm mb-2 text-[#1e293b]">Color</label>
+                <label className="block font-bold text-sm mb-2 text-on-surface">Color</label>
                 <div className="flex gap-2 md:gap-3 flex-wrap">
                   {colors.map(color => (
                     <button
@@ -484,10 +484,10 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
             </div>
 
             <div className="flex gap-2 md:gap-3 mt-6 md:mt-8">
-              <button className="flex-1 px-3 md:px-4 py-3 bg-white border-2 border-[#e2e8f0] rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[48px]" onClick={() => setFormModalOpen(false)}>
+              <button className="flex-1 px-3 md:px-4 py-3 bg-white border-2 border-outline-variant rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[48px]" onClick={() => setFormModalOpen(false)}>
                 Cancel
               </button>
-              <button className="flex-1 px-3 md:px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[48px]" onClick={saveCategory}>
+              <button className="flex-1 px-3 md:px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-md3-level3 flex items-center justify-center gap-2 hover:shadow-md3-level4 transition-all min-h-[48px]" onClick={saveCategory}>
                 <i className="fas fa-save"></i>
                 <span className="hidden md:inline">{editingCategory ? "Update Category" : "Save Category"}</span>
                 <span className="md:hidden">{editingCategory ? "Update" : "Save"}</span>
@@ -502,7 +502,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
         {toasts.map(toast => (
           <div 
             key={toast.id}
-            className="bg-[#0f172a] text-white px-6 py-4 rounded-[8px] shadow-lg flex items-center gap-4 min-w-[300px] animate-[slideInRight_0.3s_ease]"
+            className="bg-[#0f172a] text-white px-6 py-4 rounded-[8px] shadow-md3-level3 flex items-center gap-4 min-w-[300px] animate-[slideInRight_0.3s_ease]"
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${toast.type === "success" ? "bg-[#10b981]/20 text-[#10b981]" : toast.type === "error" ? "bg-[#ef4444]/20 text-[#ef4444]" : "bg-[#3b82f6]/20 text-[#3b82f6]"}`}>
               <i className={`fas fa-${toast.type === "success" ? "check-circle" : toast.type === "error" ? "exclamation-circle" : "info-circle"}`}></i>

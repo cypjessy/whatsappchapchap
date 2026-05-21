@@ -54,7 +54,7 @@ export default function RecentBookings() {
       case "pending": return "bg-[rgba(245,158,11,0.1)] text-[#f59e0b]";
       case "completed": return "bg-[rgba(59,130,246,0.1)] text-[#3b82f6]";
       case "cancelled": return "bg-[rgba(239,68,68,0.1)] text-[#ef4444]";
-      default: return "bg-[rgba(100,116,139,0.1)] text-[#64748b]";
+      default: return "bg-[rgba(100,116,139,0.1)] text-on-surface-variant";
     }
   };
 
@@ -65,10 +65,10 @@ export default function RecentBookings() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-6">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-6">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-16 bg-gray-100 rounded-lg"></div>
+            <div key={i} className="h-16 bg-surface-variant rounded-lg"></div>
           ))}
         </div>
       </div>
@@ -76,9 +76,9 @@ export default function RecentBookings() {
   }
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden">
-      <div className="p-4 md:p-5 border-b border-[#e2e8f0] flex justify-between items-center">
-        <h3 className="font-bold text-[#1e293b] flex items-center gap-2">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden">
+      <div className="p-4 md:p-5 border-b border-outline-variant flex justify-between items-center">
+        <h3 className="font-bold text-on-surface flex items-center gap-2">
           <i className="fas fa-calendar-check text-[#8b5cf6]"></i>
           Recent Bookings
         </h3>
@@ -90,13 +90,13 @@ export default function RecentBookings() {
       <div className="divide-y divide-[#e2e8f0]">
         {bookings.length > 0 ? (
           bookings.map((booking) => (
-            <div key={booking.id} className="p-4 hover:bg-white transition-colors">
+            <div key={booking.id} className="p-4 hover:bg-surface transition-colors">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm md:text-base text-[#1e293b] mb-1">
+                  <div className="font-semibold text-sm md:text-base text-on-surface mb-1">
                     {booking.service}
                   </div>
-                  <div className="text-xs md:text-sm text-[#64748b] flex flex-wrap items-center gap-2">
+                  <div className="text-xs md:text-sm text-on-surface-variant flex flex-wrap items-center gap-2">
                     <span><i className="fas fa-user mr-1"></i>{booking.client}</span>
                     <span className="hidden md:inline">•</span>
                     <span><i className="fas fa-calendar mr-1"></i>{formatDate(booking.date)}</span>
@@ -114,7 +114,7 @@ export default function RecentBookings() {
             </div>
           ))
         ) : (
-          <div className="p-8 text-center text-[#64748b]">
+          <div className="p-8 text-center text-on-surface-variant">
             <i className="fas fa-calendar-times text-4xl mb-3 opacity-30"></i>
             <p className="font-semibold">No bookings yet</p>
             <p className="text-sm mt-1">Bookings will appear here when clients schedule appointments</p>

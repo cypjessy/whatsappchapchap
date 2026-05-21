@@ -84,17 +84,17 @@ export default function ServiceFilterBottomSheet({
       {/* Bottom Sheet */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[3001] max-h-[85vh] overflow-y-auto
+          fixed bottom-0 left-0 right-0 bg-surface rounded-t-2xl z-[3001] max-h-[85vh] overflow-y-auto
           shadow-2xl transform transition-transform duration-300 ease-out
           md:hidden
           ${isOpen ? "translate-y-0" : "translate-y-full"}
         `}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#e2e8f0] px-4 py-3 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-surface border-b border-outline-variant px-4 py-3 flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-5 h-5 text-[#25D366]" />
-            <h3 className="text-lg font-bold text-[#1e293b]">Filters</h3>
+            <h3 className="text-lg font-bold text-on-surface">Filters</h3>
             {hasActiveFilters && (
               <span className="px-2 py-0.5 bg-[#25D366]/10 text-[#25D366] text-xs font-bold rounded-full">
                 {[selectedBusinessType, priceRangeMin !== "", priceRangeMax !== "", sortBy !== "newest"].filter(Boolean).length}
@@ -103,9 +103,9 @@ export default function ServiceFilterBottomSheet({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-[#f1f5f9] flex items-center justify-center hover:bg-[#e2e8f0] transition-colors"
+            className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center hover:bg-surface-variant transition-colors"
           >
-            <X className="w-4 h-4 text-[#64748b]" />
+            <X className="w-4 h-4 text-on-surface-variant" />
           </button>
         </div>
 
@@ -113,27 +113,27 @@ export default function ServiceFilterBottomSheet({
         <div className="p-4 space-y-4">
           {/* Business Type */}
           <div>
-            <label className="block text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
               Business Type
             </label>
             <div className="relative">
               <select
                 value={selectedBusinessType}
                 onChange={(e) => setSelectedBusinessType(e.target.value)}
-                className="w-full px-3 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl text-sm font-medium focus:outline-none focus:border-[#25D366] appearance-none"
+                className="w-full px-3 py-3 bg-surface border-2 border-outline-variant rounded-xl text-sm font-medium focus:outline-none focus:border-[#25D366] appearance-none"
               >
                 <option value="">All Business Types</option>
                 {businessTypes.map((type) => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none" />
             </div>
           </div>
 
           {/* Sort By */}
           <div>
-            <label className="block text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
               Sort By
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -144,8 +144,8 @@ export default function ServiceFilterBottomSheet({
                   className={`
                     px-3 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95
                     ${sortBy === option.value
-                      ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/20"
-                      : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]/50"
+                      ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/20"
+                      : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366]/50"
                     }
                   `}
                 >
@@ -157,7 +157,7 @@ export default function ServiceFilterBottomSheet({
 
           {/* Price Range */}
           <div>
-            <label className="block text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
               Price Range (KES)
             </label>
             <div className="flex items-center gap-2">
@@ -166,15 +166,15 @@ export default function ServiceFilterBottomSheet({
                 value={priceRangeMin}
                 onChange={(e) => setPriceRangeMin(e.target.value ? Number(e.target.value) : "")}
                 placeholder="Min"
-                className="flex-1 px-3 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl text-sm font-medium focus:outline-none focus:border-[#25D366]"
+                className="flex-1 px-3 py-3 bg-surface border-2 border-outline-variant rounded-xl text-sm font-medium focus:outline-none focus:border-[#25D366]"
               />
-              <span className="text-[#94a3b8] font-bold">-</span>
+              <span className="text-outline font-bold">-</span>
               <input
                 type="number"
                 value={priceRangeMax}
                 onChange={(e) => setPriceRangeMax(e.target.value ? Number(e.target.value) : "")}
                 placeholder="Max"
-                className="flex-1 px-3 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl text-sm font-medium focus:outline-none focus:border-[#25D366]"
+                className="flex-1 px-3 py-3 bg-surface border-2 border-outline-variant rounded-xl text-sm font-medium focus:outline-none focus:border-[#25D366]"
               />
             </div>
           </div>
@@ -192,10 +192,10 @@ export default function ServiceFilterBottomSheet({
         </div>
 
         {/* Footer Actions */}
-        <div className="sticky bottom-0 bg-white border-t border-[#e2e8f0] p-4">
+        <div className="sticky bottom-0 bg-surface border-t border-outline-variant p-4">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-lg shadow-[#25D366]/25 hover:shadow-xl active:scale-95 transition-all"
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-md3-level4 active:scale-95 transition-all"
           >
             Apply Filters
           </button>

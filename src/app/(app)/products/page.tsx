@@ -69,7 +69,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
         <div
           key={toast.id}
           className={`
-            pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-xl text-sm font-semibold
+            pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-md3-level4 text-sm font-semibold
             transition-all duration-300 animate-slideUp
             ${toast.type === "success" ? "bg-[#10b981] text-white" : ""}
             ${toast.type === "error" ? "bg-[#ef4444] text-white" : ""}
@@ -82,9 +82,9 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
             <X className="w-4 h-4" />
           </button>
           {/* Progress bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/20 rounded-b-xl overflow-hidden">
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-surface/20 rounded-b-xl overflow-hidden">
             <div
-              className="h-full bg-white/40 transition-all duration-100 ease-linear"
+              className="h-full bg-surface/40 transition-all duration-100 ease-linear"
               style={{ width: `${toast.progress}%` }}
             />
           </div>
@@ -114,7 +114,7 @@ function ScrollToTop() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="fixed bottom-4 left-4 z-40 w-11 h-11 rounded-full bg-white shadow-lg border border-[#e2e8f0] flex items-center justify-center text-[#25D366] hover:bg-[#f0fdf4] hover:border-[#25D366] hover:shadow-xl transition-all active:scale-90 group"
+      className="fixed bottom-4 left-4 z-40 w-11 h-11 rounded-full bg-surface shadow-md3-level3 border border-outline-variant flex items-center justify-center text-[#25D366] hover:bg-[#f0fdf4] hover:border-[#25D366] hover:shadow-md3-level4 transition-all active:scale-90 group"
       aria-label="Scroll to top"
     >
       <div className="absolute inset-0 rounded-full border-2 border-[#25D366] opacity-0 group-hover:opacity-100 transition-opacity" style={{ clipPath: `polygon(0 0, 100% 0, 100% ${scrollProgress}%, 0 ${scrollProgress}%)` }} />
@@ -136,21 +136,21 @@ function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-2xl animate-scaleIn" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-[#1e293b] flex items-center gap-2">
+          <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
             <Keyboard className="w-5 h-5 text-[#8b5cf6]" />
             Keyboard Shortcuts
           </h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-[#f1f5f9] flex items-center justify-center transition-colors">
-            <X className="w-4 h-4 text-[#64748b]" />
+          <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-surface-variant flex items-center justify-center transition-colors">
+            <X className="w-4 h-4 text-on-surface-variant" />
           </button>
         </div>
         <div className="space-y-2">
           {shortcuts.map((s) => (
-            <div key={s.key} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-[#f8fafc]">
-              <span className="text-sm text-[#64748b]">{s.desc}</span>
-              <kbd className="px-2 py-1 rounded-md bg-white border border-[#e2e8f0] text-xs font-mono font-bold text-[#1e293b] shadow-sm">
+            <div key={s.key} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-surface-container-lowest">
+              <span className="text-sm text-on-surface-variant">{s.desc}</span>
+              <kbd className="px-2 py-1 rounded-md bg-surface border border-outline-variant text-xs font-mono font-bold text-on-surface shadow-md3-level1">
                 {s.key}
               </kbd>
             </div>
@@ -171,14 +171,14 @@ function EmptyState({
   onClearFilters: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-24 bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] shadow-sm animate-fadeIn">
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 bg-surface rounded-xl md:rounded-2xl border border-outline-variant shadow-md3-level1 animate-fadeIn">
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-5 shadow-inner">
         {hasProducts ? <SearchX className="w-8 h-8 md:w-10 md:h-10 text-[#cbd5e1]" /> : <PackageOpen className="w-8 h-8 md:w-10 md:h-10 text-[#cbd5e1]" />}
       </div>
-      <h3 className="text-lg md:text-xl font-bold text-[#1e293b] mb-2 text-center">
+      <h3 className="text-lg md:text-xl font-bold text-on-surface mb-2 text-center">
         {hasProducts ? "No matching products" : "No products yet"}
       </h3>
-      <p className="text-sm text-[#64748b] text-center max-w-sm mb-6 px-4">
+      <p className="text-sm text-on-surface-variant text-center max-w-sm mb-6 px-4">
         {hasProducts
           ? "Try adjusting your filters or search terms to find what you're looking for."
           : "Add your first product to start selling on WhatsApp."}
@@ -186,7 +186,7 @@ function EmptyState({
       {hasProducts ? (
         <button
           onClick={onClearFilters}
-          className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
         >
           <X className="w-4 h-4" />
           Clear Filters
@@ -194,7 +194,7 @@ function EmptyState({
       ) : (
         <button
           onClick={onAddProduct}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 hover:-translate-y-0.5 transition-all active:scale-95"
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-[#25D366]/40 hover:-translate-y-0.5 transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
           Add First Product
@@ -208,13 +208,13 @@ function LoadingState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 md:py-28 animate-fadeIn">
       <div className="relative">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#f0fdf4] to-[#dcfce7] flex items-center justify-center shadow-lg">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#f0fdf4] to-[#dcfce7] flex items-center justify-center shadow-md3-level3">
           <Loader2 className="w-8 h-8 text-[#25D366] animate-spin" />
         </div>
         <div className="absolute inset-0 rounded-2xl bg-[#25D366]/20 animate-ping" />
       </div>
-      <p className="mt-5 text-sm font-medium text-[#64748b]">Loading products...</p>
-      <p className="mt-1 text-xs text-[#94a3b8]">This may take a moment</p>
+      <p className="mt-5 text-sm font-medium text-on-surface-variant">Loading products...</p>
+      <p className="mt-1 text-xs text-outline">This may take a moment</p>
     </div>
   );
 }
@@ -230,7 +230,7 @@ function ActiveFilterPill({ label, onRemove, color = "purple" }: { label: string
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${colorMap[color] || colorMap.purple} transition-all hover:shadow-sm`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${colorMap[color] || colorMap.purple} transition-all hover:shadow-md3-level1`}>
       {label}
       <button onClick={onRemove} className="ml-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center hover:bg-black/10 transition-colors">
         <X className="w-2.5 h-2.5" />
@@ -712,7 +712,7 @@ export default function ProductsPage() {
       <div className="md:hidden px-3 mt-3 mb-3">
         <button
           onClick={() => setAddProductModalOpen(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-md3-level4 hover:-translate-y-0.5 active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>Add Product</span>
@@ -764,7 +764,7 @@ export default function ProductsPage() {
         {/* Active filter pills */}
         {activeFiltersCount > 0 && !bulkMode && (
           <div className="flex flex-wrap items-center gap-2 animate-fadeIn">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#94a3b8]" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-outline" />
             {activeFilterPills.map((pill, i) => (
               <ActiveFilterPill key={i} label={pill.label} onRemove={pill.onRemove} color={pill.color} />
             ))}
@@ -779,9 +779,9 @@ export default function ProductsPage() {
 
         {/* Results count */}
         {!loading && filteredProducts.length > 0 && (
-          <div className="flex items-center justify-between text-xs text-[#94a3b8]">
+          <div className="flex items-center justify-between text-xs text-outline">
             <span>
-              Showing <span className="font-bold text-[#1e293b]">{displayedProducts.length}</span> of <span className="font-bold text-[#1e293b]">{filteredProducts.length}</span> products
+              Showing <span className="font-bold text-on-surface">{displayedProducts.length}</span> of <span className="font-bold text-on-surface">{filteredProducts.length}</span> products
             </span>
             <button
               onClick={() => setShowShortcuts(true)}
@@ -858,7 +858,7 @@ export default function ProductsPage() {
                 {isLoadingMore ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-6 h-6 text-[#25D366] animate-spin" />
-                    <span className="text-sm text-[#64748b]">Loading more...</span>
+                    <span className="text-sm text-on-surface-variant">Loading more...</span>
                   </div>
                 ) : (
                   <div className="h-1" />

@@ -91,12 +91,12 @@ export default function ServiceStatsGrid() {
       {statsData.map((stat) => (
         <div
           key={stat.id}
-          className="bg-white p-4 md:p-5 rounded-xl md:rounded-2xl border border-[#e2e8f0] hover:shadow-lg transition-all"
+          className="bg-surface p-4 md:p-5 rounded-xl md:rounded-2xl border border-outline-variant hover:shadow-md3-level3 transition-all"
         >
           <div className="flex items-start justify-between mb-3">
             <div>
-              <div className="text-xs md:text-sm font-semibold text-[#64748b] uppercase tracking-wide">{stat.label}</div>
-              <div className="text-xl md:text-2xl font-extrabold text-[#1e293b] mt-1">{stat.value}</div>
+              <div className="text-xs md:text-sm font-semibold text-on-surface-variant uppercase tracking-wide">{stat.label}</div>
+              <div className="text-xl md:text-2xl font-extrabold text-on-surface mt-1">{stat.value}</div>
               <div className={`text-xs font-semibold mt-2 flex items-center gap-1 ${stat.positive ? "text-[#10b981]" : "text-[#ef4444]"}`}>
                 <i className={`fas ${stat.positive ? "fa-arrow-up" : "fa-arrow-down"}`}></i>
                 {stat.change}

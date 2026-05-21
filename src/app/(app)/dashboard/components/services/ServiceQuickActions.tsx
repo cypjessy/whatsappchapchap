@@ -45,13 +45,13 @@ export default function ServiceQuickActions() {
         <a
           key={action.id}
           href={action.href}
-          className="bg-white p-4 md:p-5 rounded-xl border-2 border-[#e2e8f0] hover:border-[#8b5cf6] transition-all cursor-pointer group"
+          className="bg-surface p-4 md:p-5 rounded-xl border-2 border-outline-variant hover:border-[#8b5cf6] transition-all cursor-pointer group"
         >
           <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-r ${action.color} flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform`}>
             <i className={`fas ${action.icon} text-lg`}></i>
           </div>
-          <div className="font-bold text-sm md:text-base text-[#1e293b]">{action.label}</div>
-          <div className="text-xs text-[#64748b]">{action.desc}</div>
+          <div className="font-bold text-sm md:text-base text-on-surface">{action.label}</div>
+          <div className="text-xs text-on-surface-variant">{action.desc}</div>
         </a>
       ))}
     </div>

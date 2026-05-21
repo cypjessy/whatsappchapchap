@@ -82,7 +82,7 @@ export default function EvolutionDiagnostic() {
               value={instanceName}
               onChange={(e) => setInstanceName(e.target.value)}
               placeholder="tenant_abc123"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 outline-none"
+              className="w-full px-4 py-3 border-2 border-outline rounded-xl focus:border-green-500 outline-none"
             />
           </div>
 
@@ -106,7 +106,7 @@ export default function EvolutionDiagnostic() {
 
           {/* Status Display */}
           {status && (
-            <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
+            <div className="bg-white rounded-xl p-4 border-2 border-outline-variant">
               <h3 className="font-bold mb-2">Connection Status:</h3>
               <pre className="text-sm overflow-auto bg-white p-3 rounded-lg">
                 {JSON.stringify(status, null, 2)}
@@ -119,7 +119,7 @@ export default function EvolutionDiagnostic() {
             <div className="text-center">
               <h3 className="font-bold mb-4">QR Code:</h3>
               <img src={qrCode} alt="QR Code" className="mx-auto max-w-sm rounded-xl shadow-lg" />
-              <p className="mt-4 text-sm text-gray-600">
+              <p className="mt-4 text-sm text-on-surface-variant">
                 ⏱️ Scan within 60 seconds before it expires!
               </p>
             </div>
@@ -151,7 +151,7 @@ export default function EvolutionDiagnostic() {
             <code className="text-sm bg-white px-3 py-2 rounded block break-all">
               http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io
             </code>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-on-surface-variant mt-2">
               ⚠️ Using HTTP (Evolution server doesn't have valid SSL certificate)
             </p>
           </div>

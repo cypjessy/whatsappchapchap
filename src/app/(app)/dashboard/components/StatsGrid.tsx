@@ -125,7 +125,7 @@ function useAnimatedCounter(target: number, duration: number = 1200, delay: numb
 // ─── Helper Functions ─────────────────────────────────────────────────────────
 
 function getTrendColor(value: number, isPositiveGood: boolean = true): string {
-  if (value === 0) return "text-[#64748B]";
+  if (value === 0) return "text-on-surface-variant";
   const isPositive = value > 0;
   if (isPositiveGood) {
     return isPositive ? "text-[#10B981]" : "text-[#EF4444]";
@@ -150,22 +150,22 @@ function ShimmerCard({ isMobile = false }: { isMobile?: boolean }) {
       <div className={isMobile ? "space-y-2" : "flex justify-between items-start"}>
         {!isMobile && (
           <div className="space-y-3 flex-1">
-            <div className="h-3 bg-[#F1F5F9] rounded-lg w-24" />
-            <div className="h-8 bg-[#F1F5F9] rounded-lg w-32" />
-            <div className="h-3 bg-[#F1F5F9] rounded-lg w-20" />
+            <div className="h-3 bg-surface-variant rounded-lg w-24" />
+            <div className="h-8 bg-surface-variant rounded-lg w-32" />
+            <div className="h-3 bg-surface-variant rounded-lg w-20" />
           </div>
         )}
         {isMobile && (
           <>
             <div className="flex justify-between mb-2">
-              <div className="w-8 h-8 bg-[#F1F5F9] rounded-xl" />
+              <div className="w-8 h-8 bg-surface-variant rounded-xl" />
             </div>
-            <div className="h-3 bg-[#F1F5F9] rounded w-16" />
-            <div className="h-6 bg-[#F1F5F9] rounded w-24" />
-            <div className="h-3 bg-[#F1F5F9] rounded w-20" />
+            <div className="h-3 bg-surface-variant rounded w-16" />
+            <div className="h-6 bg-surface-variant rounded w-24" />
+            <div className="h-3 bg-surface-variant rounded w-20" />
           </>
         )}
-        {!isMobile && <div className="w-12 h-12 bg-[#F1F5F9] rounded-xl shrink-0 ml-4" />}
+        {!isMobile && <div className="w-12 h-12 bg-surface-variant rounded-xl shrink-0 ml-4" />}
       </div>
     </div>
   );
@@ -200,7 +200,7 @@ function CircularProgress({ percentage, color }: { percentage: number; color: st
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] md:text-xs font-semibold text-[#1E293B]">{Math.round(percentage)}%</span>
+        <span className="text-[10px] md:text-xs font-semibold text-on-surface">{Math.round(percentage)}%</span>
       </div>
     </div>
   );
@@ -276,8 +276,8 @@ function StatCard({
         transition-all duration-200 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isHovered
-          ? "shadow-md -translate-y-0.5"
-          : "shadow-sm hover:shadow-md"
+          ? "shadow-md3-level2 -translate-y-0.5"
+          : "shadow-md3-level1 hover:shadow-md3-level2"
         }
       `}
       style={{ transitionDelay: `${index * 100}ms` }}
@@ -355,7 +355,7 @@ function StatCard({
               w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center
               ${config.iconBg} ${config.iconColor}
               transition-all duration-200
-              ${isHovered ? "scale-105 shadow-sm" : "scale-100"}
+              ${isHovered ? "scale-105 shadow-md3-level1" : "scale-100"}
             `}>
               <i className={`fas ${config.icon} text-sm md:text-xl`} />
             </div>
@@ -365,7 +365,7 @@ function StatCard({
 
       {/* Mini progress bar - MD3 styling */}
       {!config.isPercentage && (
-        <div className="mt-3 md:mt-4 h-1 bg-[#F1F5F9] rounded-full overflow-hidden">
+        <div className="mt-3 md:mt-4 h-1 bg-surface-variant rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-1000 ease-out"
             style={{

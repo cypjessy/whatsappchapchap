@@ -615,7 +615,7 @@ export default function SettingsPage() {
       <div className="p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-[#64748b]">Loading settings...</p>
+          <p className="text-on-surface-variant">Loading settings...</p>
         </div>
       </div>
     );
@@ -625,13 +625,13 @@ export default function SettingsPage() {
     <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 animate-fadeIn bg-surface">
       {/* Header */}
       <div className="mb-4 md:mb-6">
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[#1e293b] flex items-center gap-2.5 md:gap-3">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">
           <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6]/10 to-[#7c3aed]/10 flex items-center justify-center shrink-0">
             <i className="fas fa-cog text-[#8b5cf6] text-sm md:text-base"></i>
           </div>
           <span>Settings</span>
         </h1>
-        <p className="text-[#64748b] text-sm mt-1.5 md:mt-2 max-w-2xl">
+        <p className="text-on-surface-variant text-sm mt-1.5 md:mt-2 max-w-2xl">
           Manage your business profile, products, services, shipping, and WhatsApp automation
         </p>
       </div>
@@ -654,8 +654,8 @@ export default function SettingsPage() {
               onClick={async () => { await impactLight(); setActiveTab(tab.id as any); }}
               className={`relative p-3 md:p-4 rounded-xl font-semibold transition-all duration-300 flex flex-col items-center justify-center gap-1.5 select-none group ${
                 activeTab === tab.id
-                  ? `bg-gradient-to-br ${tab.color} text-white shadow-lg scale-105 border-2 border-white/30`
-                  : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#c4b5fd] hover:text-[#8b5cf6] hover:shadow-md"
+                  ? `bg-gradient-to-br ${tab.color} text-white shadow-md3-level3 scale-105 border-2 border-white/30`
+                  : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#c4b5fd] hover:text-[#8b5cf6] hover:shadow-md3-level2"
               }`}
             >
               <i className={`${tab.icon} text-lg md:text-xl transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-110'}`}></i>
@@ -664,7 +664,7 @@ export default function SettingsPage() {
                 {tab.sublabel && <span className="block text-[10px] md:text-xs opacity-80 leading-tight">{tab.sublabel}</span>}
               </div>
               {activeTab === tab.id && (
-                <div className="absolute inset-0 rounded-xl bg-white/10 animate-pulse"></div>
+                <div className="absolute inset-0 rounded-xl bg-surface/10 animate-pulse"></div>
               )}
             </button>
           ))}
@@ -673,13 +673,13 @@ export default function SettingsPage() {
 
       {/* Business Profile Tab */}
       {activeTab === "profile" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-purple-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-info-circle text-xl md:text-2xl text-purple-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Unified Business Profile</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   This information is shared across both products and services. Customers will see this in WhatsApp chats.
                 </p>
               </div>
@@ -847,7 +847,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveProfile(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -867,13 +867,13 @@ export default function SettingsPage() {
 
       {/* Product Store Tab */}
       {activeTab === "products" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-store text-xl md:text-2xl text-blue-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Product Store Settings</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   Configure settings specific to your product store. Enable this tab if you sell products.
                 </p>
               </div>
@@ -896,40 +896,40 @@ export default function SettingsPage() {
             {productSettings.enabled && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                     Store Description
                   </label>
                   <textarea
                     value={productSettings.storeDescription}
                     onChange={(e) => setProductSettings(prev => ({ ...prev, storeDescription: e.target.value }))}
                     rows={4}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none resize-none text-sm"
                     placeholder="Tell customers about your products, what you sell, and why they should shop with you..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                     Return Policy
                   </label>
                   <textarea
                     value={productSettings.returnPolicy}
                     onChange={(e) => setProductSettings(prev => ({ ...prev, returnPolicy: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none resize-none text-sm"
                     placeholder="Your return and refund policy..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                     Warranty Information
                   </label>
                   <textarea
                     value={productSettings.warrantyInfo}
                     onChange={(e) => setProductSettings(prev => ({ ...prev, warrantyInfo: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none resize-none text-sm"
                     placeholder="Warranty details for your products..."
                   />
                 </div>
@@ -942,7 +942,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveProductSettings(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -962,13 +962,13 @@ export default function SettingsPage() {
 
       {/* Services Tab */}
       {activeTab === "services" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-concierge-bell text-xl md:text-2xl text-purple-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Service Business Settings</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   Configure settings specific to your services. Enable this tab if you offer services.
                 </p>
               </div>
@@ -991,40 +991,40 @@ export default function SettingsPage() {
             {serviceSettings.enabled && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                     Service Description
                   </label>
                   <textarea
                     value={serviceSettings.serviceDescription}
                     onChange={(e) => setServiceSettings(prev => ({ ...prev, serviceDescription: e.target.value }))}
                     rows={4}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-purple-500 focus:outline-none resize-none text-sm"
                     placeholder="Describe your services, expertise, and what makes you stand out..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                     Booking Policy
                   </label>
                   <textarea
                     value={serviceSettings.bookingPolicy}
                     onChange={(e) => setServiceSettings(prev => ({ ...prev, bookingPolicy: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-purple-500 focus:outline-none resize-none text-sm"
                     placeholder="How customers can book your services..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                  <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                     Cancellation Policy
                   </label>
                   <textarea
                     value={serviceSettings.cancellationPolicy}
                     onChange={(e) => setServiceSettings(prev => ({ ...prev, cancellationPolicy: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-purple-500 focus:outline-none resize-none text-sm"
                     placeholder="Your cancellation and rescheduling policy..."
                   />
                 </div>
@@ -1037,7 +1037,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveServiceSettings(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -1057,13 +1057,13 @@ export default function SettingsPage() {
 
       {/* Shipping Tab */}
       {activeTab === "shipping" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border-l-4 border-green-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-shipping-fast text-xl md:text-2xl text-green-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Shipping Methods</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   Configure delivery options for your customers. These will be used in orders and shown by the AI.
                 </p>
               </div>
@@ -1071,12 +1071,12 @@ export default function SettingsPage() {
           </div>
 
           {/* Add New Shipping Method */}
-          <div className="mb-6 p-4 bg-white rounded-xl border border-[#e2e8f0] mx-4 md:mx-6">
+          <div className="mb-6 p-4 bg-surface rounded-xl border border-outline-variant mx-4 md:mx-6">
             <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">Add Shipping Method</h3>
             
             {/* Preset Selection */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                 Quick Select (Choose a preset or customize below)
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -1087,7 +1087,7 @@ export default function SettingsPage() {
                     className={`px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
                       selectedPreset === preset.name
                         ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-green-300"
+                        : "border-outline-variant bg-surface text-on-surface-variant hover:border-green-300"
                     }`}
                   >
                     {preset.name}
@@ -1098,50 +1098,50 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Method Name *
                 </label>
                 <input
                   type="text"
                   value={newShippingMethod.name}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none text-sm"
                   placeholder="e.g., Standard Delivery"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Price (KES) *
                 </label>
                 <input
                   type="number"
                   value={newShippingMethod.price}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none text-sm"
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Estimated Days
                 </label>
                 <input
                   type="text"
                   value={newShippingMethod.estimatedDays}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, estimatedDays: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none text-sm"
                   placeholder="e.g., 2-3 days"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Description
                 </label>
                 <input
                   type="text"
                   value={newShippingMethod.description}
                   onChange={(e) => setNewShippingMethod(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none text-sm"
                   placeholder="e.g., Free delivery for orders over KES 5000"
                 />
               </div>
@@ -1149,7 +1149,7 @@ export default function SettingsPage() {
             <button
               onClick={editingMethodId ? () => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); } : addShippingMethod}
               disabled={saving || !newShippingMethod.name}
-              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
+              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
                 editingMethodId 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
                   : "bg-gradient-to-r from-green-500 to-teal-500"
@@ -1161,7 +1161,7 @@ export default function SettingsPage() {
             {editingMethodId && (
               <button
                 onClick={() => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); }}
-                className="mt-3 md:mt-4 ml-0 md:ml-2 px-5 md:px-6 py-2.5 md:py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2 text-sm md:text-base"
+                className="mt-3 md:mt-4 ml-0 md:ml-2 px-5 md:px-6 py-2.5 md:py-3 bg-surface-container-high text-on-surface rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2 text-sm md:text-base"
               >
                 <i className="fas fa-times"></i>
                 Cancel
@@ -1177,20 +1177,20 @@ export default function SettingsPage() {
               Debug: shippingMethods.length = {shippingMethods.length}
             </div>
             {shippingMethods.length === 0 ? (
-              <div className="text-center py-12 text-[#64748b]">
+              <div className="text-center py-12 text-on-surface-variant">
                 <i className="fas fa-shipping-fast text-4xl mb-3 opacity-30"></i>
                 <p>No shipping methods added yet</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {shippingMethods.map((method) => (
-                  <div key={method.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-[#e2e8f0] hover:shadow-md transition-all duration-300">
+                  <div key={method.id} className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant hover:shadow-md3-level2 transition-all duration-300">
                     <div>
                       <h4 className="font-bold">{method.name}</h4>
-                      <p className="text-sm text-[#64748b]">
+                      <p className="text-sm text-on-surface-variant">
                         KES {method.price} {method.estimatedDays && `• ${method.estimatedDays}`}
                       </p>
-                      {method.description && <p className="text-sm text-[#64748b]">{method.description}</p>}
+                      {method.description && <p className="text-sm text-on-surface-variant">{method.description}</p>}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -1216,13 +1216,13 @@ export default function SettingsPage() {
 
       {/* Pickup Stations Tab */}
       {activeTab === "pickup-stations" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-map-marker-alt text-xl md:text-2xl text-blue-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Pickup Stations</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   Configure pickup locations for customers. Organized by county and town.
                 </p>
               </div>
@@ -1230,91 +1230,91 @@ export default function SettingsPage() {
           </div>
 
           {/* Add New Pickup Station */}
-          <div className="mb-6 p-4 bg-white rounded-xl border border-[#e2e8f0] mx-4 md:mx-6">
+          <div className="mb-6 p-4 bg-surface rounded-xl border border-outline-variant mx-4 md:mx-6">
             <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">{editingStationId ? "Edit Pickup Station" : "Add Pickup Station"}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   County *
                 </label>
                 <input
                   type="text"
                   value={newPickupStation.county}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, county: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., Nairobi"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Town *
                 </label>
                 <input
                   type="text"
                   value={newPickupStation.town}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, town: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., Westlands"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Station Name *
                 </label>
                 <input
                   type="text"
                   value={newPickupStation.stationName}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, stationName: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., Sarit Centre Pickup Point"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Full Address
                 </label>
                 <input
                   type="text"
                   value={newPickupStation.address}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, address: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., 4th Floor, Sarit Centre Mall"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Contact Phone
                 </label>
                 <input
                   type="tel"
                   value={newPickupStation.contactPhone}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, contactPhone: e.target.value }))}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                   placeholder="e.g., +254 7XX XXX XXX"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Operating Hours
                 </label>
                 <input
                   type="text"
                   value={newPickupStation.operatingHours}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, operatingHours: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none"
                   placeholder="e.g., Mon-Sat 9AM-6PM"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-[#64748b] mb-2">
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                   Description
                 </label>
                 <input
                   type="text"
                   value={newPickupStation.description}
                   onChange={(e) => setNewPickupStation(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none"
                   placeholder="e.g., Near main entrance, next to ATM"
                 />
               </div>
@@ -1334,7 +1334,7 @@ export default function SettingsPage() {
             <button
               onClick={editingStationId ? updatePickupStation : addPickupStation}
               disabled={saving || !newPickupStation.county || !newPickupStation.town || !newPickupStation.stationName}
-              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
+              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
                 editingStationId 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
                   : "bg-gradient-to-r from-green-500 to-teal-500"
@@ -1358,7 +1358,7 @@ export default function SettingsPage() {
                     isActive: true,
                   }); 
                 }}
-                className="mt-3 md:mt-4 ml-0 md:ml-2 px-5 md:px-6 py-2.5 md:py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2 text-sm md:text-base"
+                className="mt-3 md:mt-4 ml-0 md:ml-2 px-5 md:px-6 py-2.5 md:py-3 bg-surface-container-high text-on-surface rounded-xl font-bold hover:bg-gray-300 transition-all flex items-center gap-2 text-sm md:text-base"
               >
                 <i className="fas fa-times"></i>
                 Cancel
@@ -1370,45 +1370,45 @@ export default function SettingsPage() {
           <div className="px-4 md:px-6 pb-6">
             <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4">Current Pickup Stations</h3>
             {pickupStations.length === 0 ? (
-              <div className="text-center py-12 text-[#64748b]">
+              <div className="text-center py-12 text-on-surface-variant">
                 <i className="fas fa-map-marker-alt text-4xl mb-3 opacity-30"></i>
                 <p>No pickup stations added yet</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {pickupStations.map((station) => (
-                  <div key={station.id} className="flex items-start justify-between p-4 bg-white rounded-xl border border-[#e2e8f0] hover:shadow-md transition-all duration-300">
+                  <div key={station.id} className="flex items-start justify-between p-4 bg-surface rounded-xl border border-outline-variant hover:shadow-md3-level2 transition-all duration-300">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-bold">{station.stationName}</h4>
                         {!station.isActive && (
-                          <span className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">Inactive</span>
+                          <span className="px-2 py-1 text-xs bg-surface-container-high text-on-surface-variant rounded-full">Inactive</span>
                         )}
                       </div>
-                      <p className="text-sm text-[#64748b]">
+                      <p className="text-sm text-on-surface-variant">
                         <i className="fas fa-map-pin mr-1"></i>
                         {station.county}, {station.town}
                       </p>
                       {station.address && (
-                        <p className="text-sm text-[#64748b] mt-1">
+                        <p className="text-sm text-on-surface-variant mt-1">
                           <i className="fas fa-location-dot mr-1"></i>
                           {station.address}
                         </p>
                       )}
                       {station.contactPhone && (
-                        <p className="text-sm text-[#64748b] mt-1">
+                        <p className="text-sm text-on-surface-variant mt-1">
                           <i className="fas fa-phone mr-1"></i>
                           {station.contactPhone}
                         </p>
                       )}
                       {station.operatingHours && (
-                        <p className="text-sm text-[#64748b] mt-1">
+                        <p className="text-sm text-on-surface-variant mt-1">
                           <i className="fas fa-clock mr-1"></i>
                           {station.operatingHours}
                         </p>
                       )}
                       {station.description && (
-                        <p className="text-sm text-[#64748b] mt-1 italic">
+                        <p className="text-sm text-on-surface-variant mt-1 italic">
                           {station.description}
                         </p>
                       )}
@@ -1437,26 +1437,26 @@ export default function SettingsPage() {
       {activeTab === "whatsapp" && (
         <div className="space-y-6">
           {/* Business Name */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <h3 className="font-bold text-base md:text-lg flex items-center gap-2 mb-3 md:mb-4">
               <i className="fas fa-store text-[#8b5cf6]"></i>
               Business Name
             </h3>
             <div>
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">Your Business Name</label>
+              <label className="block text-sm font-semibold text-on-surface-variant mb-2">Your Business Name</label>
               <input
                 type="text"
                 value={whatsappSettings.businessName || ""}
                 onChange={(e) => handleWhatsAppChange("businessName", e.target.value)}
-                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none text-sm"
                 placeholder="e.g., Campus Hub Store"
               />
-              <p className="text-xs text-[#64748b] mt-2">This will be used in automated messages and greetings</p>
+              <p className="text-xs text-on-surface-variant mt-2">This will be used in automated messages and greetings</p>
             </div>
           </div>
 
           {/* Welcome Message */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
                 <i className="fas fa-hand-sparkles text-[#8b5cf6]"></i>
@@ -1474,7 +1474,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">
                 Message Template
               </label>
               <textarea
@@ -1482,21 +1482,21 @@ export default function SettingsPage() {
                 value={whatsappSettings.welcomeMessage || ""}
                 onChange={(e) => handleWhatsAppChange("welcomeMessage", e.target.value)}
                 rows={12}
-                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none font-mono text-xs md:text-sm resize-none"
+                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none font-mono text-xs md:text-sm resize-none"
                 placeholder="Enter your welcome message or choose a template below..."
               />
             </div>
 
             {/* Quick Templates */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-[#64748b] mb-3">
+              <label className="block text-sm font-semibold text-on-surface-variant mb-3">
                 <i className="fas fa-magic mr-1"></i>
                 Quick Templates (click to use):
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "👋 Hi there! Welcome to {{business_name}}!\n\nWe're excited to have you here. How can we help you today?\n\n📞 Contact us: {{phone}}\n🌐 Visit: {{website}}" }))}
-                  className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-left hover:border-blue-400 hover:shadow-md transition-all group"
+                  className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-left hover:border-blue-400 hover:shadow-md3-level2 transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1511,7 +1511,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Hello! 👋\n\nThank you for contacting {{business_name}}.\n\nWe offer:\n✅ Quality products/services\n✅ Fast delivery\n✅ Excellent customer support\n\nHow can we assist you today?" }))}
-                  className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-left hover:border-green-400 hover:shadow-md transition-all group"
+                  className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-left hover:border-green-400 hover:shadow-md3-level2 transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1526,7 +1526,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "🎉 Welcome to {{business_name}}!\n\nWe're here to serve you 24/7.\n\n⏰ Business Hours: Mon-Sat, 9AM-6PM\n📍 Location: {{address}}\n📱 WhatsApp: {{phone}}\n\nWhat would you like to know about?" }))}
-                  className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-left hover:border-purple-400 hover:shadow-md transition-all group"
+                  className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-left hover:border-purple-400 hover:shadow-md3-level2 transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1541,7 +1541,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Hi! Thanks for reaching out to {{business_name}} 🙏\n\nI'm here to help you with:\n• Product inquiries\n• Order status\n• Booking appointments\n• General questions\n\nPlease let me know what you need!" }))}
-                  className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl text-left hover:border-orange-400 hover:shadow-md transition-all group"
+                  className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl text-left hover:border-orange-400 hover:shadow-md3-level2 transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1556,7 +1556,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Welcome to {{business_name}}! ✨\n\nWe specialize in providing top-quality products and exceptional service.\n\n💬 Chat with us anytime\n🚀 Fast response guaranteed\n⭐ Customer satisfaction is our priority\n\nHow can we help you today?" }))}
-                  className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-xl text-left hover:border-pink-400 hover:shadow-md transition-all group"
+                  className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-xl text-left hover:border-pink-400 hover:shadow-md3-level2 transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1571,7 +1571,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "👋 Hello!\n\nYou've reached {{business_name}}.\n\nFor quick assistance:\n1️⃣ Browse our catalog\n2️⃣ Check order status\n3️⃣ Book an appointment\n4️⃣ Speak with support\n\nReply with a number or ask away!" }))}
-                  className="p-4 bg-gradient-to-br from-cyan-50 to-sky-50 border-2 border-cyan-200 rounded-xl text-left hover:border-cyan-400 hover:shadow-md transition-all group"
+                  className="p-4 bg-gradient-to-br from-cyan-50 to-sky-50 border-2 border-cyan-200 rounded-xl text-left hover:border-cyan-400 hover:shadow-md3-level2 transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1588,31 +1588,31 @@ export default function SettingsPage() {
 
             {/* Quick Variables */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                 Insert Variables (click to add):
               </label>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => insertVariable("{{business_name}}")}
-                  className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
+                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
                 >
                   Business Name
                 </button>
                 <button
                   onClick={() => insertVariable("{{phone}}")}
-                  className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
+                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
                 >
                   Phone
                 </button>
                 <button
                   onClick={() => insertVariable("{{website}}")}
-                  className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
+                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
                 >
                   Website
                 </button>
                 <button
                   onClick={() => insertVariable("\n")}
-                  className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
+                  className="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all"
                 >
                   New Line
                 </button>
@@ -1620,11 +1620,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Preview */}
-            <div className="bg-white rounded-xl p-4 border border-[#e2e8f0]">
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+            <div className="bg-surface rounded-xl p-4 border border-outline-variant">
+              <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                 Preview:
               </label>
-              <div className="bg-white rounded-lg p-4 text-sm whitespace-pre-wrap border border-[#e2e8f0]">
+              <div className="bg-surface rounded-lg p-4 text-sm whitespace-pre-wrap border border-outline-variant">
                 {(whatsappSettings.welcomeMessage || "")
                   .replace(/\{\{business_name\}\}/g, profile.businessName || "Your Business")
                   .replace(/\{\{phone\}\}/g, profile.phone || "+254 7XX XXX XXX")
@@ -1634,7 +1634,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Auto Reply */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-reply text-[#8b5cf6]"></i>
@@ -1652,21 +1652,21 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                 Auto Reply Message
               </label>
               <textarea
                 value={whatsappSettings.autoReplyMessage || ""}
                 onChange={(e) => handleWhatsAppChange("autoReplyMessage", e.target.value)}
                 rows={4}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none"
+                className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none resize-none"
                 placeholder="Thank you for your message! We'll get back to you shortly."
               />
             </div>
           </div>
 
           {/* Away Message */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-moon text-[#8b5cf6]"></i>
@@ -1684,14 +1684,14 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#64748b] mb-2">
+              <label className="block text-sm font-semibold text-on-surface-variant mb-2">
                 Away Message
               </label>
               <textarea
                 value={whatsappSettings.awayMessage || ""}
                 onChange={(e) => handleWhatsAppChange("awayMessage", e.target.value)}
                 rows={4}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none resize-none"
+                className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none resize-none"
                 placeholder="Hi! Thanks for reaching out. We're currently away..."
               />
             </div>
@@ -1702,7 +1702,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveWhatsAppSettings(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -1722,13 +1722,13 @@ export default function SettingsPage() {
 
       {/* Payment Methods Tab */}
       {activeTab === "payments" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-credit-card text-xl md:text-2xl text-green-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Payment Methods Configuration</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   Configure payment methods that will be displayed to customers when booking services or purchasing products.
                   These settings are automatically applied to all your services and products.
                 </p>
@@ -1738,7 +1738,7 @@ export default function SettingsPage() {
 
           <div className="space-y-6 px-4 md:px-6 pb-6">
             {/* M-Pesa Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-green-500 transition-all">
+            <div className="border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-green-500 transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -1746,7 +1746,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-base md:text-lg">M-Pesa (Kenya)</h3>
-                    <p className="text-xs md:text-sm text-[#64748b]">Accept payments via M-Pesa mobile money</p>
+                    <p className="text-xs md:text-sm text-on-surface-variant">Accept payments via M-Pesa mobile money</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1756,14 +1756,14 @@ export default function SettingsPage() {
                     onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, enabled: e.target.checked } }))}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-outline after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                 </label>
               </div>
 
               {paymentMethods.mpesa.enabled && (
                 <div className="mt-4">
                   {/* M-Pesa Tabs - Android Material Design 3 Style */}
-                  <div className="flex gap-2 mb-4 bg-gray-50 p-1.5 rounded-xl">
+                  <div className="flex gap-2 mb-4 bg-surface-container-lowest p-1.5 rounded-xl">
                     {[
                       { id: 'buyGoods', label: 'Buy Goods (Till)', icon: 'fa-store' },
                       { id: 'paybill', label: 'Paybill', icon: 'fa-university' },
@@ -1774,8 +1774,8 @@ export default function SettingsPage() {
                         onClick={() => setMpesaActiveTab(tab.id as any)}
                         className={`flex-1 px-4 py-2.5 font-semibold text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                           mpesaActiveTab === tab.id
-                            ? 'bg-white text-green-700 shadow-md scale-100'
-                            : 'text-[#64748b] hover:bg-white/50 hover:text-green-600'
+                            ? 'bg-surface text-green-700 shadow-md3-level2 scale-100'
+                            : 'text-on-surface-variant hover:bg-surface/50 hover:text-green-600'
                         }`}
                       >
                         <i className={`fas ${tab.icon} text-xs`}></i>
@@ -1789,25 +1789,25 @@ export default function SettingsPage() {
                   {mpesaActiveTab === 'buyGoods' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Business Name *</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">Business Name *</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.buyGoods.businessName}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, buyGoods: { ...prev.mpesa.buyGoods, businessName: e.target.value } } }))}
                           placeholder="Your Business Name"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Till Number *</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">Till Number *</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.buyGoods.tillNumber}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, buyGoods: { ...prev.mpesa.buyGoods, tillNumber: e.target.value } } }))}
                           placeholder="123456"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
-                        <p className="text-xs text-[#64748b] mt-1">Lipa Na M-Pesa Till Number</p>
+                        <p className="text-xs text-on-surface-variant mt-1">Lipa Na M-Pesa Till Number</p>
                       </div>
                     </div>
                   )}
@@ -1816,35 +1816,35 @@ export default function SettingsPage() {
                   {mpesaActiveTab === 'paybill' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Business Name *</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">Business Name *</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.paybill.businessName}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybill: { ...prev.mpesa.paybill, businessName: e.target.value } } }))}
                           placeholder="Your Business Name"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Paybill Number *</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">Paybill Number *</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.paybill.paybillNumber}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybill: { ...prev.mpesa.paybill, paybillNumber: e.target.value } } }))}
                           placeholder="123456"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Number (Optional)</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">Account Number (Optional)</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.paybill.accountNumber}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, paybill: { ...prev.mpesa.paybill, accountNumber: e.target.value } } }))}
                           placeholder="ACCOUNT123 or Phone Number"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
-                        <p className="text-xs text-[#64748b] mt-1">Customers will use this as the account number when paying</p>
+                        <p className="text-xs text-on-surface-variant mt-1">Customers will use this as the account number when paying</p>
                       </div>
                     </div>
                   )}
@@ -1853,26 +1853,26 @@ export default function SettingsPage() {
                   {mpesaActiveTab === 'personal' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">M-Pesa Phone Number *</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">M-Pesa Phone Number *</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.personal.phoneNumber}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, personal: { ...prev.mpesa.personal, phoneNumber: e.target.value } } }))}
                           placeholder="254712345678"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
-                        <p className="text-xs text-[#64748b] mt-1">Format: 254XXXXXXXXX (no + sign)</p>
+                        <p className="text-xs text-on-surface-variant mt-1">Format: 254XXXXXXXXX (no + sign)</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-[#64748b] mb-2">Account Name *</label>
+                        <label className="block text-sm font-semibold text-on-surface-variant mb-2">Account Name *</label>
                         <input
                           type="text"
                           value={paymentMethods.mpesa.personal.accountName}
                           onChange={(e) => setPaymentMethods(prev => ({ ...prev, mpesa: { ...prev.mpesa, personal: { ...prev.mpesa.personal, accountName: e.target.value } } }))}
                           placeholder="John Doe"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-green-500 focus:outline-none"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-green-500 focus:outline-none"
                         />
-                        <p className="text-xs text-[#64748b] mt-1">Name registered with this M-Pesa number</p>
+                        <p className="text-xs text-on-surface-variant mt-1">Name registered with this M-Pesa number</p>
                       </div>
                     </div>
                   )}
@@ -1881,7 +1881,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Bank Transfer Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-blue-500 transition-all">
+            <div className="border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-blue-500 transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -1889,7 +1889,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-base md:text-lg">Bank Transfer</h3>
-                    <p className="text-xs md:text-sm text-[#64748b]">Accept direct bank transfers</p>
+                    <p className="text-xs md:text-sm text-on-surface-variant">Accept direct bank transfers</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1899,60 +1899,60 @@ export default function SettingsPage() {
                     onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, enabled: e.target.checked } }))}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-outline after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
               </div>
 
               {paymentMethods.bank.enabled && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Bank Name *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Bank Name *</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.bankName}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, bankName: e.target.value } }))}
                       placeholder="KCB Bank"
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Account Name *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Account Name *</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.accountName}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, accountName: e.target.value } }))}
                       placeholder="Business Name Ltd"
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Account Number *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Account Number *</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.accountNumber}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, accountNumber: e.target.value } }))}
                       placeholder="1234567890"
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Branch</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Branch</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.branch}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, branch: e.target.value } }))}
                       placeholder="Nairobi Branch"
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">SWIFT Code</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">SWIFT Code</label>
                     <input
                       type="text"
                       value={paymentMethods.bank.swiftCode}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, bank: { ...prev.bank, swiftCode: e.target.value } }))}
                       placeholder="KCBLKENX"
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-blue-500 focus:outline-none text-sm"
                     />
                   </div>
                 </div>
@@ -1960,7 +1960,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Card Payment Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-purple-500 transition-all">
+            <div className="border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-purple-500 transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-purple-100 flex items-center justify-center">
@@ -1968,7 +1968,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-base md:text-lg">Card Payments</h3>
-                    <p className="text-xs md:text-sm text-[#64748b]">Accept credit/debit card payments</p>
+                    <p className="text-xs md:text-sm text-on-surface-variant">Accept credit/debit card payments</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1978,18 +1978,18 @@ export default function SettingsPage() {
                     onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, enabled: e.target.checked } }))}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-outline after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                 </label>
               </div>
 
               {paymentMethods.card.enabled && (
                 <div className="space-y-3 md:space-y-4 mt-3 md:mt-4">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Payment Provider</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Payment Provider</label>
                     <select
                       value={paymentMethods.card.provider}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, provider: e.target.value as any } }))}
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-purple-500 focus:outline-none text-sm"
                     >
                       <option value="stripe">Stripe</option>
                       <option value="paypal">PayPal</option>
@@ -1997,13 +1997,13 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Payment Instructions</label>
+                    <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Payment Instructions</label>
                     <textarea
                       value={paymentMethods.card.instructions}
                       onChange={(e) => setPaymentMethods(prev => ({ ...prev, card: { ...prev.card, instructions: e.target.value } }))}
                       placeholder="Pay via Stripe link sent separately..."
                       rows={3}
-                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-purple-500 focus:outline-none resize-none text-sm"
+                      className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-purple-500 focus:outline-none resize-none text-sm"
                     />
                   </div>
                 </div>
@@ -2011,7 +2011,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Cash Payment Section */}
-            <div className="border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 hover:border-orange-500 transition-all">
+            <div className="border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-orange-500 transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-orange-100 flex items-center justify-center">
@@ -2019,7 +2019,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-base md:text-lg">Cash on Delivery</h3>
-                    <p className="text-xs md:text-sm text-[#64748b]">Accept cash payments</p>
+                    <p className="text-xs md:text-sm text-on-surface-variant">Accept cash payments</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -2029,19 +2029,19 @@ export default function SettingsPage() {
                     onChange={(e) => setPaymentMethods(prev => ({ ...prev, cash: { ...prev.cash, enabled: e.target.checked } }))}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                  <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-outline after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                 </label>
               </div>
 
               {paymentMethods.cash.enabled && (
                 <div className="mt-3 md:mt-4">
-                  <label className="block text-xs md:text-sm font-semibold text-[#64748b] mb-2">Cash Payment Instructions</label>
+                  <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">Cash Payment Instructions</label>
                   <textarea
                     value={paymentMethods.cash.instructions}
                     onChange={(e) => setPaymentMethods(prev => ({ ...prev, cash: { ...prev.cash, instructions: e.target.value } }))}
                     placeholder="Pay on delivery or at our office..."
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-orange-500 focus:outline-none resize-none text-sm"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-orange-500 focus:outline-none resize-none text-sm"
                   />
                 </div>
               )}
@@ -2049,11 +2049,11 @@ export default function SettingsPage() {
           </div>
 
           {/* Save Button */}
-          <div className="flex justify-end mt-4 md:mt-6 pt-4 md:pt-6 border-t border-[#e2e8f0] px-4 md:px-6 pb-4 md:pb-6">
+          <div className="flex justify-end mt-4 md:mt-6 pt-4 md:pt-6 border-t border-outline-variant px-4 md:px-6 pb-4 md:pb-6">
             <button
               onClick={async () => { await impactLight(); saveProfile(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -2073,13 +2073,13 @@ export default function SettingsPage() {
 
       {/* Security Tab - Biometric Authentication */}
       {activeTab === "security" && (
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-shield-alt text-xl md:text-2xl text-orange-500"></i>
               <div>
                 <h3 className="font-bold text-base md:text-lg mb-1">Biometric Authentication</h3>
-                <p className="text-sm text-[#64748b]">
+                <p className="text-sm text-on-surface-variant">
                   Enable fingerprint or face recognition for faster, more secure login to your app.
                 </p>
               </div>
@@ -2092,17 +2092,17 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                    biometricAvailable ? 'bg-green-100' : 'bg-gray-200'
+                    biometricAvailable ? 'bg-green-100' : 'bg-surface-container-high'
                   }`}>
                     <i className={`fas ${biometricAvailable ? getBiometricIcon() : 'fa-times-circle'} text-2xl ${
                       biometricAvailable ? 'text-green-600' : 'text-gray-400'
                     }`}></i>
                   </div>
                   <div>
-                    <h4 className="font-bold text-base md:text-lg text-[#1e293b]">
+                    <h4 className="font-bold text-base md:text-lg text-on-surface">
                       {biometricAvailable ? 'Biometric Available' : 'Not Available'}
                     </h4>
-                    <p className="text-sm text-[#64748b]">
+                    <p className="text-sm text-on-surface-variant">
                       {biometricAvailable 
                         ? `Your device supports ${biometricType} authentication`
                         : 'Your device does not support biometric authentication'}
@@ -2113,13 +2113,13 @@ export default function SettingsPage() {
             </div>
 
             {/* Toggle Biometric Login */}
-            <div className="bg-white border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6 mb-6">
+            <div className="bg-surface border-2 border-outline-variant rounded-xl p-4 md:p-6 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h4 className="font-bold text-base md:text-lg text-[#1e293b] mb-1">
+                  <h4 className="font-bold text-base md:text-lg text-on-surface mb-1">
                     Enable Biometric Login
                   </h4>
-                  <p className="text-sm text-[#64748b]">
+                  <p className="text-sm text-on-surface-variant">
                     Use {biometricType === 'fingerprint' ? 'fingerprint' : biometricType === 'face' || biometricType === 'faceId' ? 'face recognition' : 'biometrics'} to quickly log in to your account
                   </p>
                 </div>
@@ -2145,7 +2145,7 @@ export default function SettingsPage() {
                   } ${!biometricAvailable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                    className={`inline-block h-6 w-6 transform rounded-full bg-surface shadow-md3-level3 transition-transform duration-300 ${
                       biometricEnabled && biometricAvailable ? 'translate-x-7' : 'translate-x-1'
                     }`}
                   />
@@ -2155,11 +2155,11 @@ export default function SettingsPage() {
 
             {/* Test Biometric Button */}
             {biometricAvailable && (
-              <div className="bg-white border-2 border-[#e2e8f0] rounded-xl p-4 md:p-6">
-                <h4 className="font-bold text-base md:text-lg text-[#1e293b] mb-3">
+              <div className="bg-surface border-2 border-outline-variant rounded-xl p-4 md:p-6">
+                <h4 className="font-bold text-base md:text-lg text-on-surface mb-3">
                   Test Authentication
                 </h4>
-                <p className="text-sm text-[#64748b] mb-4">
+                <p className="text-sm text-on-surface-variant mb-4">
                   Try authenticating with your {biometricType} to ensure everything works correctly
                 </p>
                 <button
@@ -2184,7 +2184,7 @@ export default function SettingsPage() {
                     }
                   }}
                   disabled={testingBiometric}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-md3-level3 hover:shadow-md3-level4 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {testingBiometric ? (
                     <>
@@ -2205,8 +2205,8 @@ export default function SettingsPage() {
             <div className="mt-6 p-4 rounded-xl bg-blue-50 border border-blue-200">
               <div className="flex items-start gap-3">
                 <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                <div className="text-sm text-[#64748b]">
-                  <p className="font-semibold text-[#1e293b] mb-1">How it works:</p>
+                <div className="text-sm text-on-surface-variant">
+                  <p className="font-semibold text-on-surface mb-1">How it works:</p>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>Your biometric data never leaves your device</li>
                     <li>Authentication is handled by Android's secure system</li>

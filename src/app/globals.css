@@ -8,36 +8,59 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 
   /* Material Design 3 Color System */
+  /* ===== Material Design 3 Color System ===== */
+  /* Primary - WhatsApp Green */
   --md-sys-color-primary: #25D366;
   --md-sys-color-on-primary: #FFFFFF;
   --md-sys-color-primary-container: #DCF8C6;
   --md-sys-color-on-primary-container: #00210B;
   
+  /* Secondary - Purple (Service) */
   --md-sys-color-secondary: #8b5cf6;
   --md-sys-color-on-secondary: #FFFFFF;
   --md-sys-color-secondary-container: #ede9fe;
   --md-sys-color-on-secondary-container: #2E1065;
   
+  /* Tertiary - Gold/Amber */
   --md-sys-color-tertiary: #C9A84C;
   --md-sys-color-on-tertiary: #FFFFFF;
   --md-sys-color-tertiary-container: #FEF3C7;
   --md-sys-color-on-tertiary-container: #451A03;
   
+  /* Error */
   --md-sys-color-error: #ef4444;
   --md-sys-color-on-error: #FFFFFF;
   --md-sys-color-error-container: #fee2e2;
   --md-sys-color-on-error-container: #7f1d1d;
   
+  /* Surface Colors */
   --md-sys-color-surface: #ffffff;
+  --md-sys-color-surface-dim: #f1f5f9;
+  --md-sys-color-surface-bright: #ffffff;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #f8fafc;
+  --md-sys-color-surface-container: #f1f5f9;
+  --md-sys-color-surface-container-high: #e2e8f0;
+  --md-sys-color-surface-container-highest: #cbd5e1;
   --md-sys-color-surface-variant: #f8fafc;
   --md-sys-color-on-surface: #1e293b;
   --md-sys-color-on-surface-variant: #64748b;
   
+  /* Outline Colors */
   --md-sys-color-outline: #cbd5e1;
   --md-sys-color-outline-variant: #e2e8f0;
   
+  /* Background */
   --md-sys-color-background: #ffffff;
   --md-sys-color-on-background: #1e293b;
+
+  /* MD3 Elevation Tokens */
+  --md3-elevation-level0: 0 0 0 0 transparent;
+  --md3-elevation-level1: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+  --md3-elevation-level2: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+  --md3-elevation-level3: 0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.3);
+  --md3-elevation-level4: 0 6px 10px 4px rgba(0,0,0,0.15), 0 2px 3px rgba(0,0,0,0.3);
+  --md3-elevation-level5: 0 8px 12px 6px rgba(0,0,0,0.15), 0 4px 4px rgba(0,0,0,0.3);
 
   /* Legacy Variables */
   --primary: #25D366;
@@ -194,7 +217,7 @@ body {
 }
 
 /* Material Design 3 Surface Background for App Pages */
-.bg-surface {
+.app-layout-surface {
   background: linear-gradient(
     180deg,
     var(--md-sys-color-surface) 0%,
@@ -1000,7 +1023,8 @@ body::after {
   gap: 0.75rem;
   padding: 1rem;
   border-top: 1px solid #f1f5f9;
-  position: sticky bottom 0;
+  position: sticky;
+  bottom: 0;
   background: white;
 }
 
@@ -1305,27 +1329,6 @@ body::after {
   flex: 1;
 }
 
-/* Form Sections */
-.form-section {
-  margin-bottom: 1.5rem;
-}
-
-.section-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
-  margin-bottom: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.section-title i {
-  color: var(--service);
-}
-
 /* Form Grid */
 .form-grid {
   display: grid;
@@ -1341,37 +1344,6 @@ body::after {
 
 .form-group.full-width {
   grid-column: 1 / -1;
-}
-
-.form-label {
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-}
-
-.form-input,
-.form-textarea {
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  background: var(--bg);
-  color: var(--text-primary);
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--service);
-  background: white;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
 }
 
 /* Business Type Selection */
@@ -1459,21 +1431,6 @@ body::after {
   to { opacity: 1; }
 }
 
-.spec-group {
-  background: var(--bg);
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--border);
-}
-
-.spec-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.875rem;
-}
-
 .spec-title {
   font-weight: 700;
   font-size: 0.95rem;
@@ -1485,47 +1442,6 @@ body::after {
 
 .spec-title i {
   color: var(--service);
-}
-
-.spec-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.625rem;
-}
-
-.spec-option {
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--border);
-  border-radius: 50px;
-  background: white;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--text-primary);
-}
-
-.spec-option:hover {
-  border-color: var(--service);
-  transform: translateY(-1px);
-}
-
-.spec-option.active {
-  background: linear-gradient(135deg, var(--service) 0%, var(--service-dark) 100%);
-  color: white;
-  border-color: var(--service);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
-}
-
-.spec-option .check-icon {
-  display: none;
-}
-
-.spec-option.active .check-icon {
-  display: inline;
 }
 
 /* Pricing Tiers */
@@ -1771,44 +1687,6 @@ body::after {
 }
 
 /* Add Custom Option */
-.add-custom-btn {
-  padding: 0.5rem 1rem;
-  border: 2px dashed var(--border);
-  border-radius: 50px;
-  background: transparent;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.add-custom-btn:hover {
-  border-color: var(--service);
-  color: var(--service);
-}
-
-.custom-input-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.custom-input {
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--service);
-  border-radius: 50px;
-  font-family: inherit;
-  font-size: 0.85rem;
-  outline: none;
-  width: 150px;
-  color: var(--text-primary);
-  background: white;
-}
-
 /* Image Upload */
 .image-upload-grid {
   display: grid;
@@ -2001,67 +1879,172 @@ body::after {
 }
 
 /* ============================================
-   ADD SERVICE FORM STYLES
+   ADD SERVICE FORM STYLES (MD3)
    ============================================ */
 
 .form-section {
-  @apply space-y-3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .section-title {
-  @apply flex items-center gap-2 text-sm font-bold text-[#475569] mb-3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 0.75rem;
 }
 
 .form-label {
-  @apply block text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1.5;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.375rem;
 }
 
 .form-input {
-  @apply w-full px-3 py-2.5 rounded-lg border-2 border-[#e2e8f0] text-sm font-medium text-[#1e293b] placeholder:text-[#94a3b8] focus:border-[#8b5cf6] focus:outline-none transition-all duration-200 bg-white;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface);
+  transition: all 0.2s;
+}
+
+.form-input::placeholder {
+  color: var(--md-sys-color-outline);
+}
+
+.form-input:focus {
+  border-color: #8b5cf6;
+  outline: none;
 }
 
 .form-textarea {
-  @apply w-full px-3 py-2.5 rounded-lg border-2 border-[#e2e8f0] text-sm font-medium text-[#1e293b] placeholder:text-[#94a3b8] focus:border-[#8b5cf6] focus:outline-none transition-all duration-200 bg-white resize-none;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface);
+  transition: all 0.2s;
+  resize: none;
+}
+
+.form-textarea::placeholder {
+  color: var(--md-sys-color-outline);
+}
+
+.form-textarea:focus {
+  border-color: #8b5cf6;
+  outline: none;
 }
 
 .spec-group {
-  @apply space-y-2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .spec-header {
-  @apply flex items-center gap-2 text-xs font-bold text-[#475569] uppercase tracking-wider;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .spec-options {
-  @apply flex flex-wrap gap-2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .spec-option {
-  @apply flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-xs font-semibold text-[#64748b] hover:border-[#cbd5e1] transition-all duration-200 cursor-pointer bg-white;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  background-color: var(--md-sys-color-surface);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.spec-option:hover {
+  border-color: var(--md-sys-color-outline);
 }
 
 .spec-option.active {
-  @apply border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6];
+  border-color: #8b5cf6;
+  background-color: #ede9fe;
+  color: #8b5cf6;
 }
 
 .spec-option .check-icon {
-  @apply opacity-0 text-[10px] transition-opacity;
+  opacity: 0;
+  font-size: 10px;
+  transition: opacity 0.2s;
 }
 
 .spec-option.active .check-icon {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 .add-custom-btn {
-  @apply flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-dashed border-[#cbd5e1] text-xs font-semibold text-[#94a3b8] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all duration-200 cursor-pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px dashed var(--md-sys-color-outline-variant);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--md-sys-color-outline);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.add-custom-btn:hover {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
 }
 
 .custom-input-row {
-  @apply flex items-center gap-2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .custom-input {
-  @apply flex-1 px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none;
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--md-sys-color-outline-variant);
+  font-size: 0.875rem;
+}
+
+.custom-input:focus {
+  border-color: #8b5cf6;
+  outline: none;
 }
 
 /* ============================================
@@ -3964,6 +3947,23 @@ body:has(.landing-page-wrapper)::after {
 
 /* Material Design 3 Utility Classes */
 @layer utilities {
+  /* MD3 Elevation Shadows */
+  .shadow-level0 { box-shadow: var(--md3-elevation-level0); }
+  .shadow-level1 { box-shadow: var(--md3-elevation-level1); }
+  .shadow-level2 { box-shadow: var(--md3-elevation-level2); }
+  .shadow-level3 { box-shadow: var(--md3-elevation-level3); }
+  .shadow-level4 { box-shadow: var(--md3-elevation-level4); }
+  .shadow-level5 { box-shadow: var(--md3-elevation-level5); }
+
+  /* MD3 Surface Container Backgrounds */
+  .bg-surface-dim { background-color: var(--md-sys-color-surface-dim); }
+  .bg-surface-bright { background-color: var(--md-sys-color-surface-bright); }
+  .bg-surface-container-lowest { background-color: var(--md-sys-color-surface-container-lowest); }
+  .bg-surface-container-low { background-color: var(--md-sys-color-surface-container-low); }
+  .bg-surface-container { background-color: var(--md-sys-color-surface-container); }
+  .bg-surface-container-high { background-color: var(--md-sys-color-surface-container-high); }
+  .bg-surface-container-highest { background-color: var(--md-sys-color-surface-container-highest); }
+
   /* Background colors */
   .bg-primary { background-color: var(--md-sys-color-primary); }
   .bg-on-primary { background-color: var(--md-sys-color-on-primary); }
@@ -4036,4 +4036,50 @@ body:has(.landing-page-wrapper)::after {
   .border-surface-variant { border-color: var(--md-sys-color-surface-variant); }
   .border-outline { border-color: var(--md-sys-color-outline); }
   .border-outline-variant { border-color: var(--md-sys-color-outline-variant); }
+}
+
+/* ============================================
+   PAYSTACK POPUP FIX — Center on Mobile & Capacitor
+   ============================================
+   Paystack Inline JS injects #paystack-popover-container with fixed positioning.
+   On mobile and in Capacitor/Cordova webviews, the popup stretches outside
+   the viewport. These overrides force it to stay centered.
+   
+   Note: We do NOT override iframe height — Paystack manages it dynamically
+   via postMessage. We only constrain max-height to prevent overflow.
+*/
+
+/* Global: Force container to center its content */
+#paystack-popover-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  z-index: 99999 !important;
+}
+
+/* Mobile: Constrain iframe width/height to prevent overflow outside viewport */
+@media (max-width: 767px) {
+  #paystack-popover-container iframe {
+    width: 95% !important;
+    max-width: 440px !important;
+    max-height: 90vh !important;
+    border-radius: 12px !important;
+    position: relative !important;
+  }
+
+  /* Extra safety on very small screens */
+  @media (max-width: 480px) {
+    #paystack-popover-container iframe {
+      width: 92% !important;
+      max-height: 85vh !important;
+    }
+  }
 }

@@ -62,23 +62,23 @@ function ActionButton({
 
   const variants = {
     default: `
-      bg-white border-2 border-[#e2e8f0] text-[#64748b]
+      bg-surface border-2 border-outline-variant text-on-surface-variant
       hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:bg-[#f5f3ff]
       active:bg-[#ede9fe]
     `,
     primary: `
       bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white border-0
-      shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:shadow-[#25D366]/30
+      shadow-md3-level3 shadow-[#25D366]/20 hover:shadow-md3-level4 hover:shadow-[#25D366]/30
       hover:-translate-y-0.5 active:translate-y-0
     `,
     danger: `
       bg-[#ef4444] text-white border-0
-      shadow-lg shadow-[#ef4444]/20 hover:shadow-xl hover:shadow-[#ef4444]/30
+      shadow-md3-level3 shadow-[#ef4444]/20 hover:shadow-md3-level4 hover:shadow-[#ef4444]/30
       hover:-translate-y-0.5 active:translate-y-0
     `,
     ghost: `
-      bg-transparent border-2 border-[#e2e8f0] text-[#64748b]
-      hover:border-[#64748b] hover:text-[#1e293b]
+      bg-transparent border-2 border-outline-variant text-on-surface-variant
+      hover:border-[#64748b] hover:text-on-surface
     `,
   };
 
@@ -156,7 +156,7 @@ export default function CustomersHeader({
     `}>
       {/* Title Section */}
       <div className="min-w-0">
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[#1e293b] flex items-center gap-2.5 md:gap-3">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">
           <div className={`
             w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 
             flex items-center justify-center shrink-0
@@ -169,7 +169,7 @@ export default function CustomersHeader({
           {customerCount !== undefined && (
             <span className={`
               hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full 
-              bg-[#f1f5f9] text-[#64748b] text-xs font-bold
+              bg-surface-variant text-on-surface-variant text-xs font-bold
               ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-75"}
               transition-all duration-500 delay-200
             `}>
@@ -178,7 +178,7 @@ export default function CustomersHeader({
           )}
         </h1>
         <p className={`
-          text-[#64748b] text-sm mt-1 hidden md:block
+          text-on-surface-variant text-sm mt-1 hidden md:block
           ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}
           transition-all duration-500 delay-200
         `}>

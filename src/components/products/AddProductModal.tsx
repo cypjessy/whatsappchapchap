@@ -58,7 +58,7 @@ const getCategoryName = (categoryId: string): string => {
 
 function StepIndicator({ currentStep, completedSteps }: { currentStep: number; completedSteps: Set<number> }) {
   return (
-    <div className="hidden md:flex items-center justify-center gap-1 px-8 py-4 bg-white border-b border-[#e2e8f0]">
+    <div className="hidden md:flex items-center justify-center gap-1 px-8 py-4 bg-white border-b border-outline-variant">
       {STEPS.map((step, idx) => {
         const isActive = currentStep === step.id;
         const isCompleted = completedSteps.has(step.id);
@@ -70,10 +70,10 @@ function StepIndicator({ currentStep, completedSteps }: { currentStep: number; c
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300
                 ${isActive
-                  ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25"
+                  ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/25"
                   : isCompleted
                     ? "bg-[#10b981] text-white"
-                    : "bg-[#e2e8f0] text-[#94a3b8]"
+                    : "bg-surface-variant text-outline"
                 }
               `}>
                 {isCompleted && !isActive ? (
@@ -84,7 +84,7 @@ function StepIndicator({ currentStep, completedSteps }: { currentStep: number; c
               </div>
               <span className={`
                 text-xs font-semibold transition-colors duration-200
-                ${isActive ? "text-[#8b5cf6]" : isCompleted ? "text-[#10b981]" : "text-[#94a3b8]"}
+                ${isActive ? "text-[#8b5cf6]" : isCompleted ? "text-[#10b981]" : "text-outline"}
               `}>
                 {step.label}
               </span>
@@ -92,7 +92,7 @@ function StepIndicator({ currentStep, completedSteps }: { currentStep: number; c
             {!isLast && (
               <div className={`
                 w-8 h-[2px] mx-2 rounded-full transition-colors duration-300
-                ${isCompleted ? "bg-[#10b981]" : "bg-[#e2e8f0]"}
+                ${isCompleted ? "bg-[#10b981]" : "bg-surface-variant"}
               `} />
             )}
           </div>
@@ -105,16 +105,16 @@ function StepIndicator({ currentStep, completedSteps }: { currentStep: number; c
 function MobileStepIndicator({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
   const progress = (currentStep / totalSteps) * 100;
   return (
-    <div className="md:hidden px-4 py-3 bg-white border-b border-[#e2e8f0]">
+    <div className="md:hidden px-4 py-3 bg-white border-b border-outline-variant">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs font-bold text-[#64748b]">
+        <span className="text-xs font-bold text-on-surface-variant">
           Step {currentStep} of {totalSteps}
         </span>
         <span className="text-xs font-bold text-[#8b5cf6]">
           {STEPS[currentStep - 1]?.label}
         </span>
       </div>
-      <div className="h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-surface-variant rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -137,7 +137,7 @@ function InputField({
 }) {
   return (
     <div>
-      <label className="md3-label-large block mb-2 text-[#475569]">
+      <label className="md3-label-large block mb-2 text-on-surface-variant">
         {label}
         {required && <span className="text-[#ef4444] ml-0.5">*</span>}
       </label>
@@ -177,15 +177,15 @@ function SelectableCard({
         relative p-4 border-2 rounded-xl text-center cursor-pointer transition-all duration-200
         active:scale-95
         ${selected
-          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:shadow-sm"
+          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md3-level2 shadow-[#8b5cf6]/10"
+          : "border-outline-variant bg-white hover:border-outline-variant hover:shadow-md3-level1"
         }
         ${isPressed ? "scale-95" : "scale-100"}
         ${className}
       `}
     >
       {selected && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-sm">
+        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-md3-level1">
           <i className="fas fa-check text-[9px]" />
         </div>
       )}
@@ -215,10 +215,10 @@ function SpecButton({
         px-3 py-1.5 md:px-4 md:py-2 rounded-full border-2 text-xs md:text-sm font-semibold transition-all duration-200
         active:scale-95 flex items-center gap-1.5
         ${selected
-          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md"
+          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level2"
           : isCustom
-            ? "border-dashed border-[#cbd5e1] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
-            : "border-[#e2e8f0] text-[#475569] hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-white"
+            ? "border-dashed border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+            : "border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-white"
         }
       `}
     >
@@ -263,19 +263,19 @@ function MultiSelectDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-left text-sm flex justify-between items-center hover:border-[#8b5cf6] transition-colors"
+        className="w-full px-3 py-2 rounded-lg border-2 border-outline-variant text-left text-sm flex justify-between items-center hover:border-[#8b5cf6] transition-colors"
       >
-        <span className="text-[#475569]">
+        <span className="text-on-surface-variant">
           {selectedValues.size === 0 
             ? "Select options..." 
             : `${selectedValues.size} selected`}
         </span>
-        <i className={`fas fa-chevron-down text-[#94a3b8] transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <i className={`fas fa-chevron-down text-outline transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
       
       {isOpen && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-[#e2e8f0] rounded-lg shadow-lg max-h-64 overflow-hidden flex flex-col">
-          <div className="p-2 border-b border-[#e2e8f0]">
+        <div className="absolute z-20 mt-1 w-full bg-white border border-outline-variant rounded-lg shadow-md3-level3 max-h-64 overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-outline-variant">
             <input
               type="text"
               placeholder="Search..."
@@ -288,19 +288,19 @@ function MultiSelectDropdown({
             {filteredOptions.map(opt => (
               <label
                 key={opt}
-                className="flex items-center gap-2 px-3 py-2 hover:bg-[#f1f5f9] cursor-pointer text-sm"
+                className="flex items-center gap-2 px-3 py-2 hover:bg-surface-variant cursor-pointer text-sm"
               >
                 <input
                   type="checkbox"
                   checked={selectedValues.has(opt)}
                   onChange={() => onToggle(opt)}
-                  className="rounded border-[#cbd5e1] text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                  className="rounded border-outline-variant text-[#8b5cf6] focus:ring-[#8b5cf6]"
                 />
-                <span className="text-[#475569]">{opt}</span>
+                <span className="text-on-surface-variant">{opt}</span>
               </label>
             ))}
             {filteredOptions.length === 0 && (
-              <div className="px-3 py-2 text-sm text-[#94a3b8] text-center">
+              <div className="px-3 py-2 text-sm text-outline text-center">
                 No options found
               </div>
             )}
@@ -354,7 +354,7 @@ function CustomSpecInput({
       </button>
       <button
         onClick={onCancel}
-        className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
+        className="px-3 py-2 bg-surface-variant text-on-surface-variant rounded-lg hover:bg-[#cbd5e1] transition-colors"
       >
         <i className="fas fa-times" />
       </button>
@@ -384,7 +384,7 @@ function ImageCard({
     <div
       className={`
         relative rounded-xl overflow-hidden border-2 transition-all duration-200 group
-        ${image.isMain ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10" : "border-[#e2e8f0]"}
+        ${image.isMain ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10" : "border-outline-variant"}
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -409,7 +409,7 @@ function ImageCard({
             onClick={onSetMain}
             className={`
               text-[10px] px-2 py-1 rounded-md font-bold transition-all
-              ${image.isMain ? "bg-[#8b5cf6] text-white" : "bg-white/90 text-[#475569] hover:bg-white"}
+              ${image.isMain ? "bg-[#8b5cf6] text-white" : "bg-white/90 text-on-surface-variant hover:bg-white"}
             `}
           >
             {image.isMain ? "✓ Main" : "Set Main"}
@@ -424,7 +424,7 @@ function ImageCard({
       </div>
 
       {image.isMain && (
-        <div className="absolute top-2 left-2 bg-[#8b5cf6] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+        <div className="absolute top-2 left-2 bg-[#8b5cf6] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-md3-level1">
           Main
         </div>
       )}
@@ -447,7 +447,7 @@ function ToastContainer({ toasts }: { toasts: { id: number; type: string; messag
         <div
           key={toast.id}
           className={`
-            pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5
+            pointer-events-auto px-4 py-3 rounded-xl shadow-md3-level4 flex items-center gap-2.5
             animate-[slideInRight_0.3s_ease] min-w-[280px]
             ${toast.type === "error" ? "bg-[#ef4444] text-white" : "bg-[#10b981] text-white"}
           `}
@@ -1026,7 +1026,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             className="w-full px-4 py-3 text-sm bg-transparent outline-none"
           />
         </div>
-        <p className="text-xs text-[#64748b] mt-1.5 ml-1">You'll be notified when stock falls below this number</p>
+        <p className="text-xs text-on-surface-variant mt-1.5 ml-1">You'll be notified when stock falls below this number</p>
       </InputField>
     </div>
   );
@@ -1053,7 +1053,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <div className="text-2xl md:text-3xl mb-1 transition-transform duration-200">
                     {category.icon}
                   </div>
-                  <div className="font-bold text-xs text-[#475569] line-clamp-2">
+                  <div className="font-bold text-xs text-on-surface-variant line-clamp-2">
                     {category.name}
                   </div>
                 </SelectableCard>
@@ -1088,7 +1088,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const renderStep3 = () => {
     if (!currentSubcategory) {
       return (
-        <div className="text-center py-12 text-[#64748b]">
+        <div className="text-center py-12 text-on-surface-variant">
           <i className="fas fa-tag text-4xl mb-3 opacity-50" />
           <p>Please select a category and subcategory first</p>
         </div>
@@ -1111,7 +1111,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         )}
 
         {specEntries.length === 0 && (
-          <div className="text-center py-12 text-[#64748b]">
+          <div className="text-center py-12 text-on-surface-variant">
             <i className="fas fa-cogs text-4xl mb-3 opacity-50" />
             <p>No specifications available for this subcategory</p>
             <p className="text-xs mt-1">You can still add variants directly in the next step</p>
@@ -1128,14 +1128,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           const selectedValues = selectedSpecs[specKey] || new Set<string>();
 
           return (
-            <div key={specKey} className="bg-white rounded-xl p-4 md:p-5 border border-[#e2e8f0]">
+            <div key={specKey} className="bg-white rounded-xl p-4 md:p-5 border border-outline-variant">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white text-xs">
                   <i className={`fas ${specField.icon || "fa-tag"}`} />
                 </div>
-                <span className="font-bold text-sm text-[#475569]">{specField.label}</span>
+                <span className="font-bold text-sm text-on-surface-variant">{specField.label}</span>
                 {isMultiple && (
-                  <span className="text-[10px] bg-[#e2e8f0] px-2 py-0.5 rounded-full text-[#64748b]">
+                  <span className="text-[10px] bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant">
                     Multi-select
                   </span>
                 )}
@@ -1196,7 +1196,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   const renderStep4 = () => (
     <div className="space-y-4 animate-fadeIn">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-[#64748b]">
+        <span className="text-sm font-bold text-on-surface-variant">
           {variants.length} variant{variants.length !== 1 ? "s" : ""} generated
         </span>
         {errors.variants && (
@@ -1205,7 +1205,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       </div>
 
       {variants.length === 0 ? (
-        <div className="text-center py-12 text-[#64748b] bg-white rounded-xl border border-[#e2e8f0]">
+        <div className="text-center py-12 text-on-surface-variant bg-white rounded-xl border border-outline-variant">
           <i className="fas fa-cubes text-4xl mb-3 opacity-50" />
           <p>No variants generated</p>
           <p className="text-xs mt-1">Select specifications in the previous step to generate variants</p>
@@ -1215,46 +1215,46 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           {variants.map((variant, idx) => (
             <div
               key={variant.id}
-              className="bg-white border border-[#e2e8f0] rounded-xl p-3 md:p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-start animate-fadeIn"
+              className="bg-white border border-outline-variant rounded-xl p-3 md:p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-start animate-fadeIn"
               style={{ animationDelay: `${idx * 50}ms` }}
             >
               <div>
-                <div className="font-bold text-xs text-[#64748b] mb-1">Variant #{variant.id}</div>
+                <div className="font-bold text-xs text-on-surface-variant mb-1">Variant #{variant.id}</div>
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(variant.specs).map(([key, value]) => (
-                    <span key={key} className="text-[10px] px-2 py-0.5 bg-[#f1f5f9] rounded-full text-[#64748b] font-medium">
+                    <span key={key} className="text-[10px] px-2 py-0.5 bg-surface-variant rounded-full text-on-surface-variant font-medium">
                       {value}
                     </span>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">SKU</label>
+                <label className="text-[10px] text-outline font-semibold uppercase block mb-1">SKU</label>
                 <input
                   type="text"
                   value={variant.sku}
                   onChange={(e) => updateVariant(idx, "sku", e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-outline-variant text-sm focus:border-[#8b5cf6] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Price (KES)</label>
+                <label className="text-[10px] text-outline font-semibold uppercase block mb-1">Price (KES)</label>
                 <input
                   type="number"
                   value={variant.price}
                   onChange={(e) => updateVariant(idx, "price", e.target.value)}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-outline-variant text-sm focus:border-[#8b5cf6] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-[10px] text-[#94a3b8] font-semibold uppercase block mb-1">Stock</label>
+                <label className="text-[10px] text-outline font-semibold uppercase block mb-1">Stock</label>
                 <input
                   type="number"
                   value={variant.stock}
                   onChange={(e) => updateVariant(idx, "stock", e.target.value)}
                   placeholder="0"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-[#e2e8f0] text-sm focus:border-[#8b5cf6] focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-outline-variant text-sm focus:border-[#8b5cf6] focus:outline-none"
                 />
               </div>
             </div>
@@ -1280,9 +1280,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         ))}
 
         <div className="flex flex-col gap-2">
-          <label className="border-2 border-dashed border-[#e2e8f0] rounded-xl p-4 text-center cursor-pointer hover:border-[#8b5cf6] hover:bg-[#f5f3ff] transition-all flex flex-col items-center justify-center h-24 md:h-28 group">
-            <i className="fas fa-plus text-[#94a3b8] text-xl mb-1 group-hover:text-[#8b5cf6] transition-colors" />
-            <span className="text-[10px] text-[#94a3b8] group-hover:text-[#8b5cf6] transition-colors">Upload</span>
+          <label className="border-2 border-dashed border-outline-variant rounded-xl p-4 text-center cursor-pointer hover:border-[#8b5cf6] hover:bg-[#f5f3ff] transition-all flex flex-col items-center justify-center h-24 md:h-28 group">
+            <i className="fas fa-plus text-outline text-xl mb-1 group-hover:text-[#8b5cf6] transition-colors" />
+            <span className="text-[10px] text-outline group-hover:text-[#8b5cf6] transition-colors">Upload</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -1294,15 +1294,15 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </label>
           <button
             onClick={openCamera}
-            className="border-2 border-dashed border-[#e2e8f0] rounded-xl p-2 text-center cursor-pointer hover:border-[#8b5cf6] hover:bg-[#f5f3ff] transition-all flex flex-col items-center justify-center h-auto group"
+            className="border-2 border-dashed border-outline-variant rounded-xl p-2 text-center cursor-pointer hover:border-[#8b5cf6] hover:bg-[#f5f3ff] transition-all flex flex-col items-center justify-center h-auto group"
           >
-            <i className="fas fa-camera text-[#94a3b8] text-xl mb-1 group-hover:text-[#8b5cf6] transition-colors" />
-            <span className="text-[10px] text-[#94a3b8] group-hover:text-[#8b5cf6] transition-colors">Camera</span>
+            <i className="fas fa-camera text-outline text-xl mb-1 group-hover:text-[#8b5cf6] transition-colors" />
+            <span className="text-[10px] text-outline group-hover:text-[#8b5cf6] transition-colors">Camera</span>
           </button>
         </div>
       </div>
 
-      <p className="text-xs text-[#94a3b8]">
+      <p className="text-xs text-outline">
         Drag images to reorder. Click "Set Main" to choose the primary image. First image is auto-set as main.
       </p>
     </div>
@@ -1326,13 +1326,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         >
           {/* Header */}
           <div className="md3-dialog-header flex items-center justify-between">
-            <h2 className="md3-headline-small flex items-center gap-2 text-[#1e293b]">
+            <h2 className="md3-headline-small flex items-center gap-2 text-on-surface">
               <i className="fas fa-plus-circle text-[#8b5cf6]" />
               Add New Product
             </h2>
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full hover:bg-[#ef4444]/10 hover:text-[#ef4444] transition-all flex items-center justify-center text-[#64748b]"
+              className="w-10 h-10 rounded-full hover:bg-[#ef4444]/10 hover:text-[#ef4444] transition-all flex items-center justify-center text-on-surface-variant"
             >
               <i className="fas fa-times text-lg" />
             </button>
@@ -1417,7 +1417,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
               <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                 <button
                   onClick={capturePhotoFromCamera}
-                  className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                  className="w-16 h-16 rounded-full bg-white shadow-md3-level3 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 >
                   <div className="w-14 h-14 rounded-full border-4 border-[#8b5cf6]" />
                 </button>

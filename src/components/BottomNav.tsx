@@ -143,39 +143,39 @@ function BottomNavItem({
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       className={`
-        relative flex-1 flex flex-col items-center justify-center h-full py-2 px-1
+        bottom-nav-item relative flex-1 flex flex-col items-center justify-center h-full py-2 px-1
         transition-all duration-200 select-none rounded-xl mx-1
-        ${isPressed ? "scale-95" : "scale-100"}
+        ${isPressed ? "scale-[0.95]" : "scale-100"}
         ${isActive 
-          ? "bg-[#E8F5E9] text-[#25D366]" 
-          : "text-[#64748b] hover:bg-gray-50"
+          ? "text-primary" 
+          : "text-on-surface-variant"
         }
       `}
     >
       {/* MD3 Active Indicator - Pill shape */}
       {isActive && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#25D366] rounded-b-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-[3px] bg-primary rounded-b-full animate-navIndicator" />
       )}
       
       <div className="relative mt-1">
-        <i className={`fas ${item.icon} text-[20px] transition-transform duration-200 ${isActive ? "scale-105" : "scale-100"}`} />
+        <i className={`fas ${item.icon} text-xl transition-all duration-200 ${isActive ? "scale-105" : "scale-100"}`} />
       </div>
       
       <span className={`
-        text-[11px] font-semibold mt-1.5 transition-all duration-200
-        ${isActive ? "opacity-100" : "opacity-80"}
+        md3-label-small mt-1.5 transition-all duration-200
+        ${isActive ? "opacity-100 font-semibold" : "opacity-70"}
       `}>
         {item.label}
       </span>
 
-      {/* Badge */}
+      {/* MD3 Badge */}
       {item.badge && item.badge > 0 && (
         <span className={`
           absolute top-1 right-1/2 translate-x-3
           min-w-[18px] h-[18px] px-1
-          bg-[#ef4444] text-white text-[10px] font-bold
+          bg-error text-white text-[10px] font-bold
           rounded-full flex items-center justify-center
-          border-2 border-white shadow-sm animate-badgePop
+          border-2 border-white shadow-level1 animate-badgePop
         `}>
           {item.badge > 99 ? "99+" : item.badge}
         </span>
@@ -279,8 +279,8 @@ function MenuSheet({
         </div>
 
         {/* Header */}
-        <div className="px-6 pb-4 flex items-center justify-between border-b border-gray-100">
-          <h3 className="font-semibold text-lg text-gray-900 flex items-center gap-2">
+        <div className="px-6 pb-4 flex items-center justify-between border-b border-outline-variant">
+          <h3 className="font-semibold text-lg text-on-surface flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-[#E8F5E9] flex items-center justify-center">
               <i className="fas fa-plus text-[#25D366] text-base" />
             </div>
@@ -288,7 +288,7 @@ function MenuSheet({
           </h3>
           <button
             onClick={handleClose}
-            className="w-9 h-9 rounded-full hover:bg-gray-100 active:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+            className="w-9 h-9 rounded-full hover:bg-surface-variant active:bg-surface-container-high flex items-center justify-center text-on-surface-variant transition-colors"
           >
             <i className="fas fa-times text-sm" />
           </button>
@@ -299,7 +299,7 @@ function MenuSheet({
           {FAB_MENU_SECTIONS.map((section, sectionIdx) => (
             <div key={section.title} className={sectionIdx > 0 ? "mt-6" : "mt-2"}>
               <div className="px-2 mb-3">
-                <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
                   {section.title}
                 </span>
               </div>
@@ -311,7 +311,7 @@ function MenuSheet({
                     onClick={handleClose}
                     className={`
                       flex flex-col items-center gap-2 p-3 rounded-2xl
-                      hover:bg-gray-50 active:bg-gray-100 active:scale-95
+                      hover:bg-surface-container-lowest active:bg-surface-variant active:scale-95
                       transition-all duration-150
                       animate-menuItem
                     `}
@@ -321,11 +321,11 @@ function MenuSheet({
                       w-14 h-14 rounded-2xl flex items-center justify-center
                       bg-[#E8F5E9]
                       text-[#25D366] text-lg
-                      shadow-sm
+                      shadow-md3-level1
                     `}>
                       <i className={`fas ${item.icon}`} />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-700 text-center leading-tight">
+                    <span className="text-[11px] font-medium text-on-surface text-center leading-tight">
                       {item.label}
                     </span>
                   </Link>
@@ -335,9 +335,9 @@ function MenuSheet({
           ))}
 
           {/* Logout Section */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
+          <div className="mt-6 pt-6 border-t border-outline-variant">
             <div className="px-2 mb-3">
-              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
                 Account
               </span>
             </div>
@@ -349,7 +349,7 @@ function MenuSheet({
                 }}
                 className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-150"
               >
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-50 text-red-500 text-lg shadow-sm">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-50 text-red-500 text-lg shadow-md3-level1">
                   <i className="fas fa-sign-out-alt" />
                 </div>
                 <span className="text-[11px] font-medium text-red-600 text-center leading-tight">
@@ -502,11 +502,11 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
                 w-14 h-14 rounded-2xl
                 bg-[#25D366]
                 flex items-center justify-center text-white
-                shadow-md shadow-[#25D366]/30
+                shadow-md3-level2 shadow-[#25D366]/30
                 transition-all duration-200
                 relative z-10
                 ${fabPressed ? "scale-90" : "scale-100"}
-                ${fabOpen ? "rotate-45 shadow-lg shadow-[#25D366]/40" : "rotate-0"}
+                ${fabOpen ? "rotate-45 shadow-md3-level3 shadow-[#25D366]/40" : "rotate-0"}
               `}
             >
               <i className="fas fa-plus text-xl" />

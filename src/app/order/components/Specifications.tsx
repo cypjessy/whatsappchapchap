@@ -126,7 +126,7 @@ function ColorSwatch({
             <i
               className={`
                 fas fa-check text-sm drop-shadow-md
-                ${light ? "text-[#1e293b]" : "text-white"}
+                ${light ? "text-on-surface" : "text-white"}
               `}
             />
           </div>
@@ -141,7 +141,7 @@ function ColorSwatch({
       </button>
 
       {/* Label */}
-      <span className="text-[10px] md:text-xs font-semibold text-[#64748b] capitalize">
+      <span className="text-[10px] md:text-xs font-semibold text-on-surface-variant capitalize">
         {option}
       </span>
     </div>
@@ -182,7 +182,7 @@ function SpecPill({
         ${isPressed ? "scale-95" : "scale-100"}
         ${isSelected
           ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:shadow-[#25D366]/30"
-          : "bg-white text-[#1e293b] border-2 border-[#e2e8f0] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+          : "bg-white text-on-surface border-2 border-outline-variant hover:border-outline-variant hover:bg-surface-container-lowest"
         }
       `}
       style={{ transitionDelay: `${index * 40}ms` }}
@@ -228,7 +228,7 @@ function FilterSection({
         <div className="w-7 h-7 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
           <i className={`fas ${icon} text-[#25D366] text-xs`} />
         </div>
-        <h3 className="font-bold text-sm md:text-[15px] text-[#1e293b] capitalize">
+        <h3 className="font-bold text-sm md:text-[15px] text-on-surface capitalize">
           {filterKey.replace(/_/g, " ")}
         </h3>
         {selectedValue && (
@@ -289,7 +289,7 @@ export default function Specifications({
   return (
     <div
       className={`
-        p-4 md:p-6 border-b border-[#e2e8f0] transition-all duration-500
+        p-4 md:p-6 border-b border-outline-variant transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
     >
@@ -299,11 +299,11 @@ export default function Specifications({
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 flex items-center justify-center">
             <i className="fas fa-sliders-h text-[#25D366] text-sm" />
           </div>
-          <h2 className="text-base md:text-lg font-extrabold text-[#1e293b]">
+          <h2 className="text-base md:text-lg font-extrabold text-on-surface">
             Select Options
           </h2>
         </div>
-        <span className="text-xs md:text-sm text-[#64748b] font-medium hidden sm:inline">
+        <span className="text-xs md:text-sm text-on-surface-variant font-medium hidden sm:inline">
           Choose your preferences
         </span>
       </div>

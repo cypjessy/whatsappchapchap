@@ -88,9 +88,9 @@ function formatDayLabel(dateStr: string) {
 
 function getStatusConfig(status: string) {
   return STATUS_CONFIG[status] || {
-    bg: "bg-[#f1f5f9]",
-    text: "text-[#64748b]",
-    border: "border-[#e2e8f0]",
+    bg: "bg-surface-variant",
+    text: "text-on-surface-variant",
+    border: "border-outline-variant",
     dot: "bg-[#94a3b8]",
     ring: "ring-[#94a3b8]/30",
   };
@@ -182,10 +182,10 @@ function DateHeader({ group, index }: { group: GroupedBookings; index: number })
       <div className={`
         inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold
         ${group.isToday
-          ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/20"
+          ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/20"
           : group.isTomorrow
             ? "bg-[#ede9fe] text-[#8b5cf6] border border-[#8b5cf6]/20"
-            : "bg-white text-[#64748b] border border-[#e2e8f0]"
+            : "bg-surface text-on-surface-variant border border-outline-variant"
         }
       `}>
         <i className={`fas ${group.isToday ? "fa-calendar-day" : group.isTomorrow ? "fa-calendar-plus" : "fa-calendar"} text-[10px]`} />
@@ -237,7 +237,7 @@ function TimelineItem({
       {/* Timeline dot */}
       <div className="absolute -left-10 md:-left-12 top-3 md:top-4 flex flex-col items-center">
         <div className={`
-          w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border-[2.5px] border-white shadow-sm
+          w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border-[2.5px] border-white shadow-md3-level1
           transition-all duration-300 z-10
           ${statusConfig.dot}
           ${isHovered ? "scale-125 ring-4 " + statusConfig.ring : "scale-100 ring-0"}
@@ -250,7 +250,7 @@ function TimelineItem({
 
       {/* Time label */}
       <div className="absolute -left-14 md:-left-16 w-12 md:w-14 text-right top-3 md:top-4">
-        <span className="text-[10px] md:text-xs font-bold text-[#94a3b8]">
+        <span className="text-[10px] md:text-xs font-bold text-outline">
           {booking?.time || "N/A"}
         </span>
       </div>
@@ -258,11 +258,11 @@ function TimelineItem({
       {/* Card */}
       <div
         className={`
-          bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-3.5 md:p-4 cursor-pointer
+          bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-3.5 md:p-4 cursor-pointer
           transition-all duration-300 ease-out
           ${isHovered
-            ? "border-[#8b5cf6]/30 shadow-lg shadow-[#8b5cf6]/5 -translate-y-0.5"
-            : "shadow-sm hover:shadow-md"
+            ? "border-[#8b5cf6]/30 shadow-md3-level3 shadow-[#8b5cf6]/5 -translate-y-0.5"
+            : "shadow-md3-level1 hover:shadow-md3-level2"
           }
         `}
         onMouseEnter={() => setIsHovered(true)}
@@ -277,7 +277,7 @@ function TimelineItem({
               transition-transform duration-300
               ${booking.verified
                 ? "bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] text-[#8b5cf6]"
-                : "bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-[#64748b]"
+                : "bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-on-surface-variant"
               }
               ${isHovered ? "scale-110" : "scale-100"}
             `}>
@@ -290,7 +290,7 @@ function TimelineItem({
                   <i className="fas fa-badge-check text-[#10b981] text-xs shrink-0" title="Verified" />
                 )}
               </div>
-              <div className="text-[11px] md:text-xs text-[#64748b] flex items-center gap-1">
+              <div className="text-[11px] md:text-xs text-on-surface-variant flex items-center gap-1">
                 <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
                 <span className="truncate">{booking?.phone || "N/A"}</span>
               </div>
@@ -321,16 +321,16 @@ function TimelineItem({
         </div>
 
         {/* Service */}
-        <div className="text-sm text-[#64748b] mb-2.5 md:mb-3 flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-md bg-white flex items-center justify-center shrink-0">
+        <div className="text-sm text-on-surface-variant mb-2.5 md:mb-3 flex items-center gap-1.5">
+          <div className="w-5 h-5 rounded-md bg-surface flex items-center justify-center shrink-0">
             <i className="fas fa-cut text-[#8b5cf6] text-[9px]" />
           </div>
-          <span className="font-medium text-[#475569]">{booking?.service || "N/A"}</span>
+          <span className="font-medium text-on-surface-variant">{booking?.service || "N/A"}</span>
         </div>
 
         {/* Bottom row: Meta + Price + Actions */}
         <div className="flex items-center justify-between pt-2.5 md:pt-3 border-t border-[#f1f5f9]">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-[#94a3b8]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-outline">
             <span className="flex items-center gap-1">
               <i className="fas fa-clock text-[9px]" />
               {booking?.duration || "N/A"}
@@ -370,8 +370,8 @@ function TimelineItem({
               className={`
                 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                 ${isHovered
-                  ? "bg-[#8b5cf6] text-white shadow-sm"
-                  : "bg-[#f1f5f9] text-[#64748b]"
+                  ? "bg-[#8b5cf6] text-white shadow-md3-level1"
+                  : "bg-surface-variant text-on-surface-variant"
                 }
               `}
               aria-label="View"
@@ -387,12 +387,12 @@ function TimelineItem({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-20 text-[#64748b] animate-fadeIn">
+    <div className="flex flex-col items-center justify-center py-16 md:py-20 text-on-surface-variant animate-fadeIn">
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-4 shadow-inner">
         <i className="fas fa-stream text-3xl md:text-4xl text-[#cbd5e1]" />
       </div>
-      <p className="text-base md:text-lg font-bold text-[#475569] mb-1">No bookings found</p>
-      <p className="text-xs md:text-sm text-[#94a3b8] max-w-xs text-center">
+      <p className="text-base md:text-lg font-bold text-on-surface-variant mb-1">No bookings found</p>
+      <p className="text-xs md:text-sm text-outline max-w-xs text-center">
         Your timeline is empty. Bookings will appear here once scheduled.
       </p>
     </div>
@@ -464,7 +464,7 @@ export default function BookingTimeline({
     .mb-6.md\:mb-8 { margin-bottom: 20px !important; }
     
     /* MD3 Timeline Cards */
-    .bg-white.rounded-xl.border { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; border: none !important; margin-bottom: 12px !important; padding: 16px !important; }
+    .bg-surface.rounded-xl.border { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; border: none !important; margin-bottom: 12px !important; padding: 16px !important; }
     
     /* MD3 Status Badges */
     .rounded-full.px-3.py-1.text-xs { border-radius: 16px !important; font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; text-transform: uppercase !important; }
@@ -481,13 +481,13 @@ export default function BookingTimeline({
     .font-bold { font-weight: 600 !important; }
     
     /* MD3 Time Display */
-    .text-sm.text-gray-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    .text-sm.text-on-surface-variant { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
     
     /* MD3 Customer Name */
-    .font-medium.text-gray-900 { color: var(--md-sys-color-on-surface, #1e293b) !important; font-weight: 500 !important; }
+    .font-medium.text-on-surface { color: var(--md-sys-color-on-surface, #1e293b) !important; font-weight: 500 !important; }
     
     /* MD3 Service Name */
-    .text-sm.text-gray-600 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    .text-sm.text-on-surface-variant { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
     
     /* MD3 Price Display */
     .font-bold.text-lg { font-weight: 600 !important; font-size: 18px !important; color: var(--md-sys-color-primary, #8b5cf6) !important; }

@@ -83,7 +83,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
   }, []);
 
   const variantStyles = {
-    default: "bg-white border-[#e2e8f0] text-[#1e293b]",
+    default: "bg-white border-outline-variant text-on-surface",
     destructive: "bg-[#fef2f2] border-[#fecaca] text-[#dc2626]",
     success: "bg-[#f0fdf4] border-[#bbf7d0] text-[#16a34a]",
   };
@@ -101,7 +101,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       className={`
         pointer-events-auto
         ${variantStyles[toast.variant || "default"]}
-        border rounded-xl shadow-lg p-4
+        border rounded-xl shadow-md3-level3 p-4
         transition-all duration-300 ease-out
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"}
       `}

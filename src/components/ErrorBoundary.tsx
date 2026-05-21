@@ -38,8 +38,8 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <i className="fas fa-exclamation-triangle text-red-600 text-2xl" />
             </div>
-            <h3 className="text-lg font-bold text-[#1e293b] mb-2">Something went wrong</h3>
-            <p className="text-sm text-[#64748b] mb-4">
+            <h3 className="text-lg font-bold text-on-surface mb-2">Something went wrong</h3>
+            <p className="text-sm text-on-surface-variant mb-4">
               {this.state.error?.message || "An unexpected error occurred"}
             </p>
             <button

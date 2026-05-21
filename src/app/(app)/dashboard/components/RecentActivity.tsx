@@ -59,8 +59,8 @@ const ACTIVITY_TYPE_CONFIG: Record<string, {
   },
   default: {
     icon: "fa-bell",
-    iconBg: "bg-[#F1F5F9]",
-    iconColor: "text-[#64748B]",
+    iconBg: "bg-surface-variant",
+    iconColor: "text-on-surface-variant",
     borderColor: "border-[#64748B]/20",
   },
 };
@@ -121,7 +121,7 @@ function ActivityRow({
     <div
       className={`
         group flex items-start gap-3 p-3 rounded-xl cursor-pointer
-        transition-all duration-200 hover:bg-[#F8FAFC]
+        transition-all duration-200 hover:bg-surface-container-lowest
         ${activity.isUnread ? "border-l-2 " + config.borderColor : ""}
       `}
       onMouseEnter={() => setIsHovered(true)}
@@ -144,14 +144,14 @@ function ActivityRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="font-medium text-sm text-[#1E293B] leading-snug">
+            <div className="font-medium text-sm text-on-surface leading-snug">
               {activity.message}
               {activity.isUnread && (
                 <span className="inline-block w-2 h-2 rounded-full bg-[#8B5CF6] ml-2 animate-pulse" />
               )}
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[11px] text-[#94A3B8] font-medium">
+              <span className="text-[11px] text-outline font-medium">
                 {relativeTime}
               </span>
               {activity.type && (
@@ -168,7 +168,7 @@ function ActivityRow({
           {/* Expand chevron */}
           {activity.details && (
             <i className={`
-              fas fa-chevron-down text-[10px] text-[#94A3B8] mt-1 transition-transform duration-200 shrink-0
+              fas fa-chevron-down text-[10px] text-outline mt-1 transition-transform duration-200 shrink-0
               ${isExpanded ? "rotate-180" : "rotate-0"}
             `} />
           )}
@@ -178,9 +178,9 @@ function ActivityRow({
         {activity.details && (
           <div className={`
             overflow-hidden transition-all duration-200 ease-out
-            ${isExpanded ? "max-h-40 opacity-100 mt-2 pt-2 border-t border-[#E2E8F0]" : "max-h-0 opacity-0 mt-0 pt-0"}
+            ${isExpanded ? "max-h-40 opacity-100 mt-2 pt-2 border-t border-outline-variant" : "max-h-0 opacity-0 mt-0 pt-0"}
           `}>
-            <p className="text-xs text-[#64748B] leading-relaxed">
+            <p className="text-xs text-on-surface-variant leading-relaxed">
               {activity.details}
             </p>
           </div>
@@ -192,12 +192,12 @@ function ActivityRow({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-10 md:py-12 text-[#64748B] animate-fadeIn">
-      <div className="w-14 h-14 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mb-3">
+    <div className="flex flex-col items-center justify-center py-10 md:py-12 text-on-surface-variant animate-fadeIn">
+      <div className="w-14 h-14 rounded-2xl bg-surface-variant flex items-center justify-center mb-3">
         <i className="fas fa-inbox text-xl text-[#CBD5E1]" />
       </div>
-      <p className="text-sm font-semibold text-[#475569]">No recent activity</p>
-      <p className="text-xs text-[#94A3B8] mt-1">Check back later for updates</p>
+      <p className="text-sm font-semibold text-on-surface-variant">No recent activity</p>
+      <p className="text-xs text-outline mt-1">Check back later for updates</p>
     </div>
   );
 }
@@ -240,18 +240,18 @@ export function RecentActivity({
 
   return (
     <div className={`
-      bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden
+      bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden
       transition-all duration-300
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
       {/* Header - MD3 styling */}
-      <div className="p-4 md:p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+      <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#FEF3C7] flex items-center justify-center">
             <i className="fas fa-bell text-[#F59E0B] text-sm" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm md:text-base text-[#1E293B]">Recent Activity</h3>
+            <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Activity</h3>
             {unreadCount > 0 && (
               <span className="text-[10px] font-semibold text-[#F59E0B]">
                 {unreadCount} unread
@@ -269,7 +269,7 @@ export function RecentActivity({
               View all
             </button>
           )}
-          <span className="text-[10px] font-semibold text-[#94A3B8] bg-[#F1F5F9] px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-semibold text-outline bg-surface-variant px-2.5 py-1 rounded-full">
             {activities.length}
           </span>
         </div>
@@ -300,10 +300,10 @@ export function RecentActivity({
 
       {/* Footer - MD3 styling */}
       {!loading && activities.length > 0 && showViewAll && onViewAll && (
-        <div className="p-3 border-t border-[#E2E8F0] text-center">
+        <div className="p-3 border-t border-outline-variant text-center">
           <button
             onClick={onViewAll}
-            className="text-xs font-semibold text-[#64748B] hover:text-[#8B5CF6] transition-colors flex items-center justify-center gap-1.5 w-full py-1"
+            className="text-xs font-semibold text-on-surface-variant hover:text-[#8B5CF6] transition-colors flex items-center justify-center gap-1.5 w-full py-1"
           >
             View all activity
             <i className="fas fa-arrow-right text-[10px]" />

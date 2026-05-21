@@ -28,11 +28,11 @@ interface CustomerFiltersProps {
 // ─── Constants ─────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Status", icon: "fa-users", color: "text-[#64748b]" },
+  { value: "all", label: "All Status", icon: "fa-users", color: "text-on-surface-variant" },
   { value: "active", label: "Active", icon: "fa-check-circle", color: "text-[#10b981]" },
   { value: "new", label: "New", icon: "fa-star", color: "text-[#3b82f6]" },
   { value: "vip", label: "VIP", icon: "fa-crown", color: "text-[#f59e0b]" },
-  { value: "inactive", label: "Inactive", icon: "fa-moon", color: "text-[#64748b]" },
+  { value: "inactive", label: "Inactive", icon: "fa-moon", color: "text-on-surface-variant" },
 ] as const;
 
 const SORT_OPTIONS = [
@@ -74,14 +74,14 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border-2 transition-all duration-200
           ${isFocused
-            ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-white"
-            : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+            ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+            : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
       >
         <i className={`
           fas fa-search absolute left-3.5 text-sm transition-colors duration-200
-          ${isFocused ? "text-[#25D366]" : "text-[#94a3b8]"}
+          ${isFocused ? "text-[#25D366]" : "text-outline"}
         `} />
         <input
           ref={inputRef}
@@ -91,7 +91,7 @@ function SearchInput({
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="w-full pl-10 pr-9 py-2.5 md:py-3 bg-transparent text-sm font-medium placeholder:text-[#94a3b8] focus:outline-none rounded-xl"
+          className="w-full pl-10 pr-9 py-2.5 md:py-3 bg-transparent text-sm font-medium placeholder:text-outline focus:outline-none rounded-xl"
         />
         {value && (
           <button
@@ -99,7 +99,7 @@ function SearchInput({
               onChange("");
               inputRef.current?.focus();
             }}
-            className="absolute right-3 w-5 h-5 rounded-full bg-[#e2e8f0] text-[#64748b] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all duration-150"
+            className="absolute right-3 w-5 h-5 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all duration-150"
           >
             <i className="fas fa-times text-[9px]" />
           </button>
@@ -151,23 +151,23 @@ function CustomSelect({
           w-full flex items-center gap-2 px-3 py-2.5 md:py-3 rounded-xl border-2 text-sm font-medium
           transition-all duration-200 text-left
           ${isFocused || isOpen
-            ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-white"
-            : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+            ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+            : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
       >
-        <i className={`fas ${icon} ${isFocused || isOpen ? "text-[#25D366]" : "text-[#94a3b8]"} text-xs`} />
-        <span className={value ? "text-[#1e293b]" : "text-[#94a3b8]"}>
+        <i className={`fas ${icon} ${isFocused || isOpen ? "text-[#25D366]" : "text-outline"} text-xs`} />
+        <span className={value ? "text-on-surface" : "text-outline"}>
           {selectedOption?.label || placeholder}
         </span>
         <i className={`
           fas fa-chevron-down ml-auto text-[10px] transition-transform duration-200
-          ${isOpen ? "rotate-180 text-[#25D366]" : "text-[#94a3b8]"}
+          ${isOpen ? "rotate-180 text-[#25D366]" : "text-outline"}
         `} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-[#e2e8f0] shadow-xl z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface rounded-xl border border-outline-variant shadow-md3-level4 z-50 overflow-hidden animate-fadeIn">
           {options.map((option) => (
             <button
               key={option.value}
@@ -177,12 +177,12 @@ function CustomSelect({
               }}
               className={`
                 w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium
-                transition-colors hover:bg-white
-                ${value === option.value ? "bg-[#DCF8C6]/30 text-[#25D366] font-bold" : "text-[#475569]"}
+                transition-colors hover:bg-surface-container-highest
+                ${value === option.value ? "bg-[#DCF8C6]/30 text-[#25D366] font-bold" : "text-on-surface-variant"}
               `}
             >
               {option.icon && (
-                <i className={`fas ${option.icon} ${option.color || "text-[#94a3b8]"} text-xs w-4 text-center`} />
+                <i className={`fas ${option.icon} ${option.color || "text-outline"} text-xs w-4 text-center`} />
               )}
               {option.label}
               {value === option.value && (
@@ -215,13 +215,13 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200
         ${startFocused
-          ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-white"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+          ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+          : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
         <i className={`
           fas fa-calendar-alt absolute left-3 text-xs transition-colors
-          ${startFocused ? "text-[#25D366]" : "text-[#94a3b8]"}
+          ${startFocused ? "text-[#25D366]" : "text-outline"}
         `} />
         <input
           type="date"
@@ -229,7 +229,7 @@ function DateRangePicker({
           onChange={(e) => onStartChange(e.target.value)}
           onFocus={() => setStartFocused(true)}
           onBlur={() => setStartFocused(false)}
-          className="w-full pl-8 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-[#1e293b]"
+          className="w-full pl-8 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-on-surface"
         />
       </div>
 
@@ -240,13 +240,13 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200
         ${endFocused
-          ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-white"
-          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+          ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+          : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
         <i className={`
           fas fa-calendar-alt absolute left-3 text-xs transition-colors
-          ${endFocused ? "text-[#25D366]" : "text-[#94a3b8]"}
+          ${endFocused ? "text-[#25D366]" : "text-outline"}
         `} />
         <input
           type="date"
@@ -254,7 +254,7 @@ function DateRangePicker({
           onChange={(e) => onEndChange(e.target.value)}
           onFocus={() => setEndFocused(true)}
           onBlur={() => setEndFocused(false)}
-          className="w-full pl-8 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-[#1e293b]"
+          className="w-full pl-8 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-on-surface"
         />
       </div>
     </div>
@@ -275,26 +275,26 @@ function PriceRange({
   return (
     <div className="flex items-center gap-2">
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs font-bold">KES</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xs font-bold">KES</span>
         <input
           type="number"
           placeholder="Min"
           value={min}
           onChange={(e) => onMinChange(e.target.value ? Number(e.target.value) : "")}
-          className="w-24 pl-9 pr-3 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] bg-white text-sm font-medium focus:border-[#25D366] focus:outline-none focus:bg-white transition-all"
+          className="w-24 pl-9 pr-3 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant bg-surface text-sm font-medium focus:border-[#25D366] focus:outline-none focus:bg-surface transition-all"
         />
       </div>
       <div className="flex items-center justify-center w-4 shrink-0">
         <div className="w-2 h-[2px] bg-[#cbd5e1] rounded-full" />
       </div>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs font-bold">KES</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xs font-bold">KES</span>
         <input
           type="number"
           placeholder="Max"
           value={max}
           onChange={(e) => onMaxChange(e.target.value ? Number(e.target.value) : "")}
-          className="w-24 pl-9 pr-3 py-2.5 md:py-3 rounded-xl border-2 border-[#e2e8f0] bg-white text-sm font-medium focus:border-[#25D366] focus:outline-none focus:bg-white transition-all"
+          className="w-24 pl-9 pr-3 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant bg-surface text-sm font-medium focus:border-[#25D366] focus:outline-none focus:bg-surface transition-all"
         />
       </div>
     </div>
@@ -396,20 +396,20 @@ export default function CustomerFilters({
 
   return (
     <>
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden mb-3 md:mb-6 shadow-sm">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden mb-3 md:mb-6 shadow-md3-level1">
         {/* Main bar */}
         <div className="p-3 md:p-4">
           {/* Mobile: Compact toolbar */}
           <div className="flex items-center gap-2 lg:hidden">
             {/* Search input */}
             <div className="relative flex-1 min-w-0">
-              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#94a3b8]" />
+              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-outline" />
               <input
                 type="text"
                 placeholder="Search customers..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl text-sm font-medium placeholder:text-[#94a3b8] focus:border-[#25D366] focus:outline-none"
+                className="w-full pl-9 pr-3 py-2.5 bg-surface border-2 border-outline-variant rounded-xl text-sm font-medium placeholder:text-outline focus:border-[#25D366] focus:outline-none"
               />
             </div>
 
@@ -420,7 +420,7 @@ export default function CustomerFilters({
                 relative flex items-center justify-center w-10 h-10 rounded-xl border-2 shrink-0 transition-all active:scale-95
                 ${hasActiveFilters
                   ? "border-[#25D366] bg-[#DCF8C6] text-[#25D366]"
-                  : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#25D366]"
+                  : "border-outline-variant bg-surface text-on-surface-variant hover:border-[#25D366]"
                 }
               `}
               aria-label="Open filters"
@@ -436,7 +436,7 @@ export default function CustomerFilters({
             {/* Broadcast button */}
             <button
               onClick={onBroadcast}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shrink-0 active:scale-95 transition-all"
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2 shrink-0 active:scale-95 transition-all"
               aria-label="Broadcast message"
             >
               <i className="fas fa-broadcast-tower text-sm" />
@@ -480,13 +480,13 @@ export default function CustomerFilters({
               className={`
                 flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm
                 transition-all duration-200 active:scale-95 shrink-0
-                bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 hover:shadow-lg
+                bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2 shadow-[#25D366]/20 hover:shadow-md3-level3
               `}
             >
               <i className="fas fa-broadcast-tower" />
               <span>Broadcast</span>
               {filteredCount !== undefined && (
-                <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[10px]">
+                <span className="ml-1 px-1.5 py-0.5 bg-surface/20 rounded-full text-[10px]">
                   {filteredCount}
                 </span>
               )}
@@ -498,14 +498,14 @@ export default function CustomerFilters({
         {hasActiveFilters && (
           <div className="px-3 md:px-4 pb-3 md:pb-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] md:text-xs font-bold text-[#94a3b8] uppercase tracking-wider mr-1">
+              <span className="text-[10px] md:text-xs font-bold text-outline uppercase tracking-wider mr-1">
                 Active:
               </span>
               {getActiveFilters().slice(0, 3).map((filter, idx) => (
                 <ActiveFilterPill key={idx} label={filter.label} onRemove={filter.onRemove} />
               ))}
               {getActiveFilters().length > 3 && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-[#f1f5f9] text-[#64748b]">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-surface-variant text-on-surface-variant">
                   +{getActiveFilters().length - 3} more
                 </span>
               )}
@@ -522,7 +522,7 @@ export default function CustomerFilters({
         {/* Results count */}
         {filteredCount !== undefined && (
           <div className="px-3 md:px-4 pb-3 md:pb-4 pt-0 -mt-1">
-            <span className="text-xs text-[#94a3b8] font-medium">
+            <span className="text-xs text-outline font-medium">
               Showing {filteredCount} of {totalCustomers} customers
             </span>
           </div>

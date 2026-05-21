@@ -185,8 +185,8 @@ function ActionCard({
       <TouchRipple href={action.href} className="h-full">
         <div
           className={`
-            bg-white rounded-2xl border border-[#E2E8F0] p-4 md:p-5 text-center h-full
-            shadow-sm hover:shadow-md hover:border-[#CBD5E1]
+            bg-surface rounded-2xl border border-outline-variant p-4 md:p-5 text-center h-full
+            shadow-md3-level1 hover:shadow-md3-level2 hover:border-outline-variant
             hover:-translate-y-0.5 active:translate-y-0
             transition-all duration-200 ease-out
             flex flex-col items-center justify-center
@@ -199,8 +199,8 @@ function ActionCard({
                 w-12 h-12 md:w-14 md:h-14 mx-auto rounded-2xl
                 ${action.gradient}
                 flex items-center justify-center
-                shadow-md ${action.shadowColor}
-                group-hover:scale-105 group-hover:shadow-lg
+                shadow-md3-level2 ${action.shadowColor}
+                group-hover:scale-105 group-hover:shadow-md3-level3
                 transition-all duration-200
               `}
             >
@@ -216,7 +216,7 @@ function ActionCard({
                   ${action.badgeColor || "bg-[#EF4444]"} text-white
                   text-[10px] font-bold rounded-full
                   flex items-center justify-center
-                  border-2 border-white shadow-sm
+                  border-2 border-white shadow-md3-level1
                   animate-badgePop
                 `}
               >
@@ -226,12 +226,12 @@ function ActionCard({
           </div>
 
           {/* Label - MD3 typography */}
-          <div className="font-semibold text-sm md:text-base text-[#1E293B] group-hover:text-[#25D366] transition-colors duration-200">
+          <div className="font-semibold text-sm md:text-base text-on-surface group-hover:text-[#25D366] transition-colors duration-200">
             {action.label}
           </div>
 
           {/* Sublabel - MD3 body style */}
-          <div className="text-[11px] md:text-xs text-[#94A3B8] mt-0.5 font-medium">
+          <div className="text-[11px] md:text-xs text-outline mt-0.5 font-medium">
             {action.id === "orders" && displayBadge !== undefined
               ? `${displayBadge} pending`
               : action.sublabel}

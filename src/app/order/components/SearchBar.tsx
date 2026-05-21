@@ -31,10 +31,10 @@ function SearchSkeleton() {
     <div className="p-4 space-y-3">
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex items-center gap-3 animate-pulse">
-          <div className="w-12 h-12 rounded-lg bg-[#f1f5f9] shrink-0" />
+          <div className="w-12 h-12 rounded-lg bg-surface-variant shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-[#f1f5f9] rounded-lg w-3/4" />
-            <div className="h-3 bg-[#f1f5f9] rounded-lg w-1/2" />
+            <div className="h-4 bg-surface-variant rounded-lg w-3/4" />
+            <div className="h-3 bg-surface-variant rounded-lg w-1/2" />
           </div>
         </div>
       ))}
@@ -44,12 +44,12 @@ function SearchSkeleton() {
 
 function EmptyState({ query }: { query: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-8 text-[#64748b] animate-fadeIn">
-      <div className="w-14 h-14 rounded-2xl bg-[#f1f5f9] flex items-center justify-center mb-3">
+    <div className="flex flex-col items-center justify-center py-8 text-on-surface-variant animate-fadeIn">
+      <div className="w-14 h-14 rounded-2xl bg-surface-variant flex items-center justify-center mb-3">
         <i className="fas fa-search text-xl text-[#cbd5e1]" />
       </div>
       <p className="text-sm font-semibold">No products found</p>
-      <p className="text-xs text-[#94a3b8] mt-1 max-w-[200px] text-center">
+      <p className="text-xs text-outline mt-1 max-w-[200px] text-center">
         No results for &quot;{query}&quot;. Try a different search term.
       </p>
     </div>
@@ -84,7 +84,7 @@ function SearchResultItem({
     const parts = text.split(regex);
     return parts.map((part, i) =>
       regex.test(part) ? (
-        <span key={i} className="bg-[#25D366]/20 text-[#1e293b] font-bold rounded px-0.5">
+        <span key={i} className="bg-[#25D366]/20 text-on-surface font-bold rounded px-0.5">
           {part}
         </span>
       ) : (
@@ -99,7 +99,7 @@ function SearchResultItem({
         flex items-center gap-3 p-3 md:p-3.5 cursor-pointer border-b border-[#f1f5f9] last:border-b-0
         transition-all duration-200
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
-        ${isHovered ? "bg-[#f8fafc]" : "bg-white"}
+        ${isHovered ? "bg-surface-container-lowest" : "bg-white"}
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -108,7 +108,7 @@ function SearchResultItem({
     >
       {/* Thumbnail */}
       {thumb ? (
-        <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#f8fafc]">
+        <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-surface-container-lowest">
           <img
             src={thumb}
             alt={product.name}
@@ -117,17 +117,17 @@ function SearchResultItem({
           />
         </div>
       ) : (
-        <div className="w-12 h-12 rounded-lg bg-[#f1f5f9] flex items-center justify-center text-xl shrink-0">
+        <div className="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-xl shrink-0">
           📦
         </div>
       )}
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm text-[#1e293b] truncate">
+        <div className="font-semibold text-sm text-on-surface truncate">
           {highlightMatch(product.name)}
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-[#64748b]">
+        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-on-surface-variant">
           {product.category && (
             <span className="truncate">{product.category}</span>
           )}
@@ -289,7 +289,7 @@ export default function SearchBar({
   const hasResults = searchResults.length > 0;
 
   return (
-    <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#e2e8f0]">
+    <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant">
       <div className="max-w-2xl mx-auto px-4 py-3 md:py-4">
         <div ref={searchContainerRef} className="relative">
           {/* Search Input */}
@@ -298,7 +298,7 @@ export default function SearchBar({
               relative flex items-center rounded-xl md:rounded-2xl border-2 transition-all duration-200 bg-white
               ${isFocused
                 ? "border-[#3b82f6] shadow-lg shadow-[#3b82f6]/10"
-                : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+                : "border-outline-variant hover:border-outline-variant"
               }
             `}
           >
@@ -309,7 +309,7 @@ export default function SearchBar({
                 <i
                   className={`
                     fas fa-search text-sm transition-colors duration-200
-                    ${isFocused ? "text-[#3b82f6]" : "text-[#94a3b8]"}
+                    ${isFocused ? "text-[#3b82f6]" : "text-outline"}
                   `}
                 />
               )}
@@ -324,7 +324,7 @@ export default function SearchBar({
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               onKeyDown={handleKeyDown}
-              className="w-full py-2.5 md:py-3 pr-10 bg-transparent text-sm md:text-[15px] outline-none placeholder:text-[#94a3b8] rounded-xl"
+              className="w-full py-2.5 md:py-3 pr-10 bg-transparent text-sm md:text-[15px] outline-none placeholder:text-outline rounded-xl"
               autoComplete="off"
             />
 
@@ -336,7 +336,7 @@ export default function SearchBar({
                   absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full
                   flex items-center justify-center
                   transition-all duration-150 active:scale-90
-                  bg-[#f1f5f9] text-[#64748b] hover:bg-[#ef4444] hover:text-white
+                  bg-surface-variant text-on-surface-variant hover:bg-[#ef4444] hover:text-white
                 `}
                 aria-label="Clear search"
               >
@@ -350,7 +350,7 @@ export default function SearchBar({
             <div
               className={`
                 absolute top-full left-0 right-0 mt-2 rounded-xl md:rounded-2xl
-                bg-white border-2 border-[#e2e8f0] shadow-2xl shadow-black/10
+                bg-white border-2 border-outline-variant shadow-2xl shadow-black/10
                 max-h-[60vh] md:max-h-[400px] overflow-y-auto overflow-x-hidden
                 animate-fadeIn
               `}
@@ -358,12 +358,12 @@ export default function SearchBar({
               {/* Header */}
               {!isSearching && hasResults && (
                 <div className="sticky top-0 z-10 px-4 py-2.5 bg-white/95 backdrop-blur-sm border-b border-[#f1f5f9] flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-outline uppercase tracking-wider">
                     Found {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
                   </span>
                   <button
                     onClick={() => setShowSearchResults(false)}
-                    className="text-[10px] font-bold text-[#64748b] hover:text-[#ef4444] transition-colors"
+                    className="text-[10px] font-bold text-on-surface-variant hover:text-[#ef4444] transition-colors"
                   >
                     Close
                   </button>

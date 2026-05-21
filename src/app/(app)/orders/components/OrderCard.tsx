@@ -62,7 +62,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`flex-1 min-w-0 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${color} hover:shadow-sm`}
+      className={`flex-1 min-w-0 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${color} hover:shadow-md3-level1`}
       onClick={onClick}
       disabled={loading}
     >
@@ -104,7 +104,7 @@ function DropdownMenu({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn"
+      className="absolute right-0 top-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-md3-level2 z-20 w-48 overflow-hidden animate-fadeIn"
     >
       {children}
     </div>
@@ -114,7 +114,7 @@ function DropdownMenu({
 function DropdownItem({
   icon,
   label,
-  color = "text-[#64748B]",
+  color = "text-on-surface-variant",
   onClick,
   disabled,
 }: {
@@ -129,7 +129,7 @@ function DropdownItem({
       className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-left ${
         disabled
           ? "opacity-40 cursor-not-allowed"
-          : "hover:bg-[#F8FAFC] active:bg-[#F1F5F9]"
+          : "hover:bg-surface-container-lowest active:bg-surface-variant"
       } ${color}`}
       onClick={onClick}
       disabled={disabled}
@@ -391,7 +391,7 @@ export default function OrderCard({
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 top-full mt-1 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 top-full mt-1 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-xl shadow-md3-level2 z-20 w-48 overflow-hidden animate-fadeIn">
               {/* Edit - Only for non-finalized orders */}
               {onEditOrder && !["delivered", "cancelled", "refunded"].includes(order.status) && (
                 <button

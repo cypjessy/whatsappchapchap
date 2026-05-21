@@ -108,7 +108,7 @@ function getStepValidation(step: number, form: ServiceFormData): boolean {
 
 function StepIndicator({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
   return (
-    <div className="flex items-center justify-between px-2 md:px-6 py-4 border-b border-[#e2e8f0] bg-white overflow-x-auto">
+    <div className="flex items-center justify-between px-2 md:px-6 py-4 border-b border-outline-variant bg-surface overflow-x-auto">
       {WIZARD_STEPS.map((step, idx) => {
         const isActive = step.id === currentStep;
         const isCompleted = step.id < currentStep;
@@ -122,10 +122,10 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
                   w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center
                   text-xs md:text-sm font-bold transition-all duration-300
                   ${isActive
-                    ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25 scale-110"
+                    ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/25 scale-110"
                     : isCompleted
                       ? "bg-[#10b981] text-white"
-                      : "bg-[#e2e8f0] text-[#94a3b8]"
+                      : "bg-surface-variant text-outline"
                   }
                 `}
               >
@@ -138,7 +138,7 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
               <span
                 className={`
                   text-[9px] md:text-[10px] font-bold uppercase tracking-wider transition-colors
-                  ${isActive ? "text-[#8b5cf6]" : isCompleted ? "text-[#10b981]" : "text-[#94a3b8]"}
+                  ${isActive ? "text-[#8b5cf6]" : isCompleted ? "text-[#10b981]" : "text-outline"}
                 `}
               >
                 {step.label}
@@ -148,7 +148,7 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
               <div
                 className={`
                   w-4 md:w-8 h-[2px] mx-1 md:mx-2 rounded-full transition-colors duration-300 shrink-0
-                  ${isCompleted ? "bg-[#10b981]" : "bg-[#e2e8f0]"}
+                  ${isCompleted ? "bg-[#10b981]" : "bg-surface-variant"}
                 `}
               />
             )}
@@ -205,7 +205,7 @@ function ToggleSwitch({ label, checked, onChange }: {
       >
         <div
           className={`
-            absolute top-1 w-6 h-6 bg-white rounded-full shadow-md
+            absolute top-1 w-6 h-6 bg-surface rounded-full shadow-md3-level2
             transition-transform duration-200
             ${checked ? "translate-x-7" : "translate-x-1"}
           `}
@@ -236,10 +236,10 @@ function SpecButton({
         px-3 py-1.5 md:px-4 md:py-2 rounded-full border-2 text-xs md:text-sm font-semibold transition-all duration-200
         active:scale-95 flex items-center gap-1.5
         ${selected
-          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md"
+          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level2"
           : isCustom
-            ? "border-dashed border-[#cbd5e1] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
-            : "border-[#e2e8f0] text-[#475569] hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-white"
+            ? "border-dashed border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+            : "border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-surface"
         }
       `}
     >
@@ -774,13 +774,13 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               className={`
                 relative p-3 md:p-4 rounded-xl border-2 transition-all duration-200 text-center
                 ${form.businessType === category.id
-                  ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
-                  : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:shadow-sm"
+                  ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md3-level2 shadow-[#8b5cf6]/10"
+                  : "border-outline-variant bg-surface hover:border-outline-variant hover:shadow-md3-level1"
                 }
               `}
             >
               <div className="text-2xl md:text-3xl mb-1.5">{category.icon}</div>
-              <div className="text-xs md:text-sm font-bold text-[#475569] line-clamp-2">{category.name}</div>
+              <div className="text-xs md:text-sm font-bold text-on-surface-variant line-clamp-2">{category.name}</div>
               {form.businessType === category.id && (
                 <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#8b5cf6] rounded-full flex items-center justify-center">
                   <i className="fas fa-check text-white text-[9px]" />
@@ -801,7 +801,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     
     if (subcategories.length === 0) {
       return (
-        <div className="text-center py-12 text-[#64748b]">
+        <div className="text-center py-12 text-on-surface-variant">
           <i className="fas fa-layer-group text-4xl mb-3 opacity-50" />
           <p>No subcategories available for this service type</p>
           <p className="text-xs mt-1">You can proceed to specifications</p>
@@ -832,7 +832,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
   const renderStep4 = () => {
     if (!form.businessType || !form.subcategoryKey) {
       return (
-        <div className="text-center py-12 text-[#64748b]">
+        <div className="text-center py-12 text-on-surface-variant">
           <i className="fas fa-sliders-h text-4xl mb-3 opacity-50" />
           <p>Please select a category and subcategory first</p>
         </div>
@@ -843,7 +843,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     
     if (!specs || Object.keys(specs).length === 0) {
       return (
-        <div className="text-center py-12 text-[#64748b]">
+        <div className="text-center py-12 text-on-surface-variant">
           <i className="fas fa-cogs text-4xl mb-3 opacity-50" />
           <p>No specifications available for this service</p>
           <p className="text-xs mt-1">You can still proceed to pricing</p>
@@ -860,14 +860,14 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               const isMultiple = spec.multiple !== false; // Default to true
               
               return (
-                <div key={specKey} className="bg-white rounded-xl p-4 border border-[#e2e8f0]">
+                <div key={specKey} className="bg-surface rounded-xl p-4 border border-outline-variant">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white text-xs">
                       <i className={`fas ${spec.icon}`} />
                     </div>
-                    <span className="font-bold text-sm text-[#475569]">{spec.label}</span>
+                    <span className="font-bold text-sm text-on-surface-variant">{spec.label}</span>
                     {isMultiple && (
-                      <span className="text-[10px] bg-[#e2e8f0] px-2 py-0.5 rounded-full text-[#64748b]">
+                      <span className="text-[10px] bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant">
                         Multi-select
                       </span>
                     )}
@@ -929,7 +929,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                           setActiveCustomSpec(null);
                           setTempCustomValue("");
                         }}
-                        className="px-3 py-2 bg-[#e2e8f0] text-[#64748b] rounded-lg hover:bg-[#cbd5e1] transition-colors"
+                        className="px-3 py-2 bg-surface-variant text-on-surface-variant rounded-lg hover:bg-[#cbd5e1] transition-colors"
                       >
                         <i className="fas fa-times" />
                       </button>
@@ -959,8 +959,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               className={`
                 relative p-4 md:p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
                 ${form.tier === tier.key
-                  ? "border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/10"
-                  : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+                  ? "border-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/10"
+                  : "border-outline-variant hover:border-outline-variant"
                 }
               `}
             >
@@ -970,7 +970,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               `}>
                 {tier.badge}
               </div>
-              <div className="text-sm font-bold text-[#475569] mb-3 mt-1">{tier.label} Package</div>
+              <div className="text-sm font-bold text-on-surface-variant mb-3 mt-1">{tier.label} Package</div>
               <div className="relative md3-input-outlined mt-2">
                 <span className="absolute left-4 top-0 text-[var(--md-sys-color-on-surface-variant)] text-sm font-medium pointer-events-none bg-[var(--md-sys-color-surface)] px-1 z-10">KES</span>
                 <input
@@ -989,22 +989,22 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               <div className="mt-3 space-y-1.5">
                 {tier.key === "basic" && (
                   <>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Core service included</div>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Professional quality</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Core service included</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Professional quality</div>
                   </>
                 )}
                 {tier.key === "standard" && (
                   <>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Everything in Basic</div>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Priority scheduling</div>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Enhanced support</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Everything in Basic</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Priority scheduling</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Enhanced support</div>
                   </>
                 )}
                 {tier.key === "premium" && (
                   <>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Everything in Standard</div>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> VIP treatment</div>
-                    <div className="text-[11px] text-[#64748b] flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> 24/7 support</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> Everything in Standard</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> VIP treatment</div>
+                    <div className="text-[11px] text-on-surface-variant flex items-center gap-1"><i className="fas fa-check text-[#10b981] text-[9px]" /> 24/7 support</div>
                   </>
                 )}
               </div>
@@ -1034,8 +1034,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                       w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 flex flex-col items-center justify-center
                       transition-all duration-200 text-xs font-bold
                       ${form.days.has(day)
-                        ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6] shadow-sm"
-                        : "border-[#e2e8f0] bg-white text-[#94a3b8] hover:border-[#cbd5e1]"
+                        ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6] shadow-md3-level1"
+                        : "border-outline-variant bg-surface text-outline hover:border-outline-variant"
                       }
                     `}
                   >
@@ -1057,7 +1057,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                       transition-all duration-200
                       ${form.times.has(time)
                         ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6]"
-                        : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+                        : "border-outline-variant bg-surface text-on-surface-variant hover:border-outline-variant"
                       }
                     `}
                   >
@@ -1066,7 +1066,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                 ))}
               </div>
               {form.times.size === 0 && (
-                <p className="text-[11px] text-[#94a3b8] mt-2">Default slots will be used if none selected</p>
+                <p className="text-[11px] text-outline mt-2">Default slots will be used if none selected</p>
               )}
             </div>
           </div>
@@ -1092,7 +1092,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                 transition-all duration-200
                 ${form.mode === mode.key
                   ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6]"
-                  : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+                  : "border-outline-variant bg-surface text-on-surface-variant hover:border-outline-variant"
                 }
               `}
             >
@@ -1118,7 +1118,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                 flex items-center gap-2.5 p-3 md:p-4 rounded-xl border-2 transition-all duration-200
                 ${form.location === loc.key
                   ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6]"
-                  : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+                  : "border-outline-variant bg-surface text-on-surface-variant hover:border-outline-variant"
                 }
               `}
             >
@@ -1142,7 +1142,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                   transition-all duration-200
                   ${form.duration === val
                     ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6]"
-                    : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+                    : "border-outline-variant bg-surface text-on-surface-variant hover:border-outline-variant"
                   }
                 `}
               >
@@ -1166,7 +1166,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       </FormSection>
 
       <FormSection title="Booking Policy" icon="fa-shield-alt">
-        <div className="bg-white rounded-xl p-3 md:p-4 space-y-1">
+        <div className="bg-surface rounded-xl p-3 md:p-4 space-y-1">
           <ToggleSwitch label="Require Deposit" checked={form.deposit} onChange={(v) => updateForm("deposit", v)} />
           <ToggleSwitch label="Allow Rescheduling" checked={form.rescheduling} onChange={(v) => updateForm("rescheduling", v)} />
           <ToggleSwitch label="24h Cancellation Notice" checked={form.cancellationNotice} onChange={(v) => updateForm("cancellationNotice", v)} />
@@ -1197,7 +1197,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               key={i}
               className={`
                 relative aspect-square rounded-xl border-2 overflow-hidden transition-all duration-200
-                ${dragOverIndex === i ? "border-[#8b5cf6] bg-[#ede9fe] scale-105" : "border-[#e2e8f0]"}
+                ${dragOverIndex === i ? "border-[#8b5cf6] bg-[#ede9fe] scale-105" : "border-outline-variant"}
               `}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -1215,7 +1215,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                   />
                   <button
                     onClick={() => removeImage(i)}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#ef4444] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#ef4444] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md3-level2"
                   >
                     <i className="fas fa-times text-xs" />
                   </button>
@@ -1223,7 +1223,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
                   <label
-                    className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-[#94a3b8] hover:text-[#8b5cf6] hover:bg-white transition-all cursor-pointer"
+                    className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-outline hover:text-[#8b5cf6] hover:bg-surface transition-all cursor-pointer"
                   >
                     <i className="fas fa-plus text-lg" />
                     <span className="text-[10px] font-semibold">Upload</span>
@@ -1257,7 +1257,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+        className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-md3-level4 hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
       >
         <i className="fas fa-plus mr-2" />
         Add Service
@@ -1266,25 +1266,25 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       {isOpen && (
         <div className="fixed inset-0 md3-dialog-backdrop z-50 flex items-center justify-center p-2 md:p-4">
           <div
-            className="md3-dialog w-full max-w-3xl my-2 md:my-8 bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+            className="md3-dialog w-full max-w-3xl my-2 md:my-8 bg-surface rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-white rounded-t-2xl border-b border-[#e2e8f0]">
+            <div className="sticky top-0 z-10 bg-surface rounded-t-2xl border-b border-outline-variant">
               <div className="flex items-center justify-between px-6 py-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-md3-level3">
                     <i className="fas fa-plus text-lg" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-normal text-[#1e293b] leading-tight">Add New Service</h2>
-                    <p className="text-xs text-[#64748b] mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
+                    <h2 className="text-xl font-normal text-on-surface leading-tight">Add New Service</h2>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
                   disabled={isSaving || isUploading}
-                  className="w-10 h-10 rounded-full bg-transparent text-[#64748b] flex items-center justify-center hover:bg-[#f1f5f9] transition-all duration-200 active:scale-95"
+                  className="w-10 h-10 rounded-full bg-transparent text-on-surface-variant flex items-center justify-center hover:bg-surface-variant transition-all duration-200 active:scale-95"
                 >
                   <i className="fas fa-times" />
                 </button>
@@ -1306,7 +1306,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
             </div>
 
             {/* Footer - Always Visible */}
-            <div className="md3-dialog-actions sticky bottom-0 bg-white border-t border-[#e2e8f0] px-6 py-4 rounded-b-2xl">
+            <div className="md3-dialog-actions sticky bottom-0 bg-surface border-t border-outline-variant px-6 py-4 rounded-b-2xl">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 1 || isSaving || isUploading}
@@ -1358,7 +1358,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                 <button
                   onClick={capturePhoto}
-                  className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                  className="w-16 h-16 rounded-full bg-surface shadow-md3-level3 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 >
                   <div className="w-14 h-14 rounded-full border-4 border-[#8b5cf6]" />
                 </button>
@@ -1371,26 +1371,26 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       {/* Close Confirmation Modal */}
       {showCloseConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2500] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 md:p-8 shadow-2xl animate-scaleIn">
+          <div className="bg-surface rounded-2xl w-full max-w-md p-6 md:p-8 shadow-2xl animate-scaleIn">
             <div className="text-center mb-6">
               <div className="w-16 h-16 rounded-full bg-[#f59e0b]/10 flex items-center justify-center mx-auto mb-4">
                 <i className="fas fa-exclamation-triangle text-2xl text-[#f59e0b]" />
               </div>
-              <h3 className="text-xl font-extrabold text-[#1e293b] mb-2">Discard Changes?</h3>
-              <p className="text-sm text-[#64748b] leading-relaxed">
+              <h3 className="text-xl font-extrabold text-on-surface mb-2">Discard Changes?</h3>
+              <p className="text-sm text-on-surface-variant leading-relaxed">
                 Close without saving? All progress will be lost.
               </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={cancelClose}
-                className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all duration-200 active:scale-95"
+                className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all duration-200 active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmClose}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md shadow-[#ef4444]/20 hover:shadow-lg active:scale-95 transition-all duration-200"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md3-level2 shadow-[#ef4444]/20 hover:shadow-md3-level3 active:scale-95 transition-all duration-200"
               >
                 <i className="fas fa-times mr-2" />
                 Discard

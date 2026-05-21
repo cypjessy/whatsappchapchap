@@ -161,8 +161,8 @@ function formatTime(createdAt: any): string {
 function getStatusBadge(status?: string) {
   return (
     STATUS_BADGES[status || "pending"] || {
-      bg: "bg-white",
-      color: "text-gray-600",
+      bg: "bg-surface",
+      color: "text-on-surface-variant",
       label: "Unknown",
       icon: "fa-circle",
     }
@@ -996,13 +996,13 @@ export default function OrdersPage() {
       {/* Desktop Header — hidden on mobile, TopBar handles mobile */}
       <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-6 pt-4" style={{ animationDelay: '0.1s' }}>
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[#1e293b] flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md3-level3">
               <i className="fas fa-shopping-bag" />
             </div>
             Orders
           </h1>
-          <p className="text-[#64748b] text-sm mt-1">
+          <p className="text-on-surface-variant text-sm mt-1">
             Track and manage your WhatsApp orders
           </p>
         </div>
@@ -1011,7 +1011,7 @@ export default function OrdersPage() {
             href={`/order?tenant=${user?.uid}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
           >
             <i className="fas fa-store" />
             <span>View Store</span>
@@ -1019,14 +1019,14 @@ export default function OrdersPage() {
           {selectedOrders.size > 0 && (
             <>
               <button
-                className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center gap-2"
                 onClick={() => handleBulkUpdateStatus("delivered")}
               >
                 <i className="fas fa-check" />
                 <span>Complete ({selectedOrders.size})</span>
               </button>
               <button
-                className="px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                className="px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center gap-2"
                 onClick={() => handleBulkUpdateStatus("cancelled")}
               >
                 <i className="fas fa-times" />
@@ -1035,14 +1035,14 @@ export default function OrdersPage() {
             </>
           )}
           <button
-            className="px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
             onClick={handleExportCSV}
           >
             <i className="fas fa-download" />
             <span>Export</span>
           </button>
           <button
-            className="px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
+            className="px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-md3-level3 hover:shadow-md3-level4 transition-all active:scale-95 flex items-center gap-2"
             onClick={() => setNewOrderModalOpen(true)}
           >
             <i className="fas fa-plus" />
@@ -1053,7 +1053,7 @@ export default function OrdersPage() {
 
       {/* Mobile Tabs — MD3 scrollable tabs */}
       <div className="md:hidden">
-        <div className="flex gap-0 overflow-x-auto pb-0 scrollbar-hide border-b border-[#e2e8f0]">
+        <div className="flex gap-0 overflow-x-auto pb-0 scrollbar-hide border-b border-outline-variant">
           {tabs.map((tab) => {
             const isActive = (tab.id === "cancellation_requests" && viewMode === "cancellations") ||
               (tab.id !== "cancellation_requests" && activeStatus === tab.id);
@@ -1064,7 +1064,7 @@ export default function OrdersPage() {
                 className={`relative px-3 py-3 font-medium text-xs whitespace-nowrap transition-all active:scale-95 flex-shrink-0 ${
                   isActive
                     ? "text-[#25D366]"
-                    : "text-[#64748b]"
+                    : "text-on-surface-variant"
                 }`}
               >
                 {tab.icon && <i className={`fas ${tab.icon} mr-1.5 text-[10px]`} />}
@@ -1073,7 +1073,7 @@ export default function OrdersPage() {
                   className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                     isActive
                       ? "bg-[rgba(37,211,102,0.15)] text-[#25D366]"
-                      : "bg-gray-100 text-gray-500"
+                      : "bg-surface-variant text-on-surface-variant"
                   }`}
                 >
                   {tab.count}
@@ -1096,8 +1096,8 @@ export default function OrdersPage() {
             className={`px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all active:scale-95 flex-shrink-0 ${
               (tab.id === "cancellation_requests" && viewMode === "cancellations") ||
               (tab.id !== "cancellation_requests" && activeStatus === tab.id)
-                ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg"
-                : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"
+                ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level3"
+                : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
             }`}
           >
             {tab.icon && <i className={`fas ${tab.icon} text-xs`} />}
@@ -1106,8 +1106,8 @@ export default function OrdersPage() {
               className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
                 (tab.id === "cancellation_requests" && viewMode === "cancellations") ||
                 (tab.id !== "cancellation_requests" && activeStatus === tab.id)
-                  ? "bg-white/20"
-                  : "bg-gray-100 text-gray-500"
+                  ? "bg-surface/20"
+                  : "bg-surface-variant text-on-surface-variant"
               }`}
             >
               {tab.count}
@@ -1131,7 +1131,7 @@ export default function OrdersPage() {
           <div className="md:hidden px-3 mb-3">
             <button
               onClick={() => setNewOrderModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
             >
               <i className="fas fa-plus" />
               <span>New Order</span>
@@ -1150,7 +1150,7 @@ export default function OrdersPage() {
           </div>
 
           {/* Filters & Table - FIXED: changed overflow-hidden to overflow-x-hidden */}
-          <div className="bg-white md:rounded-2xl md:border border-[#e2e8f0] md:shadow-sm overflow-x-hidden">
+          <div className="bg-surface md:rounded-2xl md:border border-outline-variant md:shadow-md3-level1 overflow-x-hidden">
             <OrderFilters
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -1175,15 +1175,15 @@ export default function OrdersPage() {
               {loading ? (
                 <div className="p-8 text-center">
                   <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto" />
-                  <p className="mt-4 text-[#64748b]">Loading orders...</p>
+                  <p className="mt-4 text-on-surface-variant">Loading orders...</p>
                 </div>
               ) : filteredOrders.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
                     <i className="fas fa-shopping-bag text-2xl text-gray-300" />
                   </div>
-                  <h4 className="font-bold text-[#1e293b] mb-1">No orders found</h4>
-                  <p className="text-sm text-[#64748b]">Try adjusting your filters</p>
+                  <h4 className="font-bold text-on-surface mb-1">No orders found</h4>
+                  <p className="text-sm text-on-surface-variant">Try adjusting your filters</p>
                 </div>
               ) : (
                 <div className="space-y-3 w-full">
@@ -1242,20 +1242,20 @@ export default function OrdersPage() {
 
             {/* Pagination Footer */}
             {!loading && filteredOrders.length > 0 && (
-              <div className="p-4 border-t border-[#e2e8f0] flex justify-between items-center text-sm text-[#64748b]">
+              <div className="p-4 border-t border-outline-variant flex justify-between items-center text-sm text-on-surface-variant">
                 <div>
-                  Showing <span className="font-semibold text-[#1e293b]">{filteredOrders.length}</span> orders
+                  Showing <span className="font-semibold text-on-surface">{filteredOrders.length}</span> orders
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="px-3 py-2 border-2 border-[#e2e8f0] rounded-lg hover:border-[#25D366] transition-all disabled:opacity-40"
+                    className="px-3 py-2 border-2 border-outline-variant rounded-lg hover:border-[#25D366] transition-all disabled:opacity-40"
                     disabled
                   >
                     <i className="fas fa-chevron-left" />
                   </button>
                   <button className="px-3 py-2 bg-[#25D366] text-white rounded-lg font-semibold">1</button>
                   <button
-                    className="px-3 py-2 border-2 border-[#e2e8f0] rounded-lg hover:border-[#25D366] transition-all disabled:opacity-40"
+                    className="px-3 py-2 border-2 border-outline-variant rounded-lg hover:border-[#25D366] transition-all disabled:opacity-40"
                     disabled
                   >
                     <i className="fas fa-chevron-right" />

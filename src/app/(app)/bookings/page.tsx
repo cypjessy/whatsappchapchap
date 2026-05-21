@@ -74,7 +74,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
         <div
           key={toast.id}
           className={`
-            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg
+            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md3-level3
             text-sm font-semibold animate-slideInRight
             ${toast.type === "success" ? "bg-[#10b981] text-white" : ""}
             ${toast.type === "error" ? "bg-[#ef4444] text-white" : ""}
@@ -129,7 +129,7 @@ function DeleteConfirmDialog({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-3 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-xl font-medium text-sm hover:bg-[var(--md-sys-color-error)]/90 transition-all active:scale-95 shadow-lg shadow-[var(--md-sys-color-error)]/20"
+            className="flex-1 px-4 py-3 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-xl font-medium text-sm hover:bg-[var(--md-sys-color-error)]/90 transition-all active:scale-95 shadow-md3-level3 shadow-[var(--md-sys-color-error)]/20"
           >
             Delete
           </button>
@@ -149,12 +149,12 @@ function EmptyState({ viewMode }: { viewMode: ViewMode }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-[#64748b] animate-fadeIn">
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-on-surface-variant animate-fadeIn">
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-4 shadow-inner">
         <i className={`fas ${icons[viewMode]} text-3xl md:text-4xl text-[#cbd5e1]`} />
       </div>
-      <p className="text-base md:text-lg font-bold text-[#475569] mb-1">No bookings found</p>
-      <p className="text-xs md:text-sm text-[#94a3b8] max-w-xs text-center">
+      <p className="text-base md:text-lg font-bold text-on-surface-variant mb-1">No bookings found</p>
+      <p className="text-xs md:text-sm text-outline max-w-xs text-center">
         Try adjusting your filters or create a new booking to get started.
       </p>
     </div>
@@ -831,22 +831,22 @@ export default function BookingsPage() {
       {/* Sticky Header - Desktop only (TopBar handles mobile) */}
       <div
         className={`
-          sticky top-0 z-[60] bg-white/80 backdrop-blur-md border-b transition-all duration-300 hidden md:block
-          ${headerScrolled ? "border-[#e2e8f0] shadow-sm" : "border-transparent"}
+          sticky top-0 z-[60] bg-surface/80 backdrop-blur-md border-b transition-all duration-300 hidden md:block
+          ${headerScrolled ? "border-outline-variant shadow-md3-level1" : "border-transparent"}
         `}
       >
         <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div>
-              <div className="flex items-center gap-2 text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-2 text-[10px] text-outline font-bold uppercase tracking-wider mb-1">
                 <i className="fas fa-home text-[8px]" />
                 <span>Dashboard</span>
                 <i className="fas fa-chevron-right text-[6px]" />
-                <span className="text-[#1e293b]">Bookings</span>
+                <span className="text-on-surface">Bookings</span>
               </div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-[#1e293b] flex items-center gap-2">
+              <h1 className="text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
                 Bookings
-                <span className="text-sm font-bold text-[#94a3b8] ml-1">
+                <span className="text-sm font-bold text-outline ml-1">
                   ({filteredBookings.length})
                 </span>
               </h1>
@@ -858,8 +858,8 @@ export default function BookingsPage() {
                 className={`
                   flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
                   ${bulkMode
-                    ? "bg-[#1e293b] text-white shadow-md"
-                    : "border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b]"
+                    ? "bg-[#1e293b] text-white shadow-md3-level2"
+                    : "border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
                   }
                 `}
               >
@@ -872,7 +872,7 @@ export default function BookingsPage() {
                 disabled={isExporting || filteredBookings.length === 0}
                 className={`
                   flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
-                  border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b]
+                  border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
@@ -886,7 +886,7 @@ export default function BookingsPage() {
 
               <button
                 onClick={() => setModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-semibold text-xs md:text-sm shadow-lg hover:opacity-90 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-semibold text-xs md:text-sm shadow-md3-level3 hover:opacity-90 transition-all active:scale-95"
               >
                 <i className="fas fa-plus text-xs" />
                 <span className="hidden sm:inline">New Booking</span>
@@ -902,7 +902,7 @@ export default function BookingsPage() {
         <div className="md:hidden mb-3">
           <button
             onClick={() => setModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
           >
             <i className="fas fa-plus" />
             <span>New Booking</span>
@@ -958,7 +958,7 @@ export default function BookingsPage() {
         />
 
         {/* View Tabs */}
-        <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-1 shadow-sm">
+        <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-1 shadow-md3-level1">
           <div className="flex overflow-x-auto scrollbar-hide">
             {VIEW_TABS.map((tab) => (
               <button
@@ -971,14 +971,14 @@ export default function BookingsPage() {
                   flex-1 min-w-[80px] flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2
                   px-3 py-2.5 md:px-4 md:py-3 rounded-lg font-bold text-[10px] md:text-xs transition-all duration-200
                   ${viewMode === tab.id
-                    ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
-                    : "text-[#64748b] hover:text-[#1e293b] hover:bg-[#f1f5f9]"
+                    ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant"
                   }
                 `}
               >
                 <i className={`fas ${tab.icon} text-xs`} />
                 <span>{tab.label}</span>
-                <span className={`hidden lg:inline text-[9px] opacity-70 ${viewMode === tab.id ? "text-white/70" : "text-[#94a3b8]"}`}>
+                <span className={`hidden lg:inline text-[9px] opacity-70 ${viewMode === tab.id ? "text-white/70" : "text-outline"}`}>
                   {tab.desc}
                 </span>
               </button>
@@ -995,8 +995,8 @@ export default function BookingsPage() {
               className={`
                 shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-bold text-[11px] md:text-xs transition-all duration-200 active:scale-95
                 ${filterStatus === chip.id
-                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
-                  : "bg-white border border-[#e2e8f0] text-[#64748b] hover:border-[#1e293b] hover:text-[#1e293b]"
+                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
+                  : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
                 }
               `}
             >
@@ -1004,7 +1004,7 @@ export default function BookingsPage() {
               {chip.label}
               <span className={`
                 ml-0.5 px-1.5 py-0.5 rounded-full text-[9px]
-                ${filterStatus === chip.id ? "bg-white/20" : "bg-[#f1f5f9]"}
+                ${filterStatus === chip.id ? "bg-surface/20" : "bg-surface-variant"}
               `}>
                 {chip.id === "all" ? bookings.length : bookings.filter((b) => b.status === chip.id).length}
               </span>
@@ -1024,8 +1024,8 @@ export default function BookingsPage() {
             />
           ) : loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-10 h-10 border-3 border-[#e2e8f0] border-t-[#1e293b] rounded-full animate-spin mb-4" />
-              <p className="text-sm text-[#64748b] font-medium">Loading bookings...</p>
+              <div className="w-10 h-10 border-3 border-outline-variant border-t-[#1e293b] rounded-full animate-spin mb-4" />
+              <p className="text-sm text-on-surface-variant font-medium">Loading bookings...</p>
             </div>
           ) : !hasData ? (
             <EmptyState viewMode={viewMode} />
@@ -1176,7 +1176,7 @@ export default function BookingsPage() {
                         name={field.name}
                         type={field.type}
                         defaultValue={field.defaultValue}
-                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md focus:outline-none text-sm transition-all md3-input-outlined"
+                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md3-level2 focus:outline-none text-sm transition-all md3-input-outlined"
                         required={field.name !== "deposit"}
                       />
                     </div>
@@ -1186,7 +1186,7 @@ export default function BookingsPage() {
                     <select
                       name="paymentMethod"
                       defaultValue={editingBooking.paymentMethod || ""}
-                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md focus:outline-none text-sm transition-all md3-input-outlined"
+                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md3-level2 focus:outline-none text-sm transition-all md3-input-outlined"
                     >
                       <option value="">Select method</option>
                       <option value="cash">Cash</option>
@@ -1202,7 +1202,7 @@ export default function BookingsPage() {
                     name="notes"
                     defaultValue={editingBooking.notes || ""}
                     rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md focus:outline-none text-sm resize-none transition-all md3-input-outlined"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md3-level2 focus:outline-none text-sm resize-none transition-all md3-input-outlined"
                   />
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -1215,7 +1215,7 @@ export default function BookingsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 md3-button-filled rounded-xl font-medium text-sm transition-all active:scale-95 shadow-lg"
+                    className="flex-1 px-4 py-3 md3-button-filled rounded-xl font-medium text-sm transition-all active:scale-95 shadow-md3-level3"
                   >
                     <i className="fas fa-save mr-2 text-xs" />
                     Save Changes

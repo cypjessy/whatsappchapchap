@@ -1,7 +1,7 @@
 export default function MobileLogo() {
   return (
     <div className="lg:hidden flex flex-col items-center mb-8">
-      <div className="w-[80px] h-[80px] bg-white rounded-[20px] flex items-center justify-center shadow-lg border border-gray-100">
+      <div className="w-[80px] h-[80px] bg-white rounded-[20px] flex items-center justify-center shadow-md3-level3 border border-outline-variant">
         <svg
           viewBox="0 0 24 24"
           className="w-[40px] h-[40px] fill-[#25D366]"

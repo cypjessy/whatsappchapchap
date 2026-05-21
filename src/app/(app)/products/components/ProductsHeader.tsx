@@ -135,10 +135,10 @@ function HeaderButton({
 
   const variants = {
     default: isActive
-      ? "bg-[#25D366] text-white shadow-lg shadow-[#25D366]/25 border-transparent"
-      : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md hover:-translate-y-0.5",
-    primary: "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 hover:-translate-y-0.5 border-transparent",
-    danger: "bg-white border-2 border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444] hover:text-white hover:border-[#ef4444]",
+      ? "bg-[#25D366] text-white shadow-md3-level3 shadow-[#25D366]/25 border-transparent"
+      : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md3-level2 hover:-translate-y-0.5",
+    primary: "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-[#25D366]/40 hover:-translate-y-0.5 border-transparent",
+    danger: "bg-surface border-2 border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444] hover:text-white hover:border-[#ef4444]",
   };
 
   const Component = asLabel ? "label" : "button";
@@ -193,7 +193,7 @@ export default function ProductsHeader({
   return (
     <header
       className={`
-        sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-[#e2e8f0]
+        sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-outline-variant
         transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
       `}
@@ -205,7 +205,7 @@ export default function ProductsHeader({
           <div className="flex items-center gap-3 md:gap-4 w-full lg:w-auto">
             {/* Icon container with pulse */}
             <div className="relative shrink-0">
-              <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-lg shadow-[#25D366]/20">
+              <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-md3-level3 shadow-[#25D366]/20">
                 <Box className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               {/* Pulse ring */}
@@ -213,18 +213,18 @@ export default function ProductsHeader({
             </div>
 
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg md:text-xl font-extrabold text-[#1e293b] tracking-tight">
+              <h1 className="text-lg md:text-xl font-extrabold text-on-surface tracking-tight">
                 Products
               </h1>
 
               {/* Stats row */}
               <div className="flex flex-wrap items-center gap-2 mt-1">
-                <span className="text-xs text-[#94a3b8]">
+                <span className="text-xs text-outline">
                   {animatedCount.toLocaleString()} items
                 </span>
                 <span className="text-[#e2e8f0]">·</span>
                 <span
-                  className="text-xs text-[#94a3b8] font-medium"
+                  className="text-xs text-outline font-medium"
                   title={`KES ${totalInventoryValue.toLocaleString()}`}
                 >
                   KES {animatedValue.toLocaleString()} value
@@ -275,7 +275,7 @@ export default function ProductsHeader({
             <div className="snap-start">
               <label
                 className={`
-                  flex items-center gap-2 px-3 md:px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm text-[#64748b] hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95 shrink-0 cursor-pointer
+                  flex items-center gap-2 px-3 md:px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md3-level2 hover:-translate-y-0.5 transition-all active:scale-95 shrink-0 cursor-pointer
                 `}
               >
                 <Upload className="w-4 h-4" />

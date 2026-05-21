@@ -137,7 +137,7 @@ function SearchField({
       <div
         className={`
           absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200
-          ${isFocused ? "text-[#25D366]" : "text-[#94a3b8]"}
+          ${isFocused ? "text-[#25D366]" : "text-outline"}
         `}
       >
         {isLoading ? (
@@ -157,26 +157,26 @@ function SearchField({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         className={`
-          pl-10 pr-9 py-2.5 bg-white border-2 rounded-xl text-sm 
+          pl-10 pr-9 py-2.5 bg-surface border-2 rounded-xl text-sm 
           transition-all duration-200 w-full lg:w-72
           focus:outline-none focus:ring-2 focus:ring-[#25D366]/20
           ${isFocused || value
-            ? "border-[#25D366] bg-white shadow-sm"
-            : "border-transparent hover:border-[#e2e8f0]"
+            ? "border-[#25D366] bg-surface shadow-md3-level1"
+            : "border-transparent hover:border-outline-variant"
           }
         `}
       />
       {value && (
         <button
           onClick={() => onChange("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b] transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
       )}
       {/* Keyboard hint */}
       {!value && !isFocused && (
-        <kbd className="hidden lg:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-[#e2e8f0] text-[10px] font-bold text-[#94a3b8]">
+        <kbd className="hidden lg:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-variant text-[10px] font-bold text-outline">
           /
         </kbd>
       )}
@@ -223,7 +223,7 @@ function SelectField({
       </select>
       <ChevronDown
         className={`
-          absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94a3b8] pointer-events-none transition-transform duration-200
+          absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-outline pointer-events-none transition-transform duration-200
           ${isOpen ? "rotate-180" : "rotate-0"}
         `}
       />
@@ -247,12 +247,12 @@ function PriceRangeField({
   return (
     <div
       className={`
-        flex items-center gap-1 bg-white rounded-xl border-2 p-1.5
+        flex items-center gap-1 bg-surface rounded-xl border-2 p-1.5
         transition-all duration-200
-        ${isFocused ? "border-[#25D366] bg-white shadow-sm ring-2 ring-[#25D366]/20" : "border-[#e2e8f0] hover:border-[#cbd5e1]"}
+        ${isFocused ? "border-[#25D366] bg-surface shadow-md3-level1 ring-2 ring-[#25D366]/20" : "border-outline-variant hover:border-outline-variant"}
       `}
     >
-      <Tag className="w-3.5 h-3.5 text-[#94a3b8] ml-1.5 shrink-0" />
+      <Tag className="w-3.5 h-3.5 text-outline ml-1.5 shrink-0" />
       <input
         type="number"
         placeholder="Min"
@@ -260,9 +260,9 @@ function PriceRangeField({
         onChange={(e) => onMinChange(e.target.value ? Number(e.target.value) : "")}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="w-14 px-1 py-1 bg-transparent text-sm text-[#1e293b] placeholder:text-[#94a3b8] focus:outline-none"
+        className="w-14 px-1 py-1 bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-none"
       />
-      <span className="text-[#94a3b8] text-xs font-bold">-</span>
+      <span className="text-outline text-xs font-bold">-</span>
       <input
         type="number"
         placeholder="Max"
@@ -270,7 +270,7 @@ function PriceRangeField({
         onChange={(e) => onMaxChange(e.target.value ? Number(e.target.value) : "")}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="w-14 px-1 py-1 bg-transparent text-sm text-[#1e293b] placeholder:text-[#94a3b8] focus:outline-none"
+        className="w-14 px-1 py-1 bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-none"
       />
     </div>
   );
@@ -292,28 +292,28 @@ function DateRangeField({
   return (
     <div
       className={`
-        flex items-center gap-1 bg-white rounded-xl border-2 p-1.5
+        flex items-center gap-1 bg-surface rounded-xl border-2 p-1.5
         transition-all duration-200
-        ${isFocused ? "border-[#25D366] bg-white shadow-sm ring-2 ring-[#25D366]/20" : "border-[#e2e8f0] hover:border-[#cbd5e1]"}
+        ${isFocused ? "border-[#25D366] bg-surface shadow-md3-level1 ring-2 ring-[#25D366]/20" : "border-outline-variant hover:border-outline-variant"}
       `}
     >
-      <Calendar className="w-3.5 h-3.5 text-[#94a3b8] ml-1.5 shrink-0" />
+      <Calendar className="w-3.5 h-3.5 text-outline ml-1.5 shrink-0" />
       <input
         type="date"
         value={start}
         onChange={(e) => onStartChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="w-24 px-1 py-1 bg-transparent text-sm text-[#1e293b] focus:outline-none"
+        className="w-24 px-1 py-1 bg-transparent text-sm text-on-surface focus:outline-none"
       />
-      <span className="text-[#94a3b8] text-xs font-bold">-</span>
+      <span className="text-outline text-xs font-bold">-</span>
       <input
         type="date"
         value={end}
         onChange={(e) => onEndChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="w-24 px-1 py-1 bg-transparent text-sm text-[#1e293b] focus:outline-none"
+        className="w-24 px-1 py-1 bg-transparent text-sm text-on-surface focus:outline-none"
       />
     </div>
   );
@@ -327,7 +327,7 @@ function ViewToggle({
   onChange: (v: "grid" | "list") => void;
 }) {
   return (
-    <div className="flex bg-white rounded-xl p-1 border-2 border-[#e2e8f0]">
+    <div className="flex bg-surface rounded-xl p-1 border-2 border-outline-variant">
       {(["grid", "list"] as const).map((v) => (
         <button
           key={v}
@@ -335,8 +335,8 @@ function ViewToggle({
           className={`
             p-2 rounded-lg transition-all duration-200
             ${view === v
-              ? "bg-white shadow-sm text-[#25D366] ring-1 ring-[#25D366]/20"
-              : "text-[#94a3b8] hover:text-[#64748b]"
+              ? "bg-surface shadow-md3-level1 text-[#25D366] ring-1 ring-[#25D366]/20"
+              : "text-outline hover:text-on-surface-variant"
             }
           `}
           aria-label={`${v} view`}
@@ -483,7 +483,7 @@ export default function ProductFilters({
   return (
     <div className="space-y-2 mb-3 md:mb-4 px-0">
       {/* Main toolbar — compact on mobile, full on desktop */}
-      <div className="bg-white rounded-xl md:rounded-2xl p-2.5 md:p-4 border border-[#e2e8f0] shadow-sm">
+      <div className="bg-surface rounded-xl md:rounded-2xl p-2.5 md:p-4 border border-outline-variant shadow-md3-level1">
         {/* Mobile: compact toolbar */}
         <div className="flex items-center gap-2 lg:hidden">
           {/* Search */}
@@ -494,7 +494,7 @@ export default function ProductFilters({
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin text-[#25D366]" />
               ) : (
-                <Search className="w-4 h-4 text-[#94a3b8]" />
+                <Search className="w-4 h-4 text-outline" />
               )}
             </div>
             <input
@@ -502,12 +502,12 @@ export default function ProductFilters({
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-9 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+              className="w-full pl-9 pr-9 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -520,8 +520,8 @@ export default function ProductFilters({
             className={`
               flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-200 active:scale-95
               ${hasActiveFilters
-                ? "bg-[#25D366] text-white shadow-md"
-                : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]"
+                ? "bg-[#25D366] text-white shadow-md3-level2"
+                : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366]"
               }
             `}
           >
@@ -534,11 +534,11 @@ export default function ProductFilters({
           </button>
 
           {/* View toggle */}
-          <div className="flex items-center border-2 border-[#e2e8f0] rounded-xl overflow-hidden shrink-0">
+          <div className="flex items-center border-2 border-outline-variant rounded-xl overflow-hidden shrink-0">
             <button
               onClick={() => setView("grid")}
               className={`flex items-center justify-center w-9 h-9 transition-colors ${
-                view === "grid" ? "bg-[#25D366] text-white" : "bg-white text-[#94a3b8] hover:text-[#64748b]"
+                view === "grid" ? "bg-[#25D366] text-white" : "bg-surface text-outline hover:text-on-surface-variant"
               }`}
             >
               <Grid3X3 className="w-4 h-4" />
@@ -546,7 +546,7 @@ export default function ProductFilters({
             <button
               onClick={() => setView("list")}
               className={`flex items-center justify-center w-9 h-9 transition-colors ${
-                view === "list" ? "bg-[#25D366] text-white" : "bg-white text-[#94a3b8] hover:text-[#64748b]"
+                view === "list" ? "bg-[#25D366] text-white" : "bg-surface text-outline hover:text-on-surface-variant"
               }`}
             >
               <List className="w-4 h-4" />
@@ -590,7 +590,7 @@ export default function ProductFilters({
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {totalResults !== undefined && (
-              <span className="text-xs text-[#94a3b8] font-medium">
+              <span className="text-xs text-outline font-medium">
                 {totalResults} result{totalResults !== 1 ? "s" : ""}
               </span>
             )}
@@ -623,7 +623,7 @@ export default function ProductFilters({
             </span>
           ))}
           {filterChips.length > 3 && (
-            <span className="text-[10px] text-[#64748b] font-medium">+{filterChips.length - 3} more</span>
+            <span className="text-[10px] text-on-surface-variant font-medium">+{filterChips.length - 3} more</span>
           )}
           <button
             onClick={handleClearAll}

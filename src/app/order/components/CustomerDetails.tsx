@@ -78,7 +78,7 @@ function FloatingInput({
               ? "border-[#ef4444] focus:border-[#ef4444] bg-[#fef2f2]"
               : isFocused
                 ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
-                : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+                : "border-outline-variant hover:border-outline-variant"
             }
             ${hasValue || isFocused ? "pt-5 pb-2" : "py-3 md:py-3.5"}
           `}
@@ -89,7 +89,7 @@ function FloatingInput({
             absolute left-4 transition-all duration-200 pointer-events-none
             ${hasValue || isFocused
               ? "top-1 text-[10px] md:text-xs font-bold text-[#8b5cf6]"
-              : "top-1/2 -translate-y-1/2 text-sm md:text-base text-[#94a3b8]"
+              : "top-1/2 -translate-y-1/2 text-sm md:text-base text-outline"
             }
             ${error && (hasValue || isFocused) ? "text-[#ef4444]" : ""}
           `}
@@ -100,8 +100,8 @@ function FloatingInput({
       </div>
 
       {helperText && !error && (
-        <p className="text-[11px] md:text-xs text-[#64748b] mt-1.5 flex items-center gap-1">
-          <i className="fas fa-info-circle text-[10px] text-[#94a3b8]" />
+        <p className="text-[11px] md:text-xs text-on-surface-variant mt-1.5 flex items-center gap-1">
+          <i className="fas fa-info-circle text-[10px] text-outline" />
           {helperText}
         </p>
       )}
@@ -151,9 +151,9 @@ function SelectDropdown({
               ? "border-[#ef4444] bg-[#fef2f2]"
               : isFocused
                 ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
-                : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+                : "border-outline-variant hover:border-outline-variant"
             }
-            ${disabled ? "opacity-50 cursor-not-allowed bg-[#f8fafc]" : ""}
+            ${disabled ? "opacity-50 cursor-not-allowed bg-surface-container-lowest" : ""}
           `}
         >
           <option value="">{placeholder}</option>
@@ -164,7 +164,7 @@ function SelectDropdown({
         <i className={`
           fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-xs
           transition-colors duration-200 pointer-events-none
-          ${isFocused ? "text-[#8b5cf6]" : "text-[#94a3b8]"}
+          ${isFocused ? "text-[#8b5cf6]" : "text-outline"}
         `} />
       </div>
       {error && errorMessage && (
@@ -260,7 +260,7 @@ export default function CustomerDetails({
 
   return (
     <div className={`
-      p-4 md:p-6 border-b border-[#e2e8f0] transition-all duration-500
+      p-4 md:p-6 border-b border-outline-variant transition-all duration-500
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
       {/* Header */}
@@ -269,9 +269,9 @@ export default function CustomerDetails({
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-[#8b5cf6]/10 to-[#7c3aed]/10 flex items-center justify-center">
             <i className="fas fa-truck text-[#8b5cf6] text-sm" />
           </div>
-          <h2 className="text-base md:text-lg font-extrabold text-[#1e293b]">Delivery Details</h2>
+          <h2 className="text-base md:text-lg font-extrabold text-on-surface">Delivery Details</h2>
         </div>
-        <span className="text-xs md:text-sm text-[#64748b] font-medium hidden sm:inline">
+        <span className="text-xs md:text-sm text-on-surface-variant font-medium hidden sm:inline">
           Where should we deliver?
         </span>
       </div>
@@ -303,7 +303,7 @@ export default function CustomerDetails({
 
       {/* Pickup Location - County / Town / Station dropdowns */}
       <div className="mb-4 md:mb-5">
-        <label className="block text-xs md:text-sm font-bold text-[#1e293b] mb-2.5 uppercase tracking-wider">
+        <label className="block text-xs md:text-sm font-bold text-on-surface mb-2.5 uppercase tracking-wider">
           Delivery Location <span className="text-[#ef4444]">*</span>
         </label>
 

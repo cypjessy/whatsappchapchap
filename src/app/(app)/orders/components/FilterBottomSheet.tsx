@@ -71,7 +71,7 @@ function SelectField({
 }) {
   return (
     <div className="relative">
-      <label className="block text-xs font-semibold text-[#64748b] mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">{label}</label>
       {icon && (
         <div className="absolute left-3 top-[38px] -translate-y-1/2 text-gray-400 pointer-events-none">
           <i className={`fas ${icon} text-xs`} />
@@ -80,7 +80,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all appearance-none cursor-pointer bg-white ${
+        className={`w-full px-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all appearance-none cursor-pointer bg-surface ${
           icon ? "pl-9" : ""
         }`}
       >
@@ -110,7 +110,7 @@ function DateField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-[#64748b] mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">{label}</label>
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           <i className={`fas ${icon} text-xs`} />
@@ -119,7 +119,7 @@ function DateField({
           type="date"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-9 pr-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+          className="w-full pl-9 pr-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
         />
       </div>
     </div>
@@ -141,7 +141,7 @@ function AmountField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-[#64748b] mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">{label}</label>
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           <i className={`fas ${icon} text-xs`} />
@@ -153,7 +153,7 @@ function AmountField({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value ? Number(e.target.value) : "")}
-          className="w-full pl-9 pr-3 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+          className="w-full pl-9 pr-3 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
         />
       </div>
     </div>
@@ -252,7 +252,7 @@ export default function FilterBottomSheet({
     >
       <div
         ref={sheetRef}
-        className="bg-white rounded-t-2xl w-full max-w-lg max-h-[85vh] flex flex-col animate-slideUp"
+        className="bg-surface rounded-t-2xl w-full max-w-lg max-h-[85vh] flex flex-col animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag Handle */}
@@ -261,11 +261,11 @@ export default function FilterBottomSheet({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pb-3 border-b border-[#e2e8f0]">
-          <h2 className="font-bold text-lg text-[#1e293b]">Filters</h2>
+        <div className="flex items-center justify-between px-4 pb-3 border-b border-outline-variant">
+          <h2 className="font-bold text-lg text-on-surface">Filters</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#64748b] hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant active:bg-surface-container-high transition-colors"
             aria-label="Close filters"
           >
             <i className="fas fa-times" />
@@ -274,9 +274,9 @@ export default function FilterBottomSheet({
 
         {/* Active Filter Chips */}
         {activeFilterCount > 0 && (
-          <div className="px-4 py-3 border-b border-[#e2e8f0]">
+          <div className="px-4 py-3 border-b border-outline-variant">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-[#64748b]">Active Filters</span>
+              <span className="text-xs font-semibold text-on-surface-variant">Active Filters</span>
               <button
                 onClick={handleClearAll}
                 className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
@@ -341,7 +341,7 @@ export default function FilterBottomSheet({
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {/* Search */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-1.5">Search</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">Search</label>
             <div className="relative">
               <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
               <input
@@ -349,11 +349,11 @@ export default function FilterBottomSheet({
                 placeholder="Search orders..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="w-full pl-10 pr-9 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                className="w-full pl-10 pr-9 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
               />
               {localSearch && (
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-on-surface-variant transition-colors"
                   onClick={() => setLocalSearch("")}
                 >
                   <i className="fas fa-times-circle" />
@@ -391,7 +391,7 @@ export default function FilterBottomSheet({
 
           {/* Date Range */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-2">Date Range</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-2">Date Range</label>
             <div className="grid grid-cols-2 gap-3">
               <DateField
                 label="Start Date"
@@ -410,7 +410,7 @@ export default function FilterBottomSheet({
 
           {/* Amount Range */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-2">Amount Range</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-2">Amount Range</label>
             <div className="grid grid-cols-2 gap-3">
               <AmountField
                 label="Min Amount"
@@ -431,7 +431,7 @@ export default function FilterBottomSheet({
 
           {/* Quick Presets */}
           <div>
-            <label className="block text-xs font-semibold text-[#64748b] mb-2">Quick Filters</label>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-2">Quick Filters</label>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
@@ -439,7 +439,7 @@ export default function FilterBottomSheet({
                   setLocalDateStart(today);
                   setLocalDateEnd(today);
                 }}
-                className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
+                className="px-3 py-2 bg-surface border border-outline-variant rounded-xl text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
               >
                 Today
               </button>
@@ -451,7 +451,7 @@ export default function FilterBottomSheet({
                   setLocalDateStart(start.toISOString().split("T")[0]);
                   setLocalDateEnd(end.toISOString().split("T")[0]);
                 }}
-                className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
+                className="px-3 py-2 bg-surface border border-outline-variant rounded-xl text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
               >
                 Last 7 days
               </button>
@@ -463,7 +463,7 @@ export default function FilterBottomSheet({
                   setLocalDateStart(start.toISOString().split("T")[0]);
                   setLocalDateEnd(end.toISOString().split("T")[0]);
                 }}
-                className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
+                className="px-3 py-2 bg-surface border border-outline-variant rounded-xl text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
               >
                 Last 30 days
               </button>
@@ -472,7 +472,7 @@ export default function FilterBottomSheet({
                   setLocalAmountMin(100);
                   setLocalAmountMax(500);
                 }}
-                className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
+                className="px-3 py-2 bg-surface border border-outline-variant rounded-xl text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95"
               >
                 100 - 500
               </button>
@@ -481,16 +481,16 @@ export default function FilterBottomSheet({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-4 py-3 border-t border-[#e2e8f0] bg-white">
+        <div className="flex gap-3 px-4 py-3 border-t border-outline-variant bg-surface">
           <button
             onClick={handleClearAll}
-            className="flex-1 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm font-semibold text-[#64748b] hover:border-red-300 hover:text-red-500 transition-all active:scale-95"
+            className="flex-1 py-3 border-2 border-outline-variant rounded-xl text-sm font-semibold text-on-surface-variant hover:border-red-300 hover:text-red-500 transition-all active:scale-95"
           >
             Clear All
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95"
+            className="flex-1 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl text-sm font-semibold shadow-md3-level3 hover:shadow-md3-level4 transition-all active:scale-95"
           >
             Apply Filters
           </button>

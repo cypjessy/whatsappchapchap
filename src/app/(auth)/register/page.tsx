@@ -239,12 +239,12 @@ export default function RegisterPage() {
               <div
                 key={step}
                 className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
-                  step <= currentStep ? "bg-gradient-to-r from-[#25D366] to-[#128C7E]" : "bg-[#e2e8f0]"
+                  step <= currentStep ? "bg-gradient-to-r from-[#25D366] to-[#128C7E]" : "bg-surface-variant"
                 }`}
               />
             ))}
           </div>
-          <div className="flex justify-between text-xs text-[#64748b] font-medium">
+          <div className="flex justify-between text-xs text-on-surface-variant font-medium">
             <span>Account</span>
             <span>Business</span>
             <span>Plan</span>
@@ -257,7 +257,7 @@ export default function RegisterPage() {
         <div className="md:hidden px-4 pb-2">
           <Link
             href="/"
-            className="text-[#64748b] hover:text-[#25D366] transition-colors inline-flex items-center gap-2 text-sm"
+            className="text-on-surface-variant hover:text-[#25D366] transition-colors inline-flex items-center gap-2 text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -272,9 +272,9 @@ export default function RegisterPage() {
           {currentStep > 1 && (
             <button
               onClick={handleBack}
-              className="md:hidden flex items-center gap-2 text-[#64748b] mb-4 
+              className="md:hidden flex items-center gap-2 text-on-surface-variant mb-4 
                 hover:text-[#25D366] transition-colors duration-300 
-                active:scale-95 px-3 py-2 rounded-lg hover:bg-gray-50"
+                active:scale-95 px-3 py-2 rounded-lg hover:bg-surface-container-lowest"
             >
               <i className="fas fa-arrow-left"></i>
               <span>Back</span>
@@ -327,7 +327,7 @@ export default function RegisterPage() {
             <div className="space-y-6">
               <div className="text-center">
                 <h2 className="text-3xl font-bold">Connect your WhatsApp Business</h2>
-                <p className="text-[#64748b] mt-3">
+                <p className="text-on-surface-variant mt-3">
                   Scan the QR code below to create your Evolution app instance and connect your WhatsApp number.
                 </p>
               </div>
@@ -339,8 +339,8 @@ export default function RegisterPage() {
                   autoStart={false}
                 />
               ) : (
-                <div className="p-6 bg-white rounded-3xl border border-[#e2e8f0] text-center">
-                  <p className="text-[#64748b]">Waiting for your account to initialize. Please try again if this message persists.</p>
+                <div className="p-6 bg-white rounded-3xl border border-outline-variant text-center">
+                  <p className="text-on-surface-variant">Waiting for your account to initialize. Please try again if this message persists.</p>
                 </div>
               )}
             </div>
@@ -353,7 +353,7 @@ export default function RegisterPage() {
               {currentStep > 1 ? (
                 <button
                   onClick={handleBack}
-                  className="py-3 px-4 md:px-6 bg-white text-[#1a1a2e] border-2 border-[#e2e8f0] 
+                  className="py-3 px-4 md:px-6 bg-white text-[#1a1a2e] border-2 border-outline-variant 
                     rounded-xl font-semibold transition-all duration-300 
                     hover:border-[#25D366] hover:text-[#25D366] hover:shadow-md
                     active:translate-y-0 active:shadow-none active:scale-[0.98]

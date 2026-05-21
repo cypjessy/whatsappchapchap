@@ -29,10 +29,10 @@ function ContactButton({ onClick, isExpanded }: { onClick: () => void; isExpande
       onTouchStart={() => setIsPressed(true)}
       onTouchEnd={() => setIsPressed(false)}
       className={`
-        flex items-center justify-center gap-2 rounded-xl border-2 border-[#e2e8f0] bg-white
-        text-[#1e293b] font-bold text-sm md:text-base
+        flex items-center justify-center gap-2 rounded-xl border-2 border-outline-variant bg-white
+        text-on-surface font-bold text-sm md:text-base
         transition-all duration-150 active:scale-95
-        ${isPressed ? "scale-95 bg-[#f8fafc]" : "scale-100"}
+        ${isPressed ? "scale-95 bg-surface-container-lowest" : "scale-100"}
         ${isExpanded ? "flex-1 py-3 md:py-3.5" : "w-12 h-12 md:w-auto md:flex-1 md:py-3"}
       `}
       aria-label="Contact seller on WhatsApp"
@@ -60,7 +60,7 @@ function AddToCartButton({ onClick, disabled }: { onClick: () => void; disabled:
         flex-1 flex items-center justify-center gap-2 rounded-xl font-bold text-sm md:text-base
         transition-all duration-150
         ${disabled
-          ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+          ? "bg-surface-variant text-outline cursor-not-allowed"
           : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-lg shadow-[#3b82f6]/25 hover:shadow-xl hover:shadow-[#3b82f6]/30 hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
         }
         ${isPressed && !disabled ? "scale-95" : "scale-100"}
@@ -178,7 +178,7 @@ export default function FooterActions({
   return (
     <div
       className={`
-        sticky bottom-0 z-40 bg-white border-t border-[#e2e8f0]
+        sticky bottom-0 z-40 bg-white border-t border-outline-variant
         shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm
         transition-all duration-300
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"}
@@ -187,9 +187,9 @@ export default function FooterActions({
       {/* Stock & Total Info Bar */}
       <div className="px-4 md:px-6 pt-3 pb-1 flex items-center justify-between">
         <StockBadge stock={currentStock} />
-        <div className="flex items-center gap-2 text-sm text-[#64748b]">
+        <div className="flex items-center gap-2 text-sm text-on-surface-variant">
           <span className="hidden sm:inline">Total:</span>
-          <span className="font-extrabold text-[#1e293b] text-base">
+          <span className="font-extrabold text-on-surface text-base">
             {CURRENCY_SYMBOL}{total.toLocaleString()}
           </span>
         </div>

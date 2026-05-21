@@ -39,7 +39,7 @@ const STATS_CONFIG: StatConfig[] = [
     icon: "fa-users",
     iconColor: "text-[#25D366]",
     iconBg: "bg-[#DCF8C6]",
-    valueColor: "text-[#1e293b]",
+    valueColor: "text-on-surface",
     getValue: (c) => c.length,
   },
   {
@@ -49,7 +49,7 @@ const STATS_CONFIG: StatConfig[] = [
     icon: "fa-check-circle",
     iconColor: "text-[#10b981]",
     iconBg: "bg-[#dcfce7]",
-    valueColor: "text-[#1e293b]",
+    valueColor: "text-on-surface",
     getValue: (c) => c.filter((x) => x.status === "active").length,
   },
   {
@@ -59,7 +59,7 @@ const STATS_CONFIG: StatConfig[] = [
     icon: "fa-crown",
     iconColor: "text-[#f59e0b]",
     iconBg: "bg-[#fef3c7]",
-    valueColor: "text-[#1e293b]",
+    valueColor: "text-on-surface",
     getValue: (c) => c.filter((x) => x.status === "vip").length,
   },
   {
@@ -69,7 +69,7 @@ const STATS_CONFIG: StatConfig[] = [
     icon: "fa-coins",
     iconColor: "text-[#3b82f6]",
     iconBg: "bg-[#dbeafe]",
-    valueColor: "text-[#1e293b]",
+    valueColor: "text-on-surface",
     getValue: (c) => c.reduce((sum, x) => sum + (x.totalSpent || 0), 0),
     format: (val) => `KES ${val.toLocaleString()}`, // Will be overridden by prop
   },
@@ -131,14 +131,14 @@ function getTrend(current: number, previous?: number): { value: number; isPositi
 
 function ShimmerCard() {
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl px-3 md:px-5 py-2.5 md:py-4 border border-[#e2e8f0] overflow-hidden relative shadow-sm">
+    <div className="bg-surface rounded-xl md:rounded-2xl px-3 md:px-5 py-2.5 md:py-4 border border-outline-variant overflow-hidden relative shadow-md3-level1">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-center justify-between mb-2 md:mb-3">
-        <div className="w-9 h-9 md:w-11 md:h-11 bg-[#f1f5f9] rounded-xl" />
-        <div className="h-4 bg-[#f1f5f9] rounded-lg w-14" />
+        <div className="w-9 h-9 md:w-11 md:h-11 bg-surface-variant rounded-xl" />
+        <div className="h-4 bg-surface-variant rounded-lg w-14" />
       </div>
-      <div className="h-6 md:h-8 bg-[#f1f5f9] rounded-lg w-20 mb-1.5 md:mb-2" />
-      <div className="h-3 bg-[#f1f5f9] rounded-lg w-24" />
+      <div className="h-6 md:h-8 bg-surface-variant rounded-lg w-20 mb-1.5 md:mb-2" />
+      <div className="h-3 bg-surface-variant rounded-lg w-24" />
     </div>
   );
 }
@@ -180,13 +180,13 @@ function StatCard({
   return (
     <div
       className={`
-        group relative bg-white rounded-xl md:rounded-2xl px-3 md:px-5 py-2.5 md:py-4 
-        border border-[#e2e8f0] overflow-hidden cursor-default min-w-[0]
+        group relative bg-surface rounded-xl md:rounded-2xl px-3 md:px-5 py-2.5 md:py-4 
+        border border-outline-variant overflow-hidden cursor-default min-w-[0]
         transition-all duration-300 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isHovered
-          ? "border-[#cbd5e1] shadow-lg shadow-[#e2e8f0]/40 -translate-y-1"
-          : "shadow-sm hover:shadow-md"
+          ? "border-outline-variant shadow-md3-level3 shadow-[#e2e8f0]/40 -translate-y-1"
+          : "shadow-md3-level1 hover:shadow-md3-level2"
         }
       `}
       style={{ transitionDelay: `${index * 100}ms` }}
@@ -233,7 +233,7 @@ function StatCard({
               {trend.value}%
             </span>
           )}
-          <span className="text-[10px] md:text-xs text-[#94a3b8] font-bold uppercase tracking-wider">
+          <span className="text-[10px] md:text-xs text-outline font-bold uppercase tracking-wider">
             {config.label}
           </span>
         </div>
@@ -250,18 +250,18 @@ function StatCard({
       </div>
 
       <div className="flex items-center justify-between mt-1.5 md:mt-2">
-        <span className="text-[10px] md:text-xs text-[#64748b] font-medium">
+        <span className="text-[10px] md:text-xs text-on-surface-variant font-medium">
           {config.sublabel}
         </span>
         {config.id !== "revenue" && rawValue > 0 && customers.length > 0 && (
-          <span className="hidden md:block text-[10px] text-[#94a3b8] font-semibold">
+          <span className="hidden md:block text-[10px] text-outline font-semibold">
             {Math.round((rawValue / customers.length) * 100)}%
           </span>
         )}
       </div>
 
       {/* Progress bar */}
-      <div className="mt-2 md:mt-3 h-1 bg-[#f1f5f9] rounded-full overflow-hidden">
+      <div className="mt-2 md:mt-3 h-1 bg-surface-variant rounded-full overflow-hidden">
         <div
           className={`
             h-full rounded-full transition-all duration-1000 ease-out

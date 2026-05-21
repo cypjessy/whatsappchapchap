@@ -82,11 +82,11 @@ export default function WhatsAppConnectionManager({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-6 shadow-md3-level1 border border-outline-variant">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">WhatsApp Connection</h3>
-            <p className="text-sm text-gray-500 mt-1">Checking connection status...</p>
+            <h3 className="text-lg font-bold text-on-surface">WhatsApp Connection</h3>
+            <p className="text-sm text-on-surface-variant mt-1">Checking connection status...</p>
           </div>
           <div className="animate-spin rounded-full h-6 w-6 border-2 border-green-500 border-t-transparent"></div>
         </div>
@@ -95,11 +95,11 @@ export default function WhatsAppConnectionManager({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-2xl p-6 shadow-md3-level1 border border-outline-variant">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">WhatsApp Connection</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <h3 className="text-lg font-bold text-on-surface">WhatsApp Connection</h3>
+          <p className="text-sm text-on-surface-variant mt-1">
             {connectionStatus === 'connected' 
               ? 'AI replies are active' 
               : 'Connect to enable AI replies'}
@@ -108,7 +108,7 @@ export default function WhatsAppConnectionManager({
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
           connectionStatus === 'connected' 
             ? 'bg-green-100 text-green-700' 
-            : 'bg-gray-100 text-gray-600'
+            : 'bg-surface-variant text-on-surface-variant'
         }`}>
           <div className={`w-2 h-2 rounded-full ${
             connectionStatus === 'connected' 
@@ -153,7 +153,7 @@ export default function WhatsAppConnectionManager({
                 <button
                   onClick={() => setConfirmingLogout(false)}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold text-sm"
+                  className="flex-1 px-4 py-2.5 bg-surface-variant text-on-surface rounded-xl hover:bg-surface-container-high transition-all font-semibold text-sm"
                 >
                   Cancel
                 </button>
@@ -182,7 +182,7 @@ export default function WhatsAppConnectionManager({
             setShowConnectModal(true);
           }}
           disabled={isLoading}
-          className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
+          className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold text-sm flex items-center justify-center gap-2 shadow-md3-level3 shadow-green-500/30"
         >
           <i className="fab fa-whatsapp text-lg"></i>
           Connect WhatsApp Number
@@ -193,13 +193,13 @@ export default function WhatsAppConnectionManager({
       {showConnectModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slideUp">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
-              <h3 className="text-lg font-bold text-gray-900">Connect WhatsApp</h3>
+            <div className="sticky top-0 bg-white border-b border-outline-variant p-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-bold text-on-surface">Connect WhatsApp</h3>
               <button
                 onClick={() => setShowConnectModal(false)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors"
               >
-                <i className="fas fa-times text-gray-500"></i>
+                <i className="fas fa-times text-on-surface-variant"></i>
               </button>
             </div>
             

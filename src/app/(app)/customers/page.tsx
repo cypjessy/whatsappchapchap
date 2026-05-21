@@ -666,7 +666,7 @@ export default function CustomersPage() {
       <div className="md:hidden mb-3">
         <button
           onClick={() => setShowAddModal(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
         >
           <i className="fas fa-plus" />
           <span>Add Customer</span>
@@ -678,7 +678,7 @@ export default function CustomersPage() {
       {loading ? (
         <div className="p-8 text-center">
           <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-[#64748b]">Loading customers...</p>
+          <p className="mt-4 text-on-surface-variant">Loading customers...</p>
         </div>
       ) : filteredCustomers.length === 0 ? (
         <EmptyState

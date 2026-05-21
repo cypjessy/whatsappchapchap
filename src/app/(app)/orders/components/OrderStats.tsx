@@ -142,11 +142,11 @@ function TrendBadge({ value, label }: { value: number; label?: string }) {
 
 function SkeletonCard({ delay }: { delay?: number }) {
   return (
-    <div className="flex-shrink-0 bg-white px-4 py-4 rounded-xl border border-[#e2e8f0] flex items-center gap-3 min-w-[160px] animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.1}s` }}>
-      <div className="w-10 h-10 rounded-full bg-gray-200" />
+    <div className="flex-shrink-0 bg-surface px-4 py-4 rounded-xl border border-outline-variant flex items-center gap-3 min-w-[160px] animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.1}s` }}>
+      <div className="w-10 h-10 rounded-full bg-surface-container-high" />
       <div className="space-y-2">
-        <div className="h-5 w-16 bg-gray-200 rounded" />
-        <div className="h-3 w-20 bg-gray-100 rounded" />
+        <div className="h-5 w-16 bg-surface-container-high rounded" />
+        <div className="h-3 w-20 bg-surface-variant rounded" />
       </div>
     </div>
   );
@@ -172,7 +172,7 @@ function StatCard({
 
   return (
     <div
-      className="group relative bg-white p-3 md:px-4 md:py-4 rounded-xl border border-[#e2e8f0] flex items-center gap-2.5 md:gap-3 animate-fadeIn md:flex-shrink-0 md:min-w-[160px] md:transition-all md:duration-300 md:hover:shadow-lg md:hover:border-[#25D366]/20 md:hover:-translate-y-0.5 md:cursor-default"
+      className="group relative bg-surface p-3 md:px-4 md:py-4 rounded-xl border border-outline-variant flex items-center gap-2.5 md:gap-3 animate-fadeIn md:flex-shrink-0 md:min-w-[160px] md:transition-all md:duration-300 md:hover:shadow-md3-level3 md:hover:border-[#25D366]/20 md:hover:-translate-y-0.5 md:cursor-default"
       style={{ animationDelay: `${delay * 0.1}s` }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -180,7 +180,7 @@ function StatCard({
       {/* Icon */}
       <div
         className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 md:transition-all md:duration-300 ${
-          isHovered ? "scale-110 shadow-md" : ""
+          isHovered ? "scale-110 shadow-md3-level2" : ""
         }`}
         style={{ backgroundColor: iconBg, color: iconColor }}
       >
@@ -190,11 +190,11 @@ function StatCard({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 md:gap-2 mb-0.5">
-          <div className="font-extrabold text-base md:text-lg text-[#1e293b] tracking-tight">{value}</div>
+          <div className="font-extrabold text-base md:text-lg text-on-surface tracking-tight">{value}</div>
           {trend !== undefined && <TrendBadge value={trend} label={trendLabel} />}
         </div>
-        <div className="text-[10px] md:text-xs text-[#64748b] font-medium">{label}</div>
-        {subtitle && <div className="text-[10px] text-[#94a3b8] mt-0.5 hidden md:block">{subtitle}</div>}
+        <div className="text-[10px] md:text-xs text-on-surface-variant font-medium">{label}</div>
+        {subtitle && <div className="text-[10px] text-outline mt-0.5 hidden md:block">{subtitle}</div>}
       </div>
 
       {/* Hover Glow — desktop only */}
@@ -327,11 +327,11 @@ export default function OrderStats({
       {/* Mini Progress Bar (Overall Health) — desktop only */}
       {!isLoading && (
         <div className="mt-2 px-1 animate-fadeIn hidden md:block" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center justify-between text-[10px] text-[#64748b] mb-1.5">
+          <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1.5">
             <span className="font-semibold">Order Processing Health</span>
             <span>{completionRate}% completion rate</span>
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-2 bg-surface-variant rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-1000 ease-out relative"
               style={{
@@ -339,10 +339,10 @@ export default function OrderStats({
                 background: "linear-gradient(90deg, #25D366, #128C7E)",
               }}
             >
-              <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+              <div className="absolute inset-0 bg-surface/20 animate-shimmer" />
             </div>
           </div>
-          <div className="flex justify-between mt-1.5 text-[10px] text-[#94a3b8]">
+          <div className="flex justify-between mt-1.5 text-[10px] text-outline">
             <span>0%</span>
             <span>50%</span>
             <span>100%</span>

@@ -53,30 +53,30 @@ function LoadingState() {
     <div className="p-4 md:p-6 space-y-6 animate-fadeIn">
       {/* Header shimmer */}
       <div className="flex items-center justify-between">
-        <div className="h-8 bg-[#e2e8f0] rounded-lg w-48 animate-pulse" />
-        <div className="h-10 bg-[#e2e8f0] rounded-xl w-32 animate-pulse" />
+        <div className="h-8 bg-surface-variant rounded-lg w-48 animate-pulse" />
+        <div className="h-10 bg-surface-variant rounded-xl w-32 animate-pulse" />
       </div>
 
       {/* Stats shimmer */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white p-4 rounded-xl border border-[#e2e8f0] animate-pulse">
-            <div className="h-3 bg-[#e2e8f0] rounded w-20 mb-3" />
-            <div className="h-8 bg-[#f1f5f9] rounded-lg w-16" />
+          <div key={i} className="bg-surface p-4 rounded-xl border border-outline-variant animate-pulse">
+            <div className="h-3 bg-surface-variant rounded w-20 mb-3" />
+            <div className="h-8 bg-surface-variant rounded-lg w-16" />
           </div>
         ))}
       </div>
 
       {/* Filters shimmer */}
-      <div className="h-12 bg-[#e2e8f0] rounded-xl w-full animate-pulse" />
+      <div className="h-12 bg-surface-variant rounded-xl w-full animate-pulse" />
 
       {/* Grid shimmer */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-xl border border-[#e2e8f0] p-4 animate-pulse">
-            <div className="h-32 bg-[#f1f5f9] rounded-lg mb-3" />
-            <div className="h-5 bg-[#e2e8f0] rounded w-3/4 mb-2" />
-            <div className="h-4 bg-[#f1f5f9] rounded w-1/2" />
+          <div key={i} className="bg-surface rounded-xl border border-outline-variant p-4 animate-pulse">
+            <div className="h-32 bg-surface-variant rounded-lg mb-3" />
+            <div className="h-5 bg-surface-variant rounded w-3/4 mb-2" />
+            <div className="h-4 bg-surface-variant rounded w-1/2" />
           </div>
         ))}
       </div>
@@ -94,12 +94,12 @@ function EmptyState({
   onAddService: () => void;
 }) {
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-8 md:p-16 text-center animate-fadeIn">
-      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] flex items-center justify-center mx-auto mb-6 shadow-sm">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-8 md:p-16 text-center animate-fadeIn">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] flex items-center justify-center mx-auto mb-6 shadow-md3-level1">
         <i className="fas fa-concierge-bell text-3xl md:text-4xl text-[#25D366]/40" />
       </div>
-      <h3 className="text-xl md:text-2xl font-extrabold text-[#1e293b] mb-2">No Services Found</h3>
-      <p className="text-sm md:text-base text-[#64748b] mb-6 max-w-md mx-auto">
+      <h3 className="text-xl md:text-2xl font-extrabold text-on-surface mb-2">No Services Found</h3>
+      <p className="text-sm md:text-base text-on-surface-variant mb-6 max-w-md mx-auto">
         {hasFilters
           ? "Try adjusting your filters or search criteria to find what you're looking for."
           : "Get started by creating your first service and start accepting bookings."}
@@ -107,7 +107,7 @@ function EmptyState({
       {hasFilters ? (
         <button
           onClick={onClearFilters}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-md3-level4 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
         >
           <i className="fas fa-times-circle" />
           Clear Filters
@@ -115,7 +115,7 @@ function EmptyState({
       ) : (
         <button
           onClick={onAddService}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-md3-level4 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
         >
           <i className="fas fa-plus mr-2" />
           Add Service
@@ -138,26 +138,26 @@ function DeleteConfirmModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2500] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 md:p-8 shadow-2xl animate-scaleIn">
+      <div className="bg-surface rounded-2xl w-full max-w-md p-6 md:p-8 shadow-2xl animate-scaleIn">
         <div className="text-center mb-6">
           <div className="w-16 h-16 rounded-full bg-[#ef4444]/10 flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-exclamation-triangle text-2xl text-[#ef4444]" />
           </div>
-          <h3 className="text-xl font-extrabold text-[#1e293b] mb-2">Delete Service?</h3>
-          <p className="text-sm text-[#64748b] leading-relaxed">
+          <h3 className="text-xl font-extrabold text-on-surface mb-2">Delete Service?</h3>
+          <p className="text-sm text-on-surface-variant leading-relaxed">
             This action cannot be undone. The service and all associated bookings data will be permanently removed.
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all duration-200 active:scale-95"
+            className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all duration-200 active:scale-95"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(serviceId)}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md shadow-[#ef4444]/20 hover:shadow-lg active:scale-95 transition-all duration-200"
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md3-level2 shadow-[#ef4444]/20 hover:shadow-md3-level3 active:scale-95 transition-all duration-200"
           >
             <i className="fas fa-trash-alt mr-2" />
             Delete
@@ -188,7 +188,7 @@ function BulkActionBar({
   const allSelected = selectedCount === totalCount && totalCount > 0;
 
   return (
-    <div className="mb-4 bg-white border border-[#e2e8f0] rounded-xl p-3 md:p-4 shadow-sm animate-slideDown">
+    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-md3-level1 animate-slideDown">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <label className="flex items-center gap-2.5 cursor-pointer">
           <div className="relative">
@@ -196,10 +196,10 @@ function BulkActionBar({
               type="checkbox"
               checked={allSelected}
               onChange={onSelectAll}
-              className="w-5 h-5 rounded border-2 border-[#e2e8f0] text-[#25D366] focus:ring-[#25D366] focus:ring-offset-0 cursor-pointer"
+              className="w-5 h-5 rounded border-2 border-outline-variant text-[#25D366] focus:ring-[#25D366] focus:ring-offset-0 cursor-pointer"
             />
           </div>
-          <span className="text-sm font-bold text-[#475569]">
+          <span className="text-sm font-bold text-on-surface-variant">
             {selectedCount} selected
           </span>
         </label>
@@ -235,7 +235,7 @@ function BulkActionBar({
           </button>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-[#f1f5f9] text-[#64748b] flex items-center justify-center hover:bg-[#e2e8f0] transition-all"
+            className="w-8 h-8 rounded-lg bg-surface-variant text-on-surface-variant flex items-center justify-center hover:bg-surface-variant transition-all"
           >
             <i className="fas fa-times text-xs" />
           </button>
@@ -587,7 +587,7 @@ export default function ServicesPage() {
         <div className="md:hidden mb-3">
           <button
             onClick={() => addServiceRef.current?.open()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
           >
             <i className="fas fa-plus" />
             <span>Add Service</span>
@@ -616,8 +616,8 @@ export default function ServicesPage() {
                   flex-shrink-0 relative px-4 py-2.5 rounded-full font-bold text-sm
                   transition-all duration-200 active:scale-95
                   ${isActive
-                    ? `bg-gradient-to-r ${chip.color} text-white shadow-md`
-                    : "bg-white border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"
+                    ? `bg-gradient-to-r ${chip.color} text-white shadow-md3-level2`
+                    : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
                   }
                 `}
               >
@@ -626,7 +626,7 @@ export default function ServicesPage() {
                   <span
                     className={`
                       px-1.5 py-0.5 rounded-full text-[10px] font-extrabold min-w-[20px] text-center
-                      ${isActive ? "bg-white/25 text-white" : "bg-[#f1f5f9] text-[#64748b]"}
+                      ${isActive ? "bg-surface/25 text-white" : "bg-surface-variant text-on-surface-variant"}
                     `}
                   >
                     {count}
@@ -648,8 +648,8 @@ export default function ServicesPage() {
                   flex-shrink-0 snap-start px-4 py-2 rounded-lg font-semibold text-sm
                   transition-all duration-200 active:scale-95
                   ${!selectedBusinessType
-                    ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/20"
-                    : "bg-white border border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]/50"
+                    ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/20"
+                    : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/50"
                   }
                 `}
               >
@@ -668,8 +668,8 @@ export default function ServicesPage() {
                     flex-shrink-0 snap-start px-4 py-2 rounded-lg font-semibold text-sm capitalize
                     transition-all duration-200 active:scale-95 whitespace-nowrap
                     ${selectedBusinessType === type
-                      ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/20"
-                      : "bg-white border border-[#e2e8f0] text-[#64748b] hover:border-[#25D366]/50"
+                      ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/20"
+                      : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/50"
                     }
                   `}
                 >

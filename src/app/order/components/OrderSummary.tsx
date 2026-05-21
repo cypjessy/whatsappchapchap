@@ -88,11 +88,11 @@ function SummaryLine({
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
       `}
     >
-      <span className="text-sm text-[#64748b]">{label}</span>
+      <span className="text-sm text-on-surface-variant">{label}</span>
       <span
         className={`
           font-semibold text-sm md:text-base
-          ${isFree ? "text-[#10b981]" : highlight ? "text-[#1e293b]" : "text-[#1e293b]"}
+          ${isFree ? "text-[#10b981]" : highlight ? "text-on-surface" : "text-on-surface"}
           ${isFree ? "flex items-center gap-1.5" : ""}
         `}
       >
@@ -129,7 +129,7 @@ export default function OrderSummary({
   return (
     <div
       className={`
-        p-4 md:p-6 border-b border-[#e2e8f0] relative overflow-hidden
+        p-4 md:p-6 border-b border-outline-variant relative overflow-hidden
         transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
@@ -149,11 +149,11 @@ export default function OrderSummary({
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-[#25D366]/10 to-[#8b5cf6]/10 flex items-center justify-center">
               <i className="fas fa-receipt text-[#25D366] text-sm" />
             </div>
-            <h2 className="text-base md:text-lg font-extrabold text-[#1e293b]">
+            <h2 className="text-base md:text-lg font-extrabold text-on-surface">
               Order Summary
             </h2>
           </div>
-          <span className="text-xs text-[#94a3b8] font-medium">
+          <span className="text-xs text-outline font-medium">
             {quantity} {quantity === 1 ? "item" : "items"}
           </span>
         </div>
@@ -175,7 +175,7 @@ export default function OrderSummary({
 
           {/* Divider */}
           <div className="relative py-1">
-            <div className="border-t-2 border-dashed border-[#e2e8f0]" />
+            <div className="border-t-2 border-dashed border-outline-variant" />
             {isFreeShipping && (
               <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-white px-2">
                 <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-wider">
@@ -192,13 +192,13 @@ export default function OrderSummary({
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
             `}
           >
-            <span className="font-bold text-base md:text-lg text-[#1e293b]">Total</span>
+            <span className="font-bold text-base md:text-lg text-on-surface">Total</span>
             <div className="text-right">
               <span className="font-extrabold text-xl md:text-2xl lg:text-3xl text-[#25D366] tracking-tight">
                 {CURRENCY_SYMBOL}
                 {animatedTotal.toLocaleString()}
               </span>
-              <p className="text-[10px] text-[#94a3b8] font-medium mt-0.5">
+              <p className="text-[10px] text-outline font-medium mt-0.5">
                 All prices include taxes
               </p>
             </div>

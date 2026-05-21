@@ -67,9 +67,9 @@ export default function TopServices() {
   const totalBookings = services.reduce((sum, s) => sum + s.bookings, 0);
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden">
-      <div className="p-4 md:p-5 border-b border-[#e2e8f0]">
-        <h3 className="font-bold text-[#1e293b] flex items-center gap-2">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden">
+      <div className="p-4 md:p-5 border-b border-outline-variant">
+        <h3 className="font-bold text-on-surface flex items-center gap-2">
           <i className="fas fa-trophy text-[#f59e0b]"></i>
           Top Services
         </h3>
@@ -87,16 +87,16 @@ export default function TopServices() {
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{service.emoji}</span>
                       <div>
-                        <div className="font-semibold text-sm text-[#1e293b]">{service.name}</div>
-                        <div className="text-xs text-[#64748b]">{service.bookings} bookings</div>
+                        <div className="font-semibold text-sm text-on-surface">{service.name}</div>
+                        <div className="text-xs text-on-surface-variant">{service.bookings} bookings</div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-sm text-[#8b5cf6]">{formatCurrency(service.revenue)}</div>
-                      <div className="text-xs text-[#64748b]">{percentage.toFixed(0)}%</div>
+                      <div className="text-xs text-on-surface-variant">{percentage.toFixed(0)}%</div>
                     </div>
                   </div>
-                  <div className="w-full h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
@@ -107,7 +107,7 @@ export default function TopServices() {
             })}
           </div>
         ) : (
-          <div className="text-center py-8 text-[#64748b]">
+          <div className="text-center py-8 text-on-surface-variant">
             <i className="fas fa-chart-bar text-4xl mb-3 opacity-30"></i>
             <p className="font-semibold">No service data yet</p>
             <p className="text-sm mt-1">Service performance will appear here as you get bookings</p>

@@ -33,7 +33,7 @@ function getStatusClass(status: string) {
     case "pending": return "bg-[#FEF3C7] text-[#D97706] border-[#D97706]/20";
     case "completed": return "bg-[#EFF6FF] text-[#2563EB] border-[#2563EB]/20";
     case "cancelled": return "bg-[#FEE2E2] text-[#DC2626] border-[#DC2626]/20";
-    default: return "bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]";
+    default: return "bg-surface-variant text-on-surface-variant border-outline-variant";
   }
 }
 
@@ -151,7 +151,7 @@ function CalendarHeader({ currentDate, onNavigate, onToday }: {
       <div className="flex items-center gap-2 md:gap-4">
         <button
           onClick={() => handleNavigate(-1)}
-          className="w-9 h-9 md:w-10 md:h-10 rounded-xl border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:bg-[#F3E8FF] active:scale-95 transition-all duration-200"
+          className="w-9 h-9 md:w-10 md:h-10 rounded-xl border border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:bg-[#F3E8FF] active:scale-95 transition-all duration-200"
           aria-label="Previous month"
         >
           <i className="fas fa-chevron-left text-xs md:text-sm" />
@@ -161,7 +161,7 @@ function CalendarHeader({ currentDate, onNavigate, onToday }: {
         </span>
         <button
           onClick={() => handleNavigate(1)}
-          className="w-9 h-9 md:w-10 md:h-10 rounded-xl border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:bg-[#F3E8FF] active:scale-95 transition-all duration-200"
+          className="w-9 h-9 md:w-10 md:h-10 rounded-xl border border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:bg-[#F3E8FF] active:scale-95 transition-all duration-200"
           aria-label="Next month"
         >
           <i className="fas fa-chevron-right text-xs md:text-sm" />
@@ -169,7 +169,7 @@ function CalendarHeader({ currentDate, onNavigate, onToday }: {
       </div>
       <button
         onClick={onToday}
-        className="w-9 h-9 md:w-10 md:h-10 rounded-xl border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:bg-[#F3E8FF] active:scale-95 transition-all duration-200"
+        className="w-9 h-9 md:w-10 md:h-10 rounded-xl border border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-[#8B5CF6] hover:text-[#8B5CF6] hover:bg-[#F3E8FF] active:scale-95 transition-all duration-200"
         aria-label="Go to today"
       >
         <i className="fas fa-calendar-day text-xs md:text-sm" />
@@ -197,7 +197,7 @@ function CalendarDay({
 
   if (!item.day || item.isOther) {
     return (
-      <div className="aspect-square flex items-center justify-center text-sm font-medium text-[#94a3b8] opacity-40 select-none">
+      <div className="aspect-square flex items-center justify-center text-sm font-medium text-outline opacity-40 select-none">
         {item.day}
       </div>
     );
@@ -220,10 +220,10 @@ function CalendarDay({
         text-sm md:text-base font-semibold transition-all duration-200 select-none
         active:scale-90 md:active:scale-95
         ${item.isToday
-          ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/25"
+          ? "bg-[#8B5CF6] text-white shadow-md3-level2 shadow-[#8B5CF6]/25"
           : isSelected
-            ? "bg-[#F3E8FF] text-[#8B5CF6] border-2 border-[#8B5CF6] shadow-sm"
-            : "text-[#64748B] hover:bg-[#F3E8FF] hover:text-[#8B5CF6]"
+            ? "bg-[#F3E8FF] text-[#8B5CF6] border-2 border-[#8B5CF6] shadow-md3-level1"
+            : "text-on-surface-variant hover:bg-[#F3E8FF] hover:text-[#8B5CF6]"
         }
         ${isPressed && !item.isToday ? "scale-90" : "scale-100"}
       `}
@@ -238,7 +238,7 @@ function CalendarDay({
           rounded-full flex items-center justify-center
           text-[9px] md:text-[10px] font-bold
           ${isSelected ? "bg-[#8B5CF6] text-white" : "bg-[#8B5CF6] text-white"}
-          shadow-sm z-20
+          shadow-md3-level1 z-20
         `}>
           {bookingCount > 9 ? "9+" : bookingCount}
         </div>
@@ -246,7 +246,7 @@ function CalendarDay({
 
       {/* Today indicator dot */}
       {item.isToday && !isSelected && (
-        <div className="absolute bottom-1 md:bottom-1.5 w-1 h-1 bg-white/80 rounded-full" />
+        <div className="absolute bottom-1 md:bottom-1.5 w-1 h-1 bg-surface/80 rounded-full" />
       )}
 
       {/* Booking dots for non-selected days */}
@@ -283,7 +283,7 @@ function CalendarGrid({
         {DAYS_OF_WEEK.map((day, i) => (
           <div
             key={day}
-            className="text-center text-[10px] md:text-xs font-semibold text-[#64748B] uppercase tracking-wide py-1.5 md:py-2"
+            className="text-center text-[10px] md:text-xs font-semibold text-on-surface-variant uppercase tracking-wide py-1.5 md:py-2"
           >
             <span className="hidden md:inline">{day}</span>
             <span className="md:hidden">{DAYS_OF_WEEK_SHORT[i]}</span>
@@ -326,8 +326,8 @@ function BookingCard({ booking, index, onViewBooking }: {
   return (
     <div
       className={`
-        group bg-white rounded-2xl p-3.5 md:p-4 border border-[#E2E8F0] 
-        hover:border-[#8B5CF6]/40 hover:shadow-md hover:shadow-[#8B5CF6]/5 
+        group bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant 
+        hover:border-[#8B5CF6]/40 hover:shadow-md3-level2 hover:shadow-[#8B5CF6]/5 
         hover:-translate-y-0.5 transition-all duration-200 cursor-pointer
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
@@ -344,7 +344,7 @@ function BookingCard({ booking, index, onViewBooking }: {
             font-bold text-base md:text-lg shrink-0 transition-transform duration-200
             ${booking.verified
               ? "bg-[#F3E8FF] text-[#8B5CF6]"
-              : "bg-[#F1F5F9] text-[#64748B]"
+              : "bg-surface-variant text-on-surface-variant"
             }
             ${isHovered ? "scale-105" : "scale-100"}
           `}>
@@ -352,7 +352,7 @@ function BookingCard({ booking, index, onViewBooking }: {
           </div>
           <div className="min-w-0">
             <div className="font-medium text-sm md:text-base truncate">{booking.client}</div>
-            <div className="text-xs text-[#64748B] flex items-center gap-1">
+            <div className="text-xs text-on-surface-variant flex items-center gap-1">
               <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
               <span className="truncate">{booking.phone}</span>
             </div>
@@ -367,21 +367,21 @@ function BookingCard({ booking, index, onViewBooking }: {
       </div>
 
       <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3">
-        <span className="text-[11px] md:text-xs bg-[#F8FAFC] px-2 py-1 rounded-lg text-[#64748B] border border-[#E2E8F0]/60 flex items-center gap-1">
+        <span className="text-[11px] md:text-xs bg-surface-container-lowest px-2 py-1 rounded-lg text-on-surface-variant border border-outline-variant/60 flex items-center gap-1">
           <i className="fas fa-cut text-[#8B5CF6] text-[10px]" />
           {booking?.service || "N/A"}
         </span>
-        <span className="text-[11px] md:text-xs bg-[#F8FAFC] px-2 py-1 rounded-lg text-[#64748B] border border-[#E2E8F0]/60 flex items-center gap-1">
+        <span className="text-[11px] md:text-xs bg-surface-container-lowest px-2 py-1 rounded-lg text-on-surface-variant border border-outline-variant/60 flex items-center gap-1">
           <i className="fas fa-clock text-[#8B5CF6] text-[10px]" />
           {booking?.time || "N/A"}
         </span>
-        <span className="text-[11px] md:text-xs bg-[#F8FAFC] px-2 py-1 rounded-lg text-[#64748B] border border-[#E2E8F0]/60 flex items-center gap-1 hidden sm:flex">
+        <span className="text-[11px] md:text-xs bg-surface-container-lowest px-2 py-1 rounded-lg text-on-surface-variant border border-outline-variant/60 flex items-center gap-1 hidden sm:flex">
           <i className="fas fa-map-marker-alt text-[#8B5CF6] text-[10px]" />
           {booking.location}
         </span>
       </div>
 
-      <div className="flex justify-between items-center pt-2.5 md:pt-3 border-t border-[#E2E8F0]">
+      <div className="flex justify-between items-center pt-2.5 md:pt-3 border-t border-outline-variant">
         <div className="flex items-center gap-2">
           <span className="font-bold text-base md:text-lg text-[#8B5CF6]">
             KES {booking.price.toLocaleString()}
@@ -399,7 +399,7 @@ function BookingCard({ booking, index, onViewBooking }: {
             w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
             transition-all duration-200 active:scale-90
             ${isHovered
-              ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/25"
+              ? "bg-[#8B5CF6] text-white shadow-md3-level2 shadow-[#8B5CF6]/25"
               : "bg-[#F3E8FF] text-[#8B5CF6]"
             }
           `}
@@ -422,12 +422,12 @@ function DayBookingsList({ currentDate, bookings, onViewBooking }: {
 
   if (dayBookings.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 md:py-16 text-[#64748B] animate-fadeIn">
-        <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-[#F1F5F9] flex items-center justify-center mb-4">
+      <div className="flex flex-col items-center justify-center py-12 md:py-16 text-on-surface-variant animate-fadeIn">
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-surface-variant flex items-center justify-center mb-4">
           <i className="fas fa-calendar-times text-2xl md:text-3xl text-[#CBD5E1]" />
         </div>
         <p className="text-sm md:text-base font-medium">No bookings for this day</p>
-        <p className="text-xs text-[#94A3B8] mt-1">Select another date to view bookings</p>
+        <p className="text-xs text-outline mt-1">Select another date to view bookings</p>
       </div>
     );
   }
@@ -444,7 +444,7 @@ function DayBookingsList({ currentDate, bookings, onViewBooking }: {
       ))}
 
       {/* Day summary footer - MD3 styling */}
-      <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex justify-between items-center text-xs md:text-sm text-[#64748B]">
+      <div className="mt-4 pt-3 border-t border-outline-variant flex justify-between items-center text-xs md:text-sm text-on-surface-variant">
         <span>{dayBookings.length} booking{dayBookings.length !== 1 ? 's' : ''}</span>
         <span className="font-bold text-[#8B5CF6]">
           Total: KES {totalRevenue.toLocaleString()}
@@ -506,13 +506,13 @@ export default function BookingCalendar({
     return (
       <div className="mb-6">
         <CalendarSkeleton />
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
-          <div className="p-4 md:p-5 border-b border-[#E2E8F0] bg-[#F3E8FF]">
-            <ShimmerBox className="h-6 bg-[#E2E8F0] rounded-lg w-40" />
+        <div className="bg-surface rounded-2xl border border-outline-variant overflow-hidden">
+          <div className="p-4 md:p-5 border-b border-outline-variant bg-[#F3E8FF]">
+            <ShimmerBox className="h-6 bg-surface-variant rounded-lg w-40" />
           </div>
           <div className="p-4 md:p-5 space-y-3">
             {[0, 1, 2].map((i) => (
-              <ShimmerBox key={i} className="h-24 bg-[#F1F5F9] rounded-2xl" />
+              <ShimmerBox key={i} className="h-24 bg-surface-variant rounded-2xl" />
             ))}
           </div>
         </div>
@@ -526,7 +526,7 @@ export default function BookingCalendar({
     <div ref={containerRef}>
       {/* Calendar Grid - MD3 styling */}
       <div
-        className="bg-white rounded-2xl border border-[#E2E8F0] p-3 md:p-6 mb-4 md:mb-6 overflow-hidden"
+        className="bg-surface rounded-2xl border border-outline-variant p-3 md:p-6 mb-4 md:mb-6 overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -550,8 +550,8 @@ export default function BookingCalendar({
       </div>
 
       {/* Selected Day Bookings - MD3 styling */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
-        <div className="p-3.5 md:p-5 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F3E8FF]">
+      <div className="bg-surface rounded-2xl border border-outline-variant overflow-hidden">
+        <div className="p-3.5 md:p-5 border-b border-outline-variant flex justify-between items-center bg-[#F3E8FF]">
           <div className="font-semibold flex items-center gap-2 text-sm md:text-base">
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center">
               <i className="fas fa-calendar-check text-[#8B5CF6] text-xs md:text-sm" />
@@ -559,7 +559,7 @@ export default function BookingCalendar({
             <span>{formatShortDate(currentDate)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] md:text-xs text-[#64748B] bg-white/80 px-2 py-1 rounded-full border border-[#E2E8F0]/50">
+            <span className="text-[10px] md:text-xs text-on-surface-variant bg-surface/80 px-2 py-1 rounded-full border border-outline-variant/50">
               {dayBookings.length} booking{dayBookings.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -578,7 +578,7 @@ export default function BookingCalendar({
 <style jsx global>{`
   @media (max-width: 768px) {
     /* MD3 Calendar Container */
-    .bg-white.rounded-2xl.border { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; border: none !important; }
+    .bg-surface.rounded-2xl.border { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; border: none !important; }
     
     /* MD3 Calendar Header */
     .p-3.5.md\:p-5.border-b { padding: 16px !important; background: linear-gradient(135deg, var(--md-sys-color-primary-container, #f3e8ff) 0%, var(--md-sys-color-secondary-container, #fef3c7) 100%) !important; border-radius: 16px 16px 0 0 !important; }
@@ -602,13 +602,13 @@ export default function BookingCalendar({
     .border-2.border-\[\#8B5CF6\] { border-color: var(--md-sys-color-primary, #8b5cf6) !important; border-width: 2px !important; }
     
     /* MD3 Booking Cards in Calendar */
-    .bg-white.rounded-xl.border { border-radius: 12px !important; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important; margin-bottom: 8px !important; border: none !important; }
+    .bg-surface.rounded-xl.border { border-radius: 12px !important; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important; margin-bottom: 8px !important; border: none !important; }
     
     /* MD3 Status Badges */
     .rounded-full.px-2.py-0.5.text-xs { border-radius: 16px !important; font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; }
     
     /* MD3 Action Buttons */
-    button.bg-\[\#F3E8FF\], button.bg-white { border-radius: 20px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-    button.bg-\[\#F3E8FF\]:active, button.bg-white:active { transform: scale(0.95) !important; opacity: 0.8 !important; }
+    button.bg-\[\#F3E8FF\], button.bg-surface { border-radius: 20px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    button.bg-\[\#F3E8FF\]:active, button.bg-surface:active { transform: scale(0.95) !important; opacity: 0.8 !important; }
   }
 `}</style>

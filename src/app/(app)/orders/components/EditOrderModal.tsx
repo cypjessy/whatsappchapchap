@@ -38,7 +38,7 @@ const ORDER_STATUSES = [
   { value: "shipped", label: "Shipped", color: "bg-indigo-500", icon: "fa-shipping-fast" },
   { value: "delivered", label: "Delivered", color: "bg-green-500", icon: "fa-check-double" },
   { value: "cancelled", label: "Cancelled", color: "bg-red-500", icon: "fa-times" },
-  { value: "refunded", label: "Refunded", color: "bg-white0", icon: "fa-undo" },
+  { value: "refunded", label: "Refunded", color: "bg-surface", icon: "fa-undo" },
 ] as const;
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 function FormInput({ label, error, icon, className = "", ...props }: FormInputProps) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-[#64748b]">
+      <label className="block text-sm font-semibold text-on-surface-variant">
         {label}
         {props.required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -108,7 +108,7 @@ function FormInput({ label, error, icon, className = "", ...props }: FormInputPr
           className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 ${
             error
               ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50/30"
-              : "border-[#e2e8f0] hover:border-gray-300"
+              : "border-outline-variant hover:border-outline"
           } ${icon ? "pl-10" : ""} ${className}`}
           {...props}
         />
@@ -134,7 +134,7 @@ interface FormTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaEle
 function FormTextarea({ label, error, icon, className = "", ...props }: FormTextareaProps) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-[#64748b]">
+      <label className="block text-sm font-semibold text-on-surface-variant">
         {label}
         {props.required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -148,7 +148,7 @@ function FormTextarea({ label, error, icon, className = "", ...props }: FormText
           className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 resize-none ${
             error
               ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50/30"
-              : "border-[#e2e8f0] hover:border-gray-300"
+              : "border-outline-variant hover:border-outline"
           } ${icon ? "pl-10" : ""} ${className}`}
           {...props}
         />
@@ -170,7 +170,7 @@ interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> 
 function FormSelect({ label, error, icon, options, className = "", ...props }: FormSelectProps) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-[#64748b]">
+      <label className="block text-sm font-semibold text-on-surface-variant">
         {label}
         {props.required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -181,10 +181,10 @@ function FormSelect({ label, error, icon, options, className = "", ...props }: F
           </div>
         )}
         <select
-          className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 appearance-none cursor-pointer bg-white ${
+          className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 appearance-none cursor-pointer bg-surface ${
             error
               ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50/30"
-              : "border-[#e2e8f0] hover:border-gray-300"
+              : "border-outline-variant hover:border-outline"
           } ${icon ? "pl-10" : ""} ${className}`}
           {...props}
         >
@@ -364,7 +364,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
           <div className="flex-shrink-0 px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-md3-level3 flex-shrink-0">
                   <i className="fas fa-edit" />
                 </div>
                 <div className="min-w-0">

@@ -62,12 +62,12 @@ function Checkbox({
       onClick={onChange}
       className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all active:scale-90 ${
         checked || indeterminate
-          ? "bg-[#25D366] border-[#25D366] shadow-sm"
-          : "border-[#e2e8f0] hover:border-[#25D366] bg-white"
+          ? "bg-[#25D366] border-[#25D366] shadow-md3-level1"
+          : "border-outline-variant hover:border-[#25D366] bg-surface"
       }`}
     >
       {checked && <i className="fas fa-check text-white text-[10px]" />}
-      {indeterminate && <div className="w-2 h-0.5 bg-white rounded-full" />}
+      {indeterminate && <div className="w-2 h-0.5 bg-surface rounded-full" />}
     </button>
   );
 }
@@ -91,7 +91,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all active:scale-90 shadow-sm ${color} ${bgColor} ${hoverColor}`}
+      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all active:scale-90 shadow-md3-level1 ${color} ${bgColor} ${hoverColor}`}
       onClick={onClick}
       title={title}
       disabled={loading}
@@ -103,11 +103,11 @@ function ActionButton({
 
 function SkeletonRow({ delay }: { delay?: number }) {
   return (
-    <tr className="border-t border-[#e2e8f0] animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.05}s` }}>
+    <tr className="border-t border-outline-variant animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.05}s` }}>
       {[...Array(8)].map((_, i) => (
         <td key={i} className="p-4">
-          <div className={`h-4 bg-gray-200 rounded ${i === 0 ? "w-5" : i === 1 ? "w-20" : i === 2 ? "w-32" : i === 3 ? "w-28" : i === 4 ? "w-16" : i === 5 ? "w-20" : i === 6 ? "w-24" : "w-40"} ${i === 2 || i === 3 ? "flex items-center gap-3" : ""}`}>
-            {(i === 2 || i === 3) && <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />}
+          <div className={`h-4 bg-surface-container-high rounded ${i === 0 ? "w-5" : i === 1 ? "w-20" : i === 2 ? "w-32" : i === 3 ? "w-28" : i === 4 ? "w-16" : i === 5 ? "w-20" : i === 6 ? "w-24" : "w-40"} ${i === 2 || i === 3 ? "flex items-center gap-3" : ""}`}>
+            {(i === 2 || i === 3) && <div className="w-10 h-10 rounded-full bg-surface-container-high flex-shrink-0" />}
           </div>
         </td>
       ))}
@@ -120,11 +120,11 @@ function EmptyState({ colSpan }: { colSpan: number }) {
     <tr>
       <td colSpan={colSpan} className="py-16 text-center">
         <div className="animate-fadeIn">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-inbox text-2xl text-gray-300" />
           </div>
-          <h4 className="text-lg font-bold text-[#1e293b] mb-1">No Orders Found</h4>
-          <p className="text-sm text-[#64748b]">Try adjusting your filters or search criteria</p>
+          <h4 className="text-lg font-bold text-on-surface mb-1">No Orders Found</h4>
+          <p className="text-sm text-on-surface-variant">Try adjusting your filters or search criteria</p>
         </div>
       </td>
     </tr>
@@ -160,9 +160,9 @@ function BulkActionBar({
   }, [showMenu]);
 
   return (
-    <div className="bg-[#1e293b] text-white px-4 py-3 rounded-xl mb-4 flex items-center justify-between animate-slideDown shadow-lg">
+    <div className="bg-[#1e293b] text-white px-4 py-3 rounded-xl mb-4 flex items-center justify-between animate-slideDown shadow-md3-level3">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-surface/10 flex items-center justify-center">
           <i className="fas fa-check-square text-sm" />
         </div>
         <div>
@@ -173,7 +173,7 @@ function BulkActionBar({
       <div className="flex items-center gap-2">
         <div className="relative" ref={menuRef}>
           <button
-            className="px-3 py-2 bg-white/10 rounded-lg text-sm font-semibold hover:bg-white/20 transition-all flex items-center gap-2"
+            className="px-3 py-2 bg-surface/10 rounded-lg text-sm font-semibold hover:bg-surface/20 transition-all flex items-center gap-2"
             onClick={() => setShowMenu(!showMenu)}
           >
             <i className="fas fa-tag text-xs" />
@@ -181,11 +181,11 @@ function BulkActionBar({
             <i className={`fas fa-chevron-${showMenu ? "up" : "down"} text-xs`} />
           </button>
           {showMenu && (
-            <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-xl border border-[#e2e8f0] min-w-[180px] overflow-hidden z-50 animate-fadeIn">
+            <div className="absolute top-full right-0 mt-1 bg-surface rounded-xl shadow-md3-level4 border border-outline-variant min-w-[180px] overflow-hidden z-50 animate-fadeIn">
               {BULK_ACTIONS.map((action) => (
                 <button
                   key={action.status}
-                  className="w-full px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-white transition-colors text-left text-[#1e293b]"
+                  className="w-full px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-surface transition-colors text-left text-on-surface"
                   onClick={() => {
                     onStatusUpdate(action.status);
                     setShowMenu(false);
@@ -207,7 +207,7 @@ function BulkActionBar({
           Delete
         </button>
         <button
-          className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+          className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-surface/10 rounded-lg transition-all"
           onClick={onClear}
         >
           <i className="fas fa-times" />
@@ -279,13 +279,13 @@ export default function OrderTable({
 
   if (isLoading) {
     return (
-      <div className="hidden md:block overflow-x-auto max-w-full rounded-xl border border-[#e2e8f0] animate-fadeIn">
+      <div className="hidden md:block overflow-x-auto max-w-full rounded-xl border border-outline-variant animate-fadeIn">
         <table className="w-full min-w-[800px]">
           <thead>
-            <tr className="bg-white">
+            <tr className="bg-surface">
               {[...Array(8)].map((_, i) => (
                 <th key={i} className="text-left p-4">
-                  <div className="h-3 bg-gray-200 rounded w-16 animate-pulse" />
+                  <div className="h-3 bg-surface-container-high rounded w-16 animate-pulse" />
                 </th>
               ))}
             </tr>
@@ -319,10 +319,10 @@ export default function OrderTable({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto max-w-full rounded-xl border border-[#e2e8f0] shadow-sm animate-slideDown">
+      <div className="overflow-x-auto max-w-full rounded-xl border border-outline-variant shadow-md3-level1 animate-slideDown">
         <table className="w-full min-w-[800px]">
           <thead>
-            <tr className="bg-white sticky top-0 z-10 animate-fadeIn">
+            <tr className="bg-surface sticky top-0 z-10 animate-fadeIn">
               <th className="text-left p-4 w-12">
                 <Checkbox
                   checked={isAllSelected}
@@ -330,25 +330,25 @@ export default function OrderTable({
                   onChange={toggleSelectAll}
                 />
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Order ID
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Customer
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Products
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Amount
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Status
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                 Date
               </th>
-              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-[#64748b] w-48">
+              <th className="text-left p-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant w-48">
                 Actions
               </th>
             </tr>
@@ -366,7 +366,7 @@ export default function OrderTable({
                 return (
                   <tr
                     key={order.id}
-                    className={`border-t border-[#e2e8f0] transition-all duration-200 cursor-pointer animate-fadeIn ${
+                    className={`border-t border-outline-variant transition-all duration-200 cursor-pointer animate-fadeIn ${
                       isSelected
                         ? "bg-[rgba(37,211,102,0.05)]"
                         : isHovered
@@ -393,14 +393,14 @@ export default function OrderTable({
                     {/* Customer */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center font-bold text-sm text-[#1e293b] shadow-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center font-bold text-sm text-on-surface shadow-md3-level1">
                           {order.customerName?.charAt(0)?.toUpperCase() || "C"}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-bold text-sm text-[#1e293b] truncate max-w-[140px]">
+                          <div className="font-bold text-sm text-on-surface truncate max-w-[140px]">
                             {order.customerName || "Customer"}
                           </div>
-                          <div className="text-xs text-[#64748b] flex items-center gap-1">
+                          <div className="text-xs text-on-surface-variant flex items-center gap-1">
                             <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
                             <span className="truncate">{order.customerPhone || "N/A"}</span>
                           </div>
@@ -415,7 +415,7 @@ export default function OrderTable({
                           <img
                             src={order.productImage}
                             alt={order.products?.[0]?.name || order.productName || "Product"}
-                            className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-gray-100"
+                            className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface-variant"
                             onError={(e) => {
                               const img = e.target as HTMLImageElement;
                               img.style.display = 'none';
@@ -431,10 +431,10 @@ export default function OrderTable({
                           
                         </div>
                         <div className="min-w-0">
-                          <div className="font-bold text-sm text-[#1e293b] truncate max-w-[120px]">
+                          <div className="font-bold text-sm text-on-surface truncate max-w-[120px]">
                             {order.products?.[0]?.name || order.productName || "Product"}
                           </div>
-                          <div className="text-xs text-[#64748b]">
+                          <div className="text-xs text-on-surface-variant">
                             {order.products && order.products.length > 1
                               ? `+${order.products.length - 1} more`
                               : `Qty: ${order.products?.[0]?.quantity || order.quantity || 1}`}
@@ -445,14 +445,14 @@ export default function OrderTable({
 
                     {/* Amount */}
                     <td className="p-4">
-                      <div className="font-bold text-base text-[#1e293b]">{formatCurrency(order.total || 0)}</div>
-                      <div className="text-[11px] text-[#64748b] font-medium capitalize">{order.paymentMethod || "N/A"}</div>
+                      <div className="font-bold text-base text-on-surface">{formatCurrency(order.total || 0)}</div>
+                      <div className="text-[11px] text-on-surface-variant font-medium capitalize">{order.paymentMethod || "N/A"}</div>
                     </td>
 
                     {/* Status */}
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusStyle.bg} ${statusStyle.color} shadow-sm`}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusStyle.bg} ${statusStyle.color} shadow-md3-level1`}
                       >
                         <i className={`fas ${statusIcon} text-[8px]`} />
                         {statusStyle.label}
@@ -461,8 +461,8 @@ export default function OrderTable({
 
                     {/* Date */}
                     <td className="p-4">
-                      <div className="font-semibold text-sm text-[#1e293b]">{formatDate(order.createdAt)}</div>
-                      <div className="text-[11px] text-[#64748b]">{formatTime(order.createdAt)}</div>
+                      <div className="font-semibold text-sm text-on-surface">{formatDate(order.createdAt)}</div>
+                      <div className="text-[11px] text-on-surface-variant">{formatTime(order.createdAt)}</div>
                     </td>
 
                     {/* Actions */}
@@ -571,8 +571,8 @@ export default function OrderTable({
 
       {/* Selection Summary */}
       {selectedOrders.size > 0 && (
-        <div className="mt-3 text-xs text-[#64748b] text-right animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-          <span className="font-semibold text-[#1e293b]">{selectedOrders.size}</span> orders selected
+        <div className="mt-3 text-xs text-on-surface-variant text-right animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+          <span className="font-semibold text-on-surface">{selectedOrders.size}</span> orders selected
         </div>
       )}
     </div>

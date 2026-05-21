@@ -40,9 +40,9 @@ function ScrollButton({
       onClick={onClick}
       className={`
         absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-10 md:h-10
-        rounded-full bg-[var(--md-sys-color-surface)]/95 backdrop-blur-md shadow-lg border border-[var(--md-sys-color-outline-variant)]/80
+        rounded-full bg-[var(--md-sys-color-surface)]/95 backdrop-blur-md shadow-md3-level3 border border-[var(--md-sys-color-outline-variant)]/80
         flex items-center justify-center transition-all duration-300
-        hover:shadow-xl hover:border-[var(--md-sys-color-primary)]/30 hover:text-[var(--md-sys-color-primary)]
+        hover:shadow-md3-level4 hover:border-[var(--md-sys-color-primary)]/30 hover:text-[var(--md-sys-color-primary)]
         active:scale-90
         ${direction === "left" ? "left-0" : "right-0"}
         ${visible ? "opacity-100 translate-x-0" : "opacity-0 pointer-events-none"}
@@ -112,11 +112,11 @@ function CategoryTab({
         transition-all duration-300 ease-out select-none
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]/40 focus-visible:ring-offset-2
         ${isActive
-          ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/20 z-10"
+          ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/20 z-10"
           : "bg-[var(--md-sys-color-surface)] border-2 border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] z-0"
         }
         ${!isActive && isHovered
-          ? "border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)] shadow-sm -translate-y-0.5"
+          ? "border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)] shadow-md3-level1 -translate-y-0.5"
           : ""
         }
         ${isPressed ? "scale-95" : "scale-100"}
@@ -351,7 +351,7 @@ export default function ProductCategoryTabs({
     <div className="relative mb-3 md:mb-6 px-0">
       {/* Mobile: MD3 scrollable tabs with active indicator */}
       <div className="md:hidden">
-        <div className="flex gap-0 overflow-x-auto pb-0 scrollbar-hide border-b border-[#e2e8f0]">
+        <div className="flex gap-0 overflow-x-auto pb-0 scrollbar-hide border-b border-outline-variant">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id;
             return (
@@ -359,13 +359,13 @@ export default function ProductCategoryTabs({
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={`relative px-3 py-3 font-medium text-xs whitespace-nowrap transition-colors ${
-                  isActive ? "text-[#25D366]" : "text-[#64748b]"
+                  isActive ? "text-[#25D366]" : "text-on-surface-variant"
                 }`}
               >
                 {cat.icon && <span className="mr-1">{cat.icon}</span>}
                 {cat.label}
                 {cat.count > 0 && (
-                  <span className={`ml-1 ${isActive ? "text-[#25D366]" : "text-[#94a3b8]"}`}>
+                  <span className={`ml-1 ${isActive ? "text-[#25D366]" : "text-outline"}`}>
                     ({cat.count})
                   </span>
                 )}
@@ -448,7 +448,7 @@ export default function ProductCategoryTabs({
         </div>
 
         {/* Active indicator line */}
-        <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#e2e8f0] rounded-full mx-0 overflow-hidden">
+        <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-surface-variant rounded-full mx-0 overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full transition-all duration-500 ease-out"
             style={{

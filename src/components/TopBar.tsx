@@ -71,7 +71,7 @@ function ActionIcon({
         transition-all duration-200 ease-out
         ${isPressed ? "scale-90" : "scale-100"}
         ${isScrolled 
-          ? "hover:bg-gray-100 active:bg-gray-200 text-gray-700" 
+          ? "hover:bg-surface-variant active:bg-surface-container-high text-on-surface" 
           : "hover:bg-white/20 active:bg-white/30 text-white"
         }
       `}
@@ -97,7 +97,7 @@ function ActionIcon({
           min-w-[20px] h-[20px] px-1
           bg-red-500 text-white text-[11px] font-bold
           rounded-full flex items-center justify-center
-          border-2 ${isScrolled ? 'border-white' : 'border-[#25D366]'} shadow-sm animate-badgePop
+          border-2 ${isScrolled ? 'border-white' : 'border-[#25D366]'} shadow-md3-level1 animate-badgePop
           z-20
         `}>
           {action.badge > 99 ? "99+" : action.badge}

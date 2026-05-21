@@ -10,11 +10,11 @@ export default function Offline() {
           <i className="fas fa-wifi text-4xl text-[#8b5cf6]" />
         </div>
         
-        <h1 className="text-2xl md:text-3xl font-extrabold text-[#1e293b] mb-3">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface mb-3">
           You're Offline
         </h1>
         
-        <p className="text-[#64748b] mb-8 leading-relaxed">
+        <p className="text-on-surface-variant mb-8 leading-relaxed">
           It looks like you've lost your internet connection. 
           Some features may not be available until you're back online.
         </p>
@@ -22,7 +22,7 @@ export default function Offline() {
         <div className="space-y-3">
           <button
             onClick={() => window.location.reload()}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+            className="w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-md3-level4 hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
           >
             <i className="fas fa-redo-alt mr-2" />
             Try Again
@@ -30,15 +30,15 @@ export default function Offline() {
           
           <Link
             href="/dashboard"
-            className="block w-full px-6 py-3 border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-bold hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all duration-200"
+            className="block w-full px-6 py-3 border-2 border-outline-variant text-on-surface-variant rounded-xl font-bold hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all duration-200"
           >
             <i className="fas fa-home mr-2" />
             Go to Dashboard
           </Link>
         </div>
         
-        <div className="mt-8 pt-6 border-t border-[#e2e8f0]">
-          <p className="text-xs text-[#94a3b8]">
+        <div className="mt-8 pt-6 border-t border-outline-variant">
+          <p className="text-xs text-outline">
             💡 Tip: Cached pages and data are still available offline
           </p>
         </div>

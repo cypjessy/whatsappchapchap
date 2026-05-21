@@ -88,14 +88,14 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border transition-all duration-200
           ${isFocused
-            ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-white"
-            : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
+            ? "border-[#8B5CF6] shadow-md3-level2 shadow-[#8B5CF6]/10 bg-surface"
+            : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
       >
         <i className={`
           fas fa-search absolute left-3.5 text-sm transition-colors duration-200
-          ${isFocused ? "text-[#8B5CF6]" : "text-[#94A3B8]"}
+          ${isFocused ? "text-[#8B5CF6]" : "text-outline"}
         `} />
         <input
           ref={inputRef}
@@ -105,7 +105,7 @@ function SearchInput({
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="w-full pl-10 pr-9 py-2.5 md:py-3 bg-transparent text-sm font-medium placeholder:text-[#94A3B8] focus:outline-none rounded-xl"
+          className="w-full pl-10 pr-9 py-2.5 md:py-3 bg-transparent text-sm font-medium placeholder:text-outline focus:outline-none rounded-xl"
         />
         {value && (
           <button
@@ -113,7 +113,7 @@ function SearchInput({
               onChange("");
               inputRef.current?.focus();
             }}
-            className="absolute right-3 w-5 h-5 rounded-full bg-[#E2E8F0] text-[#64748B] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white transition-all duration-150"
+            className="absolute right-3 w-5 h-5 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white transition-all duration-150"
           >
             <i className="fas fa-times text-[9px]" />
           </button>
@@ -149,7 +149,7 @@ function SelectDropdown({
         className={`
           relative flex items-center rounded-xl border transition-all duration-200
           ${isFocused
-            ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+            ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
             : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
           }
         `}
@@ -204,13 +204,13 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border transition-all duration-200
         ${isStartFocused
-          ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-white"
-          : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
+          ? "border-[#8B5CF6] shadow-md3-level2 shadow-[#8B5CF6]/10 bg-surface"
+          : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
         <i className={`
           fas fa-calendar-alt absolute left-3 text-sm transition-colors duration-200
-          ${isStartFocused ? "text-[#8B5CF6]" : "text-[#94A3B8]"}
+          ${isStartFocused ? "text-[#8B5CF6]" : "text-outline"}
         `} />
         <input
           type="date"
@@ -218,7 +218,7 @@ function DateRangePicker({
           onChange={(e) => onStartChange(e.target.value)}
           onFocus={() => setIsStartFocused(true)}
           onBlur={() => setIsStartFocused(false)}
-          className="w-full pl-9 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-[#1E293B]"
+          className="w-full pl-9 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-on-surface"
         />
       </div>
 
@@ -229,13 +229,13 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border transition-all duration-200
         ${isEndFocused
-          ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-white"
-          : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
+          ? "border-[#8B5CF6] shadow-md3-level2 shadow-[#8B5CF6]/10 bg-surface"
+          : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
         <i className={`
           fas fa-calendar-alt absolute left-3 text-sm transition-colors duration-200
-          ${isEndFocused ? "text-[#8B5CF6]" : "text-[#94A3B8]"}
+          ${isEndFocused ? "text-[#8B5CF6]" : "text-outline"}
         `} />
         <input
           type="date"
@@ -243,7 +243,7 @@ function DateRangePicker({
           onChange={(e) => onEndChange(e.target.value)}
           onFocus={() => setIsEndFocused(true)}
           onBlur={() => setIsEndFocused(false)}
-          className="w-full pl-9 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-[#1E293B]"
+          className="w-full pl-9 pr-3 py-2.5 md:py-3 bg-transparent text-sm font-medium focus:outline-none rounded-xl text-on-surface"
         />
       </div>
     </div>
@@ -366,7 +366,7 @@ export default function BookingFilters({
   const activeFilters = getActiveFilters();
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden mb-6 shadow-sm">
+    <div className="bg-surface rounded-2xl border border-outline-variant overflow-hidden mb-6 shadow-md3-level1">
       {/* Header with search + expand toggle on mobile */}
       <div className="p-3 md:p-4">
         <div className="flex items-center gap-2 md:gap-3">
@@ -385,7 +385,7 @@ export default function BookingFilters({
               transition-all duration-200 active:scale-95
               ${isExpanded
                 ? "border-[#8B5CF6] bg-[#8B5CF6] text-white"
-                : "border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#8B5CF6] hover:text-[#8B5CF6]"
+                : "border-outline-variant bg-surface text-on-surface-variant hover:border-[#8B5CF6] hover:text-[#8B5CF6]"
               }
             `}
             aria-label={isExpanded ? "Collapse filters" : "Expand filters"}
@@ -454,7 +454,7 @@ export default function BookingFilters({
           md:hidden overflow-hidden transition-all duration-300 ease-out
           ${isExpanded ? "max-h-[500px] opacity-100 mt-3" : "max-h-0 opacity-0 mt-0"}
         `}>
-          <div className="space-y-2.5 pt-2 border-t border-[#E2E8F0]">
+          <div className="space-y-2.5 pt-2 border-t border-outline-variant">
             <SelectDropdown
               value={selectedServiceFilter}
               onChange={setSelectedServiceFilter}
@@ -507,7 +507,7 @@ export default function BookingFilters({
       {activeFilters.length > 0 && (
         <div className="px-3 md:px-4 pb-3 md:pb-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] md:text-xs font-semibold text-[#94A3B8] uppercase tracking-wide mr-1">
+            <span className="text-[10px] md:text-xs font-semibold text-outline uppercase tracking-wide mr-1">
               Active:
             </span>
             {activeFilters.map((filter, idx) => (

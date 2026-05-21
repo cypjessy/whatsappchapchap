@@ -47,16 +47,16 @@ function SectionHeader({ icon, title, color = "#25D366" }: { icon: string; title
       >
         <i className={`fas ${icon} text-xs`} style={{ color }} />
       </div>
-      <span className="text-xs font-bold uppercase tracking-wider text-[#64748b]">{title}</span>
+      <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">{title}</span>
     </div>
   );
 }
 
 function InfoRow({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`flex justify-between py-2.5 border-b border-[#e2e8f0] last:border-b-0 text-sm ${className}`}>
-      <span className="text-[#64748b] flex-shrink-0 mr-4">{label}</span>
-      <span className="font-semibold text-right text-[#1e293b]">{children}</span>
+    <div className={`flex justify-between py-2.5 border-b border-outline-variant last:border-b-0 text-sm ${className}`}>
+      <span className="text-on-surface-variant flex-shrink-0 mr-4">{label}</span>
+      <span className="font-semibold text-right text-on-surface">{children}</span>
     </div>
   );
 }
@@ -113,21 +113,21 @@ function ConfirmModal({
   return (
     <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slideUp">
-        <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmColor.replace("bg-gradient-to-r", "").split(" ")[0]?.replace("from-", "bg-") || "bg-gray-100"}`}>
+      <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slideUp">
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmColor.replace("bg-gradient-to-r", "").split(" ")[0]?.replace("from-", "bg-") || "bg-surface-variant"}`}>
           <i className={`fas ${icon} text-2xl text-white`} />
         </div>
-        <h3 className="text-xl font-bold text-[#1e293b] text-center mb-2">{title}</h3>
-        <p className="text-[#64748b] text-center mb-6 text-sm">{message}</p>
+        <h3 className="text-xl font-bold text-on-surface text-center mb-2">{title}</h3>
+        <p className="text-on-surface-variant text-center mb-6 text-sm">{message}</p>
         <div className="flex gap-3">
           <button
-            className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all active:scale-95"
+            className="flex-1 px-4 py-3 bg-surface-variant text-on-surface rounded-xl font-semibold hover:bg-surface-container-high transition-all active:scale-95"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className={`flex-1 px-4 py-3 ${confirmColor} text-white rounded-xl font-semibold transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2`}
+            className={`flex-1 px-4 py-3 ${confirmColor} text-white rounded-xl font-semibold transition-all active:scale-95 shadow-md3-level3 flex items-center justify-center gap-2`}
             onClick={onConfirm}
           >
             {confirmText}
@@ -153,7 +153,7 @@ function OrderTimeline({ order, formatDate, formatTime }: { order: Order; format
 
   return (
     <div className="relative pl-6">
-      <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-[#e2e8f0]" />
+      <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-surface-variant" />
       {timelineEvents.map((event, idx) => {
         const eventIndex = STATUS_ORDER.indexOf(event.status as any);
         const isCompleted = eventIndex <= currentStatusIndex && currentStatusIndex >= 0;
@@ -163,30 +163,30 @@ function OrderTimeline({ order, formatDate, formatTime }: { order: Order; format
         return (
           <div key={event.status} className="relative pb-6 last:pb-0">
             <div
-              className={`absolute left-[-21px] w-3 h-3 rounded-full border-2 border-white shadow-sm transition-all ${
+              className={`absolute left-[-21px] w-3 h-3 rounded-full border-2 border-white shadow-md3-level1 transition-all ${
                 isCompleted
                   ? "bg-[#10b981] shadow-[0_0_0_2px_#10b981]"
                   : isCurrent
                   ? "bg-[#f59e0b] shadow-[0_0_0_2px_#f59e0b] animate-pulse"
-                  : "bg-[#e2e8f0] shadow-[0_0_0_2px_#e2e8f0]"
+                  : "bg-surface-variant shadow-[0_0_0_2px_#e2e8f0]"
               }`}
             />
             <div
-              className={`bg-white border rounded-lg p-4 transition-all ${
-                isCurrent ? "border-[#f59e0b] shadow-sm" : "border-[#e2e8f0]"
+              className={`bg-surface border rounded-lg p-4 transition-all ${
+                isCurrent ? "border-[#f59e0b] shadow-md3-level1" : "border-outline-variant"
               }`}
             >
               <div className="flex justify-between items-start mb-1">
-                <span className={`font-bold text-sm ${isCompleted || isCurrent ? "text-[#1e293b]" : "text-gray-400"}`}>
+                <span className={`font-bold text-sm ${isCompleted || isCurrent ? "text-on-surface" : "text-gray-400"}`}>
                   {event.label}
                 </span>
                 {hasTime && (
-                  <span className="text-[10px] text-[#64748b] font-medium">
+                  <span className="text-[10px] text-on-surface-variant font-medium">
                     {formatDate(event.time)} {formatTime(event.time)}
                   </span>
                 )}
               </div>
-              <p className={`text-xs ${isCompleted || isCurrent ? "text-[#64748b]" : "text-gray-300"}`}>
+              <p className={`text-xs ${isCompleted || isCurrent ? "text-on-surface-variant" : "text-gray-300"}`}>
                 {event.desc}
               </p>
             </div>
@@ -225,13 +225,13 @@ function StatusDropdown({
   return (
     <div
       ref={ref}
-      className="absolute bottom-full right-0 mb-2 bg-white rounded-xl shadow-xl border border-[#e2e8f0] min-w-[220px] z-50 overflow-hidden animate-fadeIn"
+      className="absolute bottom-full right-0 mb-2 bg-surface rounded-xl shadow-md3-level4 border border-outline-variant min-w-[220px] z-50 overflow-hidden animate-fadeIn"
     >
       <div className="py-1">
         {ALL_STATUSES.map((s) => (
           <button
             key={s.value}
-            className={`w-full px-4 py-3 text-sm flex items-center gap-3 hover:bg-white transition-colors text-left ${
+            className={`w-full px-4 py-3 text-sm flex items-center gap-3 hover:bg-surface transition-colors text-left ${
               currentStatus === s.value ? "bg-[rgba(37,211,102,0.05)]" : ""
             }`}
             onClick={() => {
@@ -241,8 +241,8 @@ function StatusDropdown({
           >
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
             <div className="flex-1">
-              <div className="font-semibold text-[#1e293b]">{s.label}</div>
-              <div className="text-[10px] text-[#64748b]">{s.desc}</div>
+              <div className="font-semibold text-on-surface">{s.label}</div>
+              <div className="text-[10px] text-on-surface-variant">{s.desc}</div>
             </div>
             {currentStatus === s.value && <i className="fas fa-check text-[#25D366] text-xs" />}
           </button>
@@ -388,7 +388,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Confirm Order",
         icon: "fa-check-circle",
-        color: "bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg",
+        color: "bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-md3-level3",
         status: "confirmed" as OrderStatus,
       });
     }
@@ -396,7 +396,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Start Processing",
         icon: "fa-cog",
-        color: "bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg",
+        color: "bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-md3-level3",
         status: "processing" as OrderStatus,
       });
     }
@@ -404,7 +404,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Mark Shipped",
         icon: "fa-shipping-fast",
-        color: "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:shadow-lg",
+        color: "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:shadow-md3-level3",
         status: "shipped" as OrderStatus,
       });
     }
@@ -412,7 +412,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Mark Delivered",
         icon: "fa-check-double",
-        color: "bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:shadow-lg",
+        color: "bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:shadow-md3-level3",
         status: "delivered" as OrderStatus,
       });
     }
@@ -429,39 +429,39 @@ export default function OrderDetailModal({
       {/* Modal */}
       <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 lg:p-6 pointer-events-none overflow-y-auto">
         <div
-          className="bg-white w-full max-w-sm md:max-w-[1000px] max-h-[90vh] md:max-h-[calc(100vh-3rem)] rounded-2xl overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp"
+          className="bg-surface w-full max-w-sm md:max-w-[1000px] max-h-[90vh] md:max-h-[calc(100vh-3rem)] rounded-2xl overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ─── Unified Header ─── */}
-          <div className="flex-shrink-0 p-3 md:p-5 border-b border-[#e2e8f0] bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
+          <div className="flex-shrink-0 p-3 md:p-5 border-b border-outline-variant bg-gradient-to-br from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
             <div className="flex items-center justify-between gap-3">
               {/* Left: Back + Icon + Info */}
               <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1 animate-slideUp">
                 <button
-                  className="md:hidden w-9 h-9 flex items-center justify-center text-[#64748b] hover:bg-[#f1f5f9] rounded-xl transition-all active:scale-95 flex-shrink-0"
+                  className="md:hidden w-9 h-9 flex items-center justify-center text-on-surface-variant hover:bg-surface-variant rounded-xl transition-all active:scale-95 flex-shrink-0"
                   onClick={onClose}
                 >
                   <i className="fas fa-arrow-left" />
                 </button>
 
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg md:text-2xl shadow-lg flex-shrink-0">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg md:text-2xl shadow-md3-level3 flex-shrink-0">
                   <i className="fas fa-shopping-bag" />
                 </div>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base md:text-xl lg:text-2xl font-extrabold text-[#1e293b]">
+                    <h2 className="text-base md:text-xl lg:text-2xl font-extrabold text-on-surface">
                       Order <span className="text-[#25D366]">#{orderNumber}</span>
                     </h2>
                     {/* Status Badge - Desktop inline, Mobile below */}
                     <span
-                      className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm ${statusStyle.bg} ${statusStyle.color}`}
+                      className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md3-level1 ${statusStyle.bg} ${statusStyle.color}`}
                     >
                       <i className={`fas ${statusConfig?.icon || "fa-circle"} text-[10px]`} />
                       {statusStyle.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm text-[#64748b] mt-0.5">
+                  <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm text-on-surface-variant mt-0.5">
                     <span className="flex items-center gap-1">
                       <i className="far fa-calendar text-[10px]" />
                       {formatDate(order.createdAt)}
@@ -478,7 +478,7 @@ export default function OrderDetailModal({
               {/* Right: Actions */}
               <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                 <button
-                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-[#64748b] hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all active:scale-95"
+                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-on-surface-variant hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all active:scale-95"
                   onClick={() => handleAction("print", () => onPrintInvoice(order))}
                   title="Print Invoice"
                   disabled={loadingAction === "print"}
@@ -490,7 +490,7 @@ export default function OrderDetailModal({
                   )}
                 </button>
                 <button
-                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[rgba(37,211,102,0.1)] rounded-xl transition-all active:scale-95"
+                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-on-surface-variant hover:text-[#25D366] hover:bg-[rgba(37,211,102,0.1)] rounded-xl transition-all active:scale-95"
                   onClick={() => handleAction("duplicate", () => onDuplicateOrder(order))}
                   title="Duplicate Order"
                   disabled={loadingAction === "duplicate"}
@@ -502,7 +502,7 @@ export default function OrderDetailModal({
                   )}
                 </button>
                 <button
-                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-[#64748b] hover:text-[#25D366] hover:bg-[rgba(37,211,102,0.1)] rounded-xl transition-all active:scale-95"
+                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-on-surface-variant hover:text-[#25D366] hover:bg-[rgba(37,211,102,0.1)] rounded-xl transition-all active:scale-95"
                   onClick={() => handleAction("whatsapp", () => onSendWhatsApp(order, order.status as OrderStatus))}
                   title="Send WhatsApp"
                   disabled={loadingAction === "whatsapp"}
@@ -515,7 +515,7 @@ export default function OrderDetailModal({
                 </button>
                 {!isCancelled && (
                   <button
-                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-[#64748b] hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95"
+                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-on-surface-variant hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95"
                     onClick={handleCancel}
                     title="Cancel Order"
                     disabled={loadingAction === "cancel"}
@@ -528,7 +528,7 @@ export default function OrderDetailModal({
                   </button>
                 )}
                 <button
-                  className="hidden md:flex w-10 h-10 items-center justify-center text-[#64748b] hover:bg-gray-100 rounded-xl transition-all active:scale-95"
+                  className="hidden md:flex w-10 h-10 items-center justify-center text-on-surface-variant hover:bg-surface-variant rounded-xl transition-all active:scale-95"
                   onClick={onClose}
                   title="Close (Esc)"
                 >
@@ -540,12 +540,12 @@ export default function OrderDetailModal({
             {/* Mobile Status Bar */}
             <div className="md:hidden mt-2 flex items-center gap-2">
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm ${statusStyle.bg} ${statusStyle.color}`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md3-level1 ${statusStyle.bg} ${statusStyle.color}`}
               >
                 <i className={`fas ${statusConfig?.icon || "fa-circle"} text-[10px]`} />
                 {statusStyle.label}
               </span>
-              <span className="text-[10px] text-[#64748b]">{statusConfig?.desc}</span>
+              <span className="text-[10px] text-on-surface-variant">{statusConfig?.desc}</span>
             </div>
           </div>
 
@@ -568,12 +568,12 @@ export default function OrderDetailModal({
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-lg capitalize">{statusConfig?.label}</h3>
-              <p className="text-sm text-[#64748b]">{statusConfig?.desc}</p>
+              <p className="text-sm text-on-surface-variant">{statusConfig?.desc}</p>
             </div>
             {/* Quick Status Update */}
             <div className="relative">
               <button
-                className="px-4 py-2 bg-white border border-[#e2e8f0] rounded-xl text-sm font-semibold hover:border-[#25D366] transition-all flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 bg-surface border border-outline-variant rounded-xl text-sm font-semibold hover:border-[#25D366] transition-all flex items-center gap-2 shadow-md3-level1"
                 onClick={() => setShowStatusMenu(!showStatusMenu)}
               >
                 <i className="fas fa-tag text-xs" />
@@ -593,7 +593,7 @@ export default function OrderDetailModal({
           <div className="flex-1 overflow-y-auto scrollbar-thin">
             <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr]">
               {/* ─── Left Column ─── */}
-              <div className="p-4 md:p-6 lg:border-r border-[#e2e8f0]">
+              <div className="p-4 md:p-6 lg:border-r border-outline-variant">
                 {/* Order Items */}
                 <div className="animate-fadeIn" style={{ animationDelay: '0.05s' }}>
                   <SectionHeader icon="fa-box" title={`Order Items (${order.products?.length || (order.productName ? 1 : 0)})`} />
@@ -605,73 +605,73 @@ export default function OrderDetailModal({
                     order.products.map((product, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#e2e8f0] hover:border-[#25D366]/30 transition-all"
+                        className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all"
                       >
                         <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
                           📦
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm truncate">{product.name}</h4>
-                          <div className="flex items-center gap-2 text-xs text-[#64748b]">
+                          <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                             <span>{formatCurrency(product.price)}</span>
                             <span>×</span>
                             <span>{product.quantity}</span>
                           </div>
                         </div>
-                        <div className="font-bold text-sm text-[#1e293b]">{formatCurrency(product.price * product.quantity)}</div>
+                        <div className="font-bold text-sm text-on-surface">{formatCurrency(product.price * product.quantity)}</div>
                       </div>
                     ))
                   ) : order.productName ? (
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#e2e8f0]">
+                    <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
                         📦
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-sm">{order.productName}</h4>
-                        <div className="text-xs text-[#64748b]">Qty: {order.quantity || 1}</div>
+                        <div className="text-xs text-on-surface-variant">Qty: {order.quantity || 1}</div>
                       </div>
                       <div className="font-bold text-sm">{formatCurrency((order.basePrice || 0) * (order.quantity || 1))}</div>
                     </div>
                   ) : (
-                    <div className="text-center text-[#64748b] py-8 bg-white rounded-xl">No items</div>
+                    <div className="text-center text-on-surface-variant py-8 bg-surface rounded-xl">No items</div>
                   )}
                 </div>
 
                 {/* Desktop Table */}
                 <div className="hidden lg:block mb-6">
-                  <div className="border border-[#e2e8f0] rounded-xl overflow-hidden">
+                  <div className="border border-outline-variant rounded-xl overflow-hidden">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="text-left bg-white">
-                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-[#64748b]">Product</th>
-                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-[#64748b] text-right">Price</th>
-                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-[#64748b] text-center">Qty</th>
-                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-[#64748b] text-right">Total</th>
+                        <tr className="text-left bg-surface">
+                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Product</th>
+                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">Price</th>
+                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-center">Qty</th>
+                          <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">Total</th>
                         </tr>
                       </thead>
                       <tbody>
                         {order.products && order.products.length > 0 ? (
                           order.products.map((product, idx) => (
-                            <tr key={idx} className="border-t border-[#e2e8f0] hover:bg-white transition-colors">
+                            <tr key={idx} className="border-t border-outline-variant hover:bg-surface transition-colors">
                               <td className="py-4 px-4">
                                 <div className="flex items-center gap-3">
                                   <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
                                     📦
                                   </div>
                                   <div>
-                                    <h4 className="font-bold text-sm text-[#1e293b]">{product.name}</h4>
+                                    <h4 className="font-bold text-sm text-on-surface">{product.name}</h4>
                                   </div>
                                 </div>
                               </td>
                               <td className="py-4 px-4 text-sm font-semibold text-right">{formatCurrency(product.price)}</td>
-                              <td className="py-4 px-4 text-sm text-[#64748b] text-center">× {product.quantity}</td>
-                              <td className="py-4 px-4 text-sm font-bold text-right text-[#1e293b]">
+                              <td className="py-4 px-4 text-sm text-on-surface-variant text-center">× {product.quantity}</td>
+                              <td className="py-4 px-4 text-sm font-bold text-right text-on-surface">
                                 {formatCurrency(product.price * product.quantity)}
                               </td>
                             </tr>
                           ))
                         ) : order.productName ? (
-                          <tr className="border-t border-[#e2e8f0]">
+                          <tr className="border-t border-outline-variant">
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-3">
                                 {order.productImage ? (
@@ -687,14 +687,14 @@ export default function OrderDetailModal({
                               </div>
                             </td>
                             <td className="py-4 px-4 text-sm font-semibold text-right">{formatCurrency(order.basePrice || 0)}</td>
-                            <td className="py-4 px-4 text-sm text-[#64748b] text-center">× {order.quantity || 1}</td>
+                            <td className="py-4 px-4 text-sm text-on-surface-variant text-center">× {order.quantity || 1}</td>
                             <td className="py-4 px-4 text-sm font-bold text-right">
                               {formatCurrency((order.basePrice || 0) * (order.quantity || 1))}
                             </td>
                           </tr>
                         ) : (
                           <tr>
-                            <td colSpan={4} className="py-8 text-center text-[#64748b] text-sm">No items in this order</td>
+                            <td colSpan={4} className="py-8 text-center text-on-surface-variant text-sm">No items in this order</td>
                           </tr>
                         )}
                       </tbody>
@@ -712,11 +712,11 @@ export default function OrderDetailModal({
                         .map(([key, value]) => (
                           <span
                             key={key}
-                            className="bg-white px-3 py-1.5 rounded-full text-sm font-semibold border border-[#e2e8f0] shadow-sm flex items-center gap-1.5"
+                            className="bg-surface px-3 py-1.5 rounded-full text-sm font-semibold border border-outline-variant shadow-md3-level1 flex items-center gap-1.5"
                           >
                             <i className="fas fa-check text-[#10b981] text-[10px]" />
-                            <span className="text-[#64748b] text-xs">{key.replace(/_/g, " ")}:</span>
-                            <span className="text-[#1e293b]">{value}</span>
+                            <span className="text-on-surface-variant text-xs">{key.replace(/_/g, " ")}:</span>
+                            <span className="text-on-surface">{value}</span>
                           </span>
                         ))}
                     </div>
@@ -724,7 +724,7 @@ export default function OrderDetailModal({
                 )}
 
                 {/* Order Summary */}
-                <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
                   <div className="space-y-2">
                     <InfoRow label="Subtotal">{formatCurrency(order.subtotal || 0)}</InfoRow>
                     <InfoRow label="Shipping">
@@ -740,8 +740,8 @@ export default function OrderDetailModal({
                         </span>
                       </InfoRow>
                     )}
-                    <div className="flex justify-between pt-4 mt-2 border-t-2 border-[#e2e8f0]">
-                      <span className="text-lg font-extrabold text-[#1e293b]">Total</span>
+                    <div className="flex justify-between pt-4 mt-2 border-t-2 border-outline-variant">
+                      <span className="text-lg font-extrabold text-on-surface">Total</span>
                       <span className="text-2xl font-extrabold text-[#25D366]">{formatCurrency(order.total || 0)}</span>
                     </div>
                   </div>
@@ -755,15 +755,15 @@ export default function OrderDetailModal({
               </div>
 
               {/* ─── Right Column ─── */}
-              <div className="p-4 md:p-6 bg-white lg:bg-transparent animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+              <div className="p-4 md:p-6 bg-surface lg:bg-transparent animate-fadeIn" style={{ animationDelay: '0.2s' }}>
                 {/* Customer Info */}
-                <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] mb-5 shadow-sm animate-fadeIn" style={{ animationDelay: '0.25s' }}>
-                  <div className="flex items-center gap-3 mb-5 pb-5 border-b border-[#e2e8f0]">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center font-bold text-lg text-white shadow-md">
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.25s' }}>
+                  <div className="flex items-center gap-3 mb-5 pb-5 border-b border-outline-variant">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center font-bold text-lg text-white shadow-md3-level2">
                       {order.customerName?.charAt(0)?.toUpperCase() || "C"}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-lg text-[#1e293b] truncate">{order.customerName || "Customer"}</h3>
+                      <h3 className="font-bold text-lg text-on-surface truncate">{order.customerName || "Customer"}</h3>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[rgba(37,211,102,0.1)] text-[#25D366] rounded-full text-[10px] font-bold">
                         <i className="fas fa-crown text-[8px]" />
                         Customer
@@ -772,24 +772,24 @@ export default function OrderDetailModal({
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                        <i className="fas fa-phone text-[#64748b] text-xs" />
+                      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-phone text-on-surface-variant text-xs" />
                       </div>
                       <a href={`tel:${order.customerPhone}`} className="text-[#25D366] font-medium hover:underline">
                         {order.customerPhone || "N/A"}
                       </a>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                        <i className="fas fa-envelope text-[#64748b] text-xs" />
+                      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-envelope text-on-surface-variant text-xs" />
                       </div>
-                      <span className="text-[#1e293b] truncate">{order.customerEmail || "N/A"}</span>
+                      <span className="text-on-surface truncate">{order.customerEmail || "N/A"}</span>
                     </div>
                     <div className="flex items-start gap-3 text-sm">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <i className="fas fa-map-marker-alt text-[#64748b] text-xs" />
+                      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i className="fas fa-map-marker-alt text-on-surface-variant text-xs" />
                       </div>
-                      <span className="text-[#1e293b] leading-relaxed">
+                      <span className="text-on-surface leading-relaxed">
                         {order.deliveryAddress || order.customerAddress || "N/A"}
                       </span>
                     </div>
@@ -797,7 +797,7 @@ export default function OrderDetailModal({
                 </div>
 
                 {/* Order Info */}
-                <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] mb-5 shadow-sm animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
                   <SectionHeader icon="fa-info-circle" title="Order Information" color="#64748b" />
                   <div className="space-y-1">
                     <InfoRow label="Order Number">
@@ -817,7 +817,7 @@ export default function OrderDetailModal({
                 </div>
 
                 {/* Payment Info */}
-                <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] mb-5 shadow-sm animate-fadeIn" style={{ animationDelay: '0.35s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.35s' }}>
                   <SectionHeader icon="fa-credit-card" title="Payment Information" color="#10b981" />
                   <div className="space-y-1">
                     <InfoRow label="Method">
@@ -827,7 +827,7 @@ export default function OrderDetailModal({
                             order.paymentMethod?.toLowerCase().includes("mpesa")
                               ? "fa-mobile-alt text-[#00A650]"
                               : order.paymentMethod?.toLowerCase().includes("bank")
-                              ? "fa-university text-[#64748b]"
+                              ? "fa-university text-on-surface-variant"
                               : "fa-money-bill-wave text-[#10b981]"
                           }`}
                         />
@@ -908,7 +908,7 @@ export default function OrderDetailModal({
                   {/* Mark as Paid Button - Only for manual payments not yet paid */}
                   {order.paymentStatus !== "paid" && order.paymentMethod !== "paystack" && !isCancelled && (
                     <button
-                      className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                      className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] text-white rounded-xl font-bold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
                       onClick={() => {
                         setConfirmModal({
                           isOpen: true,
@@ -934,32 +934,32 @@ export default function OrderDetailModal({
                 </div>
 
                 {/* Internal Notes */}
-                <div className="bg-white rounded-xl p-5 border border-[#e2e8f0] shadow-sm animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
                   <SectionHeader icon="fa-sticky-note" title="Internal Notes" color="#8b5cf6" />
                   {order.notes && (
-                    <div className="flex gap-3 py-3 border-b border-[#e2e8f0] mb-3">
+                    <div className="flex gap-3 py-3 border-b border-outline-variant mb-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                         SM
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between mb-1">
                           <span className="font-semibold text-sm">Staff Member</span>
-                          <span className="text-[10px] text-[#64748b]">{formatTime(order.createdAt)}</span>
+                          <span className="text-[10px] text-on-surface-variant">{formatTime(order.createdAt)}</span>
                         </div>
-                        <p className="text-xs text-[#64748b] leading-relaxed">{order.notes}</p>
+                        <p className="text-xs text-on-surface-variant leading-relaxed">{order.notes}</p>
                       </div>
                     </div>
                   )}
                   <div className="mt-2">
                     <textarea
-                      className="w-full p-3 border-2 border-[#e2e8f0] rounded-xl text-sm resize-none min-h-[80px] focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all placeholder:text-gray-400"
+                      className="w-full p-3 border-2 border-outline-variant rounded-xl text-sm resize-none min-h-[80px] focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all placeholder:text-gray-400"
                       placeholder="Add an internal note..."
                       value={orderNotes}
                       onChange={(e) => setOrderNotes(e.target.value)}
                     />
                     {orderNotes.trim() && (
                       <button
-                        className="mt-2 w-full px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="mt-2 w-full px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
                         onClick={handleAddNoteClick}
                         disabled={loadingAction === "add-note"}
                       >
@@ -978,21 +978,21 @@ export default function OrderDetailModal({
           </div>
 
           {/* ─── Footer ── */}
-          <div className="flex-shrink-0 p-3 md:p-5 border-t border-[#e2e8f0] bg-white animate-fadeIn" style={{ animationDelay: '0.45s' }}>
+          <div className="flex-shrink-0 p-3 md:p-5 border-t border-outline-variant bg-surface animate-fadeIn" style={{ animationDelay: '0.45s' }}>
             <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
               {/* Left Actions */}
               <div className="flex gap-2 order-2 md:order-1">
                 <ActionButton
                   icon="fa-file-invoice"
                   label="Invoice"
-                  color="bg-white border border-[#e2e8f0] text-[#64748b] hover:border-blue-400 hover:text-blue-500"
+                  color="bg-surface border border-outline-variant text-on-surface-variant hover:border-blue-400 hover:text-blue-500"
                   onClick={() => handleAction("invoice", () => onPrintInvoice(order))}
                   loading={loadingAction === "invoice"}
                 />
                 <ActionButton
                   icon="fa-receipt"
                   label="Receipt"
-                  color="bg-white border border-[#e2e8f0] text-[#64748b] hover:border-[#25D366] hover:text-[#25D366]"
+                  color="bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
                   onClick={() => handleAction("receipt", () => onPrintInvoice(order))}
                   loading={loadingAction === "receipt"}
                 />
@@ -1020,7 +1020,7 @@ export default function OrderDetailModal({
                 {/* Mobile Status Dropdown Trigger */}
                 <div className="relative md:hidden flex-1">
                   <button
-                    className="w-full px-4 py-2.5 bg-white border-2 border-[#e2e8f0] rounded-xl font-semibold text-sm hover:border-[#25D366] transition-all flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm hover:border-[#25D366] transition-all flex items-center justify-center gap-2"
                     onClick={() => setShowStatusMenu(!showStatusMenu)}
                   >
                     <i className="fas fa-tag" />
@@ -1038,7 +1038,7 @@ export default function OrderDetailModal({
                 {/* Mark Delivered Quick Button */}
                 {!isDelivered && !isCancelled && (
                   <button
-                    className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
+                    className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
                     onClick={() => handleStatusUpdate("delivered")}
                     disabled={loadingAction === "update-status"}
                   >

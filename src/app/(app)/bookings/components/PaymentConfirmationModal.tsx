@@ -43,7 +43,7 @@ const PAYMENT_METHODS: MethodConfig[] = [
   { value: "cash", label: "Cash", icon: "fa-money-bill-wave", color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10" },
   { value: "card", label: "Card", icon: "fa-credit-card", color: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10" },
   { value: "bank", label: "Bank", icon: "fa-university", color: "text-[#f59e0b]", bg: "bg-[#f59e0b]/10" },
-  { value: "other", label: "Other", icon: "fa-ellipsis-h", color: "text-[#64748b]", bg: "bg-[#64748b]/10" },
+  { value: "other", label: "Other", icon: "fa-ellipsis-h", color: "text-on-surface-variant", bg: "bg-[#64748b]/10" },
 ];
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ function SuccessOverlay({ onComplete }: { onComplete: () => void }) {
   }, [onComplete]);
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm animate-fadeIn">
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-surface/95 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-20 h-20 mb-4">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
           <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="4" />
@@ -77,10 +77,10 @@ function SuccessOverlay({ onComplete }: { onComplete: () => void }) {
           <i className="fas fa-check text-[#10b981] text-2xl animate-scaleIn" style={{ animationDelay: "0.3s" }} />
         </div>
       </div>
-      <h3 className="text-lg font-bold text-[#1e293b] animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+      <h3 className="text-lg font-bold text-on-surface animate-fadeIn" style={{ animationDelay: "0.2s" }}>
         Payment Confirmed!
       </h3>
-      <p className="text-sm text-[#64748b] mt-1 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+      <p className="text-sm text-on-surface-variant mt-1 animate-fadeIn" style={{ animationDelay: "0.4s" }}>
         Redirecting...
       </p>
     </div>
@@ -104,16 +104,16 @@ function PaymentMethodSelector({
           className={`
             flex flex-col items-center gap-1.5 p-2.5 md:p-3 rounded-xl border-2 transition-all duration-200
             ${selected === method.value
-              ? `${method.bg} border-current ${method.color} shadow-sm`
-              : "border-[#e2e8f0] hover:border-[#cbd5e1] text-[#64748b]"
+              ? `${method.bg} border-current ${method.color} shadow-md3-level1`
+              : "border-outline-variant hover:border-outline-variant text-on-surface-variant"
             }
           `}
         >
           <div className={`
             w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center transition-colors
-            ${selected === method.value ? method.bg : "bg-white"}
+            ${selected === method.value ? method.bg : "bg-surface"}
           `}>
-            <i className={`fas ${method.icon} text-sm ${selected === method.value ? method.color : "text-[#94a3b8]"}`} />
+            <i className={`fas ${method.icon} text-sm ${selected === method.value ? method.color : "text-outline"}`} />
           </div>
           <span className="text-[9px] md:text-[10px] font-bold">{method.label}</span>
         </button>
@@ -146,17 +146,17 @@ function AmountInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 overflow-hidden
         ${isFocused
-          ? "border-[#10b981] shadow-md shadow-[#10b981]/10"
+          ? "border-[#10b981] shadow-md3-level2 shadow-[#10b981]/10"
           : isPartial
             ? "border-[#f59e0b]"
             : isOver
               ? "border-[#3b82f6]"
-              : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+              : "border-outline-variant hover:border-outline-variant"
         }
       `}>
         <div className={`
           px-4 py-3 font-bold text-sm border-r-2 transition-colors
-          ${isFocused ? "bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20" : "bg-white text-[#64748b] border-[#e2e8f0]"}
+          ${isFocused ? "bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20" : "bg-surface text-on-surface-variant border-outline-variant"}
         `}>
           KES
         </div>
@@ -168,7 +168,7 @@ function AmountInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           min={min}
-          className="w-full px-4 py-3 text-lg font-extrabold bg-transparent focus:outline-none text-[#1e293b]"
+          className="w-full px-4 py-3 text-lg font-extrabold bg-transparent focus:outline-none text-on-surface"
           placeholder="0"
         />
         <button
@@ -178,7 +178,7 @@ function AmountInput({
             mr-2 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all
             ${value === totalAmount
               ? "bg-[#10b981] text-white"
-              : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#10b981]/10 hover:text-[#10b981]"
+              : "bg-surface-variant text-on-surface-variant hover:bg-[#10b981]/10 hover:text-[#10b981]"
             }
           `}
         >
@@ -208,7 +208,7 @@ function AmountInput({
             </span>
           )}
         </div>
-        <span className="text-[11px] text-[#94a3b8] font-medium">
+        <span className="text-[11px] text-outline font-medium">
           Total: {formatCurrency(totalAmount)}
         </span>
       </div>
@@ -220,10 +220,10 @@ function ImagePreview({ url, onRemove }: { url: string; onRemove: () => void }) 
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-[#e2e8f0] bg-white">
+    <div className="relative rounded-xl overflow-hidden border border-outline-variant bg-surface">
       {!loaded && (
         <div className="aspect-video flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-[#e2e8f0] border-t-[#8b5cf6] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-outline-variant border-t-[#8b5cf6] rounded-full animate-spin" />
         </div>
       )}
       <img
@@ -353,7 +353,7 @@ export default function PaymentConfirmationModal({
 
       <div
         className={`
-          relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden
+          relative bg-surface w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden
           flex flex-col max-h-[90vh]
           ${showSuccess ? "" : "animate-scaleIn"}
         `}
@@ -362,14 +362,14 @@ export default function PaymentConfirmationModal({
         {showSuccess && <SuccessOverlay onComplete={handleSuccessComplete} />}
 
         {/* Header */}
-        <div className="shrink-0 px-5 md:px-6 py-4 md:py-5 border-b border-[#e2e8f0] bg-gradient-to-r from-[#f0fdf4] to-[#ecfdf5]">
+        <div className="shrink-0 px-5 md:px-6 py-4 md:py-5 border-b border-outline-variant bg-gradient-to-r from-[#f0fdf4] to-[#ecfdf5]">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] text-white flex items-center justify-center shadow-md shadow-[#10b981]/20">
+            <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] text-white flex items-center justify-center shadow-md3-level2 shadow-[#10b981]/20">
               <i className="fas fa-check-circle text-lg md:text-xl" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Confirm Payment</h2>
-              <p className="text-xs md:text-sm text-[#64748b]">
+              <h2 className="text-lg md:text-xl font-extrabold text-on-surface">Confirm Payment</h2>
+              <p className="text-xs md:text-sm text-on-surface-variant">
                 {isBooking ? "Booking" : "Order"} #{item.id.slice(0, 8)}
               </p>
             </div>
@@ -379,16 +379,16 @@ export default function PaymentConfirmationModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-5">
           {/* Item Summary */}
-          <div className="bg-white rounded-xl p-4 border border-[#e2e8f0]">
+          <div className="bg-surface rounded-xl p-4 border border-outline-variant">
             <div className="flex items-start justify-between mb-3">
               <div className="min-w-0">
-                <div className="text-[10px] md:text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">
+                <div className="text-[10px] md:text-xs text-outline font-bold uppercase tracking-wider mb-1">
                   {isBooking ? "Service" : "Product"}
                 </div>
-                <div className="font-bold text-sm md:text-base text-[#1e293b] truncate">{itemName}</div>
+                <div className="font-bold text-sm md:text-base text-on-surface truncate">{itemName}</div>
               </div>
               <div className="text-right shrink-0 ml-3">
-                <div className="text-[10px] md:text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">
+                <div className="text-[10px] md:text-xs text-outline font-bold uppercase tracking-wider mb-1">
                   Total
                 </div>
                 <div className="font-extrabold text-base md:text-lg text-[#10b981]">
@@ -396,7 +396,7 @@ export default function PaymentConfirmationModal({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs md:text-sm text-[#64748b]">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-on-surface-variant">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] flex items-center justify-center">
                 <span className="text-[#8b5cf6] font-bold text-[10px]">
                   {customerName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
@@ -408,7 +408,7 @@ export default function PaymentConfirmationModal({
 
           {/* Payment Method */}
           <div className="space-y-2">
-            <label className="block text-xs md:text-sm font-semibold text-[#475569]">
+            <label className="block text-xs md:text-sm font-semibold text-on-surface-variant">
               Payment Method
             </label>
             <PaymentMethodSelector selected={paymentMethod} onChange={setPaymentMethod} />
@@ -416,7 +416,7 @@ export default function PaymentConfirmationModal({
 
           {/* Amount */}
           <div>
-            <label className="block text-xs md:text-sm font-semibold text-[#475569] mb-2">
+            <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">
               Amount Received <span className="text-[#ef4444]">*</span>
             </label>
             <AmountInput
@@ -428,70 +428,70 @@ export default function PaymentConfirmationModal({
 
           {/* Transaction ID */}
           <div>
-            <label className="block text-xs md:text-sm font-semibold text-[#475569] mb-2">
+            <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">
               Transaction ID / Reference
             </label>
             <div className="relative">
-              <i className="fas fa-hashtag absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs" />
+              <i className="fas fa-hashtag absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-xs" />
               <input
                 type="text"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
                 placeholder="e.g., QKH123456789"
-                className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#10b981] focus:shadow-md focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
+                className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md3-level2 focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
               />
             </div>
-            <p className="text-[10px] md:text-xs text-[#94a3b8] mt-1.5">
+            <p className="text-[10px] md:text-xs text-outline mt-1.5">
               Optional but recommended for tracking
             </p>
           </div>
 
           {/* Proof Image */}
           <div className="space-y-2">
-            <label className="block text-xs md:text-sm font-semibold text-[#475569]">
-              Payment Proof <span className="text-[#94a3b8] font-normal">(Optional)</span>
+            <label className="block text-xs md:text-sm font-semibold text-on-surface-variant">
+              Payment Proof <span className="text-outline font-normal">(Optional)</span>
             </label>
             {!proofImage ? (
               <div className="relative">
-                <i className="fas fa-link absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs" />
+                <i className="fas fa-link absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-xs" />
                 <input
                   type="url"
                   value={proofImage}
                   onChange={(e) => setProofImage(e.target.value)}
                   placeholder="Paste image URL or screenshot link"
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#10b981] focus:shadow-md focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md3-level2 focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
                 />
               </div>
             ) : (
               <ImagePreview url={proofImage} onRemove={() => setProofImage("")} />
             )}
-            <p className="text-[10px] md:text-xs text-[#94a3b8]">
+            <p className="text-[10px] md:text-xs text-outline">
               Screenshot of M-Pesa message or bank transfer
             </p>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-xs md:text-sm font-semibold text-[#475569] mb-2">
-              Notes <span className="text-[#94a3b8] font-normal">(Optional)</span>
+            <label className="block text-xs md:text-sm font-semibold text-on-surface-variant mb-2">
+              Notes <span className="text-outline font-normal">(Optional)</span>
             </label>
             <textarea
               value={paymentNotes}
               onChange={(e) => setPaymentNotes(e.target.value)}
               placeholder="Any additional details..."
               rows={3}
-              className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#10b981] focus:shadow-md focus:shadow-[#10b981]/10 focus:outline-none text-sm resize-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md3-level2 focus:shadow-[#10b981]/10 focus:outline-none text-sm resize-none transition-all"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 px-5 md:px-6 py-4 border-t border-[#e2e8f0] bg-white">
+        <div className="shrink-0 px-5 md:px-6 py-4 border-t border-outline-variant bg-surface">
           <div className="flex gap-3">
             <button
               onClick={handleClose}
               disabled={confirming}
-              className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-bold text-sm hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95 disabled:opacity-50"
+              className="flex-1 px-4 py-3 border-2 border-outline-variant text-on-surface-variant rounded-xl font-bold text-sm hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -502,8 +502,8 @@ export default function PaymentConfirmationModal({
                 flex-1 px-4 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2
                 transition-all active:scale-95
                 ${isValid && !confirming
-                  ? "bg-gradient-to-r from-[#10b981] to-[#059669] hover:opacity-90 shadow-lg shadow-[#10b981]/20"
-                  : "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+                  ? "bg-gradient-to-r from-[#10b981] to-[#059669] hover:opacity-90 shadow-md3-level3 shadow-[#10b981]/20"
+                  : "bg-surface-variant text-outline cursor-not-allowed"
                 }
               `}
             >

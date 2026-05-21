@@ -140,17 +140,17 @@ function useAnimatedCounter(target: number, duration: number = 1000, delay: numb
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
 const ShimmerCard = memo(() => (
-  <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm">
-    <div className="relative h-36 sm:h-40 md:h-48 bg-[#f8fafc] overflow-hidden">
+  <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+    <div className="relative h-36 sm:h-40 md:h-48 bg-surface-container-lowest overflow-hidden">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
     </div>
     <div className="p-3 md:p-4 space-y-3">
-      <div className="h-3 bg-[#f1f5f9] rounded-lg w-16" />
-      <div className="h-5 bg-[#f1f5f9] rounded-lg w-3/4" />
-      <div className="h-6 bg-[#f1f5f9] rounded-lg w-1/2" />
-      <div className="pt-2 border-t border-[#e2e8f0] space-y-2">
-        <div className="h-3 bg-[#f1f5f9] rounded-lg w-full" />
-        <div className="h-8 bg-[#f1f5f9] rounded-lg w-full" />
+      <div className="h-3 bg-surface-variant rounded-lg w-16" />
+      <div className="h-5 bg-surface-variant rounded-lg w-3/4" />
+      <div className="h-6 bg-surface-variant rounded-lg w-1/2" />
+      <div className="pt-2 border-t border-outline-variant space-y-2">
+        <div className="h-3 bg-surface-variant rounded-lg w-full" />
+        <div className="h-8 bg-surface-variant rounded-lg w-full" />
       </div>
     </div>
   </div>
@@ -171,18 +171,18 @@ const BulkHeader = memo(({
   const CheckboxIcon = isAllSelected ? CheckSquare : isPartialSelected ? MinusSquare : Square;
 
   return (
-    <div className="flex items-center justify-between bg-gradient-to-r from-[#f8fafc] to-white p-3.5 md:p-4 rounded-xl md:rounded-2xl border border-[#e2e8f0] shadow-sm animate-fadeIn">
+    <div className="flex items-center justify-between bg-gradient-to-r from-[#f8fafc] to-white p-3.5 md:p-4 rounded-xl md:rounded-2xl border border-outline-variant shadow-md3-level1 animate-fadeIn">
       <button
         onClick={onSelectAll}
         className="flex items-center gap-2.5 group transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#25D366] rounded-lg"
       >
         <CheckboxIcon
           className={`w-5 h-5 transition-all duration-200 ${
-            bulkSelected.length > 0 ? "text-[#25D366]" : "text-[#cbd5e1] group-hover:text-[#94a3b8]"
+            bulkSelected.length > 0 ? "text-[#25D366]" : "text-[#cbd5e1] group-hover:text-outline"
           }`}
           strokeWidth={bulkSelected.length > 0 ? 2.5 : 2}
         />
-        <span className="text-sm font-semibold text-[#64748b]">
+        <span className="text-sm font-semibold text-on-surface-variant">
           {bulkSelected.length > 0 ? (
             <span className="flex items-center gap-1.5">
               <span className="inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-[#25D366] text-white text-[10px] font-bold">
@@ -196,7 +196,7 @@ const BulkHeader = memo(({
         </span>
       </button>
       {bulkSelected.length > 0 && (
-        <div className="text-xs text-[#94a3b8] font-medium">
+        <div className="text-xs text-outline font-medium">
           {Math.round((bulkSelected.length / totalProducts) * 100)}%
         </div>
       )}
@@ -209,7 +209,7 @@ const MetricBadge = memo(({
   icon: Icon,
   value,
   label,
-  color = "text-[#64748b]",
+  color = "text-on-surface-variant",
   fill = false,
 }: {
   icon: React.ElementType;
@@ -253,7 +253,7 @@ const ActionButton = memo(({
     <button
       onClick={onClick}
       className={`
-        flex flex-col items-center gap-1 py-2 px-1 rounded-lg text-[#64748b] 
+        flex flex-col items-center gap-1 py-2 px-1 rounded-lg text-on-surface-variant 
         transition-all duration-200 active:scale-90 focus:outline-none focus:ring-2 focus:ring-offset-1
         ${colorMap[color]}
       `}
@@ -374,11 +374,11 @@ const ProductCard = memo(({
   return (
     <div
       className={`
-        group relative bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden
+        group relative bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden
         transition-all duration-300 ease-out cursor-pointer
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-        ${isSelected ? "ring-2 ring-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/10" : "shadow-sm"}
-        ${isHovered && !bulkMode && !isSelected ? "border-[#cbd5e1] shadow-lg shadow-[#e2e8f0]/40 -translate-y-1" : ""}
+        ${isSelected ? "ring-2 ring-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/10" : "shadow-md3-level1"}
+        ${isHovered && !bulkMode && !isSelected ? "border-outline-variant shadow-md3-level3 shadow-[#e2e8f0]/40 -translate-y-1" : ""}
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -397,7 +397,7 @@ const ProductCard = memo(({
       {/* Image section */}
       <div className={`
         relative h-36 sm:h-40 md:h-48 overflow-hidden
-        ${!hasImage ? `bg-gradient-to-br ${getCategoryColor(product.category || "")}` : "bg-[#f8fafc]"}
+        ${!hasImage ? `bg-gradient-to-br ${getCategoryColor(product.category || "")}` : "bg-surface-container-lowest"}
       `}>
         {/* Bulk checkbox overlay */}
         {bulkMode && (
@@ -405,8 +405,8 @@ const ProductCard = memo(({
             <div className={`
               w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all duration-200
               ${isSelected
-                ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-md"
-                : "bg-white border-[#e2e8f0] hover:border-[#8b5cf6] hover:shadow-sm"
+                ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-md3-level2"
+                : "bg-surface border-outline-variant hover:border-[#8b5cf6] hover:shadow-md3-level1"
               }
             `}>
               {isSelected && <CheckSquare className="w-4 h-4" strokeWidth={2.5} />}
@@ -417,7 +417,7 @@ const ProductCard = memo(({
         {/* Stock badge */}
         {!bulkMode && badgeInfo.badge !== "new" && (
           <span className={`
-            absolute top-3 left-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-sm
+            absolute top-3 left-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-md3-level1
             ${badgeInfo.badge === "out"
               ? "bg-[#fee2e2] text-[#ef4444]"
               : "bg-[#fef3c7] text-[#f59e0b]"
@@ -430,8 +430,8 @@ const ProductCard = memo(({
         {/* Status badge */}
         {!bulkMode && product.status && product.status !== "active" && (
           <span className={`
-            absolute top-3 right-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-sm
-            ${product.status === "paused" ? "bg-[#fef3c7] text-[#f59e0b]" : "bg-[#f1f5f9] text-[#64748b]"}
+            absolute top-3 right-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-md3-level1
+            ${product.status === "paused" ? "bg-[#fef3c7] text-[#f59e0b]" : "bg-surface-variant text-on-surface-variant"}
           `}>
             {product.status === "paused" ? "Paused" : "Archived"}
           </span>
@@ -439,7 +439,7 @@ const ProductCard = memo(({
 
         {/* Sale badge */}
         {isOnSale && !bulkMode && (
-          <span className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[#fee2e2] text-[#ef4444] shadow-sm">
+          <span className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[#fee2e2] text-[#ef4444] shadow-md3-level1">
             -{discountPercent}%
           </span>
         )}
@@ -448,7 +448,7 @@ const ProductCard = memo(({
         {hasImage ? (
           <>
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-[#f8fafc] flex items-center justify-center">
+              <div className="absolute inset-0 bg-surface-container-lowest flex items-center justify-center">
                 <Loader2 className="w-6 h-6 text-[#8b5cf6] animate-spin" />
               </div>
             )}
@@ -484,38 +484,38 @@ const ProductCard = memo(({
             {product.category || "Uncategorized"}
           </span>
           {product.sku && (
-            <span className="text-[9px] text-[#94a3b8] font-mono truncate">
+            <span className="text-[9px] text-outline font-mono truncate">
               #{product.sku}
             </span>
           )}
         </div>
 
         {/* Name */}
-        <h3 className="font-bold text-sm md:text-base text-[#1e293b] mb-2 line-clamp-2 leading-snug">
+        <h3 className="font-bold text-sm md:text-base text-on-surface mb-2 line-clamp-2 leading-snug">
           {product.name}
         </h3>
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mb-2 md:mb-3">
-          <span className="text-lg md:text-xl font-extrabold text-[#1e293b]">
+          <span className="text-lg md:text-xl font-extrabold text-on-surface">
             {formatCurrency(product.price)}
           </span>
           {isOnSale && (
-            <span className="text-xs text-[#94a3b8] line-through font-normal">
+            <span className="text-xs text-outline line-through font-normal">
               {formatCurrency(product.salePrice!)}
             </span>
           )}
         </div>
 
         {/* Stock & metrics */}
-        <div className="pt-2 md:pt-3 border-t border-[#e2e8f0]">
+        <div className="pt-2 md:pt-3 border-t border-outline-variant">
           <div className="flex justify-between items-start mb-2">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-xs text-[#64748b] mb-1">
+              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1">
                 <Package className="w-3 h-3 shrink-0" />
                 <span className="truncate">{stock.toLocaleString()} in stock</span>
               </div>
-              <div className="w-full max-w-[80px] h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
+              <div className="w-full max-w-[80px] h-1.5 bg-surface-variant rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700 ease-out"
                   style={{ width: stockStyle.width, backgroundColor: stockStyle.color }}
@@ -541,7 +541,7 @@ const ProductCard = memo(({
 
           {/* Action buttons */}
           {!bulkMode && (
-            <div className="relative pt-2 border-t border-[#e2e8f0]">
+            <div className="relative pt-2 border-t border-outline-variant">
               {/* Desktop: Full actions */}
               <div className="hidden sm:grid grid-cols-5 gap-1">
                 {ACTION_CONFIG
@@ -582,7 +582,7 @@ const ProductCard = memo(({
                   }}
                   className={`
                     w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all
-                    ${expandedMobile ? "text-[#128C7E] bg-[#f0fdf4]" : "text-[#64748b] hover:text-[#128C7E] hover:bg-white"}
+                    ${expandedMobile ? "text-[#128C7E] bg-[#f0fdf4]" : "text-on-surface-variant hover:text-[#128C7E] hover:bg-surface"}
                   `}
                 >
                   <MoreHorizontal className="w-4 h-4" />
@@ -639,12 +639,12 @@ ProductCard.displayName = "ProductCard";
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-[#64748b] animate-fadeIn">
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-on-surface-variant animate-fadeIn">
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-4 shadow-inner">
         <Package className="w-10 h-10 text-[#cbd5e1]" />
       </div>
-      <p className="text-base md:text-lg font-bold text-[#475569] mb-1">No products found</p>
-      <p className="text-xs md:text-sm text-[#94a3b8] max-w-xs text-center">
+      <p className="text-base md:text-lg font-bold text-on-surface-variant mb-1">No products found</p>
+      <p className="text-xs md:text-sm text-outline max-w-xs text-center">
         Try adjusting your filters or search criteria to find what you're looking for.
       </p>
     </div>
@@ -684,7 +684,7 @@ export default function ProductGridView({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm p-4">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1 p-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <ShimmerCard key={i} />
@@ -696,17 +696,17 @@ export default function ProductGridView({
 
   if (products.length === 0) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm animate-fadeIn">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1 animate-fadeIn">
       {/* Bulk selection header */}
       {bulkMode && (
-        <div className="p-3 md:p-4 border-b border-[#e2e8f0] bg-white">
+        <div className="p-3 md:p-4 border-b border-outline-variant bg-surface">
           <BulkHeader
             bulkSelected={bulkSelected}
             totalProducts={products.length}

@@ -61,7 +61,7 @@ function StepIndicator({ currentStep, steps }: { currentStep: Step; steps: typeo
   const currentIndex = steps.findIndex((s) => s.id === currentStep);
 
   return (
-    <div className="flex items-center justify-center gap-1 md:gap-2 px-4 py-3 bg-white border-b border-[#e2e8f0] overflow-x-auto">
+    <div className="flex items-center justify-center gap-1 md:gap-2 px-4 py-3 bg-surface border-b border-outline-variant overflow-x-auto">
       {steps.map((step, index) => {
         const isActive = index === currentIndex;
         const isCompleted = index < currentIndex;
@@ -72,18 +72,18 @@ function StepIndicator({ currentStep, steps }: { currentStep: Step; steps: typeo
             <div
               className={`
                 flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 rounded-lg transition-all duration-300
-                ${isActive ? "bg-[#8b5cf6] text-white shadow-md" : ""}
+                ${isActive ? "bg-[#8b5cf6] text-white shadow-md3-level2" : ""}
                 ${isCompleted ? "text-[#8b5cf6]" : ""}
-                ${isPending ? "text-[#94a3b8]" : ""}
+                ${isPending ? "text-outline" : ""}
               `}
             >
               <div
                 className={`
                   w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold
                   transition-all duration-300
-                  ${isActive ? "bg-white text-[#8b5cf6]" : ""}
+                  ${isActive ? "bg-surface text-[#8b5cf6]" : ""}
                   ${isCompleted ? "bg-[#8b5cf6] text-white" : ""}
-                  ${isPending ? "bg-[#e2e8f0] text-[#94a3b8]" : ""}
+                  ${isPending ? "bg-surface-variant text-outline" : ""}
                 `}
               >
                 {isCompleted ? (
@@ -98,7 +98,7 @@ function StepIndicator({ currentStep, steps }: { currentStep: Step; steps: typeo
               <div
                 className={`
                   w-4 md:w-6 h-[2px] mx-1 rounded-full transition-all duration-300
-                  ${isCompleted ? "bg-[#8b5cf6]" : "bg-[#e2e8f0]"}
+                  ${isCompleted ? "bg-[#8b5cf6]" : "bg-surface-variant"}
                 `}
               />
             )}
@@ -122,7 +122,7 @@ function FormField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs md:text-sm font-semibold text-[#475569]">
+      <label className="block text-xs md:text-sm font-semibold text-on-surface-variant">
         {label}
         {required && <span className="text-[#ef4444] ml-0.5">*</span>}
       </label>
@@ -162,8 +162,8 @@ function Input({
           ${error
             ? "border-[#ef4444] bg-[#ef4444]/5"
             : isFocused
-              ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
-              : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+              ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10"
+              : "border-outline-variant hover:border-outline-variant"
           }
         `}
         {...props}
@@ -203,16 +203,16 @@ function Select({
           ${error
             ? "border-[#ef4444] bg-[#ef4444]/5"
             : isFocused
-              ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
-              : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+              ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10"
+              : "border-outline-variant hover:border-outline-variant"
           }
-          ${value ? "text-[#1e293b]" : "text-[#94a3b8]"}
+          ${value ? "text-on-surface" : "text-outline"}
         `}
       >
         <option value="">{placeholder}</option>
         {children}
       </select>
-      <i className="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs pointer-events-none" />
+      <i className="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-outline text-xs pointer-events-none" />
       {error && (
         <i className="fas fa-exclamation-circle absolute right-8 top-1/2 -translate-y-1/2 text-[#ef4444] text-sm" />
       )}
@@ -243,35 +243,35 @@ function PackageCard({
       className={`
         relative p-4 md:p-5 border-2 rounded-xl md:rounded-2xl cursor-pointer transition-all duration-300
         ${selected
-          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
-          : "border-[#e2e8f0] hover:border-[#8b5cf6]/50 hover:shadow-sm"
+          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md3-level2 shadow-[#8b5cf6]/10"
+          : "border-outline-variant hover:border-[#8b5cf6]/50 hover:shadow-md3-level1"
         }
         ${isHovered && !selected ? "-translate-y-0.5" : "translate-y-0"}
       `}
     >
       {selected && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-md">
+        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-md3-level2">
           <i className="fas fa-check text-[10px]" />
         </div>
       )}
 
       <div className="flex items-center justify-between mb-3">
         <span className="font-bold text-sm md:text-base capitalize">{pkg}</span>
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${selected ? "bg-[#8b5cf6] text-white" : "bg-[#f1f5f9] text-[#64748b]"}`}>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${selected ? "bg-[#8b5cf6] text-white" : "bg-surface-variant text-on-surface-variant"}`}>
           {pkg === "basic" ? "Essential" : pkg === "standard" ? "Popular" : "Premium"}
         </span>
       </div>
 
       <ul className="space-y-1.5 mb-4">
         {features.map((feature, idx) => (
-          <li key={idx} className="flex items-start gap-2 text-[11px] md:text-xs text-[#64748b]">
+          <li key={idx} className="flex items-start gap-2 text-[11px] md:text-xs text-on-surface-variant">
             <i className="fas fa-check text-[#10b981] text-[9px] mt-0.5 shrink-0" />
             <span>{feature}</span>
           </li>
         ))}
       </ul>
 
-      <div className={`text-xl md:text-2xl font-extrabold ${selected ? "text-[#8b5cf6]" : "text-[#475569]"}`}>
+      <div className={`text-xl md:text-2xl font-extrabold ${selected ? "text-[#8b5cf6]" : "text-on-surface-variant"}`}>
         {formatCurrency(price)}
       </div>
     </div>
@@ -298,10 +298,10 @@ function DateChip({
       className={`
         min-w-[68px] md:min-w-[76px] p-2.5 md:p-3 border-2 rounded-xl text-center transition-all duration-200 shrink-0
         ${selected
-          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/20"
+          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/20"
           : isHovered
             ? "border-[#8b5cf6] bg-[#f5f3ff]"
-            : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+            : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}
     >
@@ -311,7 +311,7 @@ function DateChip({
       <div className="text-lg md:text-xl font-extrabold leading-tight">
         {date.getDate()}
       </div>
-      <div className={`text-[10px] ${selected ? "text-white/70" : "text-[#94a3b8]"}`}>
+      <div className={`text-[10px] ${selected ? "text-white/70" : "text-outline"}`}>
         {date.toLocaleDateString("en-US", { month: "short" })}
       </div>
     </button>
@@ -334,8 +334,8 @@ function TimeChip({
       className={`
         py-2.5 md:py-3 px-3 md:px-4 border-2 rounded-xl text-center transition-all duration-200 text-xs md:text-sm font-semibold
         ${selected
-          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/20"
-          : "border-[#e2e8f0] bg-white hover:border-[#8b5cf6] text-[#475569]"
+          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/20"
+          : "border-outline-variant bg-surface hover:border-[#8b5cf6] text-on-surface-variant"
         }
       `}
     >
@@ -360,20 +360,20 @@ function LocationCard({
       className={`
         flex items-center gap-3 p-3.5 md:p-4 border-2 rounded-xl transition-all duration-200 w-full text-left
         ${selected
-          ? "border-[#8b5cf6] bg-[#ede9fe] shadow-sm"
-          : "border-[#e2e8f0] hover:border-[#8b5cf6]/50"
+          ? "border-[#8b5cf6] bg-[#ede9fe] shadow-md3-level1"
+          : "border-outline-variant hover:border-[#8b5cf6]/50"
         }
       `}
     >
       <div
         className={`
           w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center transition-colors duration-200 shrink-0
-          ${selected ? "bg-[#8b5cf6] text-white" : "bg-white text-[#64748b]"}
+          ${selected ? "bg-[#8b5cf6] text-white" : "bg-surface text-on-surface-variant"}
         `}
       >
         <i className={`fas ${option.icon} text-sm`} />
       </div>
-      <span className={`font-semibold text-sm ${selected ? "text-[#8b5cf6]" : "text-[#475569]"}`}>
+      <span className={`font-semibold text-sm ${selected ? "text-[#8b5cf6]" : "text-on-surface-variant"}`}>
         {option.label}
       </span>
       {selected && <i className="fas fa-check text-[#8b5cf6] ml-auto text-sm" />}
@@ -391,8 +391,8 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-5 border border-[#e2e8f0] shadow-sm">
-      <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-[#1e293b]">
+    <div className="bg-surface rounded-xl md:rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+      <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
         <div className="w-8 h-8 rounded-lg bg-[#ede9fe] flex items-center justify-center">
           <i className={`fas ${icon} text-[#8b5cf6] text-xs`} />
         </div>
@@ -716,11 +716,11 @@ export default function ManualBookingModal({
               {selectedService && (
                 <>
                   {selectedService.description && (
-                    <p className="text-sm text-[#64748b] mt-3">{selectedService.description}</p>
+                    <p className="text-sm text-on-surface-variant mt-3">{selectedService.description}</p>
                   )}
 
                   <div className="mt-4">
-                    <h4 className="text-sm font-bold text-[#475569] mb-3">Choose Package</h4>
+                    <h4 className="text-sm font-bold text-on-surface-variant mb-3">Choose Package</h4>
                     <div className="grid gap-3">
                       {(["basic", "standard", "premium"] as const).map((pkg) => (
                         <PackageCard
@@ -778,7 +778,7 @@ export default function ManualBookingModal({
                   )}
 
                   <div className="mt-4">
-                    <h4 className="text-sm font-bold text-[#475569] mb-3">Location</h4>
+                    <h4 className="text-sm font-bold text-on-surface-variant mb-3">Location</h4>
                     <div className="space-y-2">
                       {getLocationOptions().map((loc) => (
                         <LocationCard
@@ -824,7 +824,7 @@ export default function ManualBookingModal({
               </div>
 
               <div className="mt-4">
-                <h4 className="text-sm font-bold text-[#475569] mb-3">Booking Status</h4>
+                <h4 className="text-sm font-bold text-on-surface-variant mb-3">Booking Status</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -832,8 +832,8 @@ export default function ManualBookingModal({
                     className={`
                       flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all
                       ${status === "confirmed"
-                        ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/20"
-                        : "bg-white text-[#64748b] border-2 border-[#e2e8f0] hover:border-[#8b5cf6]"
+                        ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/20"
+                        : "bg-surface text-on-surface-variant border-2 border-outline-variant hover:border-[#8b5cf6]"
                       }
                     `}
                   >
@@ -846,8 +846,8 @@ export default function ManualBookingModal({
                     className={`
                       flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all
                       ${status === "pending"
-                        ? "bg-[#f59e0b] text-white shadow-md shadow-[#f59e0b]/20"
-                        : "bg-white text-[#64748b] border-2 border-[#e2e8f0] hover:border-[#f59e0b]"
+                        ? "bg-[#f59e0b] text-white shadow-md3-level2 shadow-[#f59e0b]/20"
+                        : "bg-surface text-on-surface-variant border-2 border-outline-variant hover:border-[#f59e0b]"
                       }
                     `}
                   >
@@ -864,7 +864,7 @@ export default function ManualBookingModal({
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Any special requests or notes..."
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] focus:border-[#8b5cf6] focus:outline-none text-sm resize-none transition-all focus:shadow-md focus:shadow-[#8b5cf6]/10"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none text-sm resize-none transition-all focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10"
                   />
                 </FormField>
               </div>
@@ -878,35 +878,35 @@ export default function ManualBookingModal({
             <SectionCard icon="fa-check-circle" title="Review Booking">
               <div className="space-y-4">
                 {/* Client summary */}
-                <div className="flex items-center gap-3 p-3 bg-white rounded-xl">
+                <div className="flex items-center gap-3 p-3 bg-surface rounded-xl">
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] text-[#8b5cf6] font-bold flex items-center justify-center text-sm">
                     {getInitials(clientName)}
                   </div>
                   <div>
                     <div className="font-bold text-sm">{clientName}</div>
-                    <div className="text-xs text-[#64748b]">{clientPhone}</div>
+                    <div className="text-xs text-on-surface-variant">{clientPhone}</div>
                   </div>
                 </div>
 
                 {/* Service summary */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-white rounded-xl">
-                    <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Service</div>
-                    <div className="text-sm font-bold text-[#1e293b]">{selectedService?.name}</div>
+                  <div className="p-3 bg-surface rounded-xl">
+                    <div className="text-[10px] text-outline font-bold uppercase tracking-wider mb-1">Service</div>
+                    <div className="text-sm font-bold text-on-surface">{selectedService?.name}</div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl">
-                    <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Package</div>
-                    <div className="text-sm font-bold text-[#1e293b] capitalize">{selectedPackage}</div>
+                  <div className="p-3 bg-surface rounded-xl">
+                    <div className="text-[10px] text-outline font-bold uppercase tracking-wider mb-1">Package</div>
+                    <div className="text-sm font-bold text-on-surface capitalize">{selectedPackage}</div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl">
-                    <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Date & Time</div>
-                    <div className="text-sm font-bold text-[#1e293b]">
+                  <div className="p-3 bg-surface rounded-xl">
+                    <div className="text-[10px] text-outline font-bold uppercase tracking-wider mb-1">Date & Time</div>
+                    <div className="text-sm font-bold text-on-surface">
                       {selectedDate?.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at {selectedTime}
                     </div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl">
-                    <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Location</div>
-                    <div className="text-sm font-bold text-[#1e293b] truncate">
+                  <div className="p-3 bg-surface rounded-xl">
+                    <div className="text-[10px] text-outline font-bold uppercase tracking-wider mb-1">Location</div>
+                    <div className="text-sm font-bold text-on-surface truncate">
                       {getLocationOptions().find((l) => l.key === selectedLocation)?.label || "Not specified"}
                     </div>
                   </div>
@@ -915,17 +915,17 @@ export default function ManualBookingModal({
                 {/* Price breakdown */}
                 <div className="p-4 bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] rounded-xl border border-[#8b5cf6]/10">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-[#64748b]">Service Price</span>
-                    <span className="font-bold text-[#1e293b]">{formatCurrency(finalPrice)}</span>
+                    <span className="text-sm text-on-surface-variant">Service Price</span>
+                    <span className="font-bold text-on-surface">{formatCurrency(finalPrice)}</span>
                   </div>
                   {deposit !== "" && Number(deposit) > 0 && (
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-[#64748b]">Deposit Paid</span>
+                      <span className="text-sm text-on-surface-variant">Deposit Paid</span>
                       <span className="font-bold text-[#10b981]">-{formatCurrency(Number(deposit))}</span>
                     </div>
                   )}
                   <div className="border-t border-[#8b5cf6]/10 pt-2 mt-2 flex justify-between items-center">
-                    <span className="text-sm font-bold text-[#1e293b]">Balance Due</span>
+                    <span className="text-sm font-bold text-on-surface">Balance Due</span>
                     <span className="text-xl font-extrabold text-[#8b5cf6]">
                       {formatCurrency(finalPrice - (deposit ? Number(deposit) : 0))}
                     </span>
@@ -934,7 +934,7 @@ export default function ManualBookingModal({
 
                 {/* Status badge */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#64748b]">Status:</span>
+                  <span className="text-xs text-on-surface-variant">Status:</span>
                   <span className={`
                     inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase
                     ${status === "confirmed"
@@ -966,23 +966,23 @@ export default function ManualBookingModal({
 
       <div
         className={`
-          relative bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden shadow-2xl
+          relative bg-surface rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden shadow-2xl
           flex flex-col animate-scaleIn
         `}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="shrink-0 bg-white border-b border-[#e2e8f0]">
+        <div className="shrink-0 bg-surface border-b border-outline-variant">
           <div className="p-4 md:p-5 flex justify-between items-center">
-            <h2 className="text-lg md:text-xl font-bold flex items-center gap-2.5 text-[#1e293b]">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md shadow-[#8b5cf6]/20">
+            <h2 className="text-lg md:text-xl font-bold flex items-center gap-2.5 text-on-surface">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md3-level2 shadow-[#8b5cf6]/20">
                 <i className="fas fa-calendar-plus text-white text-sm" />
               </div>
               Create Booking
             </h2>
             <button
               onClick={handleClose}
-              className="w-9 h-9 rounded-full border-2 border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:bg-[#f5f3ff] transition-all active:scale-95"
+              className="w-9 h-9 rounded-full border-2 border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:bg-[#f5f3ff] transition-all active:scale-95"
               aria-label="Close"
             >
               <i className="fas fa-times text-sm" />
@@ -1006,7 +1006,7 @@ export default function ManualBookingModal({
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 bg-white border-t border-[#e2e8f0] p-4 md:p-5">
+        <div className="shrink-0 bg-surface border-t border-outline-variant p-4 md:p-5">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -1016,7 +1016,7 @@ export default function ManualBookingModal({
                 flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all
                 ${isFirstStep
                   ? "opacity-0 pointer-events-none"
-                  : "border-2 border-[#e2e8f0] text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] active:scale-95"
+                  : "border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] active:scale-95"
                 }
               `}
             >
@@ -1026,7 +1026,7 @@ export default function ManualBookingModal({
 
             <div className="flex items-center gap-2">
               {currentStepIndex > 0 && (
-                <span className="hidden sm:inline text-xs text-[#94a3b8] font-medium">
+                <span className="hidden sm:inline text-xs text-outline font-medium">
                   Step {currentStepIndex + 1} of {STEPS.length}
                 </span>
               )}
@@ -1040,7 +1040,7 @@ export default function ManualBookingModal({
                 className={`
                   flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm text-white
                   bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed]
-                  hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-[#8b5cf6]/20
+                  hover:opacity-90 active:scale-95 transition-all shadow-md3-level3 shadow-[#8b5cf6]/20
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
@@ -1063,7 +1063,7 @@ export default function ManualBookingModal({
                 className={`
                   flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm text-white
                   bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed]
-                  hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-[#8b5cf6]/20
+                  hover:opacity-90 active:scale-95 transition-all shadow-md3-level3 shadow-[#8b5cf6]/20
                 `}
               >
                 Next

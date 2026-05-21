@@ -160,11 +160,11 @@ function StatCard({
         transition-all duration-300 ease-out cursor-pointer
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isActive
-          ? `ring-2 ${config.ringColor} border-[#8b5cf6]/40 shadow-lg shadow-[#8b5cf6]/5`
-          : "border-[#e2e8f0] hover:border-[#cbd5e1]"
+          ? `ring-2 ${config.ringColor} border-[#8b5cf6]/40 shadow-md3-level3 shadow-[#8b5cf6]/5`
+          : "border-outline-variant hover:border-outline-variant"
         }
-        ${isHovered && !isActive ? "shadow-md -translate-y-0.5" : "shadow-sm"}
-        bg-white bg-gradient-to-br ${config.bgGradient}
+        ${isHovered && !isActive ? "shadow-md3-level2 -translate-y-0.5" : "shadow-md3-level1"}
+        bg-surface bg-gradient-to-br ${config.bgGradient}
       `}
       style={{ transitionDelay: `${delay}ms` }}
       aria-pressed={isActive}
@@ -173,7 +173,7 @@ function StatCard({
       {isActive && (
         <div className={`
           absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full ${config.dotColor}
-          flex items-center justify-center shadow-md animate-bounce
+          flex items-center justify-center shadow-md3-level2 animate-bounce
         `}>
           <i className="fas fa-check text-white text-[9px]" />
         </div>
@@ -185,12 +185,12 @@ function StatCard({
           <div className={`
             w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
             transition-all duration-300
-            ${isHovered || isActive ? "scale-110 shadow-sm" : "scale-100"}
+            ${isHovered || isActive ? "scale-110 shadow-md3-level1" : "scale-100"}
             ${config.color.replace("text-", "bg-").replace("]", "]/15")}
           `}>
             <i className={`fas ${config.icon} ${config.color} text-sm md:text-base`} />
           </div>
-          <div className="text-[11px] md:text-xs font-bold text-[#64748b] uppercase tracking-wider">
+          <div className="text-[11px] md:text-xs font-bold text-on-surface-variant uppercase tracking-wider">
             {config.label}
           </div>
         </div>
@@ -221,7 +221,7 @@ function StatCard({
       {/* Percentage bar */}
       <div className="mt-3 md:mt-4">
         <div className="flex justify-between items-center mb-1.5">
-          <span className="text-[10px] text-[#94a3b8] font-semibold">
+          <span className="text-[10px] text-outline font-semibold">
             {percentage}% of total
           </span>
           <span className={`
@@ -232,7 +232,7 @@ function StatCard({
             {value} / {total}
           </span>
         </div>
-        <div className="h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
+        <div className="h-1.5 bg-surface-variant rounded-full overflow-hidden">
           <div
             className={`
               h-full rounded-full transition-all duration-1000 ease-out

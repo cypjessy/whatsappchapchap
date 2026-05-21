@@ -31,28 +31,28 @@ const STATUS_CONFIG: Record<string, { bg: string; dot: string; label: string }> 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
 
 function getStatusConfig(status: string = "active") {
-  return STATUS_CONFIG[status] || { bg: "bg-white0", dot: "bg-white0", label: status };
+  return STATUS_CONFIG[status] || { bg: "bg-surface", dot: "bg-surface", label: status };
 }
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
 function ShimmerRow() {
   return (
-    <div className="relative overflow-hidden bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] p-3 md:p-4">
+    <div className="relative overflow-hidden bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-3 md:p-4">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-center gap-3 md:gap-4">
-        <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#f1f5f9] shrink-0" />
+        <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-surface-variant shrink-0" />
         <div className="flex-1 space-y-2 min-w-0">
-          <div className="h-4 bg-[#f1f5f9] rounded-lg w-48" />
+          <div className="h-4 bg-surface-variant rounded-lg w-48" />
           <div className="flex gap-3">
-            <div className="h-3 bg-[#f1f5f9] rounded-lg w-20" />
-            <div className="h-3 bg-[#f1f5f9] rounded-lg w-16" />
-            <div className="h-3 bg-[#f1f5f9] rounded-lg w-24" />
+            <div className="h-3 bg-surface-variant rounded-lg w-20" />
+            <div className="h-3 bg-surface-variant rounded-lg w-16" />
+            <div className="h-3 bg-surface-variant rounded-lg w-24" />
           </div>
         </div>
         <div className="hidden md:flex gap-1">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="w-9 h-9 bg-[#f1f5f9] rounded-lg" />
+            <div key={i} className="w-9 h-9 bg-surface-variant rounded-lg" />
           ))}
         </div>
       </div>
@@ -90,14 +90,14 @@ function ActionButton({
           transition-all duration-200 active:scale-90
           ${bgColor} ${iconColor}
           ${hoverBg} ${hoverText}
-          hover:shadow-md
+          hover:shadow-md3-level2
         `}
         aria-label={label}
       >
         <Icon className="w-4 h-4" />
       </button>
       {showTooltip && (
-        <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1e293b] text-white text-[10px] font-bold rounded-md whitespace-nowrap shadow-lg animate-fadeIn">
+        <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1e293b] text-white text-[10px] font-bold rounded-md whitespace-nowrap shadow-md3-level3 animate-fadeIn">
           {label}
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] rotate-45" />
         </div>
@@ -149,12 +149,12 @@ function ServiceRow({
   return (
     <div
       className={`
-        group relative bg-white rounded-xl md:rounded-2xl border-2 p-3 md:p-4
+        group relative bg-surface rounded-xl md:rounded-2xl border-2 p-3 md:p-4
         transition-all duration-200 cursor-pointer
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
         ${isSelected
-          ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
-          : "border-[#e2e8f0] hover:border-[#cbd5e1] hover:shadow-lg hover:-translate-y-0.5"
+          ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10"
+          : "border-outline-variant hover:border-outline-variant hover:shadow-md3-level3 hover:-translate-y-0.5"
         }
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
@@ -176,7 +176,7 @@ function ServiceRow({
               w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 cursor-pointer
               ${isSelected
                 ? "bg-[#8b5cf6] border-[#8b5cf6]"
-                : "bg-white border-[#e2e8f0] hover:border-[#8b5cf6]"
+                : "bg-surface border-outline-variant hover:border-[#8b5cf6]"
               }
             `}>
               {isSelected && <i className="fas fa-check text-white text-xs" />}
@@ -229,12 +229,12 @@ function ServiceRow({
               text-[9px] font-bold uppercase tracking-wide text-white
               ${statusConfig.bg}
             `}>
-              <span className="w-1 h-1 rounded-full bg-white/80" />
+              <span className="w-1 h-1 rounded-full bg-surface/80" />
               {statusConfig.label}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] md:text-xs text-[#64748b]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] md:text-xs text-on-surface-variant">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3 text-[#8b5cf6]" />
               {service.duration || "TBD"}
@@ -257,7 +257,7 @@ function ServiceRow({
               {formatCurrency(service.priceMin ?? 0)}
             </span>
             {service.priceMax != null && service.priceMin != null && service.priceMax > service.priceMin && (
-              <span className="text-[#94a3b8] hidden md:inline">
+              <span className="text-outline hidden md:inline">
                 – {formatCurrency(service.priceMax)}
               </span>
             )}
@@ -266,7 +266,7 @@ function ServiceRow({
           {/* Tags - mobile only */}
           <div className="flex flex-wrap gap-1 mt-1.5 md:hidden">
             {service.tags?.slice(0, 2).map((tag) => (
-              <span key={tag} className="px-1.5 py-0.5 bg-white rounded text-[9px] text-[#64748b]">
+              <span key={tag} className="px-1.5 py-0.5 bg-surface rounded text-[9px] text-on-surface-variant">
                 {tag}
               </span>
             ))}
@@ -349,7 +349,7 @@ function ServiceRow({
               e.stopPropagation();
               onSelectService(service);
             }}
-            className="md:hidden w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#64748b]"
+            className="md:hidden w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-on-surface-variant"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
@@ -361,12 +361,12 @@ function ServiceRow({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-[#64748b] animate-fadeIn">
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-on-surface-variant animate-fadeIn">
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-4 shadow-inner">
         <i className="fas fa-list text-3xl md:text-4xl text-[#cbd5e1]" />
       </div>
-      <p className="text-base md:text-lg font-bold text-[#475569] mb-1">No services found</p>
-      <p className="text-xs md:text-sm text-[#94a3b8] max-w-xs text-center">
+      <p className="text-base md:text-lg font-bold text-on-surface-variant mb-1">No services found</p>
+      <p className="text-xs md:text-sm text-outline max-w-xs text-center">
         Try adjusting your filters or add a new service to get started.
       </p>
     </div>

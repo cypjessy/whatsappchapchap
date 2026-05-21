@@ -139,32 +139,32 @@ const ShimmerRow = memo(() => (
   <div className="relative overflow-hidden px-3 md:px-4 py-3 md:py-4 border-b border-[#f1f5f9]">
     <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
     <div className="hidden md:grid grid-cols-[auto_60px_2fr_1fr_1fr_1fr_1fr] gap-4 items-center">
-      <div className="w-8 h-8 rounded-lg bg-[#f1f5f9]" />
-      <div className="w-14 h-14 rounded-xl bg-[#f1f5f9]" />
-      <div className="space-y-2"><div className="h-4 bg-[#f1f5f9] rounded-lg w-3/4" /><div className="h-3 bg-[#f1f5f9] rounded-lg w-1/2" /></div>
-      <div className="h-6 bg-[#f1f5f9] rounded-lg w-20" />
-      <div className="h-5 bg-[#f1f5f9] rounded-lg w-16" />
-      <div className="h-4 bg-[#f1f5f9] rounded-lg w-24" />
+      <div className="w-8 h-8 rounded-lg bg-surface-variant" />
+      <div className="w-14 h-14 rounded-xl bg-surface-variant" />
+      <div className="space-y-2"><div className="h-4 bg-surface-variant rounded-lg w-3/4" /><div className="h-3 bg-surface-variant rounded-lg w-1/2" /></div>
+      <div className="h-6 bg-surface-variant rounded-lg w-20" />
+      <div className="h-5 bg-surface-variant rounded-lg w-16" />
+      <div className="h-4 bg-surface-variant rounded-lg w-24" />
       <div className="flex justify-end gap-1">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="w-9 h-9 bg-[#f1f5f9] rounded-lg" />
+          <div key={i} className="w-9 h-9 bg-surface-variant rounded-lg" />
         ))}
       </div>
     </div>
     <div className="md:hidden flex items-center gap-3">
-      <div className="w-12 h-12 rounded-xl bg-[#f1f5f9] shrink-0" />
+      <div className="w-12 h-12 rounded-xl bg-surface-variant shrink-0" />
       <div className="flex-1 space-y-2">
-        <div className="h-4 bg-[#f1f5f9] rounded-lg w-3/4" />
-        <div className="h-3 bg-[#f1f5f9] rounded-lg w-1/2" />
+        <div className="h-4 bg-surface-variant rounded-lg w-3/4" />
+        <div className="h-3 bg-surface-variant rounded-lg w-1/2" />
       </div>
-      <div className="w-8 h-8 bg-[#f1f5f9] rounded-lg" />
+      <div className="w-8 h-8 bg-surface-variant rounded-lg" />
     </div>
   </div>
 ));
 ShimmerRow.displayName = "ShimmerRow";
 
 const MetricBadge = memo(({
-  icon: Icon, value, label, color = "text-[#64748b]", fill = false,
+  icon: Icon, value, label, color = "text-on-surface-variant", fill = false,
 }: {
   icon: React.ElementType;
   value: string | number;
@@ -221,21 +221,21 @@ const DeleteConfirmDialog = memo(({
   if (!product) return null;
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onCancel}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-2xl animate-scaleIn" onClick={(e) => e.stopPropagation()}>
         <div className="text-center mb-6">
           <div className="w-16 h-16 rounded-full bg-[#fee2e2] flex items-center justify-center mx-auto mb-4">
             <Trash2 className="w-8 h-8 text-[#ef4444]" />
           </div>
-          <h3 className="text-xl font-bold text-[#1e293b] mb-2">Delete Product?</h3>
-          <p className="text-sm text-[#64748b]">
-            Are you sure you want to delete <span className="font-semibold text-[#1e293b]">"{product.name}"</span>? This action cannot be undone.
+          <h3 className="text-xl font-bold text-on-surface mb-2">Delete Product?</h3>
+          <p className="text-sm text-on-surface-variant">
+            Are you sure you want to delete <span className="font-semibold text-on-surface">"{product.name}"</span>? This action cannot be undone.
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95">
+          <button onClick={onCancel} className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95">
             Cancel
           </button>
-          <button onClick={onConfirm} className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">
+          <button onClick={onConfirm} className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md3-level2 hover:shadow-md3-level3 active:scale-95 transition-all">
             Delete
           </button>
         </div>
@@ -323,7 +323,7 @@ const ProductRow = memo(({
       <div
         className={`
           group relative transition-all duration-200
-          ${isSelected ? "bg-[#ede9fe]/30" : "hover:bg-[#f8fafc]"}
+          ${isSelected ? "bg-[#ede9fe]/30" : "hover:bg-surface-container-lowest"}
           ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
         `}
         style={{ transitionDelay: `${index * 40}ms` }}
@@ -338,17 +338,17 @@ const ProductRow = memo(({
 
         {/* Swipe reveal actions (mobile) */}
         <div className="md:hidden absolute inset-y-0 right-0 flex items-center gap-1 pr-2 z-0">
-          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("shareProductWhatsApp", e); }} className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-lg active:scale-90">
+          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("shareProductWhatsApp", e); }} className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-md3-level3 active:scale-90">
             <MessageCircle className="w-5 h-5" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("handleToggleStatus", e); }} className="w-11 h-11 rounded-xl bg-[#f59e0b] text-white flex items-center justify-center shadow-lg active:scale-90">
+          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("handleToggleStatus", e); }} className="w-11 h-11 rounded-xl bg-[#f59e0b] text-white flex items-center justify-center shadow-md3-level3 active:scale-90">
             {status === "active" ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
         </div>
 
         {/* Main row content */}
         <div
-          className="relative z-10 bg-white transition-transform duration-200 ease-out"
+          className="relative z-10 bg-surface transition-transform duration-200 ease-out"
           style={{ transform: `translateX(-${swipeOffset}px)` }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -365,7 +365,7 @@ const ProductRow = memo(({
               <div className="flex items-center justify-center" onClick={handleToggleSelectWrapper}>
                 <div className={`
                   w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200
-                  ${isSelected ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-sm" : "border-[#e2e8f0] hover:border-[#8b5cf6] bg-white"}
+                  ${isSelected ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-md3-level1" : "border-outline-variant hover:border-[#8b5cf6] bg-surface"}
                 `}>
                   {isSelected && <CheckSquare className="w-4 h-4" strokeWidth={2.5} />}
                 </div>
@@ -375,12 +375,12 @@ const ProductRow = memo(({
             {/* Image */}
             <div className={`
               relative w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden flex-shrink-0
-              ${!hasImage ? `bg-gradient-to-br ${getCategoryColor(category)}` : "bg-[#f8fafc]"}
+              ${!hasImage ? `bg-gradient-to-br ${getCategoryColor(category)}` : "bg-surface-container-lowest"}
             `}>
               {hasImage ? (
                 <>
                   {!imageLoaded && (
-                    <div className="absolute inset-0 bg-[#f8fafc] flex items-center justify-center">
+                    <div className="absolute inset-0 bg-surface-container-lowest flex items-center justify-center">
                       <Loader2 className="w-4 h-4 text-[#8b5cf6] animate-spin" />
                     </div>
                   )}
@@ -404,17 +404,17 @@ const ProductRow = memo(({
             {/* Product info */}
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className={`font-bold text-sm truncate transition-colors duration-200 ${isHovered ? "text-[#8b5cf6]" : "text-[#1e293b]"}`}>
+                <h3 className={`font-bold text-sm truncate transition-colors duration-200 ${isHovered ? "text-[#8b5cf6]" : "text-on-surface"}`}>
                   {product.name}
                 </h3>
                 {status !== "active" && (
-                  <span className={`hidden md:inline-flex shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${status === "paused" ? "bg-[#fef3c7] text-[#f59e0b]" : "bg-[#f1f5f9] text-[#64748b]"}`}>
+                  <span className={`hidden md:inline-flex shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${status === "paused" ? "bg-[#fef3c7] text-[#f59e0b]" : "bg-surface-variant text-on-surface-variant"}`}>
                     {status === "paused" ? "Paused" : "Archived"}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span className="text-[10px] text-[#94a3b8] font-mono">#{productIdShort}</span>
+                <span className="text-[10px] text-outline font-mono">#{productIdShort}</span>
                 <div className="flex md:hidden items-center gap-2">
                   {views > 0 && <MetricBadge icon={Eye} value={views} label="Views" />}
                   {orders > 0 && <MetricBadge icon={ShoppingCart} value={orders} label="Orders" />}
@@ -430,24 +430,24 @@ const ProductRow = memo(({
 
             {/* Category (desktop) */}
             <div className="hidden md:block">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#f8fafc] text-xs font-medium text-[#64748b] capitalize border border-[#e2e8f0]">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-surface-container-lowest text-xs font-medium text-on-surface-variant capitalize border border-outline-variant">
                 {category}
               </span>
             </div>
 
             {/* Price */}
             <div className="hidden md:block">
-              <div className="font-bold text-sm text-[#1e293b]">{formatCurrency(product.price)}</div>
-              {isOnSale && <div className="text-[10px] text-[#94a3b8] line-through">{formatCurrency(product.salePrice!)}</div>}
+              <div className="font-bold text-sm text-on-surface">{formatCurrency(product.price)}</div>
+              {isOnSale && <div className="text-[10px] text-outline line-through">{formatCurrency(product.salePrice!)}</div>}
             </div>
 
             {/* Stock */}
             <div className="hidden md:block">
               <div className="flex items-center gap-1.5 mb-1">
-                <Package className="w-3 h-3 text-[#94a3b8]" />
+                <Package className="w-3 h-3 text-outline" />
                 <span className="text-sm font-semibold" style={{ color: stockStyle.color }}>{stock.toLocaleString()}</span>
               </div>
-              <div className="w-full max-w-[80px] h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
+              <div className="w-full max-w-[80px] h-1.5 bg-surface-variant rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: stockStyle.width, backgroundColor: stockStyle.color }} />
               </div>
             </div>
@@ -483,7 +483,7 @@ const ProductRow = memo(({
                       onClick={(e) => { e.stopPropagation(); setExpandedMobile(!expandedMobile); }}
                       className={`
                         w-8 h-8 flex items-center justify-center rounded-lg transition-all
-                        ${expandedMobile ? "bg-[#8b5cf6] text-white shadow-md" : "text-[#94a3b8] hover:bg-[#f1f5f9]"}
+                        ${expandedMobile ? "bg-[#8b5cf6] text-white shadow-md3-level2" : "text-outline hover:bg-surface-variant"}
                       `}
                     >
                       {expandedMobile ? <ChevronDown className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
@@ -497,7 +497,7 @@ const ProductRow = memo(({
           {/* Mobile expanded actions */}
           <div className={`md:hidden overflow-hidden transition-all duration-300 ${expandedMobile ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"}`}>
             <div className="px-3 pb-3">
-              <div className="grid grid-cols-3 gap-2 p-2 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
+              <div className="grid grid-cols-3 gap-2 p-2 bg-surface-container-lowest rounded-xl border border-outline-variant">
                 {DESKTOP_ACTIONS
                   .filter((action) => !action.shouldShow || action.shouldShow(product))
                   .map((action, idx) => {
@@ -550,21 +550,21 @@ function ListHeader({
   const CheckboxIcon = isAllSelected ? CheckSquare : isPartialSelected ? MinusSquare : Square;
 
   return (
-    <div className="sticky top-0 z-20 bg-gradient-to-b from-[#f8fafc] to-[#f8fafc]/95 backdrop-blur-sm border-b-2 border-[#e2e8f0]">
+    <div className="sticky top-0 z-20 bg-gradient-to-b from-[#f8fafc] to-[#f8fafc]/95 backdrop-blur-sm border-b-2 border-outline-variant">
       <div className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_60px_2fr_1fr_1fr_1fr_1fr] gap-3 md:gap-4 p-3 md:p-4 items-center">
         {bulkMode && (
-          <button onClick={onSelectAll} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#e2e8f0] transition-all active:scale-95">
+          <button onClick={onSelectAll} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-variant transition-all active:scale-95">
             <CheckboxIcon className={`w-5 h-5 transition-all ${bulkSelected.length > 0 ? "text-[#8b5cf6]" : "text-[#cbd5e1]"}`} strokeWidth={bulkSelected.length > 0 ? 2.5 : 2} />
           </button>
         )}
-        <div className="hidden md:block text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider text-center">Image</div>
-        <div className="hidden md:block text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">Product</div>
-        <div className="hidden md:block text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">Category</div>
-        <div className="hidden md:block text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">Price</div>
-        <div className="hidden md:block text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">Stock</div>
-        <div className="hidden md:block text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider text-right">Actions</div>
+        <div className="hidden md:block text-[10px] font-bold text-outline uppercase tracking-wider text-center">Image</div>
+        <div className="hidden md:block text-[10px] font-bold text-outline uppercase tracking-wider">Product</div>
+        <div className="hidden md:block text-[10px] font-bold text-outline uppercase tracking-wider">Category</div>
+        <div className="hidden md:block text-[10px] font-bold text-outline uppercase tracking-wider">Price</div>
+        <div className="hidden md:block text-[10px] font-bold text-outline uppercase tracking-wider">Stock</div>
+        <div className="hidden md:block text-[10px] font-bold text-outline uppercase tracking-wider text-right">Actions</div>
         <div className="md:hidden flex items-center justify-between flex-1">
-          <span className="text-xs font-semibold text-[#64748b]">{totalProducts} {totalProducts === 1 ? "product" : "products"}</span>
+          <span className="text-xs font-semibold text-on-surface-variant">{totalProducts} {totalProducts === 1 ? "product" : "products"}</span>
           {bulkMode && bulkSelected.length > 0 && (
             <span className="text-xs font-bold text-[#8b5cf6]">{bulkSelected.length} selected</span>
           )}
@@ -578,12 +578,12 @@ function ListHeader({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-[#64748b] animate-fadeIn">
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 text-on-surface-variant animate-fadeIn">
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] flex items-center justify-center mb-4 shadow-inner">
         <Package className="w-10 h-10 text-[#cbd5e1]" />
       </div>
-      <p className="text-base md:text-lg font-bold text-[#475569] mb-1">No products found</p>
-      <p className="text-xs md:text-sm text-[#94a3b8] max-w-xs text-center">Try adjusting your filters or search criteria.</p>
+      <p className="text-base md:text-lg font-bold text-on-surface-variant mb-1">No products found</p>
+      <p className="text-xs md:text-sm text-outline max-w-xs text-center">Try adjusting your filters or search criteria.</p>
     </div>
   );
 }
@@ -606,7 +606,7 @@ export default function ProductListView({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
         <ListHeader bulkMode={bulkMode} bulkSelected={bulkSelected} totalProducts={0} onSelectAll={() => {}} />
         {Array.from({ length: 8 }).map((_, i) => <ShimmerRow key={i} />)}
       </div>
@@ -615,14 +615,14 @@ export default function ProductListView({
 
   if (products.length === 0) {
     return (
-      <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm animate-fadeIn">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1 animate-fadeIn">
       <ListHeader bulkMode={bulkMode} bulkSelected={bulkSelected} totalProducts={products.length} onSelectAll={selectAllProducts} />
       <div className="divide-y divide-[#f1f5f9]">
         {products.map((product, index) => (

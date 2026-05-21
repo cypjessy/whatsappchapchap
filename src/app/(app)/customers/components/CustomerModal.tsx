@@ -46,15 +46,15 @@ const TAG_COLORS = [
   { bg: "bg-[#dcfce7]", text: "text-[#10b981]", border: "border-[#10b981]/20" },
   { bg: "bg-[#fef3c7]", text: "text-[#f59e0b]", border: "border-[#f59e0b]/20" },
   { bg: "bg-[#fee2e2]", text: "text-[#ef4444]", border: "border-[#ef4444]/20" },
-  { bg: "bg-[#f1f5f9]", text: "text-[#64748b]", border: "border-[#64748b]/20" },
+  { bg: "bg-surface-variant", text: "text-on-surface-variant", border: "border-[#64748b]/20" },
 ];
 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
 
 function getOrderStatusConfig(status: string) {
   return ORDER_STATUS_CONFIG[status] || {
-    bg: "bg-[#f1f5f9]",
-    text: "text-[#64748b]",
+    bg: "bg-surface-variant",
+    text: "text-on-surface-variant",
     dot: "bg-[#94a3b8]",
   };
 }
@@ -91,12 +91,12 @@ function StatCard({ label, value, icon, color, delay = 0 }: {
 
   return (
     <div className={`
-      bg-white rounded-xl p-3 border border-[#e2e8f0] transition-all duration-300
+      bg-surface rounded-xl p-3 border border-outline-variant transition-all duration-300
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
     `} style={{ transitionDelay: `${delay}ms` }}>
       <div className="flex items-center gap-2 mb-1">
         <i className={`fas ${icon} ${color} text-xs`} />
-        <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{label}</span>
       </div>
       <div className={`text-lg font-extrabold ${color}`}>{value}</div>
     </div>
@@ -118,8 +118,8 @@ function OrderCard({ order, index, formatCurrency }: {
 
   return (
     <div className={`
-      flex justify-between items-center p-3.5 md:p-4 bg-white rounded-xl border border-transparent
-      hover:border-[#e2e8f0] hover:shadow-sm transition-all duration-200 cursor-pointer
+      flex justify-between items-center p-3.5 md:p-4 bg-surface rounded-xl border border-transparent
+      hover:border-outline-variant hover:shadow-md3-level1 transition-all duration-200 cursor-pointer
       ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
     `} style={{ transitionDelay: `${index * 80}ms` }}>
       <div className="flex items-center gap-3 min-w-0">
@@ -133,7 +133,7 @@ function OrderCard({ order, index, formatCurrency }: {
           <div className="font-semibold text-sm truncate">
             Order #{order.id?.substring(0, 8) || "N/A"}
           </div>
-          <div className="text-xs text-[#64748b] flex items-center gap-1 mt-0.5">
+          <div className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
             <i className="fas fa-calendar text-[9px]" />
             {order.createdAt?.toDate
               ? order.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -165,7 +165,7 @@ function ActivityItem({ icon, iconColor, iconBg, title, subtitle, time }: {
   time: string;
 }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-white transition-colors group">
+    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-surface transition-colors group">
       <div className={`
         w-10 h-10 rounded-full flex items-center justify-center shrink-0
         ${iconBg} ${iconColor} transition-transform duration-200 group-hover:scale-110
@@ -174,9 +174,9 @@ function ActivityItem({ icon, iconColor, iconBg, title, subtitle, time }: {
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-sm">{title}</div>
-        <div className="text-xs text-[#64748b]">{subtitle}</div>
+        <div className="text-xs text-on-surface-variant">{subtitle}</div>
       </div>
-      <div className="text-[10px] text-[#94a3b8] font-medium shrink-0">{time}</div>
+      <div className="text-[10px] text-outline font-medium shrink-0">{time}</div>
     </div>
   );
 }
@@ -298,7 +298,7 @@ export default function CustomerModal({
             <div className={`
               w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} 
               flex items-center justify-center text-xl md:text-3xl font-medium text-white shrink-0
-              shadow-lg shadow-current/20
+              shadow-md3-level3 shadow-current/20
             `}>
               {getInitials(customer.name)}
             </div>
@@ -321,8 +321,8 @@ export default function CustomerModal({
           <button
             onClick={handleClose}
             className={`
-              w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-[#e2e8f0] 
-              flex items-center justify-center text-[#64748b] 
+              w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-outline-variant 
+              flex items-center justify-center text-on-surface-variant 
               hover:bg-[#ef4444] hover:border-[#ef4444] hover:text-white 
               transition-all duration-200 active:scale-90 shrink-0
             `}
@@ -370,13 +370,13 @@ export default function CustomerModal({
               </div>
 
               {/* Actions */}
-              <div className="bg-white rounded-2xl p-4 md:p-5 space-y-2.5">
+              <div className="bg-surface rounded-2xl p-4 md:p-5 space-y-2.5">
                 <button
                   onClick={() => onSendWhatsApp(customer.phone)}
                   className={`
                     w-full py-2.5 md:py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
                     text-white rounded-xl font-bold flex items-center justify-center gap-2 
-                    shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:shadow-[#25D366]/30 
+                    shadow-md3-level3 shadow-[#25D366]/20 hover:shadow-md3-level4 hover:shadow-[#25D366]/30 
                     hover:-translate-y-0.5 transition-all duration-200 active:scale-95
                   `}
                 >
@@ -391,8 +391,8 @@ export default function CustomerModal({
                     w-full py-2.5 md:py-3 rounded-xl font-bold flex items-center justify-center gap-2
                     border-2 transition-all duration-200 active:scale-95
                     ${customer.email
-                      ? "bg-white border-[#e2e8f0] text-[#1e293b] hover:border-[#3b82f6] hover:text-[#3b82f6]"
-                      : "bg-[#f1f5f9] border-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+                      ? "bg-surface border-outline-variant text-on-surface hover:border-[#3b82f6] hover:text-[#3b82f6]"
+                      : "bg-surface-variant border-outline-variant text-outline cursor-not-allowed"
                     }
                   `}
                 >
@@ -415,7 +415,7 @@ export default function CustomerModal({
               </div>
 
               {/* Contact Info */}
-              <div className="bg-white rounded-2xl p-4 md:p-5 space-y-3">
+              <div className="bg-surface rounded-2xl p-4 md:p-5 space-y-3">
                 {[
                   { label: "Phone", value: customer.phone, icon: "fa-phone", color: "text-[#25D366]" },
                   { label: "Email", value: customer.email || "N/A", icon: "fa-envelope", color: "text-[#3b82f6]" },
@@ -429,7 +429,7 @@ export default function CustomerModal({
                       <i className={`fas ${item.icon} ${item.color} text-xs`} />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">{item.label}</div>
+                      <div className="text-[10px] font-bold text-outline uppercase tracking-wider">{item.label}</div>
                       <div className="font-semibold text-sm truncate">{item.value}</div>
                     </div>
                   </div>
@@ -437,12 +437,12 @@ export default function CustomerModal({
               </div>
 
               {/* Notes */}
-              <div className="bg-white rounded-2xl p-4 md:p-5 border border-[#e2e8f0]">
+              <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-sm">Customer Notes</h4>
                   <span className={`
                     text-[10px] font-bold uppercase tracking-wider transition-colors
-                    ${saveStatus === "saving" ? "text-[#f59e0b]" : saveStatus === "saved" ? "text-[#10b981]" : "text-[#94a3b8]"}
+                    ${saveStatus === "saving" ? "text-[#f59e0b]" : saveStatus === "saved" ? "text-[#10b981]" : "text-outline"}
                   `}>
                     {saveStatus === "saving" && <i className="fas fa-circle-notch fa-spin mr-1" />}
                     {saveStatus === "saved" && <i className="fas fa-check mr-1" />}
@@ -451,10 +451,10 @@ export default function CustomerModal({
                 </div>
                 <textarea
                   className={`
-                    w-full bg-white p-3 rounded-xl text-sm text-[#1e293b] 
+                    w-full bg-surface p-3 rounded-xl text-sm text-on-surface 
                     resize-none min-h-[100px] focus:outline-none 
-                    border-2 border-[#e2e8f0] focus:border-[#8b5cf6]
-                    transition-colors duration-200 placeholder:text-[#94a3b8]
+                    border-2 border-outline-variant focus:border-[#8b5cf6]
+                    transition-colors duration-200 placeholder:text-outline
                   `}
                   placeholder="Add notes about this customer..."
                   value={customerNotes}
@@ -466,7 +466,7 @@ export default function CustomerModal({
             {/* Main Content */}
             <div className="min-w-0">
               {/* Tabs */}
-              <div className="flex gap-1 border-b-2 border-[#e2e8f0] mb-4 md:mb-6 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-1 border-b-2 border-outline-variant mb-4 md:mb-6 overflow-x-auto scrollbar-hide">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
@@ -474,7 +474,7 @@ export default function CustomerModal({
                     className={`
                       relative px-3 md:px-4 py-2.5 md:py-3 font-bold text-xs md:text-sm capitalize 
                       whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5
-                      ${activeTab === tab.id ? "text-[#8b5cf6]" : "text-[#64748b] hover:text-[#1e293b]"}
+                      ${activeTab === tab.id ? "text-[#8b5cf6]" : "text-on-surface-variant hover:text-on-surface"}
                     `}
                   >
                     <i className={`fas ${tab.icon} text-xs`} />
@@ -482,7 +482,7 @@ export default function CustomerModal({
                     {tab.count !== undefined && (
                       <span className={`
                         ml-0.5 px-1.5 py-0.5 rounded-full text-[10px]
-                        ${activeTab === tab.id ? "bg-[#ede9fe] text-[#8b5cf6]" : "bg-[#f1f5f9] text-[#64748b]"}
+                        ${activeTab === tab.id ? "bg-[#ede9fe] text-[#8b5cf6]" : "bg-surface-variant text-on-surface-variant"}
                       `}>
                         {tab.count}
                       </span>
@@ -503,7 +503,7 @@ export default function CustomerModal({
                         {customer.visits || 0} Visits • {formatCurrency(customer.totalSpent || 0)} Total
                       </h3>
                       {customerOrders.length > 0 && (
-                        <span className="text-xs text-[#94a3b8] font-medium">
+                        <span className="text-xs text-outline font-medium">
                           {customerOrders.length} order{customerOrders.length !== 1 ? 's' : ''}
                         </span>
                       )}
@@ -512,15 +512,15 @@ export default function CustomerModal({
                     {loadingOrders ? (
                       <div className="flex flex-col items-center justify-center py-12">
                         <div className="w-8 h-8 border-2 border-[#8b5cf6]/30 border-t-[#8b5cf6] rounded-full animate-spin mb-3" />
-                        <span className="text-sm text-[#64748b]">Loading orders...</span>
+                        <span className="text-sm text-on-surface-variant">Loading orders...</span>
                       </div>
                     ) : customerOrders.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-[#64748b]">
-                        <div className="w-14 h-14 rounded-xl bg-[#f1f5f9] flex items-center justify-center mb-3">
+                      <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
+                        <div className="w-14 h-14 rounded-xl bg-surface-variant flex items-center justify-center mb-3">
                           <i className="fas fa-shopping-bag text-xl text-[#cbd5e1]" />
                         </div>
                         <p className="font-semibold text-sm">No orders found</p>
-                        <p className="text-xs text-[#94a3b8] mt-1">This customer hasn't placed any orders yet</p>
+                        <p className="text-xs text-outline mt-1">This customer hasn't placed any orders yet</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -538,12 +538,12 @@ export default function CustomerModal({
                 )}
 
                 {activeTab === "messages" && (
-                  <div className="bg-white rounded-2xl p-6 md:p-8 text-center">
+                  <div className="bg-surface rounded-2xl p-6 md:p-8 text-center">
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 flex items-center justify-center mx-auto mb-4">
                       <i className="fab fa-whatsapp text-3xl md:text-4xl text-[#25D366]" />
                     </div>
                     <h3 className="font-bold text-base md:text-lg mb-2">WhatsApp Chat History</h3>
-                    <p className="text-sm text-[#64748b] mb-6 max-w-sm mx-auto">
+                    <p className="text-sm text-on-surface-variant mb-6 max-w-sm mx-auto">
                       View all WhatsApp conversations with this customer
                     </p>
                     <button
@@ -551,7 +551,7 @@ export default function CustomerModal({
                       className={`
                         px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
                         text-white rounded-xl font-bold inline-flex items-center gap-2
-                        shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:-translate-y-0.5
+                        shadow-md3-level3 shadow-[#25D366]/20 hover:shadow-md3-level4 hover:-translate-y-0.5
                         transition-all duration-200 active:scale-95
                       `}
                     >
@@ -597,7 +597,7 @@ export default function CustomerModal({
                 {activeTab === "preferences" && (
                   <div className="space-y-4">
                     {/* Tags */}
-                    <div className="bg-white p-4 md:p-5 rounded-2xl border border-[#e2e8f0]">
+                    <div className="bg-surface p-4 md:p-5 rounded-2xl border border-outline-variant">
                       <h4 className="font-bold text-sm mb-4 flex items-center gap-2">
                         <i className="fas fa-tags text-[#8b5cf6]" />
                         Tags
@@ -612,7 +612,7 @@ export default function CustomerModal({
                                 px-3 py-1.5 rounded-full text-xs font-semibold 
                                 border flex items-center gap-1.5 transition-all duration-200
                                 ${colors.bg} ${colors.text} ${colors.border}
-                                hover:shadow-sm
+                                hover:shadow-md3-level1
                               `}
                             >
                               {tag}
@@ -627,7 +627,7 @@ export default function CustomerModal({
                           );
                         })}
                         {customerTags.length === 0 && (
-                          <span className="text-sm text-[#94a3b8] italic">No tags added yet</span>
+                          <span className="text-sm text-outline italic">No tags added yet</span>
                         )}
                       </div>
                       <div className="flex gap-2">
@@ -637,9 +637,9 @@ export default function CustomerModal({
                           onChange={(e) => setNewTag(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && addTag()}
                           className={`
-                            flex-1 px-3 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm
+                            flex-1 px-3 py-2.5 border-2 border-outline-variant rounded-xl text-sm
                             focus:outline-none focus:border-[#8b5cf6] transition-colors
-                            placeholder:text-[#94a3b8]
+                            placeholder:text-outline
                           `}
                           placeholder="Add a tag..."
                         />
@@ -649,8 +649,8 @@ export default function CustomerModal({
                           className={`
                             px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95
                             ${newTag.trim()
-                              ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md shadow-[#8b5cf6]/20"
-                              : "bg-[#f1f5f9] text-[#94a3b8] cursor-not-allowed"
+                              ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md3-level2 shadow-[#8b5cf6]/20"
+                              : "bg-surface-variant text-outline cursor-not-allowed"
                             }
                           `}
                         >

@@ -66,9 +66,9 @@ function ShimmerHeader() {
         <div className="h-4 bg-[var(--md-sys-color-surface-variant)] rounded w-16" />
       </div>
       <div className="md:hidden bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-2xl p-4">
-        <div className="h-6 bg-white/20 rounded w-32 mb-2" />
-        <div className="h-4 bg-white/20 rounded w-24 mb-1" />
-        <div className="h-3 bg-white/20 rounded w-40" />
+        <div className="h-6 bg-surface/20 rounded w-32 mb-2" />
+        <div className="h-4 bg-surface/20 rounded w-24 mb-1" />
+        <div className="h-3 bg-surface/20 rounded w-40" />
       </div>
       <div className="hidden md:block">
         <div className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded w-64 mb-2" />
@@ -99,21 +99,21 @@ function MobileHeader({
         md:hidden relative overflow-hidden
         bg-[#25D366]
         rounded-2xl p-4 text-white
-        shadow-md shadow-[#25D366]/20
+        shadow-md3-level2 shadow-[#25D366]/20
         transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
     >
       {/* Background pattern - MD3 style */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-surface rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-surface rounded-full translate-y-1/2 -translate-x-1/2" />
       </div>
 
       <div className="relative flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-white/80 bg-white/15 px-2.5 py-1 rounded-full">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-white/80 bg-surface/15 px-2.5 py-1 rounded-full">
               {currentTime}
             </span>
           </div>
@@ -127,7 +127,7 @@ function MobileHeader({
         </div>
 
         {/* Avatar - MD3 styling */}
-        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-semibold text-lg shrink-0 border-2 border-white/30">
+        <div className="w-12 h-12 rounded-full bg-surface/20 backdrop-blur-sm flex items-center justify-center font-semibold text-lg shrink-0 border-2 border-white/30">
           {getInitials(tenantName)}
         </div>
       </div>
@@ -163,31 +163,31 @@ function DesktopHeader({
     >
       {/* Breadcrumb - MD3 styling */}
       {showBreadcrumb && (
-        <nav className="flex items-center gap-2 text-sm text-[#94A3B8] mb-3">
-          <span className="hover:text-[#64748B] cursor-pointer transition-colors font-medium">Home</span>
+        <nav className="flex items-center gap-2 text-sm text-outline mb-3">
+          <span className="hover:text-on-surface-variant cursor-pointer transition-colors font-medium">Home</span>
           <i className="fas fa-chevron-right text-[10px]" />
-          <span className="text-[#64748B] font-semibold">Dashboard</span>
+          <span className="text-on-surface-variant font-semibold">Dashboard</span>
         </nav>
       )}
 
       {/* Main header - MD3 typography */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl lg:text-[1.875rem] font-bold text-[#1e293b] tracking-tight">
+          <h1 className="text-2xl lg:text-[1.875rem] font-bold text-on-surface tracking-tight">
             Good {greeting},{" "}
             <span className="text-[#25D366]">{tenantName}</span>!
           </h1>
-          <p className="text-[#64748B] text-sm mt-1.5 font-medium">
+          <p className="text-on-surface-variant text-sm mt-1.5 font-medium">
             Welcome back! Here&apos;s what&apos;s happening with your store today.
           </p>
         </div>
 
         {/* Time display - MD3 styling */}
         <div className="text-right shrink-0 ml-4">
-          <div className="text-2xl font-bold text-[#1e293b] tabular-nums">
+          <div className="text-2xl font-bold text-on-surface tabular-nums">
             {formatTime(currentTime)}
           </div>
-          <div className="text-xs text-[#94A3B8] font-medium mt-0.5">
+          <div className="text-xs text-outline font-medium mt-0.5">
             {formatDate(currentTime)}
           </div>
         </div>

@@ -106,7 +106,7 @@ function Toast({ toasts }: { toasts: { id: number; type: string; message: string
         <div
           key={toast.id}
           className={`
-            pointer-events-auto px-5 py-4 rounded-xl shadow-xl flex items-center gap-3 min-w-[320px] animate-slideInRight
+            pointer-events-auto px-5 py-4 rounded-xl shadow-md3-level4 flex items-center gap-3 min-w-[320px] animate-slideInRight
             ${toast.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}
           `}
         >
@@ -245,11 +245,11 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Price & Stock */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200">
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-3xl font-bold text-gray-900">{formatCurrency(product.price)}</span>
+              <span className="text-3xl font-bold text-on-surface">{formatCurrency(product.price)}</span>
               {hasDiscount && (
                 <span className="px-3 py-1 bg-red-100 text-red-600 text-sm font-bold rounded-full">
                   -{discountPercent}% OFF
@@ -257,7 +257,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
               )}
             </div>
             {hasDiscount && product.salePrice && (
-              <p className="text-gray-500 line-through">{formatCurrency(product.salePrice)}</p>
+              <p className="text-on-surface-variant line-through">{formatCurrency(product.salePrice)}</p>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -269,23 +269,23 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-1">Stock Level</p>
-          <p className="text-2xl font-bold text-gray-900">{product.stock || 0}</p>
-          <p className="text-xs text-gray-500 mt-1">units available</p>
+        <div className="bg-white rounded-2xl p-5 border border-outline-variant">
+          <p className="text-sm text-on-surface-variant mb-1">Stock Level</p>
+          <p className="text-2xl font-bold text-on-surface">{product.stock || 0}</p>
+          <p className="text-xs text-on-surface-variant mt-1">units available</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-1">Views</p>
-          <p className="text-2xl font-bold text-gray-900">{product.views || 0}</p>
-          <p className="text-xs text-gray-500 mt-1">total views</p>
+        <div className="bg-white rounded-2xl p-5 border border-outline-variant">
+          <p className="text-sm text-on-surface-variant mb-1">Views</p>
+          <p className="text-2xl font-bold text-on-surface">{product.views || 0}</p>
+          <p className="text-xs text-on-surface-variant mt-1">total views</p>
         </div>
       </div>
 
       {/* Description */}
       {product.description && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-200">
-          <h4 className="text-lg font-semibold text-gray-900 mb-3">Description</h4>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{product.description}</p>
+        <div className="bg-white rounded-2xl p-6 border border-outline-variant">
+          <h4 className="text-lg font-semibold text-on-surface mb-3">Description</h4>
+          <p className="text-on-surface leading-relaxed whitespace-pre-wrap">{product.description}</p>
         </div>
       )}
     </div>
@@ -294,33 +294,33 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
   const renderDetails = () => (
     <div className="space-y-6">
       {/* Basic Info */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 space-y-4">
-        <h4 className="text-lg font-semibold text-gray-900">Product Details</h4>
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant space-y-4">
+        <h4 className="text-lg font-semibold text-on-surface">Product Details</h4>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-600 mb-1">Category</p>
-            <p className="font-medium text-gray-900 flex items-center gap-2">
+            <p className="text-sm text-on-surface-variant mb-1">Category</p>
+            <p className="font-medium text-on-surface flex items-center gap-2">
               <span>{getCategoryEmoji(product.category || "other")}</span>
               {product.category || "Uncategorized"}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-1">SKU</p>
-            <p className="font-medium text-gray-900">{product.sku || "N/A"}</p>
+            <p className="text-sm text-on-surface-variant mb-1">SKU</p>
+            <p className="font-medium text-on-surface">{product.sku || "N/A"}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-1">Status</p>
+            <p className="text-sm text-on-surface-variant mb-1">Status</p>
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
               product.status === "active" ? "bg-green-100 text-green-700" : 
               product.status === "paused" ? "bg-amber-100 text-amber-700" : 
-              "bg-gray-100 text-gray-700"
+              "bg-surface-variant text-on-surface"
             }`}>
               {product.status || "active"}
             </span>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-1">Created</p>
-            <p className="font-medium text-gray-900">
+            <p className="text-sm text-on-surface-variant mb-1">Created</p>
+            <p className="font-medium text-on-surface">
               {product.createdAt?.toDate ? product.createdAt.toDate().toLocaleDateString() : "N/A"}
             </p>
           </div>
@@ -328,25 +328,25 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
       </div>
 
       {/* Pricing Details */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 space-y-4">
-        <h4 className="text-lg font-semibold text-gray-900">Pricing</h4>
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant space-y-4">
+        <h4 className="text-lg font-semibold text-on-surface">Pricing</h4>
         <div className="space-y-3">
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-gray-600">Selling Price</span>
-            <span className="font-semibold text-gray-900">{formatCurrency(product.price)}</span>
+          <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+            <span className="text-on-surface-variant">Selling Price</span>
+            <span className="font-semibold text-on-surface">{formatCurrency(product.price)}</span>
           </div>
           {product.costPrice && (
             <>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-gray-600">Cost Price</span>
-                <span className="font-semibold text-gray-900">{formatCurrency(product.costPrice)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+                <span className="text-on-surface-variant">Cost Price</span>
+                <span className="font-semibold text-on-surface">{formatCurrency(product.costPrice)}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-gray-600">Profit per unit</span>
+              <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+                <span className="text-on-surface-variant">Profit per unit</span>
                 <span className="font-semibold text-green-600">{formatCurrency(profit)}</span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-gray-600">Profit Margin</span>
+                <span className="text-on-surface-variant">Profit Margin</span>
                 <span className="font-semibold text-green-600">{profitMargin}%</span>
               </div>
             </>
@@ -359,46 +359,46 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
   const renderInventory = () => (
     <div className="space-y-6">
       {/* Stock Overview */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Inventory Overview</h4>
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant">
+        <h4 className="text-lg font-semibold text-on-surface mb-4">Inventory Overview</h4>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: stockConfig.bgLight }}>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Current Stock</p>
+              <p className="text-sm text-on-surface-variant mb-1">Current Stock</p>
               <p className="text-3xl font-bold" style={{ color: stockConfig.color }}>{product.stock || 0}</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600 mb-1">Status</p>
+              <p className="text-sm text-on-surface-variant mb-1">Status</p>
               <p className="font-semibold" style={{ color: stockConfig.color }}>{stockConfig.text}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-blue-50">
-              <p className="text-sm text-gray-600 mb-1">Low Stock Alert</p>
+              <p className="text-sm text-on-surface-variant mb-1">Low Stock Alert</p>
               <p className="text-2xl font-bold text-blue-600">{product.lowStockAlert || 5}</p>
-              <p className="text-xs text-gray-500 mt-1">units threshold</p>
+              <p className="text-xs text-on-surface-variant mt-1">units threshold</p>
             </div>
             <div className="p-4 rounded-xl bg-purple-50">
-              <p className="text-sm text-gray-600 mb-1">Total Value</p>
+              <p className="text-sm text-on-surface-variant mb-1">Total Value</p>
               <p className="text-2xl font-bold text-purple-600">{formatCurrency((product.price || 0) * (product.stock || 0))}</p>
-              <p className="text-xs text-gray-500 mt-1">at current stock</p>
+              <p className="text-xs text-on-surface-variant mt-1">at current stock</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Stock History */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Stock Management</h4>
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant">
+        <h4 className="text-lg font-semibold text-on-surface mb-4">Stock Management</h4>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="text-gray-600">Units Sold</span>
-            <span className="font-semibold text-gray-900">{product.orders || 0}</span>
+          <div className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
+            <span className="text-on-surface-variant">Units Sold</span>
+            <span className="font-semibold text-on-surface">{product.orders || 0}</span>
           </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="text-gray-600">Total Revenue</span>
-            <span className="font-semibold text-gray-900">{formatCurrency((product.price || 0) * (product.orders || 0))}</span>
+          <div className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
+            <span className="text-on-surface-variant">Total Revenue</span>
+            <span className="font-semibold text-on-surface">{formatCurrency((product.price || 0) * (product.orders || 0))}</span>
           </div>
         </div>
       </div>
@@ -412,21 +412,21 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
     return (
       <div className="space-y-6">
         {specEntries.length > 0 ? (
-          <div className="bg-white rounded-2xl p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h4>
+          <div className="bg-white rounded-2xl p-6 border border-outline-variant">
+            <h4 className="text-lg font-semibold text-on-surface mb-4">Specifications</h4>
             <div className="grid grid-cols-2 gap-4">
               {specEntries.map(([key, value], idx) => (
-                <div key={idx} className="p-4 bg-gray-50 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-1 capitalize">{key}</p>
-                  <p className="font-medium text-gray-900">{String(value)}</p>
+                <div key={idx} className="p-4 bg-surface-container-lowest rounded-xl">
+                  <p className="text-sm text-on-surface-variant mb-1 capitalize">{key}</p>
+                  <p className="font-medium text-on-surface">{String(value)}</p>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-12 border border-gray-200 text-center">
+          <div className="bg-white rounded-2xl p-12 border border-outline-variant text-center">
             <i className="fas fa-cogs text-5xl text-gray-300 mb-4"></i>
-            <p className="text-gray-500">No specifications added</p>
+            <p className="text-on-surface-variant">No specifications added</p>
           </div>
         )}
       </div>
@@ -452,14 +452,14 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
 
       {/* Desktop Modal - Two Column Layout */}
       <div className="fixed inset-0 z-[2100] flex items-center justify-center p-6 pointer-events-none">
-        <div className="w-full max-w-6xl max-h-[85vh] bg-white rounded-3xl shadow-2xl flex pointer-events-auto animate-scaleIn border border-gray-200">
+        <div className="w-full max-w-6xl max-h-[85vh] bg-white rounded-3xl shadow-2xl flex pointer-events-auto animate-scaleIn border border-outline-variant">
           
           {/* Left Column - Image Gallery */}
-          <div className="w-2/5 border-r border-gray-200 overflow-y-auto bg-gray-50">
+          <div className="w-2/5 border-r border-outline-variant overflow-y-auto bg-surface-container-lowest">
             <div className="p-6 space-y-4 sticky top-0">
               {/* Main Image */}
               <div className="relative group">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-white shadow-lg cursor-pointer" onClick={() => setLightboxOpen(true)}>
+                <div className="aspect-square rounded-2xl overflow-hidden bg-white shadow-md3-level3 cursor-pointer" onClick={() => setLightboxOpen(true)}>
                   {!mainImageError && currentImage ? (
                     <img
                       src={currentImage}
@@ -468,12 +468,12 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
                       onError={() => setMainImageError(true)}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <div className="w-full h-full flex items-center justify-center bg-surface-variant">
                       <span className="text-8xl opacity-30 select-none">{getCategoryEmoji(product.category || "other")}</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                    <i className="fas fa-expand text-white text-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
+                    <i className="fas fa-expand text-white text-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md3-level3" />
                   </div>
                 </div>
                 
@@ -497,7 +497,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
                       }}
                       className={`
                         aspect-square rounded-xl overflow-hidden border-2 transition-all hover:scale-105
-                        ${selectedImage === idx ? "border-green-500 shadow-lg scale-105" : "border-gray-200 opacity-60 hover:opacity-100"}
+                        ${selectedImage === idx ? "border-green-500 shadow-md3-level3 scale-105" : "border-outline-variant opacity-60 hover:opacity-100"}
                       `}
                     >
                       {!thumbnailErrors.has(idx) ? (
@@ -510,7 +510,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <div className="w-full h-full bg-surface-variant flex items-center justify-center">
                           <i className="fas fa-image text-gray-400" />
                         </div>
                       )}
@@ -520,10 +520,10 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
               )}
               
               {/* Quick Actions */}
-              <div className="pt-4 border-t border-gray-200 space-y-3">
+              <div className="pt-4 border-t border-outline-variant space-y-3">
                 <button
                   onClick={() => copyToClipboard(window.location.href, "Link copied to clipboard!")}
-                  className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold text-gray-700 transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-4 py-3 bg-surface-variant hover:bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface transition-colors flex items-center justify-center gap-2"
                 >
                   <i className="fas fa-link" />
                   Copy Product Link
@@ -542,11 +542,11 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
           {/* Right Column - Tabs & Content */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+            <div className="flex items-center justify-between p-6 border-b border-outline-variant bg-white">
               <div className="flex-1 min-w-0">
-                <h3 className="text-2xl font-bold text-gray-900 truncate">{product.name}</h3>
+                <h3 className="text-2xl font-bold text-on-surface truncate">{product.name}</h3>
                 <div className="flex items-center gap-3 mt-2">
-                  <span className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="flex items-center gap-2 text-sm text-on-surface-variant">
                     <i className="fas fa-box"></i>
                     {product.category || "Uncategorized"}
                   </span>
@@ -560,25 +560,25 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
               
               <div className="flex items-center gap-3">
                 {/* Keyboard shortcut hints */}
-                <div className="hidden xl:flex items-center gap-2 mr-2 text-xs text-gray-500">
-                  <kbd className="px-2 py-1 bg-gray-100 rounded border border-gray-300 font-mono">Esc</kbd>
+                <div className="hidden xl:flex items-center gap-2 mr-2 text-xs text-on-surface-variant">
+                  <kbd className="px-2 py-1 bg-surface-variant rounded border border-outline font-mono">Esc</kbd>
                   <span>Close</span>
-                  <kbd className="px-2 py-1 bg-gray-100 rounded border border-gray-300 font-mono ml-2">1-5</kbd>
+                  <kbd className="px-2 py-1 bg-surface-variant rounded border border-outline font-mono ml-2">1-5</kbd>
                   <span>Tabs</span>
                 </div>
                 
                 <button
                   onClick={handleClose}
-                  className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors"
                   title="Close (Esc)"
                 >
-                  <i className="fas fa-times text-gray-600" />
+                  <i className="fas fa-times text-on-surface-variant" />
                 </button>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-gray-200 bg-white">
+            <div className="border-b border-outline-variant bg-white">
               <div className="flex px-6">
                 {TABS.map((tab, idx) => (
                   <button
@@ -588,7 +588,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
                       flex items-center gap-2 px-4 py-4 text-sm font-medium border-b-2 transition-colors
                       ${activeTab === tab.id
                         ? "border-green-500 text-green-600"
-                        : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                        : "border-transparent text-on-surface-variant hover:text-on-surface hover:border-outline"
                       }
                     `}
                     title={`Press ${idx + 1}`}
@@ -601,7 +601,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
             </div>
 
             {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-6 bg-surface-container-lowest">
               {tabContent[activeTab]()}
             </div>
           </div>

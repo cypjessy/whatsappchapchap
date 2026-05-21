@@ -85,7 +85,7 @@ function FilterChip({
       {label}
       <button
         onClick={onRemove}
-        className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-white/50 transition-colors"
+        className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-surface/50 transition-colors"
       >
         <i className="fas fa-times text-[10px]" />
       </button>
@@ -146,7 +146,7 @@ function DateField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-[#64748b] mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">{label}</label>
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           <i className={`fas ${icon} text-xs`} />
@@ -155,7 +155,7 @@ function DateField({
           type="date"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-9 pr-3 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-gray-300"
+          className="w-full pl-9 pr-3 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-outline"
         />
       </div>
     </div>
@@ -177,7 +177,7 @@ function AmountField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-[#64748b] mb-1.5">{label}</label>
+      <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">{label}</label>
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           <i className={`fas ${icon} text-xs`} />
@@ -189,7 +189,7 @@ function AmountField({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value ? Number(e.target.value) : "")}
-          className="w-full pl-9 pr-3 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-gray-300"
+          className="w-full pl-9 pr-3 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-outline"
         />
       </div>
     </div>
@@ -298,7 +298,7 @@ export default function OrderFilters({
   );
 
   return (
-    <div className="bg-white border-b border-[#e2e8f0]">
+    <div className="bg-surface border-b border-outline-variant">
       {/* ─── Primary Bar ─── */}
       <div className="p-3 md:p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 animate-fadeIn">
         {/* Left: Title & Count */}
@@ -307,14 +307,14 @@ export default function OrderFilters({
             <i className="fas fa-list text-blue-500 text-sm" />
           </div>
           <div>
-            <h3 className="font-bold text-[#1e293b] text-sm md:text-base">Orders</h3>
+            <h3 className="font-bold text-on-surface text-sm md:text-base">Orders</h3>
             {resultCount !== undefined && (
-              <p className="text-xs text-[#64748b]">
-                Showing <span className="font-semibold text-[#1e293b]">{resultCount}</span>
+              <p className="text-xs text-on-surface-variant">
+                Showing <span className="font-semibold text-on-surface">{resultCount}</span>
                 {totalCount !== undefined && (
                   <span>
                     {" "}
-                    of <span className="font-semibold text-[#1e293b]">{totalCount}</span>
+                    of <span className="font-semibold text-on-surface">{totalCount}</span>
                   </span>
                 )}
               </p>
@@ -334,11 +334,11 @@ export default function OrderFilters({
                 placeholder="Search orders..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="w-full pl-10 pr-9 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-gray-300"
+                className="w-full pl-10 pr-9 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-outline"
               />
               {localSearch && (
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-on-surface-variant transition-colors"
                   onClick={() => {
                     setLocalSearch("");
                     setSearchTerm("");
@@ -355,7 +355,7 @@ export default function OrderFilters({
               className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 flex items-center gap-2 border-2 whitespace-nowrap ${
                 showFilterSheet
                   ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366]"
-                  : "border-[#e2e8f0] text-[#64748b] hover:border-gray-300"
+                  : "border-outline-variant text-on-surface-variant hover:border-outline"
               } animate-fadeIn`}
               style={{ animationDelay: '0.2s' }}
             >
@@ -378,11 +378,11 @@ export default function OrderFilters({
                 placeholder="Search orders..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="w-full pl-10 pr-9 py-2.5 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-gray-300"
+                className="w-full pl-10 pr-9 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all hover:border-outline"
               />
               {localSearch && (
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-on-surface-variant transition-colors"
                   onClick={() => {
                     setLocalSearch("");
                     setSearchTerm("");
@@ -434,7 +434,7 @@ export default function OrderFilters({
               className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 flex items-center gap-2 border-2 ${
                 showAdvanced
                   ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366]"
-                  : "border-[#e2e8f0] text-[#64748b] hover:border-gray-300"
+                  : "border-outline-variant text-on-surface-variant hover:border-outline"
               } animate-fadeIn`}
               style={{ animationDelay: '0.35s' }}
             >
@@ -520,7 +520,7 @@ export default function OrderFilters({
         } animate-fadeIn`}
         style={{ animationDelay: '0.15s' }}
       >
-        <div className="p-3 md:p-4 bg-white border-t border-[#e2e8f0]">
+        <div className="p-3 md:p-4 bg-surface border-t border-outline-variant">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <DateField
               label="Start Date"
@@ -552,14 +552,14 @@ export default function OrderFilters({
 
           {/* Quick Presets */}
           <div className="mt-3 flex flex-wrap gap-2">
-            <span className="text-xs text-[#64748b] font-medium mr-1">Quick filters:</span>
+            <span className="text-xs text-on-surface-variant font-medium mr-1">Quick filters:</span>
             <button
               onClick={() => {
                 const today = new Date().toISOString().split("T")[0];
                 setDateRangeStart(today);
                 setDateRangeEnd(today);
               }}
-              className="px-2.5 py-1 bg-white border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+              className="px-2.5 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
             >
               Today
             </button>
@@ -571,7 +571,7 @@ export default function OrderFilters({
                 setDateRangeStart(start.toISOString().split("T")[0]);
                 setDateRangeEnd(end.toISOString().split("T")[0]);
               }}
-              className="px-2.5 py-1 bg-white border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+              className="px-2.5 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
             >
               Last 7 days
             </button>
@@ -583,7 +583,7 @@ export default function OrderFilters({
                 setDateRangeStart(start.toISOString().split("T")[0]);
                 setDateRangeEnd(end.toISOString().split("T")[0]);
               }}
-              className="px-2.5 py-1 bg-white border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+              className="px-2.5 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
             >
               Last 30 days
             </button>
@@ -592,7 +592,7 @@ export default function OrderFilters({
                 setAmountMin(100);
                 setAmountMax(500);
               }}
-              className="px-2.5 py-1 bg-white border border-[#e2e8f0] rounded-lg text-xs font-medium text-[#64748b] hover:border-[#25D366] hover:text-[#25D366] transition-all"
+              className="px-2.5 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all"
             >
               $100 - $500
             </button>

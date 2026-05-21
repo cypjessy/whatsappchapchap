@@ -136,14 +136,14 @@ function useAnimatedCounter(target: number, duration: number = 1200, delay: numb
 
 function ShimmerCard() {
   return (
-    <div className="flex-shrink-0 snap-start bg-white px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 border-[#e2e8f0] shadow-sm min-w-[160px] md:min-w-0 md:flex-1 overflow-hidden relative">
+    <div className="flex-shrink-0 snap-start bg-surface px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 border-outline-variant shadow-md3-level1 min-w-[160px] md:min-w-0 md:flex-1 overflow-hidden relative">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-start justify-between mb-2">
-        <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-[#f1f5f9]" />
-        <div className="h-5 bg-[#f1f5f9] rounded-full w-12" />
+        <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-surface-variant" />
+        <div className="h-5 bg-surface-variant rounded-full w-12" />
       </div>
-      <div className="h-7 bg-[#f1f5f9] rounded-lg w-24 mb-1" />
-      <div className="h-4 bg-[#f1f5f9] rounded-lg w-20" />
+      <div className="h-7 bg-surface-variant rounded-lg w-24 mb-1" />
+      <div className="h-4 bg-surface-variant rounded-lg w-20" />
     </div>
   );
 }
@@ -189,9 +189,9 @@ function StatCard({
         border-2 transition-all duration-200 ease-out text-left
         min-w-[0] md:min-w-0
         ${config.borderColor} ${config.hoverBorder}
-        ${isHovered ? "shadow-lg -translate-y-0.5" : "shadow-sm"}
+        ${isHovered ? "shadow-md3-level3 -translate-y-0.5" : "shadow-md3-level1"}
         ${onClick ? "cursor-pointer active:scale-[0.98]" : "cursor-default"}
-        bg-white
+        bg-surface
       `}
       disabled={!onClick}
     >
@@ -202,7 +202,7 @@ function StatCard({
             w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center
             transition-all duration-300
             ${config.iconBg}
-            ${isHovered ? "scale-110 shadow-sm" : "scale-100"}
+            ${isHovered ? "scale-110 shadow-md3-level1" : "scale-100"}
           `}
         >
           <config.icon
@@ -220,7 +220,7 @@ function StatCard({
               ${trend.isUp
                 ? "bg-[#f0fdf4] text-[#25D366] border-[#25D366]/20"
                 : trend.isNeutral
-                  ? "bg-white text-[#94a3b8] border-[#e2e8f0]"
+                  ? "bg-surface text-outline border-outline-variant"
                   : "bg-[#fef2f2] text-[#ef4444] border-[#ef4444]/20"
               }
             `}
@@ -237,7 +237,7 @@ function StatCard({
           className={`
             text-lg md:text-2xl lg:text-3xl font-extrabold tracking-tight
             transition-all duration-300
-            ${isWarningActive ? "text-[#ef4444]" : "text-[#1e293b]"}
+            ${isWarningActive ? "text-[#ef4444]" : "text-on-surface"}
             ${isHovered ? "scale-[1.02]" : "scale-100"}
             inline-block
           `}
@@ -248,14 +248,14 @@ function StatCard({
 
       {/* Label + Arrow */}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] md:text-sm font-medium text-[#64748b]">
+        <span className="text-[10px] md:text-sm font-medium text-on-surface-variant">
           {config.label}
         </span>
 
         {onClick && (
           <ChevronRight
             className={`
-              hidden md:block w-3.5 h-3.5 text-[#94a3b8] transition-all duration-300
+              hidden md:block w-3.5 h-3.5 text-outline transition-all duration-300
               ${isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-1"}
             `}
           />
@@ -264,7 +264,7 @@ function StatCard({
 
       {/* Previous value comparison — hidden on mobile */}
       {showTrend && !config.isWarning && (
-        <div className="mt-1 md:mt-1.5 text-[10px] text-[#94a3b8] font-medium hidden md:block">
+        <div className="mt-1 md:mt-1.5 text-[10px] text-outline font-medium hidden md:block">
           vs {config.isCurrency ? formatCurrency(previousValue!) : previousValue!.toLocaleString()} last period
         </div>
       )}
@@ -273,11 +273,11 @@ function StatCard({
       {config.isWarning && value > 0 && (
         <div className="mt-1.5 md:mt-3">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[9px] md:text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
+            <span className="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-wider">
               {Math.round((value / Math.max(totalProducts, 1)) * 100)}% of total
             </span>
           </div>
-          <div className="h-1 md:h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
+          <div className="h-1 md:h-1.5 bg-surface-variant rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-1000 ease-out"
               style={{
@@ -373,8 +373,8 @@ export default function ProductStats({
         onClick={() => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
         className={`
           absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full 
-          bg-white/95 backdrop-blur-md shadow-lg border border-[#e2e8f0] 
-          flex items-center justify-center text-[#64748b] hover:text-[#128C7E] hover:border-[#25D366]
+          bg-surface/95 backdrop-blur-md shadow-md3-level3 border border-outline-variant 
+          flex items-center justify-center text-on-surface-variant hover:text-[#128C7E] hover:border-[#25D366]
           transition-all duration-300 active:scale-90 md:hidden
           ${canScrollRight ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}
         `}

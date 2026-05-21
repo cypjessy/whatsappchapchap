@@ -36,7 +36,7 @@ function CharacterCounter({ current, max }: { current: number; max: number }) {
 
   return (
     <div className="flex items-center gap-2 mt-2">
-      <div className="flex-1 h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
         <div
           className={`
             h-full rounded-full transition-all duration-300
@@ -47,7 +47,7 @@ function CharacterCounter({ current, max }: { current: number; max: number }) {
       </div>
       <span className={`
         text-[10px] font-bold tabular-nums
-        ${isOverLimit ? "text-[#ef4444]" : isNearLimit ? "text-[#f59e0b]" : "text-[#94a3b8]"}
+        ${isOverLimit ? "text-[#ef4444]" : isNearLimit ? "text-[#f59e0b]" : "text-outline"}
       `}>
         {current}/{max}
       </span>
@@ -72,7 +72,7 @@ function TemplateButton({
         transition-all duration-200 active:scale-95
         ${isActive
           ? "border-[#25D366] bg-[#DCF8C6]/30 text-[#25D366]"
-          : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1]"
+          : "border-outline-variant bg-surface text-on-surface-variant hover:border-outline-variant"
         }
       `}
     >
@@ -93,23 +93,23 @@ function DeliveryPreview({
   const cost = customerCount * 0; // WhatsApp API cost estimation
 
   return (
-    <div className="bg-white rounded-xl p-3 md:p-4 space-y-2 border border-[#e2e8f0]">
-      <div className="flex items-center gap-2 text-xs font-bold text-[#64748b] uppercase tracking-wider">
+    <div className="bg-surface rounded-xl p-3 md:p-4 space-y-2 border border-outline-variant">
+      <div className="flex items-center gap-2 text-xs font-bold text-on-surface-variant uppercase tracking-wider">
         <i className="fas fa-chart-pie text-[#8b5cf6]" />
         Delivery Preview
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <div className="text-center p-2 bg-white rounded-lg border border-[#e2e8f0]">
+        <div className="text-center p-2 bg-surface rounded-lg border border-outline-variant">
           <div className="text-lg font-extrabold text-[#8b5cf6]">{customerCount}</div>
-          <div className="text-[10px] text-[#94a3b8] font-semibold">Recipients</div>
+          <div className="text-[10px] text-outline font-semibold">Recipients</div>
         </div>
-        <div className="text-center p-2 bg-white rounded-lg border border-[#e2e8f0]">
+        <div className="text-center p-2 bg-surface rounded-lg border border-outline-variant">
           <div className="text-lg font-extrabold text-[#f59e0b]">~{estimatedTime}s</div>
-          <div className="text-[10px] text-[#94a3b8] font-semibold">Est. Time</div>
+          <div className="text-[10px] text-outline font-semibold">Est. Time</div>
         </div>
-        <div className="text-center p-2 bg-white rounded-lg border border-[#e2e8f0]">
+        <div className="text-center p-2 bg-surface rounded-lg border border-outline-variant">
           <div className="text-lg font-extrabold text-[#10b981]">{message.length}</div>
-          <div className="text-[10px] text-[#94a3b8] font-semibold">Characters</div>
+          <div className="text-[10px] text-outline font-semibold">Characters</div>
         </div>
       </div>
     </div>
@@ -131,14 +131,14 @@ function MessagePreview({ message }: { message: string }) {
 
       {showPreview && (
         <div className="animate-fadeIn">
-          <div className="bg-[#DCF8C6] rounded-2xl rounded-tl-sm p-3 md:p-4 max-w-[85%] ml-auto shadow-sm">
+          <div className="bg-[#DCF8C6] rounded-2xl rounded-tl-sm p-3 md:p-4 max-w-[85%] ml-auto shadow-md3-level1">
             <div className="flex items-start gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white text-xs font-bold shrink-0">
                 <i className="fas fa-broadcast-tower" />
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-bold text-[#075E54]">Your Business</div>
-                <p className="text-sm text-[#1e293b] whitespace-pre-wrap leading-relaxed">
+                <p className="text-sm text-on-surface whitespace-pre-wrap leading-relaxed">
                   {message || "Your message will appear here..."}
                 </p>
                 <div className="flex items-center justify-end gap-1 text-[10px] text-[#34B7F1]">
@@ -198,7 +198,7 @@ export default function BroadcastModal({
         {/* Header - MD3 Dialog Header */}
         <div className="px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md3-level2">
               <i className="fas fa-broadcast-tower" />
             </div>
             <div>
@@ -227,7 +227,7 @@ export default function BroadcastModal({
               </div>
               <div>
                 <div className="text-sm font-bold text-[#10b981]">Broadcast Sent!</div>
-                <div className="text-xs text-[#64748b]">
+                <div className="text-xs text-on-surface-variant">
                   {sentCount} delivered • {failedCount} failed
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function BroadcastModal({
 
           {/* Templates */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider">
+            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
               Quick Templates
             </label>
             <div className="flex flex-wrap gap-2">
@@ -254,10 +254,10 @@ export default function BroadcastModal({
           {/* Message Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-[#475569] uppercase tracking-wider">
+              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
                 Message
               </label>
-              <span className="text-[10px] text-[#94a3b8] font-medium">
+              <span className="text-[10px] text-outline font-medium">
                 Supports [name], [date] placeholders
               </span>
             </div>
@@ -275,7 +275,7 @@ export default function BroadcastModal({
                   transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0
                   ${isOverLimit
                     ? "border-[#ef4444] bg-[#fef2f2] focus:ring-[#ef4444]/20 text-[#ef4444]"
-                    : "border-[#e2e8f0] focus:border-[#25D366] focus:ring-[#25D366]/20 text-[#1e293b]"
+                    : "border-outline-variant focus:border-[#25D366] focus:ring-[#25D366]/20 text-on-surface"
                   }
                 `}
                 placeholder="Enter your message or select a template above..."
@@ -284,7 +284,7 @@ export default function BroadcastModal({
               <div className="absolute bottom-3 right-3 flex items-center gap-2">
                 <button
                   onClick={() => onMessageChange(message + "😊")}
-                  className="w-7 h-7 rounded-lg bg-[#f1f5f9] text-[#94a3b8] hover:bg-[#fde68a] hover:text-[#d97706] flex items-center justify-center transition-all text-xs"
+                  className="w-7 h-7 rounded-lg bg-surface-variant text-outline hover:bg-[#fde68a] hover:text-[#d97706] flex items-center justify-center transition-all text-xs"
                   title="Add emoji"
                 >
                   <i className="fas fa-smile" />

@@ -98,7 +98,7 @@ function SectionHeader({ icon, title, required }: { icon: string; title: string;
       <div className="w-7 h-7 rounded-lg bg-[rgba(37,211,102,0.1)] flex items-center justify-center flex-shrink-0">
         <i className={`fas ${icon} text-[#25D366] text-xs`} />
       </div>
-      <span className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
+      <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
         {title}
       </span>
       {required && <span className="text-red-500 text-xs font-bold">*</span>}
@@ -129,7 +129,7 @@ function FormInput({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-[#64748b]">
+      <label className="block text-sm font-semibold text-on-surface-variant">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -148,7 +148,7 @@ function FormInput({
           className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 ${
             error
               ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50/30"
-              : "border-[#e2e8f0] hover:border-gray-300"
+              : "border-outline-variant hover:border-outline"
           } ${icon ? "pl-10" : ""}`}
         />
         {error && (
@@ -176,20 +176,20 @@ function ToggleSwitch({
   activeColor?: string;
 }) {
   return (
-    <div className="flex items-center justify-between p-4 bg-white border border-[#e2e8f0] rounded-xl transition-all hover:border-gray-300">
+    <div className="flex items-center justify-between p-4 bg-surface border border-outline-variant rounded-xl transition-all hover:border-outline">
       <div>
-        <div className="font-semibold text-sm text-[#1e293b]">{label}</div>
-        <div className="text-xs text-[#64748b] mt-0.5">{description}</div>
+        <div className="font-semibold text-sm text-on-surface">{label}</div>
+        <div className="text-xs text-on-surface-variant mt-0.5">{description}</div>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
         className={`w-12 h-7 rounded-full relative transition-all duration-300 ${
-          checked ? activeColor : "bg-[#e2e8f0]"
+          checked ? activeColor : "bg-surface-variant"
         }`}
       >
         <div
-          className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 ${
+          className={`absolute top-0.5 w-6 h-6 bg-surface rounded-full shadow-md3-level2 transition-all duration-300 ${
             checked ? "right-0.5" : "left-0.5"
           }`}
         />
@@ -201,11 +201,11 @@ function ToggleSwitch({
 function EmptyState({ icon, title, description }: { icon: string; title: string; description: string }) {
   return (
     <div className="p-8 text-center animate-fadeIn">
-      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3">
+      <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-3">
         <i className={`fas ${icon} text-2xl text-gray-300`} />
       </div>
-      <h4 className="text-sm font-semibold text-[#1e293b] mb-1">{title}</h4>
-      <p className="text-xs text-[#64748b]">{description}</p>
+      <h4 className="text-sm font-semibold text-on-surface mb-1">{title}</h4>
+      <p className="text-xs text-on-surface-variant">{description}</p>
     </div>
   );
 }
@@ -449,23 +449,23 @@ export default function NewOrderModal({
       <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 pointer-events-none overflow-y-auto">
         <div
           ref={modalRef}
-          className="bg-white rounded-2xl w-full max-w-sm md:max-w-2xl lg:max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp my-auto"
+          className="bg-surface rounded-2xl w-full max-w-sm md:max-w-2xl lg:max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp my-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex-shrink-0 p-4 sm:p-5 border-b border-[#e2e8f0] bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
+          <div className="flex-shrink-0 p-4 sm:p-5 border-b border-outline-variant bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0 animate-slideUp">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-md3-level3 flex-shrink-0">
                   <i className="fas fa-plus" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-[#1e293b]">New Order</h2>
-                  <p className="text-xs sm:text-sm text-[#64748b] hidden sm:block">Create a new order for your customer</p>
+                  <h2 className="text-lg sm:text-xl font-extrabold text-on-surface">New Order</h2>
+                  <p className="text-xs sm:text-sm text-on-surface-variant hidden sm:block">Create a new order for your customer</p>
                 </div>
               </div>
               <button
-                className="w-9 h-9 flex items-center justify-center text-[#64748b] hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95 flex-shrink-0"
+                className="w-9 h-9 flex items-center justify-center text-on-surface-variant hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95 flex-shrink-0"
                 onClick={onClose}
               >
                 <i className="fas fa-times" />
@@ -488,7 +488,7 @@ export default function NewOrderModal({
                       <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
-                        className="w-full pl-10 pr-4 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                        className="w-full pl-10 pr-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
                         placeholder="Search by name or phone..."
                         value={customerSearch}
                         onChange={(e) => {
@@ -501,11 +501,11 @@ export default function NewOrderModal({
 
                     {/* Dropdown */}
                     {showCustomerDropdown && filteredCustomers.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#e2e8f0] rounded-xl shadow-xl z-20 max-h-56 overflow-y-auto animate-fadeIn">
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-md3-level4 z-20 max-h-56 overflow-y-auto animate-fadeIn">
                         {filteredCustomers.map((customer) => (
                           <button
                             key={customer.id}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-white transition-colors text-left"
+                            className="w-full flex items-center gap-3 p-3 hover:bg-surface transition-colors text-left"
                             onClick={() => selectCustomer(customer)}
                           >
                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
@@ -518,7 +518,7 @@ export default function NewOrderModal({
                             </div>
                             <div className="min-w-0">
                               <div className="font-semibold text-sm truncate">{customer.name}</div>
-                              <div className="text-xs text-[#64748b]">{customer.phone}</div>
+                              <div className="text-xs text-on-surface-variant">{customer.phone}</div>
                             </div>
                             <i className="fas fa-chevron-right text-xs text-gray-300 ml-auto" />
                           </button>
@@ -527,8 +527,8 @@ export default function NewOrderModal({
                     )}
 
                     {showCustomerDropdown && customerSearch && filteredCustomers.length === 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#e2e8f0] rounded-xl shadow-xl z-20 p-4 text-center animate-fadeIn">
-                        <p className="text-sm text-[#64748b]">No customers found</p>
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-md3-level4 z-20 p-4 text-center animate-fadeIn">
+                        <p className="text-sm text-on-surface-variant">No customers found</p>
                       </div>
                     )}
                   </div>
@@ -546,10 +546,10 @@ export default function NewOrderModal({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm truncate">{form.customerName}</div>
-                        <div className="text-xs text-[#64748b]">{form.customerPhone}</div>
+                        <div className="text-xs text-on-surface-variant">{form.customerPhone}</div>
                       </div>
                       <button
-                        className="w-7 h-7 rounded-full bg-white text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors shadow-sm"
+                        className="w-7 h-7 rounded-full bg-surface text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md3-level1"
                         onClick={() =>
                           setForm((prev) => ({
                             ...prev,
@@ -570,7 +570,7 @@ export default function NewOrderModal({
                   {/* Manual Entry Toggle */}
                   {!form.customerName && (
                     <button
-                      className="w-full py-2.5 mt-2 bg-white border-2 border-dashed border-[#e2e8f0] rounded-xl text-[#25D366] font-semibold text-sm flex items-center justify-center gap-2 hover:border-[#25D366] transition-all"
+                      className="w-full py-2.5 mt-2 bg-surface border-2 border-dashed border-outline-variant rounded-xl text-[#25D366] font-semibold text-sm flex items-center justify-center gap-2 hover:border-[#25D366] transition-all"
                       onClick={() => setForm((prev) => ({ ...prev, customerName: "New Customer" }))}
                     >
                       <i className="fas fa-user-plus" />
@@ -618,14 +618,14 @@ export default function NewOrderModal({
                 <div className="animate-fadeIn" style={{ animationDelay: '0.1s' }}>
                   <SectionHeader icon="fa-box" title="Products" required />
 
-                  <div className="border-2 border-[#e2e8f0] rounded-xl overflow-hidden">
-                    <div className="p-3 bg-white border-b border-[#e2e8f0]">
+                  <div className="border-2 border-outline-variant rounded-xl overflow-hidden">
+                    <div className="p-3 bg-surface border-b border-outline-variant">
                       <div className="relative">
                         <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                         <input
                           type="text"
                           placeholder="Search products..."
-                          className="w-full pl-9 pr-4 py-2 border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:border-[#25D366] transition-all"
+                          className="w-full pl-9 pr-4 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-[#25D366] transition-all"
                           value={productSearch}
                           onChange={(e) => setProductSearch(e.target.value)}
                         />
@@ -643,18 +643,18 @@ export default function NewOrderModal({
                         filteredProducts.map((product) => (
                           <div
                             key={product.id}
-                            className="flex items-center gap-3 p-3 border-b border-[#e2e8f0] last:border-b-0 hover:bg-white transition-colors group"
+                            className="flex items-center gap-3 p-3 border-b border-outline-variant last:border-b-0 hover:bg-surface transition-colors group"
                           >
                             <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
                               📦
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="font-semibold text-sm truncate">{product.name}</div>
-                              <div className="text-xs text-[#64748b]">{formatCurrency(product.price)} each</div>
+                              <div className="text-xs text-on-surface-variant">{formatCurrency(product.price)} each</div>
                             </div>
                             <button
                               onClick={() => addProduct(product)}
-                              className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center hover:bg-[#22c55e] transition-all active:scale-90 shadow-sm opacity-0 group-hover:opacity-100 sm:opacity-100"
+                              className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center hover:bg-[#22c55e] transition-all active:scale-90 shadow-md3-level1 opacity-0 group-hover:opacity-100 sm:opacity-100"
                             >
                               <i className="fas fa-plus text-xs" />
                             </button>
@@ -680,26 +680,26 @@ export default function NewOrderModal({
                       {form.selectedProducts.map((item) => (
                         <div
                           key={item.productId}
-                          className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#e2e8f0] hover:border-[#25D366]/30 transition-all group"
+                          className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all group"
                         >
                           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-lg flex-shrink-0">
                             📦
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm truncate">{item.name}</div>
-                            <div className="text-xs text-[#64748b]">{formatCurrency(item.price)} each</div>
+                            <div className="text-xs text-on-surface-variant">{formatCurrency(item.price)} each</div>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                              className="w-8 h-8 rounded-lg border-2 border-[#e2e8f0] flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
+                              className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
                             >
                               -
                             </button>
                             <span className="font-bold w-7 text-center text-sm">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                              className="w-8 h-8 rounded-lg border-2 border-[#e2e8f0] flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
+                              className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
                             >
                               +
                             </button>
@@ -723,22 +723,22 @@ export default function NewOrderModal({
                 {form.selectedProducts.length > 0 && (
                   <div className="animate-fadeIn" style={{ animationDelay: '0.2s' }}>
                     <SectionHeader icon="fa-calculator" title="Order Summary" />
-                    <div className="bg-white rounded-xl p-4 space-y-2 border border-[#e2e8f0]">
+                    <div className="bg-surface rounded-xl p-4 space-y-2 border border-outline-variant">
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#64748b]">
+                        <span className="text-on-surface-variant">
                           Subtotal ({form.selectedProducts.reduce((s, p) => s + p.quantity, 0)} items)
                         </span>
-                        <span className="font-semibold text-[#1e293b]">{formatCurrency(totals.subtotal)}</span>
+                        <span className="font-semibold text-on-surface">{formatCurrency(totals.subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#64748b]">Shipping</span>
-                        <span className="font-semibold text-[#1e293b]">
+                        <span className="text-on-surface-variant">Shipping</span>
+                        <span className="font-semibold text-on-surface">
                           {totals.shipping > 0 ? formatCurrency(totals.shipping) : "Free"}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#64748b]">Tax (16%)</span>
-                        <span className="font-semibold text-[#1e293b]">{formatCurrency(totals.tax)}</span>
+                        <span className="text-on-surface-variant">Tax (16%)</span>
+                        <span className="font-semibold text-on-surface">{formatCurrency(totals.tax)}</span>
                       </div>
                       {totals.discount > 0 && (
                         <div className="flex justify-between text-sm text-green-600">
@@ -749,8 +749,8 @@ export default function NewOrderModal({
                           <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between pt-3 mt-1 border-t-2 border-[#e2e8f0]">
-                        <span className="text-base font-extrabold text-[#1e293b]">Total</span>
+                      <div className="flex justify-between pt-3 mt-1 border-t-2 border-outline-variant">
+                        <span className="text-base font-extrabold text-on-surface">Total</span>
                         <span className="text-xl font-extrabold text-[#25D366]">{formatCurrency(totals.total)}</span>
                       </div>
                     </div>
@@ -774,28 +774,28 @@ export default function NewOrderModal({
                         }}
                         className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                           form.paymentMethod === method.id
-                            ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] shadow-sm"
-                            : "border-[#e2e8f0] hover:border-[#25D366]/50 hover:bg-white"
+                            ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] shadow-md3-level1"
+                            : "border-outline-variant hover:border-[#25D366]/50 hover:bg-surface"
                         }`}
                       >
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 transition-all ${
                             form.paymentMethod === method.id
-                              ? "bg-[#25D366] text-white shadow-md"
-                              : "bg-white text-[#64748b]"
+                              ? "bg-[#25D366] text-white shadow-md3-level2"
+                              : "bg-surface text-on-surface-variant"
                           }`}
                         >
                           <i className={`fas ${method.icon}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-sm">{method.id}</div>
-                          <div className="text-xs text-[#64748b]">{method.desc}</div>
+                          <div className="text-xs text-on-surface-variant">{method.desc}</div>
                         </div>
                         <div
                           className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                             form.paymentMethod === method.id
                               ? "bg-[#25D366] border-[#25D366]"
-                              : "border-[#e2e8f0]"
+                              : "border-outline-variant"
                           }`}
                         >
                           {form.paymentMethod === method.id && <i className="fas fa-check text-white text-xs" />}
@@ -818,8 +818,8 @@ export default function NewOrderModal({
                         onClick={() => setActiveDeliveryType(type)}
                         className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
                           activeDeliveryType === type
-                            ? "bg-[#25D366] text-white shadow-md"
-                            : "bg-white text-[#64748b] hover:bg-gray-100"
+                            ? "bg-[#25D366] text-white shadow-md3-level2"
+                            : "bg-surface text-on-surface-variant hover:bg-surface-variant"
                         }`}
                       >
                         {type}
@@ -878,14 +878,14 @@ export default function NewOrderModal({
                         type="text"
                         value={form.discountCode}
                         onChange={(e) => setForm((prev) => ({ ...prev, discountCode: e.target.value }))}
-                        className="w-full pl-9 pr-4 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                        className="w-full pl-9 pr-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
                         placeholder="Discount code"
                       />
                     </div>
                     <button
                       onClick={applyDiscount}
                       disabled={!form.discountCode.trim()}
-                      className="px-4 py-3 bg-white border-2 border-[#e2e8f0] rounded-xl text-[#64748b] font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                      className="px-4 py-3 bg-surface border-2 border-outline-variant rounded-xl text-on-surface-variant font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                     >
                       Apply
                     </button>
@@ -899,7 +899,7 @@ export default function NewOrderModal({
                     name="notes"
                     value={form.notes}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all resize-none"
+                    className="w-full px-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all resize-none"
                     rows={3}
                     placeholder="Add any special instructions..."
                   />
@@ -909,9 +909,9 @@ export default function NewOrderModal({
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 p-3 sm:p-4 border-t border-[#e2e8f0] bg-white animate-fadeIn" style={{ animationDelay: '0.5s' }}>
+          <div className="flex-shrink-0 p-3 sm:p-4 border-t border-outline-variant bg-surface animate-fadeIn" style={{ animationDelay: '0.5s' }}>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-[#64748b] order-2 sm:order-1">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-on-surface-variant order-2 sm:order-1">
                 <i className="fas fa-shield-alt text-[#10b981]" />
                 <span>
                   <strong>Secure</strong> • {form.selectedProducts.length} items • {formatCurrency(totals.total)}
@@ -919,7 +919,7 @@ export default function NewOrderModal({
               </div>
               <div className="flex gap-2 w-full sm:w-auto order-1 sm:order-2">
                 <button
-                  className="flex-1 sm:flex-none px-4 py-3 bg-white border-2 border-[#e2e8f0] text-[#64748b] rounded-xl font-semibold text-sm hover:border-gray-400 hover:text-gray-700 transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
+                  className="flex-1 sm:flex-none px-4 py-3 bg-surface border-2 border-outline-variant text-on-surface-variant rounded-xl font-semibold text-sm hover:border-gray-400 hover:text-on-surface transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
                   onClick={onClose}
                   disabled={creatingOrder || isSubmitting}
                 >
@@ -929,8 +929,8 @@ export default function NewOrderModal({
                 <button
                   className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 min-w-[140px] ${
                     isFormValid
-                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:shadow-lg hover:from-[#22c55e] hover:to-[#0d9488]"
-                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:shadow-md3-level3 hover:from-[#22c55e] hover:to-[#0d9488]"
+                      : "bg-surface-container-high text-gray-400 cursor-not-allowed"
                   }`}
                   onClick={handleSubmit}
                   disabled={!isFormValid || creatingOrder || isSubmitting}
@@ -957,25 +957,25 @@ export default function NewOrderModal({
       {showConfirm && (
         <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slideUp">
+          <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slideUp">
             <div className="w-14 h-14 rounded-full bg-[rgba(37,211,102,0.1)] flex items-center justify-center mx-auto mb-4">
               <i className="fas fa-clipboard-check text-2xl text-[#25D366]" />
             </div>
-            <h3 className="text-xl font-bold text-[#1e293b] text-center mb-2">Confirm Order</h3>
-            <p className="text-[#64748b] text-center mb-6">
+            <h3 className="text-xl font-bold text-on-surface text-center mb-2">Confirm Order</h3>
+            <p className="text-on-surface-variant text-center mb-6">
               Create order for <strong>{form.customerName}</strong> with{" "}
               <strong>{form.selectedProducts.reduce((s, p) => s + p.quantity, 0)} items</strong> totaling{" "}
               <strong className="text-[#25D366]">{formatCurrency(totals.total)}</strong>?
             </p>
             <div className="flex gap-3">
               <button
-                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all active:scale-95"
+                className="flex-1 px-4 py-3 bg-surface-variant text-on-surface rounded-xl font-semibold hover:bg-surface-container-high transition-all active:scale-95"
                 onClick={() => setShowConfirm(false)}
               >
                 Review
               </button>
               <button
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold hover:shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
                 onClick={confirmCreate}
                 disabled={isSubmitting}
               >

@@ -59,9 +59,9 @@ function formatDate(dateStr: string) {
 
 function getStatusConfig(status: string) {
   return STATUS_CONFIG[status] || {
-    bg: "bg-[#F1F5F9]",
-    text: "text-[#64748B]",
-    border: "border-[#E2E8F0]",
+    bg: "bg-surface-variant",
+    text: "text-on-surface-variant",
+    border: "border-outline-variant",
     dot: "bg-[#94A3B8]",
     label: status,
   };
@@ -103,10 +103,10 @@ function ShimmerCard() {
         <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-3/4" />
       </div>
       <div className="flex justify-between items-center pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
-        <div className="h-6 bg-[#F1F5F9] rounded-lg w-24" />
+        <div className="h-6 bg-surface-variant rounded-lg w-24" />
         <div className="flex gap-2">
-          <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl" />
-          <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl" />
+          <div className="w-10 h-10 bg-surface-variant rounded-xl" />
+          <div className="w-10 h-10 bg-surface-variant rounded-xl" />
         </div>
       </div>
     </div>
@@ -148,7 +148,7 @@ function BookingCard({
         p-4 md:p-5 cursor-pointer overflow-hidden
         transition-all duration-200 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-        ${isHovered ? "shadow-md -translate-y-0.5" : "shadow-sm hover:shadow-md"}
+        ${isHovered ? "shadow-md3-level2 -translate-y-0.5" : "shadow-md3-level1 hover:shadow-md3-level2"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -269,7 +269,7 @@ function BookingCard({
               relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
               transition-all duration-200 active:scale-90
               bg-[var(--md-sys-color-success-container)] text-[var(--md-sys-color-on-success-container)]
-              hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md
+              hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md3-level2
             `}
             aria-label="Message on WhatsApp"
             title="Message on WhatsApp"
@@ -287,7 +287,7 @@ function BookingCard({
               relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
               transition-all duration-200 active:scale-90
               bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]
-              hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:shadow-md
+              hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:shadow-md3-level2
             `}
             aria-label="View booking details"
             title="View details"
@@ -373,25 +373,25 @@ export default function BookingGridView({
     .font-bold { font-weight: 600 !important; }
     
     /* MD3 Customer Name */
-    .text-base.font-semibold.text-gray-900 { color: var(--md-sys-color-on-surface, #1e293b) !important; font-size: 15px !important; }
+    .text-base.font-semibold.text-on-surface { color: var(--md-sys-color-on-surface, #1e293b) !important; font-size: 15px !important; }
     
     /* MD3 Phone Number */
-    .text-sm.text-gray-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    .text-sm.text-on-surface-variant { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
     
     /* MD3 Service Name */
-    .text-sm.text-gray-600 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
+    .text-sm.text-on-surface-variant { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 13px !important; }
     
     /* MD3 Date/Time Display */
-    .text-xs.text-gray-500 { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 12px !important; }
+    .text-xs.text-on-surface-variant { color: var(--md-sys-color-on-surface-variant, #64748b) !important; font-size: 12px !important; }
     
     /* MD3 Price Display */
-    .text-lg.font-bold.text-gray-900 { color: var(--md-sys-color-primary, #8b5cf6) !important; font-weight: 600 !important; font-size: 18px !important; }
+    .text-lg.font-bold.text-on-surface { color: var(--md-sys-color-primary, #8b5cf6) !important; font-weight: 600 !important; font-size: 18px !important; }
     
     /* MD3 Avatar/Icon Circle */
     .w-11.h-11.rounded-xl { border-radius: 24px !important; background: var(--md-sys-color-primary-container, #f3e8ff) !important; }
     .w-11.h-11.rounded-xl i { color: var(--md-sys-color-primary, #8b5cf6) !important; font-size: 18px !important; }
     
     /* MD3 Divider */
-    .border-t.border-gray-100 { border-color: var(--md-sys-color-outline-variant, #e2e8f0) !important; }
+    .border-t.border-outline-variant { border-color: var(--md-sys-color-outline-variant, #e2e8f0) !important; }
   }
 `}</style>

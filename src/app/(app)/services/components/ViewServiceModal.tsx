@@ -71,9 +71,9 @@ const TIER_CONFIG = {
     label: "Starter",
     badge: "Basic",
     color: "from-gray-400 to-gray-600",
-    bgColor: "bg-white",
-    borderColor: "border-gray-200",
-    textColor: "text-gray-600",
+    bgColor: "bg-surface",
+    borderColor: "border-outline-variant",
+    textColor: "text-on-surface-variant",
   },
   standard: {
     label: "Standard",
@@ -125,7 +125,7 @@ function StatCard({
   return (
     <div
       className={`
-        text-center p-3 md:p-4 bg-white rounded-xl border border-[#e2e8f0]
+        text-center p-3 md:p-4 bg-surface rounded-xl border border-outline-variant
         hover:bg-[#ede9fe] hover:border-[#8b5cf6]/30 hover:-translate-y-0.5
         transition-all duration-300 cursor-default
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
@@ -133,7 +133,7 @@ function StatCard({
       style={{ transitionDelay: `${delay}ms` }}
     >
       <div className="text-xl md:text-2xl font-extrabold text-[#8b5cf6] mb-1">{value}</div>
-      <div className="flex items-center justify-center gap-1 text-[10px] md:text-xs text-[#64748b] font-semibold uppercase tracking-wider">
+      <div className="flex items-center justify-center gap-1 text-[10px] md:text-xs text-on-surface-variant font-semibold uppercase tracking-wider">
         <Icon className="w-3 h-3" />
         {label}
       </div>
@@ -147,7 +147,7 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
       <div className="w-7 h-7 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
         <Icon className="w-3.5 h-3.5 text-[#8b5cf6]" />
       </div>
-      <span className="text-[11px] md:text-xs font-bold text-[#64748b] uppercase tracking-wider">
+      <span className="text-[11px] md:text-xs font-bold text-on-surface-variant uppercase tracking-wider">
         {title}
       </span>
     </div>
@@ -183,7 +183,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
         transition-all duration-200 active:scale-95
         ${copied
           ? "bg-[#10b981] text-white"
-          : "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md shadow-[#8b5cf6]/25"
+          : "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md3-level2 shadow-[#8b5cf6]/25"
         }
       `}
     >
@@ -222,7 +222,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
           <button
             key={idx}
             onClick={() => openLightbox(idx)}
-            className="aspect-square rounded-xl overflow-hidden bg-white group relative"
+            className="aspect-square rounded-xl overflow-hidden bg-surface group relative"
           >
             <img
               src={url}
@@ -253,7 +253,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
               <button
                 onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/40 transition-all"
+                className="w-10 h-10 rounded-full bg-surface/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-surface/40 transition-all"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -262,7 +262,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/40 transition-all"
+                className="w-10 h-10 rounded-full bg-surface/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-surface/40 transition-all"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -270,7 +270,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
           </div>
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/40 transition-all"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-surface/40 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -372,7 +372,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
       <div
         ref={modalRef}
         className={`
-          relative bg-white rounded-xl md:rounded-2xl w-full max-w-[800px] max-h-[92vh]
+          relative bg-surface rounded-xl md:rounded-2xl w-full max-w-[800px] max-h-[92vh]
           overflow-hidden shadow-2xl flex flex-col
           transition-all duration-300
           ${isClosing ? "scale-95 opacity-0 translate-y-4" : "scale-100 opacity-100 translate-y-0"}
@@ -380,7 +380,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
         onClick={(e) => e.stopPropagation()}
       >
         {/* Scroll progress bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-[#e2e8f0] z-30">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-surface-variant z-30">
           <div
             className="h-full bg-[#8b5cf6] rounded-full transition-all duration-150"
             style={{ width: `${scrollProgress * 100}%` }}
@@ -424,7 +424,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                 <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} ${service.status === "active" ? "animate-pulse" : ""}`} />
                 {statusConfig.label}
               </span>
-              <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold text-white/90">
+              <span className="px-2 py-0.5 bg-surface/20 backdrop-blur-md rounded-full text-[10px] font-bold text-white/90">
                 {BUSINESS_TYPE_NAMES[service.businessType] || service.businessType}
               </span>
             </div>
@@ -437,7 +437,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/30 hover:rotate-90 transition-all duration-300 z-10"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-surface/30 hover:rotate-90 transition-all duration-300 z-10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -450,7 +450,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           onScroll={handleScroll}
         >
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 p-4 md:p-6 border-b border-[#e2e8f0]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 p-4 md:p-6 border-b border-outline-variant">
             <StatCard
               value={service.duration || "—"}
               label="Duration"
@@ -479,23 +479,23 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
 
           {/* Description */}
           {service.description && (
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+            <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={AlignLeft} title="Description" />
-              <p className="text-sm text-[#64748b] leading-relaxed">{service.description}</p>
+              <p className="text-sm text-on-surface-variant leading-relaxed">{service.description}</p>
             </div>
           )}
 
           {/* Provider */}
           {service.providerName && (
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+            <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={Store} title="Business / Provider" />
-              <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#e2e8f0]">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white flex items-center justify-center text-xl shadow-sm">
+              <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white flex items-center justify-center text-xl shadow-md3-level1">
                   {service.emoji || "✨"}
                 </div>
                 <div>
-                  <div className="font-bold text-[#1e293b]">{service.providerName}</div>
-                  <div className="text-xs text-[#64748b]">Service Provider</div>
+                  <div className="font-bold text-on-surface">{service.providerName}</div>
+                  <div className="text-xs text-on-surface-variant">Service Provider</div>
                 </div>
               </div>
             </div>
@@ -503,13 +503,13 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
 
           {/* Tags */}
           {service.tags && service.tags.length > 0 && (
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+            <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={Tag} title="Tags" />
               <div className="flex flex-wrap gap-2">
                 {service.tags.map((tag, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] flex items-center gap-1.5 hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-colors"
+                    className="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant flex items-center gap-1.5 hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-colors"
                   >
                     <Tag className="w-3 h-3 text-[#8b5cf6]" />
                     {tag}
@@ -520,7 +520,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           )}
 
           {/* Pricing Tiers */}
-          <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+          <div className="p-4 md:p-6 border-b border-outline-variant">
             <SectionHeader icon={DollarSign} title="Pricing Packages" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {(["basic", "standard", "premium"] as const).map((tier) => {
@@ -532,24 +532,24 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                     className={`
                       relative rounded-xl p-4 border-2 transition-all duration-300
                       ${isFeatured
-                        ? `${config.bgColor} ${config.borderColor} shadow-md`
-                        : "bg-white border-[#e2e8f0] hover:border-[#cbd5e1]"
+                        ? `${config.bgColor} ${config.borderColor} shadow-md3-level2`
+                        : "bg-surface border-outline-variant hover:border-outline-variant"
                       }
-                      hover:-translate-y-0.5 hover:shadow-lg
+                      hover:-translate-y-0.5 hover:shadow-md3-level3
                     `}
                   >
                     {isFeatured && (
-                      <div className="absolute -top-2 left-4 px-2.5 py-0.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white text-[9px] font-bold uppercase rounded-full shadow-sm">
+                      <div className="absolute -top-2 left-4 px-2.5 py-0.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white text-[9px] font-bold uppercase rounded-full shadow-md3-level1">
                         Popular
                       </div>
                     )}
                     <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${config.textColor}`}>
                       {config.label}
                     </div>
-                    <div className="text-2xl md:text-3xl font-extrabold text-[#1e293b] mb-1">
+                    <div className="text-2xl md:text-3xl font-extrabold text-on-surface mb-1">
                       {formatCurrency(packagePrices[tier] || 0)}
                     </div>
-                    <div className="text-[11px] text-[#94a3b8] mb-3 pb-3 border-b border-[#e2e8f0]">
+                    <div className="text-[11px] text-outline mb-3 pb-3 border-b border-outline-variant">
                       {service.selectedDuration && !isNaN(service.selectedDuration)
                         ? `${service.selectedDuration} min`
                         : service.duration?.match(/(\d+)/)?.[1]
@@ -558,7 +558,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                     </div>
                     <ul className="space-y-2">
                       {(packageFeatures[tier] || defaultFeatures[tier]).map((feature: string, idx: number) => (
-                        <li key={idx} className="text-xs text-[#64748b] flex items-start gap-2">
+                        <li key={idx} className="text-xs text-on-surface-variant flex items-start gap-2">
                           <div className="w-4 h-4 rounded-full bg-[#10b981]/10 flex items-center justify-center shrink-0 mt-0.5">
                             <Check className="w-2.5 h-2.5 text-[#10b981]" />
                           </div>
@@ -573,21 +573,21 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           </div>
 
           {/* Service Mode & Location */}
-          <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+          <div className="p-4 md:p-6 border-b border-outline-variant">
             <SectionHeader icon={MapPin} title="Service Delivery" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-4 bg-white rounded-xl border border-[#e2e8f0]">
-                <div className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-2">Mode</div>
-                <div className="font-bold text-[#1e293b] flex items-center gap-2">
+              <div className="p-4 bg-surface rounded-xl border border-outline-variant">
+                <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2">Mode</div>
+                <div className="font-bold text-on-surface flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
                     <ModeIcon className="w-4 h-4 text-[#8b5cf6]" />
                   </div>
                   {MODE_LABELS[service.mode]?.label || service.mode}
                 </div>
               </div>
-              <div className="p-4 bg-white rounded-xl border border-[#e2e8f0]">
-                <div className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-2">Location</div>
-                <div className="font-bold text-[#1e293b] flex items-center gap-2">
+              <div className="p-4 bg-surface rounded-xl border border-outline-variant">
+                <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2">Location</div>
+                <div className="font-bold text-on-surface flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
                     <MapPin className="w-4 h-4 text-[#8b5cf6]" />
                   </div>
@@ -599,7 +599,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
 
           {/* Availability */}
           {service.availability?.days && service.availability.days.length > 0 && (
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+            <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={CalendarCheck} title="Availability" />
               <div className="grid grid-cols-7 gap-1.5 md:gap-2 mb-4">
                 {DAY_NAMES.map((day, idx) => {
@@ -611,7 +611,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                         text-center p-2 md:p-3 rounded-xl transition-all
                         ${isAvailable
                           ? "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
-                          : "bg-white text-[#94a3b8] opacity-50"
+                          : "bg-surface text-outline opacity-50"
                         }
                       `}
                     >
@@ -625,12 +625,12 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
               </div>
               {service.availability.timeSlots && service.availability.timeSlots.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-2">Time Slots</div>
+                  <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2">Time Slots</div>
                   <div className="flex flex-wrap gap-2">
                     {service.availability.timeSlots.slice(0, 8).map((time, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 bg-white border border-[#e2e8f0] rounded-lg text-[11px] font-semibold text-[#64748b]"
+                        className="px-2.5 py-1 bg-surface border border-outline-variant rounded-lg text-[11px] font-semibold text-on-surface-variant"
                       >
                         {time}
                       </span>
@@ -648,12 +648,12 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
 
           {/* Specifications */}
           {service.specifications && Object.keys(service.specifications).length > 0 && (
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+            <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={SlidersHorizontal} title="Specifications" />
               <div className="space-y-4">
                 {Object.entries(service.specifications).map(([key, values]) => (
                   <div key={key} className="pb-3 border-b border-[#f1f5f9] last:border-0 last:pb-0">
-                    <div className="text-[11px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-2 capitalize">
+                    <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2 capitalize">
                       {key.replace(/_/g, " ")}
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -674,7 +674,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
 
           {/* Portfolio Images */}
           {service.portfolioImages && service.portfolioImages.length > 0 && (
-            <div className="p-4 md:p-6 border-b border-[#e2e8f0]">
+            <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={Images} title={`Portfolio (${service.portfolioImages.length})`} />
               <ImageGallery images={service.portfolioImages} serviceName={service.name} />
             </div>
@@ -686,12 +686,12 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
               <SectionHeader icon={Link2} title="Booking Link" />
               <div className="p-4 bg-[#ede9fe] rounded-xl border-2 border-[#8b5cf6]/30">
                 <div className="flex items-center gap-3 mb-3">
-                  <code className="text-sm text-[#7c3aed] break-all flex-1 font-mono bg-white/50 px-3 py-2 rounded-lg">
+                  <code className="text-sm text-[#7c3aed] break-all flex-1 font-mono bg-surface/50 px-3 py-2 rounded-lg">
                     {service.bookingUrl}
                   </code>
                   <CopyButton text={service.bookingUrl} />
                 </div>
-                <p className="text-xs text-[#64748b]">
+                <p className="text-xs text-on-surface-variant">
                   Share this link with clients to let them book appointments directly.
                 </p>
               </div>
@@ -700,11 +700,11 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
         </div>
 
         {/* Sticky Footer */}
-        <div className="p-4 border-t border-[#e2e8f0] bg-white shrink-0">
+        <div className="p-4 border-t border-outline-variant bg-surface shrink-0">
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-4 py-3 border-2 border-[#e2e8f0] rounded-xl font-bold text-[#64748b] hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
+              className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
             >
               Close
             </button>

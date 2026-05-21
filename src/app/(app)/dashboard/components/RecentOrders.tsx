@@ -101,13 +101,13 @@ function ShimmerRow() {
     <div className="relative overflow-hidden p-4 border-b border-[#F1F5F9]">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-[#F1F5F9] rounded-xl shrink-0 animate-pulse" />
+        <div className="w-12 h-12 bg-surface-variant rounded-xl shrink-0 animate-pulse" />
         <div className="flex-1 space-y-2">
           <div className="flex justify-between">
-            <div className="h-4 bg-[#F1F5F9] rounded-lg w-24 animate-pulse" />
-            <div className="h-4 bg-[#F1F5F9] rounded-lg w-20 animate-pulse" />
+            <div className="h-4 bg-surface-variant rounded-lg w-24 animate-pulse" />
+            <div className="h-4 bg-surface-variant rounded-lg w-20 animate-pulse" />
           </div>
-          <div className="h-3 bg-[#F1F5F9] rounded-lg w-3/4 animate-pulse" />
+          <div className="h-3 bg-surface-variant rounded-lg w-3/4 animate-pulse" />
         </div>
       </div>
     </div>
@@ -116,21 +116,21 @@ function ShimmerRow() {
 
 function ShimmerTableRow() {
   return (
-    <tr className="border-t border-[#E2E8F0]">
-      <td className="p-4"><div className="h-4 bg-[#F1F5F9] rounded w-16 animate-pulse" /></td>
+    <tr className="border-t border-outline-variant">
+      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-16 animate-pulse" /></td>
       <td className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-[#F1F5F9] rounded-xl animate-pulse" />
+          <div className="w-12 h-12 bg-surface-variant rounded-xl animate-pulse" />
           <div className="space-y-2">
-            <div className="h-4 bg-[#F1F5F9] rounded w-32 animate-pulse" />
-            <div className="h-3 bg-[#F1F5F9] rounded w-24 animate-pulse" />
+            <div className="h-4 bg-surface-variant rounded w-32 animate-pulse" />
+            <div className="h-3 bg-surface-variant rounded w-24 animate-pulse" />
           </div>
         </div>
       </td>
-      <td className="p-4"><div className="h-4 bg-[#F1F5F9] rounded w-24 animate-pulse" /></td>
-      <td className="p-4"><div className="h-4 bg-[#F1F5F9] rounded w-20 animate-pulse" /></td>
-      <td className="p-4"><div className="h-6 bg-[#F1F5F9] rounded-full w-20 animate-pulse" /></td>
-      <td className="p-4"><div className="h-4 bg-[#F1F5F9] rounded w-16 animate-pulse" /></td>
+      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-24 animate-pulse" /></td>
+      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-20 animate-pulse" /></td>
+      <td className="p-4"><div className="h-6 bg-surface-variant rounded-full w-20 animate-pulse" /></td>
+      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-16 animate-pulse" /></td>
     </tr>
   );
 }
@@ -155,8 +155,8 @@ function MobileOrderCard({
     <Link
       href="/orders"
       className={`
-        block p-4 border-b border-[#E2E8F0] relative overflow-hidden
-        transition-all duration-200 hover:bg-[#F8FAFC]
+        block p-4 border-b border-outline-variant relative overflow-hidden
+        transition-all duration-200 hover:bg-surface-container-lowest
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
@@ -172,7 +172,7 @@ function MobileOrderCard({
       <div className="flex items-center gap-3">
         <div className={`
           w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0
-          bg-[#F1F5F9]
+          bg-surface-variant
           transition-transform duration-200
           ${isHovered ? "scale-105" : "scale-100"}
         `}>
@@ -184,7 +184,7 @@ function MobileOrderCard({
             <span className="font-bold text-sm">{formatCurrency(order.amount || 0)}</span>
           </div>
           <div className="flex items-center justify-between mt-1.5 gap-2">
-            <span className="text-sm text-[#1E293B] truncate">{order.productName}</span>
+            <span className="text-sm text-on-surface truncate">{order.productName}</span>
             <span className={`
               shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full 
               text-[10px] font-semibold uppercase border
@@ -194,7 +194,7 @@ function MobileOrderCard({
               {status.label}
             </span>
           </div>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-[#94A3B8]">
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-outline">
             <i className="fas fa-user text-[10px]" />
             <span className="truncate">{order.customerName}</span>
             <span>•</span>
@@ -225,8 +225,8 @@ function DesktopTableRow({
   return (
     <tr
       className={`
-        border-t border-[#E2E8F0] relative cursor-pointer
-        transition-all duration-200 hover:bg-[#F8FAFC]
+        border-t border-outline-variant relative cursor-pointer
+        transition-all duration-200 hover:bg-surface-container-lowest
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
@@ -245,7 +245,7 @@ function DesktopTableRow({
         <div className="flex items-center gap-3">
           <div className={`
             w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0
-            bg-[#F1F5F9]
+            bg-surface-variant
             transition-transform duration-200
             ${isHovered ? "scale-105" : "scale-100"}
           `}>
@@ -253,7 +253,7 @@ function DesktopTableRow({
           </div>
           <div className="min-w-0">
             <div className="font-medium text-sm truncate">{order.productName}</div>
-            <div className="text-xs text-[#64748B] truncate">{order.details}</div>
+            <div className="text-xs text-on-surface-variant truncate">{order.details}</div>
           </div>
         </div>
       </td>
@@ -278,7 +278,7 @@ function DesktopTableRow({
           {status.label}
         </span>
       </td>
-      <td className="p-4 text-sm text-[#64748B]">
+      <td className="p-4 text-sm text-on-surface-variant">
         {formatRelativeTime(order.createdAt)}
       </td>
     </tr>
@@ -287,12 +287,12 @@ function DesktopTableRow({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 md:py-16 text-[#64748B] animate-fadeIn">
-      <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mb-4">
+    <div className="flex flex-col items-center justify-center py-12 md:py-16 text-on-surface-variant animate-fadeIn">
+      <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-surface-variant flex items-center justify-center mb-4">
         <i className="fas fa-shopping-bag text-2xl md:text-3xl text-[#CBD5E1]" />
       </div>
-      <h4 className="font-semibold text-base md:text-lg text-[#475569] mb-1">No orders yet</h4>
-      <p className="text-sm text-[#94A3B8] max-w-xs text-center">
+      <h4 className="font-semibold text-base md:text-lg text-on-surface-variant mb-1">No orders yet</h4>
+      <p className="text-sm text-outline max-w-xs text-center">
         When customers order from you, they will appear here automatically.
       </p>
       <Link
@@ -345,19 +345,19 @@ export function RecentOrders({
 
   return (
     <div className={`
-      bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden
+      bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden
       transition-all duration-300
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
       {/* Header - MD3 styling */}
-      <div className="p-4 md:p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+      <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
             <i className="fas fa-list text-[#3B82F6] text-sm" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm md:text-base text-[#1E293B]">Recent Orders</h3>
-            <span className="text-[10px] text-[#94A3B8] font-medium">
+            <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Orders</h3>
+            <span className="text-[10px] text-outline font-medium">
               {orders.length > 0 ? `Last ${orders.length} orders` : "No orders"}
             </span>
           </div>
@@ -368,9 +368,9 @@ export function RecentOrders({
             href="/orders"
             className={`
               px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-semibold
-              bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]
+              bg-surface-variant text-on-surface-variant border border-outline-variant
               hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6]
-              hover:shadow-md hover:shadow-[#8B5CF6]/20
+              hover:shadow-md3-level2 hover:shadow-[#8B5CF6]/20
               transition-all duration-200 active:scale-95
             `}
           >
@@ -390,9 +390,9 @@ export function RecentOrders({
           <div className="hidden md:block">
             <table className="w-full">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-white border-b border-[#E2E8F0]">
+                <tr className="bg-surface border-b border-outline-variant">
                   {["Order ID", "Product", "Customer", "Amount", "Status", "Date"].map((h) => (
-                    <th key={h} className="text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
+                    <th key={h} className="text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
                       {h}
                     </th>
                   ))}
@@ -422,7 +422,7 @@ export function RecentOrders({
             <div className="overflow-x-auto rounded-b-2xl">
               <table className="w-full min-w-[800px]">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-white border-b border-[#E2E8F0]">
+                  <tr className="bg-surface border-b border-outline-variant">
                     {[
                       { label: "Order ID", width: "w-24" },
                       { label: "Product", width: "w-auto" },
@@ -433,7 +433,7 @@ export function RecentOrders({
                     ].map((h) => (
                       <th
                         key={h.label}
-                        className={`text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-[#64748B] ${h.width}`}
+                        className={`text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant ${h.width}`}
                       >
                         {h.label}
                       </th>

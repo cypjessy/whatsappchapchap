@@ -308,8 +308,8 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   if (status === 'loading' && !autoStart) return (
     <div className="flex flex-col items-center p-6">
       <div className="text-blue-500 text-6xl">📱</div>
-      <h3 className="mt-4 text-xl font-bold text-gray-700">Ready to Connect WhatsApp</h3>
-      <p className="text-gray-500 mt-2 text-center">
+      <h3 className="mt-4 text-xl font-bold text-on-surface">Ready to Connect WhatsApp</h3>
+      <p className="text-on-surface-variant mt-2 text-center">
         Click the button below to scan the QR code and connect your WhatsApp number.
       </p>
       <button 
@@ -324,7 +324,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   if (status === 'loading') return (
     <div className="flex flex-col items-center p-6">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500" />
-      <p className="mt-4 text-gray-600">Setting up WhatsApp...</p>
+      <p className="mt-4 text-on-surface-variant">Setting up WhatsApp...</p>
     </div>
   );
 
@@ -332,7 +332,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     <div className="flex flex-col items-center p-6">
       <div className="text-green-500 text-6xl">✅</div>
       <h3 className="mt-4 text-xl font-bold text-green-600">WhatsApp Connected!</h3>
-      <p className="text-gray-600 mt-2 text-center">Your number is ready to use.</p>
+      <p className="text-on-surface-variant mt-2 text-center">Your number is ready to use.</p>
       
       {fetchingApiKey && (
         <div className="mt-4 flex items-center gap-2 text-blue-600">
@@ -351,7 +351,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       <div className="flex gap-3 mt-4">
         <button 
           onClick={refreshWebhook}
-          className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-white"
+          className="px-4 py-2 text-sm text-on-surface-variant border border-outline rounded-lg hover:bg-white"
         >
           Refresh Webhook
         </button>
@@ -361,7 +361,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           className={`px-6 py-2 rounded-lg font-semibold ${
             status === 'connected'
               ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-gray-300 text-on-surface-variant cursor-not-allowed'
           }`}
         >
           Continue
@@ -394,7 +394,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   return (
     <div className="flex flex-col items-center p-6">
       <h3 className="text-xl font-bold mb-2">Connect Your WhatsApp</h3>
-      <p className="text-gray-600 mb-4 text-center">
+      <p className="text-on-surface-variant mb-4 text-center">
         Open WhatsApp on your phone → Linked Devices → Link a Device → Scan this QR code
       </p>
       {qrCode && (
@@ -404,7 +404,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           className="w-64 h-64 border-4 border-green-500 rounded-lg"
         />
       )}
-      <p className="mt-4 text-sm text-gray-500 animate-pulse">
+      <p className="mt-4 text-sm text-on-surface-variant animate-pulse">
         Waiting for you to scan...
       </p>
 
