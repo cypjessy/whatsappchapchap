@@ -249,15 +249,37 @@ export default function OrdersPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await orderService.getOrders(user, activeStatus);
-      setOrders(data);
+      // Fetch ALL orders so we can compute accurate counts after payment filtering
+      const data = await orderService.getOrders(user, "all");
+      
+      // 🔒 Payment visibility filter:
+      // Paystack orders: only show if paymentStatus === "paid" (confirmed by webhook)
+      // Other orders (COD, M-Pesa, Bank with reference): show normally
+      const visibleOrders = data.filter(order => {
+        if (order.paymentMethod === "paystack") {
+          return order.paymentStatus === "paid";
+        }
+        return true;
+      });
+      setOrders(visibleOrders);
+      
+      // ✅ Recompute counts from the filtered (visible) orders for accurate tab badges
+      const newCounts = {
+        all: visibleOrders.length,
+        pending: visibleOrders.filter(o => o.status === "pending").length,
+        processing: visibleOrders.filter(o => o.status === "processing").length,
+        completed: visibleOrders.filter(o => o.status === "delivered").length,
+        refunded: visibleOrders.filter(o => o.status === "refunded").length,
+        cancelled: visibleOrders.filter(o => o.status === "cancelled").length,
+      };
+      setCounts(prev => ({ ...prev, ...newCounts }));
     } catch (error) {
       console.error("Error loading orders:", error);
       setOrders([]);
     } finally {
       setLoading(false);
     }
-  }, [user, activeStatus]);
+  }, [user]);
 
   const loadCounts = useCallback(async () => {
     if (!user) return;
@@ -319,7 +341,7 @@ export default function OrdersPage() {
     loadProducts();
     loadCustomers();
     loadCancellationRequests();
-  }, [user, activeStatus, loadOrders, loadCounts, loadProducts, loadCustomers, loadCancellationRequests]);
+  }, [user, loadOrders, loadCounts, loadProducts, loadCustomers, loadCancellationRequests]);
 
   // ─── Filtered Orders ────────────────────────────────────────────────────────
 

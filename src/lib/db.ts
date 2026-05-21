@@ -401,6 +401,7 @@ export interface Order {
   discount: number;
   total: number;
   paymentMethod?: string;
+  paymentStatus?: "unpaid" | "pending" | "paid" | "failed" | "refunded";
   paymentDetails?: string;
   paymentProof?: { // Payment confirmation details
     method: string;

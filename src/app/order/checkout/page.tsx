@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
@@ -120,6 +120,7 @@ function CheckoutPage() {
       // ✅ Use root 'orders' collection to match orderService in db.ts
       const orderRef = await addDoc(collection(db, "orders"), {
         orderNumber,
+        tenantId: checkoutData.tenantId, // ✅ CRITICAL: Required for tenant to see this order
         // Cart order fields
         products: isCartOrder ? checkoutData.cartItems!.map(item => ({
           productId: item.productId,
