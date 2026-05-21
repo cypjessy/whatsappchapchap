@@ -376,9 +376,13 @@ export default function PaystackSettingsPage() {
         if (data.configured) {
           setSettings(prev => ({
             ...prev,
+            mode: data.mode || "test",
             testPublicKey: data.testPublicKey || "",
+            testSecretKey: data.testSecretKey || "",  // Load for prefilling
             livePublicKey: data.livePublicKey || "",
+            liveSecretKey: data.liveSecretKey || "",  // Load for prefilling
             webhookUrl: data.webhookUrl || "",
+            webhookSecret: data.webhookSecret || "",  // Load for prefilling
             currency: data.currency || "NGN",
             channels: data.channels || DEFAULT_SETTINGS.channels,
             metadata: data.metadata || DEFAULT_SETTINGS.metadata,

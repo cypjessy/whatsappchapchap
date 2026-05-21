@@ -3,6 +3,24 @@ import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
+// Default settings for fallback
+const DEFAULT_SETTINGS = {
+  channels: {
+    card: true,
+    bank: true,
+    transfer: false,
+    ussd: false,
+    mobileMoney: false,
+    qr: false,
+  },
+  metadata: {
+    businessName: "",
+    businessEmail: "",
+    logoUrl: "",
+    description: "",
+  },
+};
+
 // GET — return only public key to client (never expose secretKey)
 export async function GET(req: NextRequest) {
   try {
@@ -44,16 +62,17 @@ export async function GET(req: NextRequest) {
 
     const data = doc.data()!;
     
-    // Return settings structure (no secrets)
+    // Return settings structure (include webhook secret for prefilling)
     return NextResponse.json({
       configured: true,
       mode: data.mode || "test",
-      testPublicKey: data.testPublicKey,
-      livePublicKey: data.livePublicKey,
-      currency: data.currency,
-      channels: data.channels,
-      metadata: data.metadata,
-      webhookUrl: data.webhookUrl,
+      testPublicKey: data.testPublicKey || "",
+      livePublicKey: data.livePublicKey || "",
+      currency: data.currency || "NGN",
+      channels: data.channels || DEFAULT_SETTINGS.channels,
+      metadata: data.metadata || DEFAULT_SETTINGS.metadata,
+      webhookUrl: data.webhookUrl || "",
+      webhookSecret: data.webhookSecret || "",  // Return for prefilling (authenticated users only)
     });
   } catch (error) {
     console.error("Error fetching Paystack settings:", error);
