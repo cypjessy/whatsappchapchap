@@ -22,6 +22,13 @@ export default function PaystackSettingsPage() {
     isLive: false,
   });
   
+  const [savedSettings, setSavedSettings] = useState<PaystackSettings>({
+    publicKey: "",
+    secretKey: "",
+    webhookSecret: "",
+    isLive: false,
+  });
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [configured, setConfigured] = useState(false);
@@ -30,19 +37,41 @@ export default function PaystackSettingsPage() {
 
   // Load existing settings
   useEffect(() => {
+    if (!user) return; // wait for auth to initialize
+    
     const loadSettings = async () => {
       try {
-        const res = await fetch("/api/settings/paystack");
+        const token = await user.getIdToken();
+        if (!token) {
+          console.error("No authentication token available");
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch("/api/settings/paystack", {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (!res.ok) {
+          console.error("Failed to fetch settings:", res.status, res.statusText);
+          setLoading(false);
+          return;
+        }
+        
         const data = await res.json();
         
         if (data.configured) {
           setConfigured(true);
-          setSettings({
+          const loadedSettings = {
             publicKey: data.publicKey || "",
             secretKey: "", // Don't show secret key for security
             webhookSecret: "", // Don't show webhook secret for security
             isLive: data.isLive || false,
-          });
+          };
+          setSettings(loadedSettings);
+          setSavedSettings(loadedSettings);
         }
       } catch (err) {
         console.error("Error loading settings:", err);
@@ -52,11 +81,23 @@ export default function PaystackSettingsPage() {
     };
     
     loadSettings();
-  }, []);
+  }, [user]);
 
   const handleSave = async () => {
     setError("");
     setSuccess("");
+    
+    // Check authentication
+    if (!user) {
+      setError("You must be logged in");
+      return;
+    }
+    
+    const token = await user.getIdToken();
+    if (!token) {
+      setError("Not authenticated");
+      return;
+    }
     
     // Validation
     if (!settings.publicKey.trim()) {
@@ -93,18 +134,30 @@ export default function PaystackSettingsPage() {
     try {
       const res = await fetch("/api/settings/paystack", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(settings),
       });
       
-      const data = await res.json();
-      
       if (!res.ok) {
-        throw new Error(data.error || "Failed to save settings");
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to save settings");
       }
+      
+      const data = await res.json();
       
       setSuccess("Paystack settings saved successfully!");
       setConfigured(true);
+      
+      // Update saved settings to reflect what's in Firestore
+      setSavedSettings({
+        publicKey: settings.publicKey,
+        secretKey: "",
+        webhookSecret: "",
+        isLive: settings.isLive,
+      });
       
       // Clear sensitive fields after save
       setSettings(prev => ({
@@ -181,10 +234,10 @@ export default function PaystackSettingsPage() {
               <div>
                 <p className="text-sm text-blue-800 font-medium">Paystack is configured</p>
                 <p className="text-xs text-blue-600 mt-1">
-                  Public Key: {settings.publicKey ? `${settings.publicKey.substring(0, 20)}...` : "Not set"}
+                  Public Key: {savedSettings.publicKey ? `${savedSettings.publicKey.substring(0, 20)}...` : "Not set"}
                 </p>
                 <p className="text-xs text-blue-600 mt-1">
-                  Mode: {settings.isLive ? "Live" : "Test/Sandbox"}
+                  Mode: {savedSettings.isLive ? "Live" : "Test/Sandbox"}
                 </p>
               </div>
             </div>
@@ -209,7 +262,12 @@ export default function PaystackSettingsPage() {
                     type="radio"
                     name="environment"
                     checked={!settings.isLive}
-                    onChange={() => setSettings({ ...settings, isLive: false })}
+                    onChange={() => setSettings({ 
+                      ...settings, 
+                      isLive: false,
+                      publicKey: "",
+                      secretKey: "",
+                    })}
                     className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                   />
                   <span className="ml-2 text-sm text-gray-700">Test/Sandbox</span>
@@ -219,7 +277,12 @@ export default function PaystackSettingsPage() {
                     type="radio"
                     name="environment"
                     checked={settings.isLive}
-                    onChange={() => setSettings({ ...settings, isLive: true })}
+                    onChange={() => setSettings({ 
+                      ...settings, 
+                      isLive: true,
+                      publicKey: "",
+                      secretKey: "",
+                    })}
                     className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                   />
                   <span className="ml-2 text-sm text-gray-700">Live/Production</span>
@@ -273,14 +336,11 @@ export default function PaystackSettingsPage() {
                 type="password"
                 value={settings.webhookSecret}
                 onChange={(e) => setSettings({ ...settings, webhookSecret: e.target.value })}
-                placeholder="whsec_xxxxxxxxxxxxx"
+                placeholder="Your custom webhook secret"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Used to verify webhook signatures. Set webhook URL in Paystack dashboard to:{" "}
-                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-                  {typeof window !== "undefined" ? `${window.location.origin}/api/payments/webhook` : "/api/payments/webhook"}
-                </code>
+                Set a secret string in Paystack dashboard → Webhooks, then paste the same value here.
               </p>
             </div>
 
