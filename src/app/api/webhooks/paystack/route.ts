@@ -216,7 +216,7 @@ async function handleChargeSuccess(event: any, tenantId?: string) {
                 currency: "KES",
               }).format(total);
 
-              const message = `━━━━━━━━━━━━━━━━━━━━\\n✅ *PAYMENT CONFIRMED & ORDER PAID* ✅\\n━━━━━━━━━━━━━━━━━━━━\\n\\nDear *${customerName}*,\\n\\nThank you for your order! 🎉\\n\\nYour payment has been successfully processed and your order is now confirmed!\\n\\n📋 *ORDER DETAILS*\\n━━━━━━━━━━━━━━━━━━\\n🏷️ *Product:* ${productName}\\n🔖 *Order ID:* ${orderNumber}\\n💰 *Amount Paid:* ${formattedTotal}\\n📊 *Status:* Processing\\n━━━━━━━━━━━━━━━━━━\\n\\nWe will begin preparing your order shortly. You'll receive updates as it progresses.\\n\\n💬 Need help? Just reply to this message!\\n\\n━━━━━━━━━━━━━━━━━━━━\\n✨ *Thank you for choosing us!* ✨\\n━━━━━━━━━━━━━━━━━━━━`;
+              const message = `━━━━━━━━━━━━━━━━━━━━\n✅ *PAYMENT CONFIRMED & ORDER PAID* ✅\n━━━━━━━━━━━━━━━━━━━━\n\nDear *${customerName}*,\n\nThank you for your order! 🎉\n\nYour payment has been successfully processed and your order is now confirmed!\n\n📋 *ORDER DETAILS*\n━━━━━━━━━━━━━━━━━━\n🏷️ *Product:* ${productName}\n🔖 *Order ID:* ${orderNumber}\n💰 *Amount Paid:* ${formattedTotal}\n📊 *Status:* Processing\n━━━━━━━━━━━━━━━━━━\n\nWe will begin preparing your order shortly. You'll receive updates as it progresses.\n\n💬 Need help? Just reply to this message!\n\n━━━━━━━━━━━━━━━━━━━━\n✨ *Thank you for choosing us!* ✨\n━━━━━━━━━━━━━━━━━━━━`;
 
               if (!tenantId) {
                 console.warn("[Paystack Webhook] ⚠️ No tenantId available, skipping WhatsApp notification");
@@ -319,7 +319,7 @@ async function handleChargeFailed(event: any, tenantId?: string) {
             const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
 
             if (fullPhone.length >= 10) {
-              const message = `━━━━━━━━━━━━━━━━━━━━\\n❌ *PAYMENT FAILED* ❌\\n━━━━━━━━━━━━━━━━━━━━\\n\\nDear *${customerName}*,\\n\\nWe were unable to process your payment for order *${orderNumber}*.\\n\\n📋 *Reason:* ${gateway_response || "Transaction declined"}\\n\\nPlease try making the payment again or choose a different payment method.\\n\\n💬 Need help? Just reply to this message!\\n\\n━━━━━━━━━━━━━━━━━━━━`;
+              const message = `━━━━━━━━━━━━━━━━━━━━\n❌ *PAYMENT FAILED* ❌\n━━━━━━━━━━━━━━━━━━━━\n\nDear *${customerName}*,\n\nWe were unable to process your payment for order *${orderNumber}*.\n\n📋 *Reason:* ${gateway_response || "Transaction declined"}\n\nPlease try making the payment again or choose a different payment method.\n\n💬 Need help? Just reply to this message!\n\n━━━━━━━━━━━━━━━━━━━━`;
 
               if (!tenantId) {
                 console.warn("[Paystack Webhook] ⚠️ No tenantId available, skipping WhatsApp failure notification");

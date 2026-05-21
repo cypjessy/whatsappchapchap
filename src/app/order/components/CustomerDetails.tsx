@@ -31,6 +31,7 @@ interface CustomerDetailsProps {
   setSelectedStation: (value: string) => void;
   errors: Record<string, boolean>;
   deliveryMethod: string;
+  isPickupMethod: boolean;
   address: string;
   setAddress: (value: string) => void;
 }
@@ -244,6 +245,7 @@ export default function CustomerDetails({
   setSelectedStation,
   errors,
   deliveryMethod,
+  isPickupMethod,
   address,
   setAddress,
 }: CustomerDetailsProps) {
@@ -308,7 +310,7 @@ export default function CustomerDetails({
       />
 
       {/* Delivery Address - Show when NOT pickup */}
-      {!deliveryMethod.toLowerCase().includes('pickup') && (
+      {!isPickupMethod && (
         <div className="mb-4 md:mb-5">
           <label className="block text-xs md:text-sm font-bold text-[#1e293b] mb-2.5 uppercase tracking-wider">
             Delivery Address <span className="text-[#ef4444]">*</span>
@@ -341,7 +343,7 @@ export default function CustomerDetails({
       )}
 
       {/* Pickup Location - Show ONLY for pickup methods */}
-      {deliveryMethod.toLowerCase().includes('pickup') && (
+      {isPickupMethod && (
         <div className="mb-4 md:mb-5">
           <label className="block text-xs md:text-sm font-bold text-[#1e293b] mb-2.5 uppercase tracking-wider">
             Select Pickup Location <span className="text-[#ef4444]">*</span>

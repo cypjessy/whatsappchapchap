@@ -1118,6 +1118,10 @@ function OrderPageContent() {
           pickupStations={pickupStations}
           errors={errors}
           deliveryMethod={deliveryMethod}
+          isPickupMethod={(() => {
+            const selectedDeliveryMethod = businessSettings?.shippingMethods?.find(m => m.id === deliveryMethod);
+            return selectedDeliveryMethod?.name.toLowerCase().includes('pickup') || deliveryMethod.toLowerCase().includes('pickup');
+          })()}
           address={address}
           setAddress={setAddress}
         />
