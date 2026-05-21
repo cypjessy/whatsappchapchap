@@ -36,4 +36,13 @@ if (typeof window !== "undefined") {
   db = getFirestore(app);
 }
 
+// Helper function for client components that need to initialize Firebase
+export function getFirebaseApp(): FirebaseApp | null {
+  if (typeof window === "undefined") return null;
+  if (!getApps().length) {
+    return initializeApp(firebaseConfig);
+  }
+  return getApp();
+}
+
 export { app, auth, db };

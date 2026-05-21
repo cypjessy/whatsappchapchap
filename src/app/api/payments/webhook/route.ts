@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 // Helper function to get tenant's Paystack credentials
 async function getTenantPaystack(tenantId: string) {
@@ -38,6 +39,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse event to extract tenantId from metadata
+    // ⚠️  SECURITY NOTE: Parsing untrusted input before signature verification
+    // This is necessary because we use per-tenant webhook secrets.
+    // Mitigation: Signature verification below will reject invalid payloads.
     const event = JSON.parse(body);
     const tenantId = event.data?.metadata?.tenantId;
 
@@ -46,7 +50,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No tenantId in metadata" }, { status: 400 });
     }
 
+    // Validate tenantId format to prevent injection attacks
+    if (!/^tenant_[a-zA-Z0-9]+$/.test(tenantId)) {
+      console.error(`Invalid tenantId format: ${tenantId}`);
+      return NextResponse.json({ error: "Invalid tenantId format" }, { status: 400 });
+    }
+
     // Fetch tenant's webhook secret to verify signature
+    // If tenantId is invalid/non-existent, this will throw and be caught below
     const { webhookSecret } = await getTenantPaystack(tenantId);
 
     // Verify webhook signature
@@ -76,19 +87,23 @@ export async function POST(req: NextRequest) {
 
       // Update order status in Firestore
       if (adminDb) {
-        const orderRef = adminDb
-          .collection("tenants")
-          .doc(tenantId)
-          .collection("orders")
-          .doc(orderId);
+        // ✅ Use root 'orders' collection to match checkout page
+        const orderRef = adminDb.collection("orders").doc(orderId);
+
+        // ✅ Idempotency guard - check if already processed
+        const orderSnap = await orderRef.get();
+        if (orderSnap.exists && orderSnap.data()?.paymentStatus === "paid") {
+          console.log(`⚠️ Order ${orderId} already marked as paid - skipping duplicate webhook`);
+          return NextResponse.json({ received: true });
+        }
 
         await orderRef.update({
           paymentStatus: "paid",
-          paidAt: paidAt.toISOString(),
+          paidAt: paidAt.toISOString(),  // Keep ISO string for Paystack's actual payment time
           paymentReference: reference,
           paymentAmount: amount,
           paymentMethod: "paystack",
-          updatedAt: new Date().toISOString(),
+          updatedAt: FieldValue.serverTimestamp(),  // ✅ Use server timestamp for consistency
         });
 
         console.log(`✅ Order ${orderId} marked as paid via Paystack`);
@@ -97,34 +112,50 @@ export async function POST(req: NextRequest) {
       const { orderId } = event.data.metadata;
 
       if (orderId && adminDb) {
-        const orderRef = adminDb
-          .collection("tenants")
-          .doc(tenantId)
-          .collection("orders")
-          .doc(orderId);
+        // ✅ Use root 'orders' collection to match checkout page
+        const orderRef = adminDb.collection("orders").doc(orderId);
+
+        // ✅ Idempotency guard - check if already processed
+        const orderSnap = await orderRef.get();
+        if (orderSnap.exists && orderSnap.data()?.paymentStatus === "failed") {
+          console.log(`⚠️ Order ${orderId} already marked as failed - skipping duplicate webhook`);
+          return NextResponse.json({ received: true });
+        }
 
         await orderRef.update({
           paymentStatus: "failed",
           paymentFailureReason: event.data.gateway_response,
-          updatedAt: new Date().toISOString(),
+          updatedAt: FieldValue.serverTimestamp(),  // ✅ Use server timestamp for consistency
         });
 
         console.log(`❌ Order ${orderId} payment failed via Paystack`);
       }
-    } else if (event.event === "charge.refund") {
-      const { orderId } = event.data.metadata;
+    } else if (event.event === "refund.processed") {  // ✅ Correct Paystack event name
+      // ⚠️  IMPORTANT: refund.processed does NOT include metadata like charge.success
+      // Must extract orderId from transaction_reference format: "order_<orderId>_<timestamp>"
+      const transactionRef = event.data.transaction_reference as string;
+      const orderId = transactionRef?.split('_')[1];  // Extract orderId from reference
 
-      if (orderId && adminDb) {
-        const orderRef = adminDb
-          .collection("tenants")
-          .doc(tenantId)
-          .collection("orders")
-          .doc(orderId);
+      if (!orderId) {
+        console.error("Webhook refund.processed without valid transaction_reference");
+        return NextResponse.json({ error: "No orderId in transaction_reference" }, { status: 400 });
+      }
+
+      if (adminDb) {
+        // ✅ Use root 'orders' collection to match checkout page
+        const orderRef = adminDb.collection("orders").doc(orderId);
+
+        // ✅ Idempotency guard - check if already processed
+        const orderSnap = await orderRef.get();
+        if (orderSnap.exists && orderSnap.data()?.paymentStatus === "refunded") {
+          console.log(`⚠️ Order ${orderId} already marked as refunded - skipping duplicate webhook`);
+          return NextResponse.json({ received: true });
+        }
 
         await orderRef.update({
           paymentStatus: "refunded",
-          refundedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          refundedAt: new Date().toISOString(),  // Keep ISO string for refund timestamp
+          updatedAt: FieldValue.serverTimestamp(),  // ✅ Use server timestamp for consistency
         });
 
         console.log(`💰 Order ${orderId} refunded via Paystack`);

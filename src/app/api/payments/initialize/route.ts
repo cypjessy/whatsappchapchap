@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { adminDb } from "@/lib/firebase-admin";
+
+/**
+ * Paystack Initialize Route
+ * 
+ * ⚠️  CURRENTLY UNUSED - Checkout page uses direct popup mode (no server initialize)
+ * 
+ * This route is kept for future use cases:
+ * - Redirect mode payments (instead of popup)
+ * - Server-side payment flows
+ * - Dashboard-initiated payments
+ * - Subscription/recurring payment setups
+ * 
+ * When using this route, ensure you understand the amount conversion:
+ * - Client sends amount in KES (whole units, e.g., 1500 for KES 1,500)
+ * - Route converts to kobo/cents (multiplies by 100) before sending to Paystack API
+ */
 
 // Helper function to get tenant's Paystack credentials
 async function getTenantPaystack(tenantId: string) {
@@ -29,33 +44,15 @@ async function getTenantPaystack(tenantId: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication
-    const authHeader = req.headers.get("authorization");
-    
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { email, amount, orderId, tenantId, metadata } = await req.json();
 
-    const token = authHeader.split("Bearer ")[1];
-    const decodedToken = await getAdminAuth().verifyIdToken(token);
-    const uid = decodedToken.uid;
-
-    if (!adminDb) {
+    // Validation - require tenantId from request body (customer-facing endpoint)
+    if (!tenantId) {
       return NextResponse.json(
-        { error: "Database not configured" },
-        { status: 500 }
+        { error: "tenantId is required" },
+        { status: 400 }
       );
     }
-
-    // Fetch tenantId from user's Firestore record
-    const userDoc = await adminDb.collection("users").doc(uid).get();
-    const tenantId = userDoc.data()?.tenantId;
-
-    if (!tenantId) {
-      return NextResponse.json({ error: "User not associated with a tenant" }, { status: 403 });
-    }
-
-    const { email, amount, orderId, metadata } = await req.json();
 
     // Validation - explicit check for amount > 0
     if (!email || amount == null || amount <= 0 || !orderId) {
@@ -74,10 +71,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get tenant's Paystack credentials
+    // Get tenant's Paystack credentials using tenantId from request
     const { secretKey } = await getTenantPaystack(tenantId);
 
-    // Initialize transaction with Paystack
+    // Initialize transaction with Paystack (for reference generation only)
     const response = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
@@ -86,7 +83,9 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         email,
-        amount: Math.round(amount * 100), // Convert to kobo/pesewas (smallest currency unit)
+        // ⚠️  IMPORTANT: Expects amount in KES (whole units). Converts to kobo internally.
+        // Example: amount=1500 (KES) → sends 150000 (kobo) to Paystack API
+        amount: Math.round(amount * 100), // Convert KES to cents for Paystack API
         reference: `order_${orderId}_${Date.now()}`,
         callback_url: `${appUrl}/api/payments/callback`,
         metadata: { 

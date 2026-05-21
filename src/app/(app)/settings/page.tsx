@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { businessProfileService, whatsappSettingsService, shippingService, pickupStationService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, PickupStation, ProductSettings, ServiceSettings } from "@/lib/db";
+import { businessProfileService, whatsappSettingsService, shippingService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, PickupStation, ProductSettings, ServiceSettings } from "@/lib/db";
 import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 
@@ -172,7 +172,7 @@ export default function SettingsPage() {
         businessProfileService.getProfile(user),
         whatsappSettingsService.getSettings(user),
         shippingService.getShippingMethods(user),
-        pickupStationService.getPickupStations(user),
+        shippingService.getPickupStations(user),
         productSettingsService.getSettings(user),
         serviceSettingsService.getSettings(user),
       ]);
@@ -493,10 +493,10 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await impactLight();
-      await pickupStationService.createPickupStation(user, newPickupStation as any);
-      
+      await shippingService.createPickupStation(user, newPickupStation as any);
+              
       // Refresh stations list
-      const stations = await pickupStationService.getPickupStations(user);
+      const stations = await shippingService.getPickupStations(user);
       setPickupStations(stations);
       
       // Reset form
@@ -526,10 +526,10 @@ export default function SettingsPage() {
     if (!user || !editingStationId) return;
     setSaving(true);
     try {
-      await pickupStationService.updatePickupStation(user, editingStationId, newPickupStation as any);
-      
+      await shippingService.updatePickupStation(user, editingStationId, newPickupStation as any);
+              
       // Refresh stations list
-      const stations = await pickupStationService.getPickupStations(user);
+      const stations = await shippingService.getPickupStations(user);
       setPickupStations(stations);
       
       // Reset form
@@ -562,10 +562,10 @@ export default function SettingsPage() {
     await impactMedium();
     
     try {
-      await pickupStationService.deletePickupStation(user, stationId);
-      
+      await shippingService.deletePickupStation(user, stationId);
+              
       // Refresh stations list
-      const stations = await pickupStationService.getPickupStations(user);
+      const stations = await shippingService.getPickupStations(user);
       setPickupStations(stations);
       
       await notificationSuccess();

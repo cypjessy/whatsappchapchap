@@ -3,6 +3,5 @@ export { default as ProductGallery } from './ProductGallery';
 export { default as Specifications } from './Specifications';
 export { default as CustomerDetails } from './CustomerDetails';
 export { default as DeliveryOptions } from './DeliveryOptions';
-export { default as PaymentMethods } from './PaymentMethods';
 export { default as OrderSummary } from './OrderSummary';
 export { default as FooterActions } from './FooterActions';

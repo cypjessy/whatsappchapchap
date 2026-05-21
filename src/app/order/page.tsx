@@ -3,39 +3,21 @@
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, getDocs, query, where, setDoc, deleteField } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
 import { normalizePhone, createWhatsAppJid, isValidWhatsAppPhone } from "@/utils/phoneUtils";
+import { getFirebaseApp } from "@/lib/firebase";
 import {
   SearchBar,
   ProductGallery,
   Specifications,
   CustomerDetails,
   DeliveryOptions,
-  PaymentMethods,
   OrderSummary,
   FooterActions
 } from './components';
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-};
-
-function getFirebaseApp() {
-  if (typeof window === "undefined") return null;
-  if (!getApps().length) {
-    return initializeApp(firebaseConfig);
-  }
-  return getApp();
-}
 
 interface Product {
   id: string;
@@ -52,7 +34,6 @@ interface Product {
   brand?: string;
   filters?: Record<string, string[]>;
   shippingMethods?: Array<{ id: string; name: string; price: number }>;
-  paymentMethods?: Array<{ id: string; name: string; details: string }>;
   variants?: Array<{
     id: number;
     specs: Record<string, string>;
@@ -99,15 +80,10 @@ function OrderPageContent() {
   const [address, setAddress] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
-  const [paymentNotes, setPaymentNotes] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("");
   const [deliveryCost, setDeliveryCost] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [paymentDetails, setPaymentDetails] = useState("");
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
-  const [ordered, setOrdered] = useState(false);
-  const [orderNumber, setOrderNumber] = useState("");
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   
@@ -379,16 +355,12 @@ function OrderPageContent() {
         
         setPickupStations(pickupStationsData);
         
-        // Set business settings
-        
         // Build payment methods array from business profile with new M-Pesa structure
         // Each payment subtype becomes its own card for better UX
         const paymentMethodsArray: Array<{ id: string; name: string; details: string; icon: string; color: string }> = [];
         const pm = profileData?.paymentMethods;
         
-        
         if (pm?.mpesa?.enabled) {
-          
           // Each M-Pesa subtype becomes its own payment card
           if (pm.mpesa.buyGoods?.tillNumber) {
             paymentMethodsArray.push({
@@ -451,7 +423,7 @@ function OrderPageContent() {
           });
         }
         
-        
+        // Set business settings with payment methods
         setBusinessSettings({
           shippingMethods: shippingMethods.length > 0 ? shippingMethods : undefined,
           paymentMethods: paymentMethodsArray,
@@ -464,11 +436,6 @@ function OrderPageContent() {
         if (shippingMethods.length > 0) {
           setDeliveryMethod(shippingMethods[0].id);
           setDeliveryCost(shippingMethods[0].price);
-        }
-        
-        // Set default payment method (first enabled)
-        if (paymentMethodsArray.length > 0) {
-          setPaymentMethod(paymentMethodsArray[0].id);
         }
         
       } catch (err) {
@@ -549,8 +516,8 @@ function OrderPageContent() {
     saveCartToLocalStorage(newCart);
     saveCartToDatabase(newCart); // Save to Firestore for WhatsApp access
     
-    // Send WhatsApp notification about cart addition
-    if (customerPhone && tenantData?.evolutionServerUrl && tenantData?.evolutionApiKey && tenantData?.evolutionInstanceId) {
+    // Send WhatsApp notification about cart addition via server-side API
+    if (customerPhone && tenantData?.evolutionServerUrl && tenantData?.evolutionInstanceId) {
       try {
         const businessName = businessSettings?.businessName || 'Our Store';
         const specDetails = Object.entries(selectedSpecs)
@@ -559,15 +526,15 @@ function OrderPageContent() {
         
         const cartMessage = `✅ *Added to Cart!*\n\n*${product.name}*\n💰 KES ${getBasePrice().toLocaleString()} x ${quantity}\n${specDetails ? `📝 ${specDetails}\n` : ''}\n🛒 You now have ${newCart.length} item(s) in your cart\n\nReply *VIEW CART* to see your cart or continue shopping!`;
         
-        await fetch(`${tenantData.evolutionServerUrl}/message/sendText/${tenantData.evolutionInstanceId}`, {
+        // Call server-side API to protect Evolution API key
+        await fetch('/api/notify-cart', {
           method: 'POST',
-          headers: {
-            apikey: tenantData.evolutionApiKey,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            number: customerPhone,
-            text: cartMessage,
+            evolutionServerUrl: tenantData.evolutionServerUrl,
+            evolutionInstanceId: tenantData.evolutionInstanceId,
+            customerPhone,
+            message: cartMessage,
           }),
         });
         
@@ -747,169 +714,57 @@ function OrderPageContent() {
       }
       return;
     }
-      
-    setOrdering(true);
-      
+
+    // Save order data to localStorage for checkout page
+    const station = pickupStations.find(s => s.id === selectedStation);
+    const deliveryAddress = station 
+      ? `${station.stationName}, ${station.address}, ${station.town}, ${station.county}`
+      : address.trim();
+
+    const checkoutData = {
+      productId: product!.id,
+      productName: product!.name,
+      productImage: product?.image,
+      quantity: quantity,
+      price: getBasePrice(),
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail.trim(),
+      address: deliveryAddress,
+      deliveryMethod,
+      deliveryCost,
+      orderNotes: orderNotes.trim(),
+      tenantId,
+      selectedSpecs,
+      paymentMethods: businessSettings?.paymentMethods || [],
+    };
+
     try {
-      const app = getFirebaseApp()!;
-      const db = getFirestore(app);
-        
-      const orderNum = `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
-        
-      // Single product order (cart functionality moved to /order/checkout page)
-      const orderProducts = [{
-        productId: product!.id,
-        name: product!.name,
-        price: getBasePrice(),
-        quantity: quantity,
-        specs: selectedSpecs,
-      }];
-        
-      const subtotal = orderProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-      const total = subtotal + deliveryCost;
-        
-      const now = new Date();
-        
-      // Normalize phone and create WhatsApp JID
-      const normalizedPhone = normalizePhone(customerPhone);
-      const whatsappJid = phoneParam 
-        ? `${phoneParam.replace(/[^0-9]/g, '')}@s.whatsapp.net` 
-        : createWhatsAppJid(normalizedPhone);
-        
-      const productNames = orderProducts.map(p => `${p.name} x${p.quantity}`).join(', ');
-        
-      const docRef = await addDoc(collection(db, "orders"), {
-        orderNumber: orderNum,
-        tenantId,
-        productId: product!.id,
-        productName: productNames,
-        productImage: product?.image,
-        products: orderProducts,
-        basePrice: getBasePrice(),
-        selectedSpecs: selectedSpecs,
-        selectedVariant: product?.variants?.find(v => 
-          Object.entries(selectedSpecs).every(([key, value]) => v.specs[key] === value)
-        ) || null,
-        quantity: quantity,
-        customerPhone: normalizedPhone,
-        whatsappJid,
-        customerName: customerName.trim(),
-        customerEmail: customerEmail.trim() || null,
-        deliveryAddress: (() => {
-          const station = pickupStations.find(s => s.id === selectedStation);
-          if (station) {
-            return `${station.stationName}, ${station.address}, ${station.town}, ${station.county}`;
-          }
-          return address.trim();
-        })(),
-        pickupStationId: selectedStation || null,
-        pickupStationDetails: (() => {
-          const station = pickupStations.find(s => s.id === selectedStation);
-          return station ? {
-            id: station.id,
-            name: station.stationName,
-            address: station.address,
-            town: station.town,
-            county: station.county,
-            contactPhone: station.contactPhone,
-            operatingHours: station.operatingHours
-          } : null;
-        })(),
-        deliveryMethod,
-        deliveryCost,
-        paymentMethod,
-        paymentDetails: paymentDetails.trim() || null,
-        orderNotes: orderNotes.trim() || "",
-        subtotal,
-        total,
-        status: "pending",
-        statusHistory: {
-          pending: now.toISOString()
-        },
-        lastNotifiedStatus: '',
-        evolutionInstanceId: tenantId,
-        notificationSent: false,
-        createdAt: now,
-        updatedAt: now
-      });
-        
-      await updateDoc(doc(db, "orders", docRef.id), { id: docRef.id });
-  
-      // Send WhatsApp notification - Order Received
-      const customerPhoneClean = normalizePhone(customerPhone);
-        
-      // Validate phone number before sending
-      if (!isValidWhatsAppPhone(customerPhoneClean)) {
-        console.error('❌ Invalid phone number, skipping WhatsApp notification:', customerPhoneClean);
-      } else {
-        // Use pickup station address if selected, otherwise show "Not specified"
-        const station = pickupStations.find(s => s.id === selectedStation);
-        const addressForMessage = station 
-          ? `${station.stationName}, ${station.town}, ${station.county}`
-          : "Not specified";
-        
-        const orderConfirmationMessage = getOrderStatusMessage(
-          'pending',
-          customerName.trim(),
-          orderNum,
-          productNames,
-          addressForMessage
-        );
-          
-        console.log('📲 Sending order received WhatsApp to:', customerPhoneClean);
-        sendEvolutionWhatsAppMessage(
-          customerPhoneClean,
-          orderConfirmationMessage,
-          tenantId
-        ).then(() => {
-          console.log('✅ Order received WhatsApp sent successfully');
-        }).catch(err => {
-          console.error('❌ Failed to send order received WhatsApp:', err);
-        });
-      }
-        
-      // Cart persists - user manually deletes items
-      console.log('✅ Order placed successfully, cart preserved for user');
-        
-      setOrderNumber(orderNum);
-      setOrdered(true);
+      localStorage.setItem('pending_checkout', JSON.stringify(checkoutData));
+      router.push('/order/checkout');
     } catch (err: any) {
-      console.error("Error placing order:", err);
-      alert("Failed to place order. Please try again.");
-    } finally {
-      setOrdering(false);
+      console.error("Error saving checkout data:", err);
+      alert("Failed to proceed to checkout. Please try again.");
     }
   };
 
   const contactSeller = () => {
-    const cleanTenantId = tenantId.replace('tenant_', '');
-    const phone = cleanTenantId.replace(/[^0-9]/g, '');
+    // Use business phone from settings instead of deriving from tenantId
+    const sellerPhone = businessSettings?.phone;
+    
+    if (!sellerPhone) {
+      console.error('No seller phone number available');
+      alert('Unable to contact seller - phone number not configured');
+      return;
+    }
+    
+    // Clean phone number (remove non-digit characters)
+    const cleanPhone = sellerPhone.replace(/[^0-9]/g, '');
     const message = `Hi, I'm interested in ${product?.name}`;
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const continueToWhatsApp = () => {
-    const cleanTenantId = tenantId.replace('tenant_', '');
-    const phone = cleanTenantId.replace(/[^0-9]/g, '');
-    const currentTotal = getBasePrice() * quantity + deliveryCost;
-    
-    // Use pickup station address if selected, otherwise show "Not specified"
-    const station = pickupStations.find(s => s.id === selectedStation);
-    const addressText = station 
-      ? `${station.stationName}, ${station.town}, ${station.county}`
-      : (address || "Not specified");
-    
-    const message = `Hi, I just placed order ${orderNumber}. Here's my details:\n\nName: ${customerName}\nPhone: ${customerPhone}\nAddress: ${addressText}\n\nOrder Total: ${CURRENCY_SYMBOL}${currentTotal.toLocaleString()}\nPayment: ${paymentMethod}`;
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const copyOrderNumber = () => {
-    navigator.clipboard.writeText(orderNumber);
-    const recentOrders = JSON.parse(localStorage.getItem('recentOrders') || '[]');
-    const newOrder = { orderNumber, phone: customerPhone, productName: product?.name, date: new Date().toISOString() };
-    const updatedOrders = [newOrder, ...recentOrders.filter((o: any) => o.orderNumber !== orderNumber)].slice(0, 5);
-    localStorage.setItem('recentOrders', JSON.stringify(updatedOrders));
-  };
+  // Removed: continueToWhatsApp and copyOrderNumber - these are now handled on checkout/success pages
 
   if (loading) {
     return (
@@ -937,42 +792,7 @@ function OrderPageContent() {
     );
   }
 
-  if (ordered) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
-        <div style={{ textAlign: "center", maxWidth: 440, width: "100%", padding: 32 }}>
-          <div style={{ width: 80, height: 80, background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 36, color: "white", boxShadow: "0 10px 30px rgba(16,185,129,0.3)" }}>
-            <i className="fas fa-check"></i>
-          </div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, color: "#1e293b" }}>Order Confirmed!</h2>
-          <p style={{ color: "#64748b", marginBottom: 20 }}>Thank you for your purchase. We've sent the confirmation to your WhatsApp.</p>
-          
-          <div style={{ background: "white", borderRadius: 12, padding: 16, marginBottom: 20, border: "2px dashed #25D366" }}>
-            <div style={{ fontSize: 14, color: "#64748b", marginBottom: 4 }}>Order Number</div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
-              <div style={{ fontSize: 24, fontWeight: 800, color: "#25D366" }}>#{orderNumber}</div>
-              <button 
-                onClick={copyOrderNumber}
-                style={{ padding: "8px 12px", background: "#25D366", color: "white", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
-              >
-                <i className="fas fa-copy"></i>
-                Copy
-              </button>
-            </div>
-            <p style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>Save your order number for reference</p>
-          </div>
-
-          <button 
-            onClick={continueToWhatsApp}
-            style={{ width: "100%", padding: 16, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}
-          >
-            <i className="fab fa-whatsapp"></i>
-            Continue to WhatsApp
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Removed: ordered state check - order confirmation now happens on /order/success page
 
   const productEmoji = product?.image ? "" : (product?.category === "electronics" ? "📱" : product?.category === "footwear" ? "👟" : product?.category === "clothing" ? "👕" : product?.category === "beauty" ? "💄" : product?.category === "furniture" ? "🛋️" : product?.category === "food" ? "🍎" : product?.category === "sports" ? "🏋️" : product?.category === "toys" ? "🧸" : "📦");
   const currentStock = getVariantStock();
@@ -1164,16 +984,32 @@ function OrderPageContent() {
           </div>
         </div>
 
-        {/* Floating Cart Button - Navigate to dedicated cart page */}
+        {/* Floating Cart Button - Navigate to checkout with cart data */}
         {cart.length > 0 && (
           <button 
             className="floating-cart-btn"
             onClick={() => {
-              // Navigate to dedicated cart/checkout page
-              const params = new URLSearchParams();
-              if (tenantId) params.set('tenant', tenantId);
-              if (customerPhone) params.set('phone', customerPhone);
-              router.push(`/order/checkout?${params.toString()}`);
+              // Save cart data to localStorage for checkout page
+              const checkoutData = {
+                cartItems: cart,
+                customerName: customerName.trim(),
+                customerPhone: customerPhone.trim(),
+                customerEmail: customerEmail.trim(),
+                address: address.trim(),
+                deliveryMethod,
+                deliveryCost,
+                orderNotes: orderNotes.trim(),
+                tenantId,
+                selectedStation,
+              };
+              
+              try {
+                localStorage.setItem('pending_checkout', JSON.stringify(checkoutData));
+                router.push('/order/checkout');
+              } catch (err: any) {
+                console.error("Error saving cart data:", err);
+                alert("Failed to proceed to checkout. Please try again.");
+              }
             }}
             style={{ position: "fixed", bottom: 24, right: 24, width: 64, height: 64, background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 8px 24px rgba(59,130,246,0.4)", border: "none", cursor: "pointer", zIndex: 1000 }}
           >
@@ -1264,6 +1100,9 @@ function OrderPageContent() {
           setSelectedStation={setSelectedStation}
           pickupStations={pickupStations}
           errors={errors}
+          deliveryMethod={deliveryMethod}
+          address={address}
+          setAddress={setAddress}
         />
 
         {/* Delivery Options */}
@@ -1272,17 +1111,6 @@ function OrderPageContent() {
           deliveryMethod={deliveryMethod}
           setDeliveryMethod={setDeliveryMethod}
           setDeliveryCost={setDeliveryCost}
-        />
-
-        {/* Payment Methods */}
-        <PaymentMethods
-          paymentMethods={businessSettings?.paymentMethods || []}
-          paymentMethod={paymentMethod}
-          setPaymentMethod={setPaymentMethod}
-          paymentDetails={paymentDetails}
-          setPaymentDetails={setPaymentDetails}
-          paymentNotes={paymentNotes}
-          setPaymentNotes={setPaymentNotes}
         />
 
         {/* Order Notes */}
