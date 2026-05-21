@@ -69,7 +69,7 @@ function OrderPageContent() {
     contactPhone?: string;
     operatingHours?: string;
     description?: string;
-  }>>([]);
+  }>>([]);  
   const [selectedCounty, setSelectedCounty] = useState("");
   const [selectedTown, setSelectedTown] = useState("");
   const [selectedStation, setSelectedStation] = useState("");
@@ -77,7 +77,6 @@ function OrderPageContent() {
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState(phoneParam);
-  const [address, setAddress] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("");
@@ -706,13 +705,8 @@ function OrderPageContent() {
     if (!customerName.trim()) newErrors.name = true;
     if (!customerPhone.trim()) newErrors.phone = true;
     
-    // Check if selected delivery method is pickup (by name, not ID)
-    const selectedDeliveryMethod = businessSettings?.shippingMethods?.find(m => m.id === deliveryMethod);
-    const isPickupMethod = selectedDeliveryMethod?.name.toLowerCase().includes('pickup') || 
-                          deliveryMethod.toLowerCase().includes('pickup');
-    
-    // Only require pickup station if delivery method is pickup and stations are configured
-    if (isPickupMethod && pickupStations.length > 0 && !selectedStation) {
+    // Require delivery location selection if pickup stations are configured
+    if (pickupStations.length > 0 && !selectedStation) {
       newErrors.address = true;
     }
     
@@ -736,7 +730,7 @@ function OrderPageContent() {
     const station = pickupStations.find(s => s.id === selectedStation);
     const deliveryAddress = station 
       ? `${station.stationName}, ${station.address}, ${station.town}, ${station.county}`
-      : address.trim();
+      : '';
 
     const checkoutData = {
       productId: product!.id,
@@ -1022,12 +1016,16 @@ function OrderPageContent() {
             className="floating-cart-btn"
             onClick={() => {
               // Save cart data to localStorage for checkout page
+              const station = pickupStations.find(s => s.id === selectedStation);
+              const deliveryAddr = station 
+                ? `${station.stationName}, ${station.address}, ${station.town}, ${station.county}`
+                : '';
               const checkoutData = {
                 cartItems: cart,
                 customerName: customerName.trim(),
                 customerPhone: customerPhone.trim(),
                 customerEmail: customerEmail.trim(),
-                address: address.trim(),
+                address: deliveryAddr,
                 deliveryMethod,
                 deliveryCost,
                 orderNotes: orderNotes.trim(),
@@ -1133,13 +1131,6 @@ function OrderPageContent() {
           setSelectedStation={setSelectedStation}
           pickupStations={pickupStations}
           errors={errors}
-          deliveryMethod={deliveryMethod}
-          isPickupMethod={(() => {
-            const selectedDeliveryMethod = businessSettings?.shippingMethods?.find(m => m.id === deliveryMethod);
-            return selectedDeliveryMethod?.name.toLowerCase().includes('pickup') || deliveryMethod.toLowerCase().includes('pickup');
-          })()}
-          address={address}
-          setAddress={setAddress}
         />
 
         {/* Delivery Options */}

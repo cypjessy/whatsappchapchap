@@ -30,10 +30,6 @@ interface CustomerDetailsProps {
   selectedStation: string;
   setSelectedStation: (value: string) => void;
   errors: Record<string, boolean>;
-  deliveryMethod: string;
-  isPickupMethod: boolean;
-  address: string;
-  setAddress: (value: string) => void;
 }
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -244,10 +240,6 @@ export default function CustomerDetails({
   selectedStation,
   setSelectedStation,
   errors,
-  deliveryMethod,
-  isPickupMethod,
-  address,
-  setAddress,
 }: CustomerDetailsProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -309,45 +301,11 @@ export default function CustomerDetails({
         required
       />
 
-      {/* Delivery Address - Show when NOT pickup */}
-      {!isPickupMethod && (
-        <div className="mb-4 md:mb-5">
-          <label className="block text-xs md:text-sm font-bold text-[#1e293b] mb-2.5 uppercase tracking-wider">
-            Delivery Address <span className="text-[#ef4444]">*</span>
-          </label>
-          <textarea
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Enter your full delivery address (building, street, area, landmarks...)"
-            rows={3}
-            className={`
-              w-full px-4 py-3 rounded-xl text-sm md:text-base resize-none
-              border-2 outline-none bg-white transition-all duration-200
-              ${errors.address
-                ? "border-[#ef4444] focus:border-[#ef4444] bg-[#fef2f2]"
-                : "border-[#e2e8f0] hover:border-[#cbd5e1] focus:border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
-              }
-            `}
-          />
-          {errors.address && !selectedCounty && !selectedTown && !selectedStation && !address.trim() && (
-            <p className="text-xs md:text-sm text-[#ef4444] mt-1.5 flex items-center gap-1.5 animate-shake">
-              <i className="fas fa-exclamation-circle" />
-              Please enter your delivery address
-            </p>
-          )}
-          <p className="text-[11px] md:text-xs text-[#64748b] mt-1.5 flex items-center gap-1">
-            <i className="fas fa-info-circle text-[10px] text-[#94a3b8]" />
-            Include building name, floor, nearby landmarks for easier delivery
-          </p>
-        </div>
-      )}
-
-      {/* Pickup Location - Show ONLY for pickup methods */}
-      {isPickupMethod && (
-        <div className="mb-4 md:mb-5">
-          <label className="block text-xs md:text-sm font-bold text-[#1e293b] mb-2.5 uppercase tracking-wider">
-            Select Pickup Location <span className="text-[#ef4444]">*</span>
-          </label>
+      {/* Pickup Location - County / Town / Station dropdowns */}
+      <div className="mb-4 md:mb-5">
+        <label className="block text-xs md:text-sm font-bold text-[#1e293b] mb-2.5 uppercase tracking-wider">
+          Delivery Location <span className="text-[#ef4444]">*</span>
+        </label>
 
         <SelectDropdown
           value={selectedCounty}
@@ -399,8 +357,7 @@ export default function CustomerDetails({
         )}
 
         {selectedStationData && <StationCard station={selectedStationData} />}
-        </div>
-      )}
+      </div>
 
       {/* Email */}
       <FloatingInput
