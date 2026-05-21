@@ -334,10 +334,11 @@ function OrderPageContent() {
         })) as Array<{ id: string; name: string; price: number; estimatedDays?: string }>;
         
         // Fetch pickup stations - tenant-filtered query
+        // Note: No isActive filter. Existing stations may not have the field,
+        // and we match the behavior of getPickupStations() in db.ts.
         const pickupQuery = query(
           collection(db, "pickupStations"),
-          where("tenantId", "==", tenantId),
-          where("isActive", "==", true)
+          where("tenantId", "==", tenantId)
         );
         const pickupSnap = await getDocs(pickupQuery);
         const pickupStationsData = pickupSnap.docs.map(doc => ({
@@ -355,6 +356,21 @@ function OrderPageContent() {
           }>;
         
         setPickupStations(pickupStationsData);
+        
+        // 🚀 Auto-add "Store Pickup" shipping method if pickup stations exist
+        // but no shipping method has "pickup" in its name or ID.
+        // This ensures the pickup station dropdowns always appear when stations are configured.
+        const hasPickupMethod = shippingMethods.some(m =>
+          m.name.toLowerCase().includes('pickup') || m.id.toLowerCase().includes('pickup')
+        );
+        if (pickupStationsData.length > 0 && !hasPickupMethod) {
+          shippingMethods.push({
+            id: 'store-pickup',
+            name: 'Store Pickup',
+            price: 0,
+            estimatedDays: 'Same day',
+          });
+        }
         
         // Build payment methods array from business profile with new M-Pesa structure
         // Each payment subtype becomes its own card for better UX
