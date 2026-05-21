@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch tenantId from user's Firestore record
     const userDoc = await adminDb.collection("users").doc(uid).get();
-    const tenantId = userDoc.data()?.tenantId;
+    const tenantId = userDoc.data()?.tenantId || `tenant_${uid}`;
 
     if (!tenantId) {
       return NextResponse.json({ error: "Tenant not found for user" }, { status: 403 });
@@ -44,11 +44,16 @@ export async function GET(req: NextRequest) {
 
     const data = doc.data()!;
     
-    // Only return public key - NEVER expose secretKey or webhookSecret
+    // Return settings structure (no secrets)
     return NextResponse.json({
       configured: true,
-      publicKey: data.publicKey,
-      isLive: data.isLive,
+      mode: data.mode || "test",
+      testPublicKey: data.testPublicKey,
+      livePublicKey: data.livePublicKey,
+      currency: data.currency,
+      channels: data.channels,
+      metadata: data.metadata,
+      webhookUrl: data.webhookUrl,
     });
   } catch (error) {
     console.error("Error fetching Paystack settings:", error);
@@ -79,48 +84,90 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch tenantId from user's Firestore record
-    const userDoc = await adminDb.collection("users").doc(uid).get();
-    const tenantId = userDoc.data()?.tenantId;
+    // Derive tenantId from user's UID (format: tenant_${uid})
+    const tenantId = `tenant_${uid}`;
 
-    if (!tenantId) {
+    // Verify tenant exists
+    const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+    if (!tenantDoc.exists) {
       return NextResponse.json({ error: "Tenant not found for user" }, { status: 403 });
     }
 
-    const { publicKey, secretKey, webhookSecret, isLive } = await req.json();
+    const { testPublicKey, testSecretKey, livePublicKey, liveSecretKey, webhookSecret, mode, currency, channels, metadata } = await req.json();
 
-    // Validation
-    if (!publicKey || !secretKey || !webhookSecret) {
+    // Validation - at least current mode keys are required
+    const currentModeKeys = mode === "test" 
+      ? { publicKey: testPublicKey, secretKey: testSecretKey }
+      : { publicKey: livePublicKey, secretKey: liveSecretKey };
+
+    if (!currentModeKeys.publicKey || !currentModeKeys.secretKey || !webhookSecret) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "API keys and webhook secret are required" },
         { status: 400 }
       );
     }
 
-    // Validate isLive is a boolean
-    if (typeof isLive !== "boolean") {
+    // Validate mode is valid
+    if (mode !== "test" && mode !== "live") {
       return NextResponse.json(
-        { error: "isLive must be a boolean (true for live, false for test)" },
+        { error: "Mode must be 'test' or 'live'" },
         { status: 400 }
       );
     }
 
-    // Validate public key format
-    const expectedPrefix = isLive ? "pk_live_" : "pk_test_";
-    if (!publicKey.startsWith(expectedPrefix)) {
+    // Validate current mode public key format
+    const expectedPrefix = mode === "live" ? "pk_live_" : "pk_test_";
+    if (!currentModeKeys.publicKey.startsWith(expectedPrefix)) {
       return NextResponse.json(
         { error: `Invalid public key format. Must start with ${expectedPrefix}` },
         { status: 400 }
       );
     }
 
-    // Validate secret key format
-    const secretPrefix = isLive ? "sk_live_" : "sk_test_";
-    if (!secretKey.startsWith(secretPrefix)) {
+    // Validate current mode secret key format
+    const secretPrefix = mode === "live" ? "sk_live_" : "sk_test_";
+    if (!currentModeKeys.secretKey.startsWith(secretPrefix)) {
       return NextResponse.json(
         { error: `Invalid secret key format. Must start with ${secretPrefix}` },
         { status: 400 }
       );
+    }
+
+    // Validate other mode keys if provided
+    if (mode === "test" && livePublicKey && livePublicKey.length > 0) {
+      if (!livePublicKey.startsWith("pk_live_")) {
+        return NextResponse.json(
+          { error: "Invalid live public key format. Must start with pk_live_" },
+          { status: 400 }
+        );
+      }
+    }
+    
+    if (mode === "test" && liveSecretKey && liveSecretKey.length > 0) {
+      if (!liveSecretKey.startsWith("sk_live_")) {
+        return NextResponse.json(
+          { error: "Invalid live secret key format. Must start with sk_live_" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (mode === "live" && testPublicKey && testPublicKey.length > 0) {
+      if (!testPublicKey.startsWith("pk_test_")) {
+        return NextResponse.json(
+          { error: "Invalid test public key format. Must start with pk_test_" },
+          { status: 400 }
+        );
+      }
+    }
+    
+    if (mode === "live" && testSecretKey && testSecretKey.length > 0) {
+      if (!testSecretKey.startsWith("sk_test_")) {
+        return NextResponse.json(
+          { error: "Invalid test secret key format. Must start with sk_test_" },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if document already exists to preserve createdAt
@@ -132,12 +179,17 @@ export async function POST(req: NextRequest) {
 
     const existing = await ref.get();
 
-    // Save to Firestore - only set createdAt on first creation
+    // Save to Firestore with new data structure
     await ref.set({
-      publicKey,
-      secretKey,   // stored server-side, never returned to client
+      testPublicKey,
+      testSecretKey,
+      livePublicKey,
+      liveSecretKey,
       webhookSecret,
-      isLive,
+      mode,
+      currency,
+      channels,
+      metadata,
       updatedAt: FieldValue.serverTimestamp(),
       // Only set createdAt if document doesn't exist yet
       ...(!existing.exists && { createdAt: FieldValue.serverTimestamp() }),
