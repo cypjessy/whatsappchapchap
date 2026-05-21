@@ -62,17 +62,19 @@ export async function GET(req: NextRequest) {
 
     const data = doc.data()!;
     
-    // Return settings structure (include webhook secret for prefilling)
+    // Return settings structure (include secret keys for prefilling - authenticated users only)
     return NextResponse.json({
       configured: true,
       mode: data.mode || "test",
       testPublicKey: data.testPublicKey || "",
+      testSecretKey: data.testSecretKey || "",  // Return for prefilling
       livePublicKey: data.livePublicKey || "",
+      liveSecretKey: data.liveSecretKey || "",  // Return for prefilling
       currency: data.currency || "NGN",
       channels: data.channels || DEFAULT_SETTINGS.channels,
       metadata: data.metadata || DEFAULT_SETTINGS.metadata,
       webhookUrl: data.webhookUrl || "",
-      webhookSecret: data.webhookSecret || "",  // Return for prefilling (authenticated users only)
+      webhookSecret: data.webhookSecret || "",  // Return for prefilling
     });
   } catch (error) {
     console.error("Error fetching Paystack settings:", error);
