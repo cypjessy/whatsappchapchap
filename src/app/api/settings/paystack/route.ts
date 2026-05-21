@@ -95,14 +95,14 @@ export async function POST(req: NextRequest) {
 
     const { testPublicKey, testSecretKey, livePublicKey, liveSecretKey, webhookSecret, mode, currency, channels, metadata } = await req.json();
 
-    // Validation - at least current mode keys are required
+    // Validation - at least current mode keys are required, webhook secret is optional
     const currentModeKeys = mode === "test" 
       ? { publicKey: testPublicKey, secretKey: testSecretKey }
       : { publicKey: livePublicKey, secretKey: liveSecretKey };
 
-    if (!currentModeKeys.publicKey || !currentModeKeys.secretKey || !webhookSecret) {
+    if (!currentModeKeys.publicKey || !currentModeKeys.secretKey) {
       return NextResponse.json(
-        { error: "API keys and webhook secret are required" },
+        { error: "API keys are required for the selected mode" },
         { status: 400 }
       );
     }
