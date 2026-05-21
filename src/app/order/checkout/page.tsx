@@ -205,12 +205,36 @@ function CheckoutPage() {
     setPaystackLoading(true);
     
     try {
-      // ✅ Generate reference client-side for popup mode (no server initialize needed)
+      // ✅ Step 1: Fetch tenant's Paystack public key from server (multi-tenant safe)
+      const keyRes = await fetch('/api/payments/public-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: checkoutData!.tenantId }),
+      });
+
+      if (!keyRes.ok) {
+        const keyErr = await keyRes.json();
+        throw new Error(keyErr.error || 'Paystack not configured for this store');
+      }
+
+      const { publicKey } = await keyRes.json();
+
+      // ✅ Generate reference client-side for popup mode
       const reference = `order_${orderId}_${Date.now()}`;
 
-      // Open Paystack popup directly
+      // ✅ Step 2: Dynamically load Paystack Inline JS (always load fresh to avoid stale state)
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load Paystack payment widget'));
+        document.head.appendChild(script);
+      });
+
+      // ✅ Step 3: Open Paystack popup with tenant's public key
       const handler = (window as any).PaystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+        key: publicKey,
         email: checkoutData!.customerEmail || checkoutData!.customerPhone + '@example.com',
         amount: Math.round(amount * 100), // Convert KES to cents for Paystack
         currency: 'KES',
