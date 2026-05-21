@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
@@ -43,7 +43,22 @@ interface CheckoutData {
   paymentMethods?: Array<{ id: string; name: string; details: string; icon: string; color: string }>;
 }
 
-export default function CheckoutPage() {
+export default function CheckoutPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-center">
+          <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
+          <p className="text-[#64748b]">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutPage />
+    </Suspense>
+  );
+}
+
+function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   

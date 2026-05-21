@@ -1,10 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CURRENCY_SYMBOL } from "@/lib/currency";
 
-export default function OrderSuccessPage() {
+export default function OrderSuccessWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-center">
+          <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
+          <p className="text-[#64748b]">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OrderSuccessPage />
+    </Suspense>
+  );
+}
+
+function OrderSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
