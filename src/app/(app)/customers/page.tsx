@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { useModalBackHandler } from "@/hooks/useModalBackHandler";
@@ -19,6 +19,8 @@ import {
   BroadcastModal,
   DeleteConfirmModal,
 } from "./components";
+import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
+import { normalizePhone, isValidWhatsAppPhone } from "@/utils/phoneUtils";
 
 export default function CustomersPage() {
   const { user } = useAuth();
@@ -45,7 +47,12 @@ export default function CustomersPage() {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreCustomers, setHasMoreCustomers] = useState(false);
+  const customersCursorRef = useRef<any>(null);
   const [activeSegment, setActiveSegment] = useState("all");
+
+  const CUSTOMERS_PAGE_SIZE = 20;
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -103,24 +110,44 @@ export default function CustomersPage() {
   useModalBackHandler(showBroadcastModal, () => setShowBroadcastModal(false));
   useModalBackHandler(showDeleteConfirm, () => setShowDeleteConfirm(false));
 
-  useEffect(() => {
-    if (!user) return;
-    loadCustomers();
-  }, [user]);
-
-  const loadCustomers = async () => {
+  // Load customers with pagination
+  const loadCustomers = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    customersCursorRef.current = null;
     try {
-      const data = await customerService.getClients(user);
-      setCustomers(data);
+      const result = await customerService.getClientsPaginated(user, CUSTOMERS_PAGE_SIZE);
+      setCustomers(result.clients);
+      customersCursorRef.current = result.lastVisible;
+      setHasMoreCustomers(result.hasMore);
     } catch (error) {
       console.error("Error loading customers:", error);
       setCustomers([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  const loadMoreCustomers = useCallback(async () => {
+    if (!user || !customersCursorRef.current || loadingMore || !hasMoreCustomers) return;
+    setLoadingMore(true);
+    try {
+      const result = await customerService.getClientsPaginated(user, CUSTOMERS_PAGE_SIZE, customersCursorRef.current);
+      setCustomers(prev => [...prev, ...result.clients]);
+      customersCursorRef.current = result.lastVisible;
+      setHasMoreCustomers(result.hasMore);
+    } catch (error) {
+      console.error("Error loading more customers:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, loadingMore, hasMoreCustomers]);
+
+  useEffect(() => {
+    if (user) {
+      loadCustomers();
+    }
+  }, [user, loadCustomers]);
 
   const handleNewCustomerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -167,7 +194,13 @@ export default function CustomersPage() {
         ? `${newCustomer.address}${newCustomer.city ? ', ' + newCustomer.city : ''}${newCustomer.state ? ', ' + newCustomer.state : ''}`
         : "";
       const fullName = `${newCustomer.firstName.trim()} ${newCustomer.lastName.trim()}`.trim();
-      const fullPhone = newCustomer.countryCode + newCustomer.phone.replace(/[^0-9]/g, "");
+      // Normalize phone to handle Kenyan formats: 07xx, 01xx, +254, 254
+      const rawNormalized = normalizePhone(newCustomer.phone);
+      const countryCodeDigits = newCustomer.countryCode.replace(/[^0-9]/g, "");
+      // Only prepend country code if normalizePhone didn't already include it
+      const fullPhone = rawNormalized.startsWith(countryCodeDigits)
+        ? rawNormalized
+        : countryCodeDigits + rawNormalized;
       
       await customerService.createClient(user, {
         name: fullName,
@@ -183,6 +216,38 @@ export default function CustomersPage() {
         rating: 0,
         services: [],
       });
+
+      // Send WhatsApp welcome message to new customer
+      try {
+        const normalizedPhone = normalizePhone(fullPhone);
+        if (isValidWhatsAppPhone(normalizedPhone)) {
+          const welcomeMessage = `━━━━━━━━━━━━━━━━━━━━
+👋 *WELCOME!* 🇰🇪
+━━━━━━━━━━━━━━━━━━━━
+
+Hello *${fullName}*! \
+
+Thank you for registering with us! 🎉
+You're now part of our community.
+
+ *WHAT'S NEXT?*
+📦 Browse our products and services
+🛒 Place orders directly via WhatsApp
+💬 Get real-time order updates
+📞 Reach us anytime for support
+
+━━━━━━━━━━━━━━━━━━━━
+✨ *We're excited to serve you!* ✨
+━━━━━━━━━━━━━━━━━━━━`;
+          
+          await sendEvolutionWhatsAppMessage(normalizedPhone, welcomeMessage, user.uid);
+          console.log("✅ Welcome WhatsApp sent to:", normalizedPhone);
+        }
+      } catch (whatsappError) {
+        console.error("Failed to send welcome WhatsApp:", whatsappError);
+        // Don't block the flow - customer was still saved
+      }
+
       await notificationSuccess();
       await showToastNative({ text: 'Customer added successfully', duration: 'short' });
       loadCustomers();
@@ -246,8 +311,8 @@ export default function CustomersPage() {
     if (!user) return;
     setLoadingOrders(true);
     try {
-      const orders = await orderService.getOrders(user);
-      const customerOrders = orders.filter(o => o.customerId === customerId);
+      const result = await orderService.getOrdersPaginated(user, 100);
+      const customerOrders = result.orders.filter(o => o.customerId === customerId);
       setCustomerOrders(customerOrders);
     } catch (error) {
       console.error("Error loading customer orders:", error);
@@ -294,15 +359,25 @@ export default function CustomersPage() {
       return;
     }
     setSendingBroadcast(true);
+    let sentCount = 0;
     try {
       for (const customer of customers) {
         if (customer.phone) {
-          sendWhatsAppMessage(customer.phone, broadcastMessage);
-          await new Promise(resolve => setTimeout(resolve, 500));
+          try {
+            const normalizedPhone = normalizePhone(customer.phone);
+            if (isValidWhatsAppPhone(normalizedPhone) && user) {
+              await sendEvolutionWhatsAppMessage(normalizedPhone, broadcastMessage, user.uid);
+              sentCount++;
+            }
+          } catch {
+            console.error("Failed to send broadcast to:", customer.phone);
+          }
+          // Brief delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
       await notificationSuccess();
-      await showToastNative({ text: `Broadcast sent to ${customers.length} customers`, duration: 'short' });
+      await showToastNative({ text: `Broadcast sent to ${sentCount}/${customers.length} customers`, duration: 'short' });
       setShowBroadcastModal(false);
       setBroadcastMessage("");
     } catch (error) {
@@ -322,7 +397,6 @@ export default function CustomersPage() {
     try {
       await customerService.updateClient(user, selectedCustomer.id, { notes: customerNotes });
       await showToastNative({ text: 'Notes updated', duration: 'short' });
-      loadCustomers();
     } catch (error) {
       console.error("Error updating notes:", error);
       await notificationError();
@@ -388,9 +462,9 @@ export default function CustomersPage() {
       await Promise.all(
         bulkSelected.map(id => customerService.updateClient(user, id, { status: newStatus }))
       );
+      loadCustomers();
       await notificationSuccess();
       await showToastNative({ text: `Updated ${bulkSelected.length} customers`, duration: 'short' });
-      loadCustomers();
       setBulkSelected([]);
       setBulkMode(false);
     } catch (error) {
@@ -410,8 +484,8 @@ export default function CustomersPage() {
       await Promise.all(
         bulkSelected.map(id => customerService.deleteClient(user, id))
       );
-      await showToastNative({ text: `Deleted ${bulkSelected.length} customers`, duration: 'short' });
       loadCustomers();
+      await showToastNative({ text: `Deleted ${bulkSelected.length} customers`, duration: 'short' });
       setBulkSelected([]);
       setBulkMode(false);
     } catch (error) {
@@ -443,9 +517,9 @@ export default function CustomersPage() {
         rating: customer.rating,
         services: customer.services,
       });
+      loadCustomers();
       await notificationSuccess();
       await showToastNative({ text: 'Customer duplicated', duration: 'short' });
-      loadCustomers();
     } catch (error) {
       console.error("Error duplicating customer:", error);
       await notificationError();
@@ -504,8 +578,8 @@ export default function CustomersPage() {
             <div class="stat-label">Visits</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value">${customer.visits || 0}</div>
-            <div class="stat-label">Visits</div>
+            <div class="stat-value">${customer.rating ? customer.rating.toFixed(1) : 'N/A'}</div>
+            <div class="stat-label">Rating</div>
           </div>
         </div>
 
@@ -738,6 +812,29 @@ export default function CustomersPage() {
             getInitials={getInitials}
             formatCurrency={formatCurrency}
           />
+
+          {/* Load More */}
+          {hasMoreCustomers && (
+            <div className="flex justify-center pt-4 pb-8">
+              <button
+                onClick={loadMoreCustomers}
+                disabled={loadingMore}
+                className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-chevron-down text-xs" />
+                    Load More Customers
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -750,7 +847,6 @@ export default function CustomersPage() {
             if (!user || !selectedCustomer) return;
             try {
               await customerService.updateClient(user, selectedCustomer.id, { notes });
-              loadCustomers();
             } catch (error) {
               console.error("Error updating notes:", error);
             }

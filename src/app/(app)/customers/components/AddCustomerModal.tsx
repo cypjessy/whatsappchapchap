@@ -725,7 +725,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
 
   return (
     <div
-      className="fixed inset-0 md3-dialog-backdrop z-[2500] flex items-start justify-center p-3 md:p-4 overflow-y-auto"
+      className="fixed inset-0 md3-dialog-backdrop z-[2500] flex items-center justify-center p-3 md:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div

@@ -276,6 +276,10 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBusinessType, setSelectedBusinessType] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreServices, setHasMoreServices] = useState(false);
+  const servicesCursorRef = useRef<any>(null);
+  const SERVICES_PAGE_SIZE = 20;
   const [priceRangeMin, setPriceRangeMin] = useState<number | "">("");
   const [priceRangeMax, setPriceRangeMax] = useState<number | "">("");
   const [sortBy, setSortBy] = useState("newest");
@@ -291,9 +295,12 @@ export default function ServicesPage() {
   const loadServices = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    servicesCursorRef.current = null;
     try {
-      const data = await serviceService.getServices(user);
-      setServices(data);
+      const result = await serviceService.getServicesPaginated(user, SERVICES_PAGE_SIZE);
+      setServices(result.services);
+      servicesCursorRef.current = result.lastVisible;
+      setHasMoreServices(result.hasMore);
     } catch (error) {
       console.error("Error loading services:", error);
       setServices([]);
@@ -301,6 +308,21 @@ export default function ServicesPage() {
       setLoading(false);
     }
   }, [user]);
+
+  const loadMoreServices = useCallback(async () => {
+    if (!user || !servicesCursorRef.current || loadingMore || !hasMoreServices) return;
+    setLoadingMore(true);
+    try {
+      const result = await serviceService.getServicesPaginated(user, SERVICES_PAGE_SIZE, servicesCursorRef.current);
+      setServices(prev => [...prev, ...result.services]);
+      servicesCursorRef.current = result.lastVisible;
+      setHasMoreServices(result.hasMore);
+    } catch (error) {
+      console.error("Error loading more services:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, loadingMore, hasMoreServices]);
 
   useEffect(() => {
     if (user) loadServices();
@@ -701,43 +723,92 @@ export default function ServicesPage() {
 
         {/* Services View */}
         {filteredServices.length > 0 ? (
-          viewLayout === "grid" ? (
-            <ServiceGridView
-              services={filteredServices}
-              bulkMode={bulkMode}
-              bulkSelected={bulkSelected}
-              toggleBulkSelect={toggleBulkSelect}
-              onSelectService={setSelectedService}
-              onShareService={handleShareService}
-              onToggleStatus={handleToggleStatus}
-              onDuplicateService={handleDuplicateService}
-              onDeleteService={(id) => setShowDeleteConfirm(id)}
-            />
-          ) : (
-            <ServiceListView
-              services={filteredServices}
-              bulkMode={bulkMode}
-              bulkSelected={bulkSelected}
-              toggleBulkSelect={toggleBulkSelect}
-              onSelectService={setSelectedService}
-              onShareService={handleShareService}
-              onToggleStatus={handleToggleStatus}
-              onDuplicateService={handleDuplicateService}
-              onDeleteService={(id) => setShowDeleteConfirm(id)}
-            />
-          )
+          <>
+            {viewLayout === "grid" ? (
+              <ServiceGridView
+                services={filteredServices}
+                bulkMode={bulkMode}
+                bulkSelected={bulkSelected}
+                toggleBulkSelect={toggleBulkSelect}
+                onSelectService={setSelectedService}
+                onShareService={handleShareService}
+                onToggleStatus={handleToggleStatus}
+                onDuplicateService={handleDuplicateService}
+                onDeleteService={(id) => setShowDeleteConfirm(id)}
+              />
+            ) : (
+              <ServiceListView
+                services={filteredServices}
+                bulkMode={bulkMode}
+                bulkSelected={bulkSelected}
+                toggleBulkSelect={toggleBulkSelect}
+                onSelectService={setSelectedService}
+                onShareService={handleShareService}
+                onToggleStatus={handleToggleStatus}
+                onDuplicateService={handleDuplicateService}
+                onDeleteService={(id) => setShowDeleteConfirm(id)}
+              />
+            )}
+
+            {/* Load More */}
+            {hasMoreServices && (
+              <div className="flex justify-center pt-4 pb-8">
+                <button
+                  onClick={loadMoreServices}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-chevron-down text-xs" />
+                      Load More Services
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
-          <EmptyState
-            hasFilters={hasActiveFilters || filterStatus !== "all"}
-            onClearFilters={() => {
-              setSearchQuery("");
-              setSelectedBusinessType("");
-              setPriceRangeMin("");
-              setPriceRangeMax("");
-              setFilterStatus("all");
-            }}
-            onAddService={() => addServiceRef.current?.open()}
-          />
+          <>
+            <EmptyState
+              hasFilters={hasActiveFilters || filterStatus !== "all"}
+              onClearFilters={() => {
+                setSearchQuery("");
+                setSelectedBusinessType("");
+                setPriceRangeMin("");
+                setPriceRangeMax("");
+                setFilterStatus("all");
+              }}
+              onAddService={() => addServiceRef.current?.open()}
+            />
+            {/* Even with empty results, show Load More if there's more data to fetch */}
+            {hasMoreServices && filteredServices.length === 0 && (
+              <div className="flex justify-center pt-4 pb-8">
+                <button
+                  onClick={loadMoreServices}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-chevron-down text-xs" />
+                      Load More
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Delete Modal */}

@@ -11,7 +11,11 @@ import {
   serverTimestamp,
   deleteDoc,
   addDoc,
-  updateDoc
+  updateDoc,
+  onSnapshot,
+  limit,
+  startAfter,
+  DocumentSnapshot
 } from "firebase/firestore";
 import { User } from "firebase/auth";
 import { generateOrderNumber } from "../utils/orderNumber";
@@ -691,6 +695,46 @@ export const bookingService = {
       .filter((booking): booking is Booking => booking !== null && booking.service !== undefined) as Booking[];
   },
 
+  async getBookingsPaginated(
+    user: User,
+    pageSize: number,
+    cursor?: DocumentSnapshot,
+    statusFilter?: string
+  ): Promise<{ bookings: Booking[]; lastVisible: DocumentSnapshot | null; hasMore: boolean }> {
+    const tenantId = getTenantId(user);
+    const constraints: any[] = [where("tenantId", "==", tenantId)];
+    
+    if (statusFilter && statusFilter !== "all") {
+      constraints.push(where("status", "==", statusFilter));
+    }
+    
+    constraints.push(orderBy("createdAt", "desc"));
+    constraints.push(limit(pageSize + 1));
+    
+    if (cursor) {
+      constraints.push(startAfter(cursor));
+    }
+    
+    const q = query(collection(db, "bookings"), ...constraints);
+    const snap = await getDocs(q);
+    
+    const hasMore = snap.docs.length > pageSize;
+    const docs = hasMore ? snap.docs.slice(0, pageSize) : snap.docs;
+    const lastVisible = docs.length > 0 ? docs[docs.length - 1] : null;
+    
+    return {
+      bookings: docs
+        .map(doc => {
+          const data = doc.data();
+          if (!data) return null;
+          return { id: doc.id, ...data } as Booking;
+        })
+        .filter((booking): booking is Booking => booking !== null && booking.service !== undefined) as Booking[],
+      lastVisible,
+      hasMore,
+    };
+  },
+
   async getBookingById(user: User, bookingId: string): Promise<Booking | null> {
     const tenantId = getTenantId(user);
     const snap = await getDoc(doc(db, "bookings", bookingId));
@@ -1280,6 +1324,36 @@ export const serviceService = {
     return services;
   },
 
+  async getServicesPaginated(
+    user: User,
+    pageSize: number,
+    cursor?: DocumentSnapshot
+  ): Promise<{ services: Service[]; lastVisible: DocumentSnapshot | null; hasMore: boolean }> {
+    const tenantId = getTenantId(user);
+    const constraints: any[] = [
+      where("tenantId", "==", tenantId),
+      orderBy("createdAt", "desc"),
+      limit(pageSize + 1)
+    ];
+    
+    if (cursor) {
+      constraints.push(startAfter(cursor));
+    }
+    
+    const q = query(collection(db, "services"), ...constraints);
+    const snap = await getDocs(q);
+    
+    const hasMore = snap.docs.length > pageSize;
+    const docs = hasMore ? snap.docs.slice(0, pageSize) : snap.docs;
+    const lastVisible = docs.length > 0 ? docs[docs.length - 1] : null;
+    
+    return {
+      services: docs.map(doc => ({ id: doc.id, ...doc.data() })) as Service[],
+      lastVisible,
+      hasMore,
+    };
+  },
+
   async updateService(user: User, serviceId: string, data: Partial<Service>): Promise<void> {
     await setDoc(doc(db, "services", serviceId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
   },
@@ -1324,6 +1398,40 @@ export const clientService = {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Client[];
   },
 
+  async getClientsPaginated(
+    user: User,
+    pageSize: number,
+    cursor?: DocumentSnapshot,
+    statusFilter?: string
+  ): Promise<{ clients: Client[]; lastVisible: DocumentSnapshot | null; hasMore: boolean }> {
+    const tenantId = getTenantId(user);
+    const constraints: any[] = [where("tenantId", "==", tenantId)];
+    
+    if (statusFilter && statusFilter !== "all") {
+      constraints.push(where("status", "==", statusFilter));
+    }
+    
+    constraints.push(orderBy("createdAt", "desc"));
+    constraints.push(limit(pageSize + 1));
+    
+    if (cursor) {
+      constraints.push(startAfter(cursor));
+    }
+    
+    const q = query(collection(db, "clients"), ...constraints);
+    const snap = await getDocs(q);
+    
+    const hasMore = snap.docs.length > pageSize;
+    const docs = hasMore ? snap.docs.slice(0, pageSize) : snap.docs;
+    const lastVisible = docs.length > 0 ? docs[docs.length - 1] : null;
+    
+    return {
+      clients: docs.map(doc => ({ id: doc.id, ...doc.data() })) as Client[],
+      lastVisible,
+      hasMore,
+    };
+  },
+
   async getClientById(user: User, clientId: string): Promise<Client | null> {
     const tenantId = getTenantId(user);
     const snap = await getDoc(doc(db, "clients", clientId));
@@ -1331,6 +1439,19 @@ export const clientService = {
     const data = { id: snap.id, ...snap.data() } as Client;
     if (data.tenantId !== tenantId) return null;
     return data;
+  },
+
+  subscribeToClients(user: User, callback: (clients: Client[]) => void): () => void {
+    const tenantId = getTenantId(user);
+    const q = query(collection(db, "clients"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const clients = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Client[];
+      callback(clients);
+    }, (error) => {
+      console.error("Error subscribing to clients:", error);
+      callback([]);
+    });
+    return unsubscribe;
   },
 
   async updateClient(user: User, clientId: string, data: Partial<Client>): Promise<void> {
@@ -1409,6 +1530,40 @@ export const orderService = {
     
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Order[];
+  },
+
+  async getOrdersPaginated(
+    user: User,
+    pageSize: number,
+    cursor?: DocumentSnapshot,
+    statusFilter?: string
+  ): Promise<{ orders: Order[]; lastVisible: DocumentSnapshot | null; hasMore: boolean }> {
+    const tenantId = getTenantId(user);
+    const constraints: any[] = [where("tenantId", "==", tenantId)];
+    
+    if (statusFilter && statusFilter !== "all") {
+      constraints.push(where("status", "==", statusFilter));
+    }
+    
+    constraints.push(orderBy("createdAt", "desc"));
+    constraints.push(limit(pageSize + 1));
+    
+    if (cursor) {
+      constraints.push(startAfter(cursor));
+    }
+    
+    const q = query(collection(db, "orders"), ...constraints);
+    const snap = await getDocs(q);
+    
+    const hasMore = snap.docs.length > pageSize;
+    const docs = hasMore ? snap.docs.slice(0, pageSize) : snap.docs;
+    const lastVisible = docs.length > 0 ? docs[docs.length - 1] : null;
+    
+    return {
+      orders: docs.map(doc => ({ id: doc.id, ...doc.data() })) as Order[],
+      lastVisible,
+      hasMore,
+    };
   },
 
   async getOrderById(user: User, orderId: string): Promise<Order | null> {
@@ -1570,6 +1725,40 @@ export const productService = {
     const q = query(collection(db, "products"), where("tenantId", "==", tenantId), orderBy("createdAt", "desc"));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
+  },
+
+  async getProductsPaginated(
+    user: User,
+    pageSize: number,
+    cursor?: DocumentSnapshot,
+    statusFilter?: string
+  ): Promise<{ products: Product[]; lastVisible: DocumentSnapshot | null; hasMore: boolean }> {
+    const tenantId = getTenantId(user);
+    const constraints: any[] = [where("tenantId", "==", tenantId)];
+    
+    if (statusFilter && statusFilter !== "all") {
+      constraints.push(where("status", "==", statusFilter));
+    }
+    
+    constraints.push(orderBy("createdAt", "desc"));
+    constraints.push(limit(pageSize + 1));
+    
+    if (cursor) {
+      constraints.push(startAfter(cursor));
+    }
+    
+    const q = query(collection(db, "products"), ...constraints);
+    const snap = await getDocs(q);
+    
+    const hasMore = snap.docs.length > pageSize;
+    const docs = hasMore ? snap.docs.slice(0, pageSize) : snap.docs;
+    const lastVisible = docs.length > 0 ? docs[docs.length - 1] : null;
+    
+    return {
+      products: docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[],
+      lastVisible,
+      hasMore,
+    };
   },
 
   async getProductById(user: User, productId: string): Promise<Product | null> {

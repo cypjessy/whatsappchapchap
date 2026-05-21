@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { DocumentSnapshot } from "firebase/firestore";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import { useStatusBar } from "@/hooks/useStatusBar";
@@ -210,6 +211,12 @@ export default function OrdersPage() {
     cancellations: 0,
   });
 
+  // Pagination refs
+  const ordersCursorRef = useRef<DocumentSnapshot | null>(null);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+  const [isLoadingMoreOrders, setIsLoadingMoreOrders] = useState(false);
+  const [totalOrdersFetched, setTotalOrdersFetched] = useState(0);
+
   // ─── UI State ─────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("orders");
@@ -249,19 +256,23 @@ export default function OrdersPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Fetch ALL orders so we can compute accurate counts after payment filtering
-      const data = await orderService.getOrders(user, "all");
+      // Fetch paginated orders
+      const PAGE_SIZE = 30;
+      const result = await orderService.getOrdersPaginated(user, PAGE_SIZE);
       
       // 🔒 Payment visibility filter:
       // Paystack orders: only show if paymentStatus === "paid" (confirmed by webhook)
       // Other orders (COD, M-Pesa, Bank with reference): show normally
-      const visibleOrders = data.filter(order => {
+      const visibleOrders = result.orders.filter(order => {
         if (order.paymentMethod === "paystack") {
           return order.paymentStatus === "paid";
         }
         return true;
       });
       setOrders(visibleOrders);
+      ordersCursorRef.current = result.lastVisible;
+      setHasMoreOrders(result.hasMore);
+      setTotalOrdersFetched(result.orders.length);
       
       // ✅ Recompute counts from the filtered (visible) orders for accurate tab badges
       const newCounts = {
@@ -280,6 +291,31 @@ export default function OrdersPage() {
       setLoading(false);
     }
   }, [user]);
+
+  const loadMoreOrders = useCallback(async () => {
+    if (!user || !ordersCursorRef.current || isLoadingMoreOrders || !hasMoreOrders) return;
+    setIsLoadingMoreOrders(true);
+    try {
+      const PAGE_SIZE = 30;
+      const result = await orderService.getOrdersPaginated(user, PAGE_SIZE, ordersCursorRef.current);
+      
+      const visibleOrders = result.orders.filter(order => {
+        if (order.paymentMethod === "paystack") {
+          return order.paymentStatus === "paid";
+        }
+        return true;
+      });
+      
+      setOrders(prev => [...prev, ...visibleOrders]);
+      ordersCursorRef.current = result.lastVisible;
+      setHasMoreOrders(result.hasMore);
+      setTotalOrdersFetched(prev => prev + result.orders.length);
+    } catch (error) {
+      console.error("Error loading more orders:", error);
+    } finally {
+      setIsLoadingMoreOrders(false);
+    }
+  }, [user, isLoadingMoreOrders, hasMoreOrders]);
 
   const loadCounts = useCallback(async () => {
     if (!user) return;
@@ -878,13 +914,10 @@ export default function OrdersPage() {
     async (formData: any) => {
       if (!user) return;
       try {
-        const orderNumber =
-          "ORD-" + Math.floor(Math.random() * 1000000).toString().padStart(6, "0");
         const normalizedPhone = normalizePhone(formData.customerPhone);
         const whatsappJid = createWhatsAppJid(normalizedPhone);
 
-        await orderService.createOrder(user, {
-          orderNumber,
+        const createdOrder = await orderService.createOrder(user, {
           customerId: "",
           customerName: formData.customerName,
           customerPhone: normalizedPhone,
@@ -898,9 +931,39 @@ export default function OrdersPage() {
           discount: formData.discount,
           total: formData.total,
           paymentMethod: formData.paymentMethod,
-          status: "pending",
+          status: formData.markAsPaid ? "confirmed" : "pending",
+          paymentStatus: formData.markAsPaid ? "paid" : "unpaid",
           notes: formData.notes,
         });
+
+        // Send WhatsApp confirmation to customer if requested
+        if (formData.sendWhatsApp && createdOrder.orderNumber) {
+          try {
+            const productName =
+              formData.selectedProducts?.[0]?.name || "Order";
+            // Manually created orders = payment already settled, send confirmed message
+            const message = getOrderStatusMessage(
+              "confirmed",
+              formData.customerName,
+              createdOrder.orderNumber,
+              productName,
+              formData.customerAddress
+            );
+
+            const phone = getWhatsAppPhone({
+              customerPhone: normalizedPhone,
+              whatsappJid: whatsappJid,
+            });
+
+            if (isValidWhatsAppPhone(phone)) {
+              await sendEvolutionWhatsAppMessage(phone, message, user.uid);
+              console.log("✅ Order confirmation WhatsApp sent to:", phone);
+            }
+          } catch (whatsappError) {
+            console.error("Failed to send order WhatsApp:", whatsappError);
+            // Don't block the flow - order was still created
+          }
+        }
 
         await notificationSuccess();
         await showToast({ text: 'Order created successfully', duration: 'short' });
@@ -1200,6 +1263,25 @@ export default function OrdersPage() {
                       productImages={productImagesMap}
                     />
                   ))}
+                  {/* Load More for mobile */}
+                  {hasMoreOrders && (
+                    <div className="py-4 text-center">
+                      <button
+                        onClick={loadMoreOrders}
+                        disabled={isLoadingMoreOrders}
+                        className="w-full px-4 py-2.5 border-2 border-outline-variant rounded-xl font-semibold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        {isLoadingMoreOrders ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Loading more...
+                          </span>
+                        ) : (
+                          <span>Load More Orders</span>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1244,21 +1326,25 @@ export default function OrdersPage() {
             {!loading && filteredOrders.length > 0 && (
               <div className="p-4 border-t border-outline-variant flex justify-between items-center text-sm text-on-surface-variant">
                 <div>
-                  Showing <span className="font-semibold text-on-surface">{filteredOrders.length}</span> orders
+                  Showing <span className="font-semibold text-on-surface">{filteredOrders.length}</span> orders (fetched {totalOrdersFetched})
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="px-3 py-2 border-2 border-outline-variant rounded-lg hover:border-[#25D366] transition-all disabled:opacity-40"
-                    disabled
+                    onClick={loadMoreOrders}
+                    disabled={!hasMoreOrders || isLoadingMoreOrders}
+                    className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-lg font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    <i className="fas fa-chevron-left" />
-                  </button>
-                  <button className="px-3 py-2 bg-[#25D366] text-white rounded-lg font-semibold">1</button>
-                  <button
-                    className="px-3 py-2 border-2 border-outline-variant rounded-lg hover:border-[#25D366] transition-all disabled:opacity-40"
-                    disabled
-                  >
-                    <i className="fas fa-chevron-right" />
+                    {isLoadingMoreOrders ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load More
+                        <i className="fas fa-chevron-down text-xs" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

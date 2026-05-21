@@ -196,3 +196,73 @@ export const logoutInstance = async (instanceName: string) => {
     throw err;
   }
 };
+
+export interface PairingCodeResult {
+  pairingCode: string;
+  count?: number;
+  phoneNumber?: string;
+}
+
+/**
+ * Gets a pairing code for WhatsApp connection
+ * Ideal for users with only one phone — they type this code in
+ * WhatsApp → Linked Devices → Link with phone number
+ * 
+ * @param instanceName - The Evolution instance name
+ * @param phoneNumber - Phone number in international format (e.g., "254712345678")
+ * @returns Pairing code and related data
+ */
+export const getPairingCode = async (instanceName: string, phoneNumber: string): Promise<PairingCodeResult | null> => {
+  try {
+    // For pairing code, we need the instance to be created without QR mode
+    // First try to create/ensure instance exists with qrcode: false
+    try {
+      await callEvolutionApi("instance/create", "POST", {
+        instanceName,
+        qrcode: false,
+        integration: "WHATSAPP-BAILEYS",
+      });
+    } catch (createErr: any) {
+      const msg = createErr?.message?.toString() || "";
+      if (!/already.*in.*use|already.*exists|duplicate/i.test(msg)) {
+        console.warn('[Evolution] createInstance for pairing error:', msg);
+        // Continue anyway - instance may already exist
+      }
+    }
+
+    // Call connectPairing endpoint with phone number
+    const result = await callEvolutionApi(`instance/connectPairing/${instanceName}`, "POST", {
+      number: phoneNumber,
+    });
+
+    console.log('[Evolution] Pairing code result:', JSON.stringify(result));
+
+    // Extract pairing code from response
+    const pairingCode = result?.pairingCode || result?.code || result?.pairing_code || null;
+    
+    if (pairingCode) {
+      return {
+        pairingCode,
+        count: result?.count,
+        phoneNumber,
+      };
+    }
+
+    return null;
+  } catch (err: any) {
+    console.error('[Evolution] getPairingCode error:', err);
+    
+    // Fallback: try connect endpoint which may return pairingCode for non-QR instances
+    try {
+      const fallbackResult = await callEvolutionApi(`instance/connect/${instanceName}`);
+      const pairingCode = fallbackResult?.pairingCode || fallbackResult?.code || null;
+      if (pairingCode) {
+        return { pairingCode, count: fallbackResult?.count, phoneNumber };
+      }
+    } catch {
+      // Fallback also failed
+    }
+    
+    return null;
+  }
+};

@@ -328,7 +328,7 @@ export default function RegisterPage() {
               <div className="text-center">
                 <h2 className="text-3xl font-bold">Connect your WhatsApp Business</h2>
                 <p className="text-on-surface-variant mt-3">
-                  Scan the QR code below to create your Evolution app instance and connect your WhatsApp number.
+                  Choose how to connect your WhatsApp number. Scan a QR code if you have a second device, or use a pairing code if you only have one phone.
                 </p>
               </div>
 

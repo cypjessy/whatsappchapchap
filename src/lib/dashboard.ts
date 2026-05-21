@@ -52,8 +52,9 @@ export const dashboardService = {
     const tenantId = getTenantId(user);
     
     const ordersRef = collection(db, "orders");
-    const customersRef = collection(db, "customers");
+    const customersRef = collection(db, "clients");
     
+    // ⚡ Use count queries instead of fetching full documents where possible
     const allOrdersQuery = query(ordersRef, where("tenantId", "==", tenantId));
     const allCustomersQuery = query(customersRef, where("tenantId", "==", tenantId));
     
@@ -121,7 +122,7 @@ export const dashboardService = {
     );
     
     const customersQ = query(
-      collection(db, "customers"),
+      collection(db, "clients"),
       where("tenantId", "==", tenantId),
       orderBy("createdAt", "desc"),
       limit(3)

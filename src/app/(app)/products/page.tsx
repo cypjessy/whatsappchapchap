@@ -261,12 +261,15 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productCategories, setProductCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalLoaded, setTotalLoaded] = useState(0);
 
   // Pagination
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const cursorRef = useRef<any>(null);
+  const allLoadedRef = useRef(false);
 
   // UI state
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -340,12 +343,16 @@ export default function ProductsPage() {
   const loadProducts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    cursorRef.current = null;
+    allLoadedRef.current = false;
     try {
-      const data = await productService.getProducts(user);
-      setProducts(data);
-      setDisplayedProducts(data.slice(0, ITEMS_PER_PAGE));
+      const result = await productService.getProductsPaginated(user, ITEMS_PER_PAGE);
+      setProducts(result.products);
+      setDisplayedProducts(result.products.slice(0, ITEMS_PER_PAGE));
+      cursorRef.current = result.lastVisible;
+      setTotalLoaded(result.products.length);
+      setHasMore(result.hasMore);
       setCurrentPage(1);
-      setHasMore(data.length > ITEMS_PER_PAGE);
     } catch (error) {
       console.error("Error loading products:", error);
       addToast("Failed to load products", "error");
@@ -355,6 +362,26 @@ export default function ProductsPage() {
       setLoading(false);
     }
   }, [user, addToast]);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (isLoadingMore || !hasMore || !user || !cursorRef.current) return;
+    setIsLoadingMore(true);
+    try {
+      const result = await productService.getProductsPaginated(user, ITEMS_PER_PAGE, cursorRef.current);
+      const newProducts = [...products, ...result.products];
+      setProducts(newProducts);
+      setDisplayedProducts(newProducts.slice(0, newProducts.length));
+      cursorRef.current = result.lastVisible;
+      setTotalLoaded(newProducts.length);
+      setHasMore(result.hasMore);
+      setCurrentPage((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error loading more products:", error);
+      addToast("Failed to load more products", "error");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [user, products, hasMore, isLoadingMore, addToast]);
 
   const loadCategories = useCallback(async () => {
     if (!user) return;
@@ -416,27 +443,14 @@ export default function ProductsPage() {
       });
   }, [products, activeCategory, searchTerm, stockFilter, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
-  // Update displayed products when filters change
+  // Update displayed products when filters change (client-side search within loaded data)
   useEffect(() => {
-    setDisplayedProducts(filteredProducts.slice(0, ITEMS_PER_PAGE));
+    const filtered = filteredProducts;
+    // Only show as many as we've loaded from server
+    const count = Math.min(filtered.length, totalLoaded || ITEMS_PER_PAGE);
+    setDisplayedProducts(filtered.slice(0, count || ITEMS_PER_PAGE));
     setCurrentPage(1);
-    setHasMore(filteredProducts.length > ITEMS_PER_PAGE);
-  }, [filteredProducts]);
-
-  // Load more
-  const loadMoreProducts = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
-    setIsLoadingMore(true);
-    const nextPage = currentPage + 1;
-    const endIndex = nextPage * ITEMS_PER_PAGE;
-
-    setTimeout(() => {
-      setDisplayedProducts(filteredProducts.slice(0, endIndex));
-      setCurrentPage(nextPage);
-      setHasMore(endIndex < filteredProducts.length);
-      setIsLoadingMore(false);
-    }, 100);
-  }, [currentPage, hasMore, isLoadingMore, filteredProducts]);
+  }, [filteredProducts, totalLoaded]);
 
   // Stats
   const stats = useMemo(() => {
@@ -781,7 +795,7 @@ export default function ProductsPage() {
         {!loading && filteredProducts.length > 0 && (
           <div className="flex items-center justify-between text-xs text-outline">
             <span>
-              Showing <span className="font-bold text-on-surface">{displayedProducts.length}</span> of <span className="font-bold text-on-surface">{filteredProducts.length}</span> products
+              Showing <span className="font-bold text-on-surface">{displayedProducts.length}</span> of <span className="font-bold text-on-surface">{products.length}</span> loaded{totalLoaded > 0 ? ` (${totalLoaded} total fetched)` : ''}
             </span>
             <button
               onClick={() => setShowShortcuts(true)}

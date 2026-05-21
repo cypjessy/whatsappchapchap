@@ -16,7 +16,7 @@ import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import BookingCancellationRequests from "./components/BookingCancellationRequests";
 import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
-import { collection, onSnapshot, query, where, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
 import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore } from "firebase/firestore";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
@@ -176,7 +176,6 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isListening, setIsListening] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -193,6 +192,10 @@ export default function BookingsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const [cancellationRequests, setCancellationRequests] = useState<any[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreBookings, setHasMoreBookings] = useState(false);
+  const bookingsCursorRef = useRef<any>(null);
+  const BOOKINGS_PAGE_SIZE = 20;
   const [cancellationFilter, setCancellationFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
   // Status bar: green when at top, white when scrolled
@@ -257,69 +260,48 @@ export default function BookingsPage() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const bookingsListenerRef = useRef<(() => void) | null>(null);
-
   useEffect(() => {
     if (user) {
       loadServices();
-      startBookingsListener();
+      loadBookings();
       loadCancellationRequests();
     }
-    return () => {
-      // Cleanup listener on unmount
-      if (bookingsListenerRef.current) {
-        bookingsListenerRef.current();
-        bookingsListenerRef.current = null;
-      }
-    };
   }, [user, filterStatus]);
 
-  // Real-time Firestore listener for bookings
-  const startBookingsListener = useCallback(() => {
+  // Load bookings with pagination
+  const loadBookings = useCallback(async () => {
     if (!user) return;
-    
-    const tenantId = getTenantId(user);
-    let q;
-    
-    if (filterStatus === "all") {
-      q = query(
-        collection(db, "bookings"),
-        where("tenantId", "==", tenantId),
-        orderBy("createdAt", "desc")
-      );
-    } else {
-      q = query(
-        collection(db, "bookings"),
-        where("tenantId", "==", tenantId),
-        where("status", "==", filterStatus),
-        orderBy("createdAt", "desc")
-      );
+    setLoading(true);
+    bookingsCursorRef.current = null;
+    try {
+      const result = await bookingService.getBookingsPaginated(user, BOOKINGS_PAGE_SIZE, undefined, filterStatus);
+      setBookings(result.bookings);
+      bookingsCursorRef.current = result.lastVisible;
+      setHasMoreBookings(result.hasMore);
+    } catch (error) {
+      console.error("Error loading bookings:", error);
+      setBookings([]);
+      addToast("Failed to load bookings", "error");
+    } finally {
+      setLoading(false);
     }
-
-    setIsListening(true);
-    bookingsListenerRef.current = onSnapshot(
-      q,
-      (snapshot) => {
-        const bookingsData = snapshot.docs
-          .map(doc => {
-            const data = doc.data();
-            if (!data) return null;
-            return { id: doc.id, ...data } as Booking;
-          })
-          .filter((booking): booking is Booking => booking !== null && booking.service !== undefined);
-        
-        setBookings(bookingsData);
-        setLoading(false);
-        setIsListening(false);
-      },
-      (error) => {
-        console.error("Error listening to bookings:", error);
-        setLoading(false);
-        setIsListening(false);
-        addToast("Failed to load bookings", "error");
-      }
-    );
   }, [user, filterStatus, addToast]);
+
+  const loadMoreBookings = useCallback(async () => {
+    if (!user || !bookingsCursorRef.current || loadingMore || !hasMoreBookings) return;
+    setLoadingMore(true);
+    try {
+      const result = await bookingService.getBookingsPaginated(user, BOOKINGS_PAGE_SIZE, bookingsCursorRef.current ?? undefined, filterStatus);
+      setBookings(prev => [...prev, ...result.bookings]);
+      bookingsCursorRef.current = result.lastVisible;
+      setHasMoreBookings(result.hasMore);
+    } catch (error) {
+      console.error("Error loading more bookings:", error);
+      addToast("Failed to load more bookings", "error");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, filterStatus, loadingMore, hasMoreBookings, addToast]);
 
   const loadServices = async () => {
     if (!user) return;
@@ -332,15 +314,13 @@ export default function BookingsPage() {
     }
   };
 
-  const loadBookings = async () => {
-    // Kept for manual reload if needed, but real-time listener handles updates automatically
-    startBookingsListener();
-  };
+  const reloadBookings = useCallback(async () => {
+    await loadBookings();
+  }, [loadBookings]);
 
-  const handleBookingCreated = async () => {
-    await notificationSuccess();
-    await showToastNative({ text: 'Booking created successfully!', duration: 'short' });
-    loadBookings();
+  const handleBookingCreated = async () => {      await notificationSuccess();
+      await showToastNative({ text: 'Booking created successfully!', duration: 'short' });
+      reloadBookings();
   };
 
   const handleUpdateStatus = async (bookingId: string, newStatus: Booking["status"]) => {
@@ -363,7 +343,7 @@ export default function BookingsPage() {
 
       await notificationSuccess();
       await showToastNative({ text: `Booking ${newStatus}`, duration: 'short' });
-      loadBookings();
+      reloadBookings();
       setSelectedBooking(null);
     } catch (error) {
       console.error("Error updating status:", error);
@@ -434,7 +414,7 @@ export default function BookingsPage() {
       }
 
       await showToastNative({ text: 'Payment confirmed!', duration: 'short' });
-      loadBookings();
+      reloadBookings();
       setPaymentModalOpen(false);
       setSelectedBooking(null);
     } catch (error) {
@@ -516,14 +496,14 @@ export default function BookingsPage() {
 
         await notificationSuccess();
         await showToastNative({ text: 'Reminder sent successfully!', duration: 'short' });
-        loadBookings();
+        reloadBookings();
       } catch (error) {
         console.error("Error sending reminder:", error);
         await notificationError();
         await showToastNative({ text: 'Failed to send reminder', position: 'top' });
       }
     },
-    [user, bookings, loadBookings, impactMedium, notificationSuccess, notificationError, showToastNative]
+    [user, bookings, reloadBookings, impactMedium, notificationSuccess, notificationError, showToastNative]
   );
 
   const handleDeleteBooking = async (bookingId: string) => {
@@ -534,7 +514,7 @@ export default function BookingsPage() {
     try {
       await bookingService.deleteBooking(user, bookingId);
       await showToastNative({ text: 'Booking deleted', duration: 'short' });
-      loadBookings();
+      reloadBookings();
       setShowDeleteConfirm(null);
       setBulkSelected((prev) => prev.filter((id) => id !== bookingId));
     } catch (error) {
@@ -628,7 +608,7 @@ export default function BookingsPage() {
         }
 
         await loadCancellationRequests();
-        await loadBookings();
+        await reloadBookings();
         await notificationSuccess();
         await showToastNative({ text: `Cancellation ${isApproving ? 'approved' : 'rejected'}`, duration: 'short' });
       } catch (error) {
@@ -637,7 +617,7 @@ export default function BookingsPage() {
         await showToastNative({ text: 'Failed to process cancellation', position: 'top' });
       }
     },
-    [user, loadCancellationRequests, loadBookings, notificationSuccess, notificationError, showToastNative]
+    [user, loadCancellationRequests, reloadBookings, notificationSuccess, notificationError, showToastNative]
   );
 
   const handleSendMessage = async (booking: Booking) => {
@@ -693,7 +673,7 @@ export default function BookingsPage() {
       );
       await notificationSuccess();
       await showToastNative({ text: `${bulkSelected.length} bookings updated`, duration: 'short' });
-      loadBookings();
+      reloadBookings();
       setBulkSelected([]);
       setBulkMode(false);
     } catch (error) {
@@ -711,7 +691,7 @@ export default function BookingsPage() {
     try {
       await Promise.all(bulkSelected.map((id) => bookingService.deleteBooking(user, id)));
       await showToastNative({ text: `${bulkSelected.length} bookings deleted`, duration: 'short' });
-      loadBookings();
+      reloadBookings();
       setBulkSelected([]);
       setBulkMode(false);
     } catch (error) {
@@ -1061,6 +1041,29 @@ export default function BookingsPage() {
                   isLoading={loading}
                 />
               )}
+
+              {/* Load More */}
+              {hasMoreBookings && viewMode !== "calendar" && (
+                <div className="flex justify-center pt-4 pb-8">
+                  <button
+                    onClick={loadMoreBookings}
+                    disabled={loadingMore}
+                    className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95 disabled:opacity-40"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-[#1e293b]/30 border-t-[#1e293b] rounded-full animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-chevron-down text-xs" />
+                        Load More Bookings
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -1148,7 +1151,7 @@ export default function BookingsPage() {
                     updates.paymentStatus = updates.deposit && updates.deposit > 0 ? (updates.deposit >= (updates.price || 0) ? "paid" : "partial") : "unpaid";
 
                     await bookingService.updateBooking(user, editingBooking.id, updates);
-                    loadBookings();
+                    reloadBookings();
                     setEditModalOpen(false);
                     setEditingBooking(null);
                     addToast("Booking updated successfully!");
