@@ -1,14 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
-import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
+import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 /**
  * Paystack Webhook Handler
  * Processes payment events from Paystack and updates order statuses
+ * Sends WhatsApp payment confirmations to customers
  * 
  * Webhook URL: https://whatsappchapchap.vercel.app/api/webhooks/paystack
  */
+
+// Helper function to get tenant's Paystack credentials
+async function getTenantPaystack(tenantId: string) {
+  if (!adminDb) {
+    throw new Error("Database not configured");
+  }
+
+  const doc = await adminDb
+    .collection("tenants")
+    .doc(tenantId)
+    .collection("settings")
+    .doc("paystack")
+    .get();
+
+  if (!doc.exists) {
+    throw new Error("Paystack not configured for this tenant");
+  }
+
+  return doc.data() as { 
+    secretKey: string; 
+    publicKey: string; 
+    isLive: boolean;
+    webhookSecret: string;
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
@@ -22,27 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No signature provided" }, { status: 401 });
     }
 
-    // Get webhook secret from Firestore (tenant-specific)
-    // For now, we'll use environment variable or query all tenants
-    const webhookSecret = process.env.PAYSTACK_WEBHOOK_SECRET;
-    
-    if (!webhookSecret) {
-      console.warn("[Paystack Webhook] PAYSTACK_WEBHOOK_SECRET not configured");
-      // Continue processing for development/testing
-    } else {
-      // Verify signature
-      const hash = crypto
-        .createHmac("sha512", webhookSecret)
-        .update(rawBody)
-        .digest("hex");
-      
-      if (hash !== signature) {
-        console.error("[Paystack Webhook] Invalid signature");
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
-    }
-
-    // Parse the webhook payload
+    // Parse event to extract tenantId from metadata
     let event;
     try {
       event = JSON.parse(rawBody);
@@ -54,14 +61,54 @@ export async function POST(req: NextRequest) {
     console.log("[Paystack Webhook] Event:", event.event);
     console.log("[Paystack Webhook] Data:", JSON.stringify(event.data, null, 2));
 
+    const tenantId = event.data?.metadata?.tenantId || event.data?.metadata?.tenant_id;
+
+    // Fallback: Try global PAYSTACK_WEBHOOK_SECRET first
+    const globalWebhookSecret = process.env.PAYSTACK_WEBHOOK_SECRET;
+    let webhookSecret = globalWebhookSecret;
+
+    // If tenantId is available, try to get per-tenant webhook secret
+    if (tenantId) {
+      // Validate tenantId format to prevent injection attacks
+      if (!/^tenant_[a-zA-Z0-9]+$/.test(tenantId)) {
+        console.error(`[Paystack Webhook] Invalid tenantId format: ${tenantId}`);
+        return NextResponse.json({ error: "Invalid tenantId format" }, { status: 400 });
+      }
+
+      try {
+        const tenantPaystack = await getTenantPaystack(tenantId);
+        if (tenantPaystack.webhookSecret) {
+          webhookSecret = tenantPaystack.webhookSecret;
+        }
+      } catch (err) {
+        console.warn(`[Paystack Webhook] Could not fetch per-tenant secret for ${tenantId}, falling back to global`);
+      }
+    }
+
+    if (webhookSecret) {
+      // Verify signature
+      const hash = crypto
+        .createHmac("sha512", webhookSecret)
+        .update(rawBody)
+        .digest("hex");
+      
+      if (hash !== signature) {
+        console.error("[Paystack Webhook] Invalid signature");
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+      console.log(`[Paystack Webhook] ✅ Signature verified for tenant: ${tenantId || "global"}`);
+    } else {
+      console.warn("[Paystack Webhook] No webhook secret configured, skipping signature verification");
+    }
+
     // Process different event types
     switch (event.event) {
       case "charge.success":
-        await handleChargeSuccess(event);
+        await handleChargeSuccess(event, tenantId);
         break;
       
       case "charge.failed":
-        await handleChargeFailed(event);
+        await handleChargeFailed(event, tenantId);
         break;
       
       case "transfer.success":
@@ -93,9 +140,9 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Handle successful charge event
+ * Handle successful charge event — sends WhatsApp payment confirmation
  */
-async function handleChargeSuccess(event: any) {
+async function handleChargeSuccess(event: any, tenantId?: string) {
   try {
     const { data } = event;
     const { reference, amount, customer, metadata } = data;
@@ -103,12 +150,11 @@ async function handleChargeSuccess(event: any) {
     console.log("[Paystack Webhook] Charge successful:", {
       reference,
       amount,
-      customer: customer.email,
+      customer: customer?.email,
     });
 
-    // Extract order ID from metadata if present
+    // Extract order ID from metadata
     const orderId = metadata?.orderId || metadata?.order_id;
-    const tenantId = metadata?.tenantId || metadata?.tenant_id;
     
     if (!orderId) {
       console.warn("[Paystack Webhook] No order ID in metadata");
@@ -118,27 +164,92 @@ async function handleChargeSuccess(event: any) {
     // Update order status in Firestore
     if (adminDb) {
       const orderRef = adminDb.collection("orders").doc(orderId);
-      const orderDoc = await orderRef.get();
+      const orderSnap = await orderRef.get();
       
-      if (orderDoc.exists) {
-        await orderRef.update({
-          paymentStatus: "paid",
-          paymentReference: reference,
-          paidAmount: amount / 100, // Convert from kobo/cents to main currency
-          paymentMethod: "paystack",
-          paymentGateway: "paystack",
-          paidAt: new Date(),
-          updatedAt: new Date(),
-          status: "confirmed", // Auto-confirm on successful payment
-        });
-
-        console.log("[Paystack Webhook] Order updated:", orderId);
-
-        // TODO: Send WhatsApp notification to customer
-        // TODO: Send WhatsApp notification to business owner
-        // TODO: Trigger order fulfillment workflow
-      } else {
+      if (!orderSnap.exists) {
         console.warn("[Paystack Webhook] Order not found:", orderId);
+        return;
+      }
+
+      // ✅ Idempotency guard - check if already processed
+      const existingData = orderSnap.data();
+      if (existingData?.paymentStatus === "paid") {
+        console.log(`[Paystack Webhook] ⚠️ Order ${orderId} already marked as paid - skipping duplicate webhook`);
+        return;
+      }
+
+      const paidAt = new Date(event.data.paid_at || new Date());
+
+      await orderRef.update({
+        paymentStatus: "paid",
+        paymentReference: reference,
+        paidAmount: amount / 100, // Convert from kobo/cents to main currency
+        paymentMethod: "paystack",
+        paymentGateway: "paystack",
+        paidAt: paidAt.toISOString(),
+        updatedAt: FieldValue.serverTimestamp(),
+        status: "confirmed", // Auto-confirm on successful payment
+      });
+
+      console.log(`[Paystack Webhook] ✅ Order ${orderId} marked as paid`);
+
+      // 📱 Send WhatsApp payment confirmation to customer
+      try {
+        if (existingData) {
+          const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
+          const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+
+          if (evolutionApiUrl && evolutionApiKey) {
+            const customerPhone = existingData.customerPhone || "";
+            const customerName = existingData.customerName || "Customer";
+            const orderNumber = existingData.orderNumber || orderId.substring(0, 8);
+            const productName = existingData.products?.[0]?.name || existingData.productName || "Order";
+            const total = existingData.total || 0;
+
+            // Clean phone number for WhatsApp
+            const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
+            const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+
+            if (fullPhone.length >= 10) {
+              const formattedTotal = new Intl.NumberFormat("en-KE", {
+                style: "currency",
+                currency: "KES",
+              }).format(total);
+
+              const message = `━━━━━━━━━━━━━━━━━━━━\\n✅ *PAYMENT CONFIRMED & ORDER PAID* ✅\\n━━━━━━━━━━━━━━━━━━━━\\n\\nDear *${customerName}*,\\n\\nThank you for your order! 🎉\\n\\nYour payment has been successfully processed and your order is now confirmed!\\n\\n📋 *ORDER DETAILS*\\n━━━━━━━━━━━━━━━━━━\\n🏷️ *Product:* ${productName}\\n🔖 *Order ID:* ${orderNumber}\\n💰 *Amount Paid:* ${formattedTotal}\\n📊 *Status:* Processing\\n━━━━━━━━━━━━━━━━━━\\n\\nWe will begin preparing your order shortly. You'll receive updates as it progresses.\\n\\n💬 Need help? Just reply to this message!\\n\\n━━━━━━━━━━━━━━━━━━━━\\n✨ *Thank you for choosing us!* ✨\\n━━━━━━━━━━━━━━━━━━━━`;
+
+              if (!tenantId) {
+                console.warn("[Paystack Webhook] ⚠️ No tenantId available, skipping WhatsApp notification");
+                return;
+              }
+
+              const waResponse = await fetch(`${evolutionApiUrl}/message/sendText/${tenantId}`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: evolutionApiKey,
+                },
+                body: JSON.stringify({
+                  number: fullPhone,
+                  text: message,
+                }),
+              });
+
+              if (waResponse.ok) {
+                console.log(`[Paystack Webhook] ✅ WhatsApp payment confirmation sent to ${fullPhone} for order ${orderId}`);
+              } else {
+                const waError = await waResponse.text();
+                console.error(`[Paystack Webhook] ❌ Failed to send WhatsApp (${waResponse.status}): ${waError.substring(0, 200)}`);
+              }
+            } else {
+              console.warn(`[Paystack Webhook] ⚠️ Invalid phone number for WhatsApp: ${customerPhone} (cleaned: ${fullPhone})`);
+            }
+          } else {
+            console.warn("[Paystack Webhook] ⚠️ Evolution API credentials not configured, skipping WhatsApp notification");
+          }
+        }
+      } catch (waErr) {
+        console.error("[Paystack Webhook] ❌ Error sending WhatsApp payment confirmation:", waErr);
       }
     }
 
@@ -150,7 +261,7 @@ async function handleChargeSuccess(event: any) {
 /**
  * Handle failed charge event
  */
-async function handleChargeFailed(event: any) {
+async function handleChargeFailed(event: any, tenantId?: string) {
   try {
     const { data } = event;
     const { reference, gateway_response, metadata } = data;
@@ -170,21 +281,69 @@ async function handleChargeFailed(event: any) {
     // Update order status
     if (adminDb) {
       const orderRef = adminDb.collection("orders").doc(orderId);
-      const orderDoc = await orderRef.get();
+      const orderSnap = await orderRef.get();
       
-      if (orderDoc.exists) {
-        await orderRef.update({
-          paymentStatus: "failed",
-          paymentReference: reference,
-          paymentFailureReason: gateway_response,
-          updatedAt: new Date(),
-        });
-
-        console.log("[Paystack Webhook] Order marked as failed:", orderId);
-
-        // TODO: Send WhatsApp notification about failed payment
-      } else {
+      if (!orderSnap.exists) {
         console.warn("[Paystack Webhook] Order not found:", orderId);
+        return;
+      }
+
+      // ✅ Idempotency guard
+      const existingData = orderSnap.data();
+      if (existingData?.paymentStatus === "failed") {
+        console.log(`[Paystack Webhook] ⚠️ Order ${orderId} already marked as failed - skipping duplicate webhook`);
+        return;
+      }
+
+      await orderRef.update({
+        paymentStatus: "failed",
+        paymentReference: reference,
+        paymentFailureReason: gateway_response,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`[Paystack Webhook] ❌ Order ${orderId} marked as failed`);
+
+      // 📱 Send WhatsApp failure notification
+      try {
+        if (existingData) {
+          const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
+          const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+
+          if (evolutionApiUrl && evolutionApiKey) {
+            const customerPhone = existingData.customerPhone || "";
+            const customerName = existingData.customerName || "Customer";
+            const orderNumber = existingData.orderNumber || orderId.substring(0, 8);
+
+            const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
+            const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+
+            if (fullPhone.length >= 10) {
+              const message = `━━━━━━━━━━━━━━━━━━━━\\n❌ *PAYMENT FAILED* ❌\\n━━━━━━━━━━━━━━━━━━━━\\n\\nDear *${customerName}*,\\n\\nWe were unable to process your payment for order *${orderNumber}*.\\n\\n📋 *Reason:* ${gateway_response || "Transaction declined"}\\n\\nPlease try making the payment again or choose a different payment method.\\n\\n💬 Need help? Just reply to this message!\\n\\n━━━━━━━━━━━━━━━━━━━━`;
+
+              if (!tenantId) {
+                console.warn("[Paystack Webhook] ⚠️ No tenantId available, skipping WhatsApp failure notification");
+                return;
+              }
+
+              await fetch(`${evolutionApiUrl}/message/sendText/${tenantId}`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: evolutionApiKey,
+                },
+                body: JSON.stringify({
+                  number: fullPhone,
+                  text: message,
+                }),
+              });
+
+              console.log(`[Paystack Webhook] ✅ WhatsApp failure notification sent to ${fullPhone} for order ${orderId}`);
+            }
+          }
+        }
+      } catch (waErr) {
+        console.error("[Paystack Webhook] ❌ Error sending WhatsApp failure notification:", waErr);
       }
     }
 
@@ -200,10 +359,7 @@ async function handleTransferSuccess(event: any) {
   try {
     const { data } = event;
     console.log("[Paystack Webhook] Transfer successful:", data.reference);
-    
     // Handle payout/transfers if your app supports them
-    // This is for when you send money FROM your Paystack account
-    
   } catch (error) {
     console.error("[Paystack Webhook] Error handling transfer.success:", error);
   }
@@ -216,9 +372,7 @@ async function handleTransferFailed(event: any) {
   try {
     const { data } = event;
     console.log("[Paystack Webhook] Transfer failed:", data.reference);
-    
     // Handle failed payouts
-    
   } catch (error) {
     console.error("[Paystack Webhook] Error handling transfer.failed:", error);
   }
@@ -231,9 +385,7 @@ async function handleInvoicePaymentFailed(event: any) {
   try {
     const { data } = event;
     console.log("[Paystack Webhook] Invoice payment failed:", data.invoice_code);
-    
     // Handle recurring payment failures if you use invoices
-    
   } catch (error) {
     console.error("[Paystack Webhook] Error handling invoice.payment_failed:", error);
   }
