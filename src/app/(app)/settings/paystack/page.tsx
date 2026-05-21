@@ -472,6 +472,57 @@ export default function PaystackSettingsPage() {
     ? validateKey(settings.testPublicKey, "test", "public") && validateKey(settings.testSecretKey, "test", "secret")
     : validateKey(settings.livePublicKey, "live", "public") && validateKey(settings.liveSecretKey, "live", "secret");
 
+  // Test Payment Handler - Opens Paystack checkout popup
+  const handleTestPayment = useCallback(() => {
+    if (!currentModeKeysValid) {
+      alert(`Please enter valid ${settings.mode} mode API keys first`);
+      return;
+    }
+
+    const publicKey = settings.mode === "test" ? settings.testPublicKey : settings.livePublicKey;
+    
+    if (!publicKey) {
+      alert("Public key is required");
+      return;
+    }
+
+    // Dynamically load Paystack Inline JS
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    
+    script.onload = () => {
+      const handler = (window as any).PaystackPop.setup({
+        key: publicKey,
+        email: "test@example.com",
+        amount: 1000 * 100, // KES 10.00 in kobo/cents
+        currency: settings.currency || "KES",
+        ref: `test_${Date.now()}`,
+        metadata: {
+          custom_fields: [
+            { display_name: "Test Mode", variable_name: "test_mode", value: settings.mode },
+            { display_name: "Purpose", variable_name: "purpose", value: "Settings Page Test" }
+          ]
+        },
+        callback: function(response: any) {
+          console.log("Payment completed! Reference:", response.reference);
+          alert(`✅ Payment Successful!\n\nReference: ${response.reference}\nAmount: KES 10.00\n\nCheck your Paystack dashboard for details.`);
+        },
+        onClose: function() {
+          console.log("Payment window closed");
+        }
+      });
+      
+      handler.openIframe();
+    };
+
+    script.onerror = () => {
+      alert("Failed to load Paystack payment widget");
+    };
+
+    document.head.appendChild(script);
+  }, [settings.mode, settings.testPublicKey, settings.livePublicKey, settings.currency, currentModeKeysValid]);
+
   const activeChannelsCount = Object.values(settings.channels).filter(Boolean).length;
 
   if (loading) {
@@ -633,12 +684,33 @@ export default function PaystackSettingsPage() {
           </div>
 
           {/* Test Connection */}
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             <ConnectionTestButton
               mode={settings.mode}
               onTest={() => handleTestConnection(settings.mode)}
               disabled={!currentModeKeysValid}
             />
+            
+            {/* Test Payment Button */}
+            <button
+              onClick={handleTestPayment}
+              disabled={!currentModeKeysValid}
+              className={`
+                w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm
+                transition-all duration-200 active:scale-95
+                ${!currentModeKeysValid
+                  ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/20 hover:shadow-xl hover:-translate-y-0.5"
+                }
+              `}
+            >
+              <i className="fas fa-shopping-cart" />
+              Test Payment Flow (KES 10.00)
+            </button>
+            <p className="text-xs text-[#64748b] text-center flex items-center justify-center gap-1.5">
+              <i className="fas fa-info-circle text-[10px]" />
+              Opens Paystack checkout popup with test card numbers below
+            </p>
           </div>
         </div>
 
