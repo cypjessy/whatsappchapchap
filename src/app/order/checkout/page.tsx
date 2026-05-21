@@ -6,6 +6,9 @@ import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { getFirebaseApp } from "@/lib/firebase";
 import { generateOrderNumber } from "@/utils/orderNumber";
+import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
+import { getOrderStatusMessage } from "@/utils/orderMessages";
+import { getWhatsAppPhone, isValidWhatsAppPhone } from "@/utils/phoneUtils";
 
 interface CartItem {
   productId: string;
@@ -116,47 +119,52 @@ function CheckoutPage() {
       // Clear pending checkout BEFORE writing to Firestore to prevent stale data on failure
       localStorage.removeItem('pending_checkout');
       
-      // Create order in Firestore with pending payment status
-      // ✅ Use root 'orders' collection to match orderService in db.ts
-      const orderRef = await addDoc(collection(db, "orders"), {
+      // ✅ Build order data without undefined values (Firestore rejects undefined fields)
+      const orderData: Record<string, any> = {
         orderNumber,
-        tenantId: checkoutData.tenantId, // ✅ CRITICAL: Required for tenant to see this order
-        // Cart order fields
-        products: isCartOrder ? checkoutData.cartItems!.map(item => ({
-          productId: item.productId,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })) : undefined,
-        // Single product order fields (for backwards compatibility)
-        productName: !isCartOrder ? checkoutData.productName : undefined,
-        quantity: !isCartOrder ? checkoutData.quantity : undefined,
-        basePrice: !isCartOrder ? checkoutData.price : undefined,
-        selectedSpecs: !isCartOrder ? (checkoutData.selectedSpecs || {}) : undefined,
+        tenantId: checkoutData.tenantId,
         // Financial fields matching Order interface
         subtotal,
-        shipping: checkoutData.deliveryCost,  // ✅ Renamed from deliveryCost to shipping
-        tax: 0,                                 // ✅ Required field
-        discount: 0,                            // ✅ Required field
+        shipping: checkoutData.deliveryCost,
+        tax: 0,
+        discount: 0,
         total,
         // Customer fields matching Order interface
         customerName: checkoutData.customerName,
         customerPhone: checkoutData.customerPhone,
         customerEmail: checkoutData.customerEmail || "",
-        customerAddress: checkoutData.address,  // ✅ Correct field name
-        deliveryAddress: checkoutData.address,  // ✅ Also set deliveryAddress
+        customerAddress: checkoutData.address,
+        deliveryAddress: checkoutData.address,
         // Payment and delivery fields
         deliveryMethod: checkoutData.deliveryMethod,
-        deliveryCost: checkoutData.deliveryCost, // Keep for backwards compatibility
+        deliveryCost: checkoutData.deliveryCost,
         paymentMethod: paymentMethod,
         paymentDetails: paymentDetails.trim() || null,
         orderNotes: checkoutData.orderNotes.trim() || "",
-        notes: checkoutData.orderNotes.trim() || "", // Also set 'notes' for compatibility
+        notes: checkoutData.orderNotes.trim() || "",
         paymentStatus: paymentMethod === "paystack" ? "pending" : "unpaid",
         status: "pending",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+      };
+
+      // Conditionally add cart/single-product fields (never set to undefined for Firestore)
+      if (isCartOrder) {
+        orderData.products = checkoutData.cartItems!.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+      } else {
+        orderData.productName = checkoutData.productName;
+        orderData.quantity = checkoutData.quantity;
+        orderData.basePrice = checkoutData.price;
+        orderData.selectedSpecs = checkoutData.selectedSpecs || {};
+      }
+
+      // Create order in Firestore
+      const orderRef = await addDoc(collection(db, "orders"), orderData);
 
       const orderId = orderRef.id;
 
@@ -164,7 +172,25 @@ function CheckoutPage() {
       if (paymentMethod === "paystack") {
         await handlePaystackPayment(orderId, orderNumber, total);
       } else {
-        // For other payment methods, redirect to success immediately
+        // For other payment methods, send WhatsApp notification and redirect to success
+        // ✅ Send WhatsApp order pending message (fire and forget - don't block redirect)
+        const customerPhone = checkoutData.customerPhone;
+        const productName = isCartOrder
+          ? `${checkoutData.cartItems!.length} items`
+          : checkoutData.productName || "Order";
+        const pendingMsg = getOrderStatusMessage(
+          "pending",
+          checkoutData.customerName,
+          orderNumber,
+          productName,
+          checkoutData.address
+        );
+        if (customerPhone && pendingMsg) {
+          sendEvolutionWhatsAppMessage(customerPhone, pendingMsg, checkoutData.tenantId).catch((err) =>
+            console.error("Failed to send WhatsApp order confirmation:", err)
+          );
+        }
+        
         router.push(`/order/success?order=${orderNumber}&id=${orderId}`);
       }
       

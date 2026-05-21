@@ -1280,6 +1280,35 @@ export default function OrdersPage() {
         onCancelOrder={async () => {
           if (selectedOrder) await handleUpdateStatus("cancelled");
         }}
+        onMarkAsPaid={async () => {
+          if (!user || !selectedOrder) return;
+          await impactMedium();
+          try {
+            await orderService.updateOrder(user, selectedOrder.id, { paymentStatus: "paid" });
+
+            // Send payment confirmation WhatsApp notification
+            const order = selectedOrder;
+            const phone = getWhatsAppPhone({
+              customerPhone: order.customerPhone,
+              whatsappJid: order.whatsappJid,
+            });
+            if (isValidWhatsAppPhone(phone)) {
+              const paymentMsg = `✅ *PAYMENT CONFIRMED* ✅\n\nDear ${order.customerName || "Customer"},\n\nYour payment for order *${order.orderNumber || order.id.substring(0, 8)}* has been confirmed!\n\n💰 *Amount:* ${formatCurrency(order.total || 0)}\n📋 *Order:* #${order.orderNumber || order.id.substring(0, 8)}\n\nWe will begin processing your order shortly. Thank you! 🙏`;
+              sendEvolutionWhatsAppMessage(phone, paymentMsg, user.uid).catch(err =>
+                console.error("Failed to send payment confirmation WhatsApp:", err)
+              );
+            }
+
+            await notificationSuccess();
+            await showToast({ text: 'Payment confirmed as paid', duration: 'short' });
+            setModalOpen(false);
+            loadOrders();
+            loadCounts();
+          } catch (error) {
+            console.error("Error marking as paid:", error);
+            await notificationError();
+          }
+        }}
         onAddNote={async (note: string) => {
           if (!user || !selectedOrder) return;
           await orderService.updateOrder(user, selectedOrder.id, { notes: note });

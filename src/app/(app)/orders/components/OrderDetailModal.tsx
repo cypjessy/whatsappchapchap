@@ -16,6 +16,7 @@ interface OrderDetailModalProps {
   onSendWhatsApp: (order: Order, status: OrderStatus) => Promise<void> | void;
   onCancelOrder: () => Promise<void> | void;
   onAddNote: (note: string) => Promise<void> | void;
+  onMarkAsPaid: () => Promise<void> | void;
   getStatusBadge: (status?: string) => { bg: string; color: string; label: string; icon?: string };
   formatDate: (date: any) => string;
   formatTime: (date: any) => string;
@@ -263,6 +264,7 @@ export default function OrderDetailModal({
   onSendWhatsApp,
   onCancelOrder,
   onAddNote,
+  onMarkAsPaid,
   getStatusBadge,
   formatDate,
   formatTime,
@@ -901,6 +903,33 @@ export default function OrderDetailModal({
                       <div className="text-[10px] font-bold uppercase text-[#92400e] mb-1">Customer Notes</div>
                       <div className="text-sm text-[#92400e]">{order.orderNotes}</div>
                     </div>
+                  )}
+
+                  {/* Mark as Paid Button - Only for manual payments not yet paid */}
+                  {order.paymentStatus !== "paid" && order.paymentMethod !== "paystack" && !isCancelled && (
+                    <button
+                      className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                      onClick={() => {
+                        setConfirmModal({
+                          isOpen: true,
+                          action: "mark-paid",
+                          title: "Confirm Payment?",
+                          message: `Mark order #${orderNumber} as paid? This will confirm the payment and notify the customer.`,
+                          confirmText: "Yes, Mark as Paid",
+                          confirmColor: "bg-gradient-to-r from-[#10b981] to-[#059669]",
+                          icon: "fa-check-circle",
+                          handler: () => handleAction("mark-paid", onMarkAsPaid),
+                        });
+                      }}
+                      disabled={loadingAction === "mark-paid"}
+                    >
+                      {loadingAction === "mark-paid" ? (
+                        <i className="fas fa-circle-notch fa-spin" />
+                      ) : (
+                        <i className="fas fa-check-circle" />
+                      )}
+                      Mark as Paid
+                    </button>
                   )}
                 </div>
 

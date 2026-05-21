@@ -107,6 +107,56 @@ export async function POST(req: NextRequest) {
         });
 
         console.log(`✅ Order ${orderId} marked as paid via Paystack`);
+
+        // 📱 Send WhatsApp order confirmation to customer
+        try {
+          const orderData = orderSnap.data();
+          if (orderData) {
+            const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
+            const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+
+            if (evolutionApiUrl && evolutionApiKey) {
+              const customerPhone = orderData.customerPhone || "";
+              const customerName = orderData.customerName || "Customer";
+              const orderNumber = orderData.orderNumber || orderId.substring(0, 8);
+              const productName = orderData.products?.[0]?.name || orderData.productName || "Order";
+              const total = orderData.total || 0;
+
+              // Clean phone number for WhatsApp
+              const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
+              const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+
+              if (fullPhone.length >= 10) {
+                const formattedTotal = new Intl.NumberFormat("en-KE", {
+                  style: "currency",
+                  currency: "KES",
+                }).format(total);
+
+                const message = `━━━━━━━━━━━━━━━━━━━━\n✅ *PAYMENT CONFIRMED & ORDER PAID* ✅\n━━━━━━━━━━━━━━━━━━━━\n\nDear *${customerName}*,\n\nThank you for your order! 🎉\n\nYour payment has been successfully processed and your order is now confirmed!\n\n📋 *ORDER DETAILS*\n━━━━━━━━━━━━━━━━━━\n🏷️ *Product:* ${productName}\n🔖 *Order ID:* ${orderNumber}\n💰 *Amount Paid:* ${formattedTotal}\n📊 *Status:* Processing\n━━━━━━━━━━━━━━━━━━\n\nWe will begin preparing your order shortly. You'll receive updates as it progresses.\n\n💬 Need help? Just reply to this message!\n\n━━━━━━━━━━━━━━━━━━━━\n✨ *Thank you for choosing us!* ✨\n━━━━━━━━━━━━━━━━━━━━`;
+
+                await fetch(`${evolutionApiUrl}/message/sendText/${tenantId}`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    apikey: evolutionApiKey,
+                  },
+                  body: JSON.stringify({
+                    number: fullPhone,
+                    text: message,
+                  }),
+                });
+
+                console.log(`✅ WhatsApp payment confirmation sent to ${fullPhone} for order ${orderId}`);
+              } else {
+                console.warn(`⚠️ Invalid phone number for WhatsApp: ${customerPhone} (cleaned: ${fullPhone})`);
+              }
+            } else {
+              console.warn("⚠️ Evolution API credentials not configured, skipping WhatsApp notification");
+            }
+          }
+        } catch (err) {
+          console.error("❌ Failed to send WhatsApp payment confirmation:", err);
+        }
       }
     } else if (event.event === "charge.failed") {
       const { orderId } = event.data.metadata;

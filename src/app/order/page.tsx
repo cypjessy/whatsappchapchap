@@ -84,6 +84,7 @@ function OrderPageContent() {
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
+  const [navigatingToCheckout, setNavigatingToCheckout] = useState(false);
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   
@@ -741,6 +742,7 @@ function OrderPageContent() {
 
     try {
       localStorage.setItem('pending_checkout', JSON.stringify(checkoutData));
+      setNavigatingToCheckout(true);
       router.push('/order/checkout');
     } catch (err: any) {
       console.error("Error saving checkout data:", err);
@@ -772,6 +774,20 @@ function OrderPageContent() {
         <div style={{ textAlign: "center" }}>
           <div style={{ width: 60, height: 60, border: "4px solid #e2e8f0", borderTopColor: "#25D366", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }}></div>
           <p style={{ color: "#1e293b", fontWeight: 600 }}>Loading product...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // ⏳ Full-screen loading overlay when navigating to checkout
+  if (navigatingToCheckout) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
+        <div style={{ textAlign: "center", padding: 32 }}>
+          <div style={{ width: 80, height: 80, border: "4px solid #e2e8f0", borderTopColor: "#8b5cf6", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 24px" }}></div>
+          <p style={{ color: "#1e293b", fontWeight: 700, fontSize: 18 }}>Preparing checkout...</p>
+          <p style={{ color: "#64748b", fontSize: 14, marginTop: 8 }}>Please wait a moment</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -1005,6 +1021,7 @@ function OrderPageContent() {
               
               try {
                 localStorage.setItem('pending_checkout', JSON.stringify(checkoutData));
+                setNavigatingToCheckout(true);
                 router.push('/order/checkout');
               } catch (err: any) {
                 console.error("Error saving cart data:", err);
