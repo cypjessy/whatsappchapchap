@@ -890,6 +890,40 @@ export default function PaystackSettingsPage() {
             </div>
           </div>
         )}
+
+        {/* M-Pesa Test Info */}
+        {settings.mode === "test" && (
+          <div className={`
+            bg-gradient-to-br from-[#10b981]/5 to-[#059669]/5 rounded-2xl p-4 md:p-6 border border-[#10b981]/20
+            transition-all duration-500 delay-700
+            ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+          `}>
+            <div className="flex items-center gap-2 mb-4">
+              <i className="fas fa-mobile-alt text-[#10b981] text-sm" />
+              <h2 className="font-bold text-[#1e293b]">M-Pesa Test Numbers (Kenya)</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { number: "254708374149", type: "Safaricom Test Number", badge: "bg-[#10b981]/10 text-[#10b981]", description: "Use for all M-Pesa transactions" },
+                { number: "Any PIN (e.g., 1234)", type: "Test PIN", badge: "bg-[#3b82f6]/10 text-[#3b82f6]", description: "No validation in sandbox" },
+              ].map((item) => (
+                <div key={item.number} className="bg-white rounded-xl p-3 border border-[#e2e8f0]">
+                  <div className="font-mono text-sm font-bold text-[#1e293b] mb-1">{item.number}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-[#64748b]">{item.type}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.badge}`}>
+                      {item.description}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-[#64748b] mt-3 flex items-start gap-1.5">
+              <i className="fas fa-info-circle text-[10px] mt-0.5" />
+              <span>In test mode, M-Pesa payments will simulate success without requiring actual STK push or USSD confirmation.</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Sticky Save Bar */}
