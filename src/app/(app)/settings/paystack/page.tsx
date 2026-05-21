@@ -464,6 +464,10 @@ export default function PaystackSettingsPage() {
     validateKey(settings.livePublicKey, "live", "public") &&
     validateKey(settings.liveSecretKey, "live", "secret");
 
+  const currentModeKeysValid = settings.mode === "test"
+    ? validateKey(settings.testPublicKey, "test", "public") && validateKey(settings.testSecretKey, "test", "secret")
+    : validateKey(settings.livePublicKey, "live", "public") && validateKey(settings.liveSecretKey, "live", "secret");
+
   const activeChannelsCount = Object.values(settings.channels).filter(Boolean).length;
 
   if (loading) {
@@ -629,7 +633,7 @@ export default function PaystackSettingsPage() {
             <ConnectionTestButton
               mode={settings.mode}
               onTest={() => handleTestConnection(settings.mode)}
-              disabled={!allKeysValid}
+              disabled={!currentModeKeysValid}
             />
           </div>
         </div>
@@ -830,11 +834,11 @@ export default function PaystackSettingsPage() {
             )}
             <button
               onClick={handleSave}
-              disabled={isSaving || !allKeysValid}
+              disabled={isSaving || !currentModeKeysValid}
               className={`
                 flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
                 transition-all duration-200 active:scale-95
-                ${isSaving || !allKeysValid
+                ${isSaving || !currentModeKeysValid
                   ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
                   : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-lg shadow-[#10b981]/20 hover:shadow-xl hover:-translate-y-0.5"
                 }
