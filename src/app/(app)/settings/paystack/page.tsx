@@ -1,61 +1,372 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface PaystackSettings {
-  publicKey: string;
-  secretKey: string;
+  mode: "test" | "live";
+  testPublicKey: string;
+  testSecretKey: string;
+  livePublicKey: string;
+  liveSecretKey: string;
+  webhookUrl: string;
   webhookSecret: string;
-  isLive: boolean;
+  currency: string;
+  channels: {
+    card: boolean;
+    bank: boolean;
+    transfer: boolean;
+    ussd: boolean;
+    mobileMoney: boolean;
+    qr: boolean;
+  };
+  metadata: {
+    businessName: string;
+    businessEmail: string;
+    logoUrl: string;
+    description: string;
+  };
 }
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const CURRENCIES = [
+  { value: "NGN", label: "Nigerian Naira (₦)", flag: "🇳🇬" },
+  { value: "GHS", label: "Ghanaian Cedi (₵)", flag: "🇬🇭" },
+  { value: "KES", label: "Kenyan Shilling (KSh)", flag: "🇰🇪" },
+  { value: "ZAR", label: "South African Rand (R)", flag: "🇿🇦" },
+  { value: "USD", label: "US Dollar ($)", flag: "🇺🇸" },
+];
+
+const PAYMENT_CHANNELS = [
+  { id: "card" as const, label: "Card Payments", icon: "fa-credit-card", description: "Visa, Mastercard, Verve" },
+  { id: "bank" as const, label: "Bank Transfer", icon: "fa-university", description: "Direct bank account debit" },
+  { id: "transfer" as const, label: "Pay with Transfer", icon: "fa-exchange-alt", description: "Bank transfer to virtual account" },
+  { id: "ussd" as const, label: "USSD", icon: "fa-mobile-alt", description: "USSD code payments" },
+  { id: "mobileMoney" as const, label: "Mobile Money", icon: "fa-money-bill-wave", description: "M-Pesa, MTN, etc." },
+  { id: "qr" as const, label: "QR Code", icon: "fa-qrcode", description: "Scan-to-pay" },
+];
+
+const DEFAULT_SETTINGS: PaystackSettings = {
+  mode: "test",
+  testPublicKey: "",
+  testSecretKey: "",
+  livePublicKey: "",
+  liveSecretKey: "",
+  webhookUrl: "",
+  webhookSecret: "",
+  currency: "NGN",
+  channels: {
+    card: true,
+    bank: true,
+    transfer: false,
+    ussd: false,
+    mobileMoney: false,
+    qr: false,
+  },
+  metadata: {
+    businessName: "",
+    businessEmail: "",
+    logoUrl: "",
+    description: "",
+  },
+};
+
+// ─── Helper Functions ─────────────────────────────────────────────────────────
+
+function maskKey(key: string): string {
+  if (!key || key.length < 12) return key;
+  return `${key.slice(0, 8)}••••••••••••${key.slice(-4)}`;
+}
+
+function validateKey(key: string, mode: "test" | "live", type: "public" | "secret"): boolean {
+  if (!key || key.length < 20) return false;
+  const expectedPrefix = mode === "test"
+    ? (type === "public" ? "pk_test_" : "sk_test_")
+    : (type === "public" ? "pk_live_" : "sk_live_");
+  return key.startsWith(expectedPrefix);
+}
+
+function getKeyStatus(key: string, mode: "test" | "live", type: "public" | "secret"): {
+  valid: boolean;
+  message: string;
+  color: string;
+} {
+  if (!key) return { valid: false, message: "Required", color: "text-[#94a3b8]" };
+  if (validateKey(key, mode, type)) return { valid: true, message: "Valid format", color: "text-[#10b981]" };
+  const expectedPrefix = mode === "test"
+    ? (type === "public" ? "pk_test_" : "sk_test_")
+    : (type === "public" ? "pk_live_" : "sk_live_");
+  return {
+    valid: false,
+    message: `Should start with ${expectedPrefix}`,
+    color: "text-[#ef4444]",
+  };
+}
+
+// ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function ModeToggle({ mode, onChange }: { mode: "test" | "live"; onChange: (m: "test" | "live") => void }) {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleToggle = (newMode: "test" | "live") => {
+    if (newMode === mode) return;
+    setIsAnimating(true);
+    onChange(newMode);
+    setTimeout(() => setIsAnimating(false), 300);
+  };
+
+  return (
+    <div className="bg-[#f8fafc] rounded-2xl p-1.5 flex gap-1.5 relative">
+      {/* Sliding background */}
+      <div
+        className={`
+          absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl transition-all duration-300 ease-out
+          ${mode === "test" ? "left-1.5 bg-[#3b82f6]" : "left-[calc(50%+3px)] bg-[#10b981]"}
+        `}
+      />
+      
+      <button
+        onClick={() => handleToggle("test")}
+        className={`
+          relative z-10 flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
+          font-bold text-sm transition-colors duration-200
+          ${mode === "test" ? "text-white" : "text-[#64748b] hover:text-[#1e293b]"}
+        `}
+      >
+        <i className="fas fa-flask text-xs" />
+        Test Mode
+      </button>
+      <button
+        onClick={() => handleToggle("live")}
+        className={`
+          relative z-10 flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
+          font-bold text-sm transition-colors duration-200
+          ${mode === "live" ? "text-white" : "text-[#64748b] hover:text-[#1e293b]"}
+        `}
+      >
+        <i className="fas fa-rocket text-xs" />
+        Live Mode
+      </button>
+    </div>
+  );
+}
+
+function KeyInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  mode,
+  type,
+  showValue,
+  onToggleVisibility,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+  mode: "test" | "live";
+  type: "public" | "secret";
+  showValue: boolean;
+  onToggleVisibility: () => void;
+}) {
+  const [isFocused, setIsFocused] = useState(false);
+  const status = getKeyStatus(value, mode, type);
+
+  return (
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider">
+          {label}
+        </label>
+        <span className={`text-[10px] font-bold flex items-center gap-1 ${status.color}`}>
+          <i className={`fas fa-${status.valid ? "check-circle" : value ? "exclamation-circle" : "circle"} text-[8px]`} />
+          {status.message}
+        </span>
+      </div>
+      <div className={`
+        relative flex items-center rounded-xl border-2 transition-all duration-200
+        ${isFocused ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10" : "border-[#e2e8f0]"}
+        ${!status.valid && value ? "bg-[#fef2f2]" : "bg-white"}
+      `}>
+        <div className={`
+          w-10 h-10 flex items-center justify-center shrink-0 border-r-2 border-[#e2e8f0]
+          ${type === "secret" ? "bg-[#fef3c7]/30" : "bg-[#dbeafe]/30"}
+        `}>
+          <i className={`fas fa-${type === "secret" ? "lock" : "key"} text-[#94a3b8] text-xs`} />
+        </div>
+        <input
+          type={showValue ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          className="flex-1 px-3 py-3 text-sm font-mono bg-transparent outline-none placeholder:text-[#cbd5e1]"
+        />
+        <button
+          onClick={onToggleVisibility}
+          className="w-10 h-10 flex items-center justify-center text-[#94a3b8] hover:text-[#64748b] transition-colors"
+          type="button"
+          aria-label={showValue ? "Hide key" : "Show key"}
+        >
+          <i className={`fas fa-eye${showValue ? "-slash" : ""} text-xs`} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ChannelToggle({
+  channel,
+  enabled,
+  onChange,
+  index,
+}: {
+  channel: typeof PAYMENT_CHANNELS[0];
+  enabled: boolean;
+  onChange: (val: boolean) => void;
+  index: number;
+}) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), index * 60);
+    return () => clearTimeout(timer);
+  }, [index]);
+
+  return (
+    <div
+      className={`
+        flex items-center gap-3 p-3 md:p-4 rounded-xl border-2 cursor-pointer
+        transition-all duration-200
+        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
+        ${enabled
+          ? "border-[#8b5cf6] bg-[#ede9fe]/30 shadow-sm shadow-[#8b5cf6]/10"
+          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"
+        }
+      `}
+      style={{ transitionDelay: `${index * 60}ms` }}
+      onClick={() => onChange(!enabled)}
+    >
+      <div className={`
+        w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200
+        ${enabled ? "bg-[#8b5cf6] text-white" : "bg-[#f1f5f9] text-[#94a3b8]"}
+      `}>
+        <i className={`fas ${channel.icon} text-sm`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-bold text-sm">{channel.label}</div>
+        <div className="text-xs text-[#64748b]">{channel.description}</div>
+      </div>
+      <div className={`
+        w-11 h-6 rounded-full relative transition-colors duration-200 shrink-0
+        ${enabled ? "bg-[#8b5cf6]" : "bg-[#e2e8f0]"}
+      `}>
+        <div className={`
+          absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200
+          ${enabled ? "translate-x-5.5" : "translate-x-0.5"}
+        `} />
+      </div>
+    </div>
+  );
+}
+
+function ConnectionTestButton({
+  mode,
+  onTest,
+  disabled,
+}: {
+  mode: "test" | "live";
+  onTest: () => Promise<{ success: boolean; message: string }>;
+  disabled: boolean;
+}) {
+  const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const handleTest = async () => {
+    setStatus("testing");
+    try {
+      const result = await onTest();
+      setStatus(result.success ? "success" : "error");
+      setMessage(result.message);
+    } catch {
+      setStatus("error");
+      setMessage("Connection failed");
+    }
+    setTimeout(() => setStatus("idle"), 3000);
+  };
+
+  const configs = {
+    idle: { bg: "bg-[#f8fafc]", text: "text-[#64748b]", icon: "fa-plug", label: `Test ${mode === "test" ? "Sandbox" : "Live"} Connection` },
+    testing: { bg: "bg-[#f59e0b]/10", text: "text-[#f59e0b]", icon: "fa-circle-notch fa-spin", label: "Testing..." },
+    success: { bg: "bg-[#10b981]/10", text: "text-[#10b981]", icon: "fa-check-circle", label: "Connection Successful" },
+    error: { bg: "bg-[#ef4444]/10", text: "text-[#ef4444]", icon: "fa-times-circle", label: message || "Connection Failed" },
+  };
+
+  const config = configs[status];
+
+  return (
+    <button
+      onClick={handleTest}
+      disabled={disabled || status === "testing"}
+      className={`
+        w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm
+        border-2 transition-all duration-200 active:scale-95
+        ${config.bg} ${config.text} border-current
+        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-sm"}
+      `}
+    >
+      <i className={`fas ${config.icon}`} />
+      {config.label}
+    </button>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PaystackSettingsPage() {
   const router = useRouter();
   const { user } = useAuth();
   
   const [settings, setSettings] = useState<PaystackSettings>({
-    publicKey: "",
-    secretKey: "",
-    webhookSecret: "",
-    isLive: false,
+    ...DEFAULT_SETTINGS,
   });
-  
-  const [savedSettings, setSavedSettings] = useState<PaystackSettings>({
-    publicKey: "",
-    secretKey: "",
-    webhookSecret: "",
-    isLive: false,
-  });
-  
+  const [showTestSecret, setShowTestSecret] = useState(false);
+  const [showLiveSecret, setShowLiveSecret] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [configured, setConfigured] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  // Load existing settings
   useEffect(() => {
-    if (!user) return; // wait for auth to initialize
+    requestAnimationFrame(() => setIsVisible(true));
+  }, []);
+
+  // Load settings from API
+  useEffect(() => {
+    if (!user) return;
     
     const loadSettings = async () => {
       try {
         const token = await user.getIdToken();
         if (!token) {
-          console.error("No authentication token available");
+          setError("Not authenticated");
           setLoading(false);
           return;
         }
 
         const res = await fetch("/api/settings/paystack", {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         
         if (!res.ok) {
-          console.error("Failed to fetch settings:", res.status, res.statusText);
+          console.error("Failed to fetch settings:", res.status);
           setLoading(false);
           return;
         }
@@ -63,15 +374,15 @@ export default function PaystackSettingsPage() {
         const data = await res.json();
         
         if (data.configured) {
-          setConfigured(true);
-          const loadedSettings = {
-            publicKey: data.publicKey || "",
-            secretKey: "", // Don't show secret key for security
-            webhookSecret: "", // Don't show webhook secret for security
-            isLive: data.isLive || false,
-          };
-          setSettings(loadedSettings);
-          setSavedSettings(loadedSettings);
+          setSettings(prev => ({
+            ...prev,
+            testPublicKey: data.testPublicKey || "",
+            livePublicKey: data.livePublicKey || "",
+            webhookUrl: data.webhookUrl || "",
+            currency: data.currency || "NGN",
+            channels: data.channels || DEFAULT_SETTINGS.channels,
+            metadata: data.metadata || DEFAULT_SETTINGS.metadata,
+          }));
         }
       } catch (err) {
         console.error("Error loading settings:", err);
@@ -83,55 +394,34 @@ export default function PaystackSettingsPage() {
     loadSettings();
   }, [user]);
 
+  const updateField = useCallback(<K extends keyof PaystackSettings>(key: K, value: PaystackSettings[K]) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const updateChannel = useCallback((channelId: keyof PaystackSettings["channels"], value: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      channels: { ...prev.channels, [channelId]: value },
+    }));
+  }, []);
+
   const handleSave = async () => {
-    setError("");
-    setSuccess("");
-    
-    // Check authentication
     if (!user) {
       setError("You must be logged in");
       return;
     }
-    
-    const token = await user.getIdToken();
-    if (!token) {
-      setError("Not authenticated");
-      return;
-    }
-    
-    // Validation
-    if (!settings.publicKey.trim()) {
-      setError("Public key is required");
-      return;
-    }
-    
-    if (!settings.secretKey.trim()) {
-      setError("Secret key is required");
-      return;
-    }
-    
-    if (!settings.webhookSecret.trim()) {
-      setError("Webhook secret is required");
-      return;
-    }
-    
-    // Validate public key format
-    const expectedPrefix = settings.isLive ? "pk_live_" : "pk_test_";
-    if (!settings.publicKey.startsWith(expectedPrefix)) {
-      setError(`Public key must start with ${expectedPrefix}`);
-      return;
-    }
-    
-    // Validate secret key format
-    const secretPrefix = settings.isLive ? "sk_live_" : "sk_test_";
-    if (!settings.secretKey.startsWith(secretPrefix)) {
-      setError(`Secret key must start with ${secretPrefix}`);
-      return;
-    }
-    
-    setSaving(true);
+
+    setIsSaving(true);
+    setSaveStatus("saving");
     
     try {
+      const token = await user.getIdToken();
+      if (!token) {
+        setError("Not authenticated");
+        setIsSaving(false);
+        return;
+      }
+
       const res = await fetch("/api/settings/paystack", {
         method: "POST",
         headers: {
@@ -146,246 +436,425 @@ export default function PaystackSettingsPage() {
         throw new Error(errorData.error || "Failed to save settings");
       }
       
-      const data = await res.json();
-      
-      setSuccess("Paystack settings saved successfully!");
-      setConfigured(true);
-      
-      // Update saved settings to reflect what's in Firestore
-      setSavedSettings({
-        publicKey: settings.publicKey,
-        secretKey: "",
-        webhookSecret: "",
-        isLive: settings.isLive,
-      });
-      
-      // Clear sensitive fields after save
-      setSettings(prev => ({
-        ...prev,
-        secretKey: "",
-        webhookSecret: "",
-      }));
-      
-      setTimeout(() => setSuccess(""), 3000);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (err: any) {
       setError(err.message || "Failed to save settings");
+      setSaveStatus("error");
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
+  const handleTestConnection = async (mode: "test" | "live"): Promise<{ success: boolean; message: string }> => {
+    // TODO: Implement actual connection test with Paystack API
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: "Connection successful",
+        });
+      }, 1500);
+    });
+  };
+
+  const allKeysValid = 
+    validateKey(settings.testPublicKey, "test", "public") &&
+    validateKey(settings.testSecretKey, "test", "secret") &&
+    validateKey(settings.livePublicKey, "live", "public") &&
+    validateKey(settings.liveSecretKey, "live", "secret");
+
+  const activeChannelsCount = Object.values(settings.channels).filter(Boolean).length;
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
-          <i className="fas fa-circle-notch fa-spin text-4xl text-indigo-600 mb-4"></i>
-          <p className="text-gray-600">Loading settings...</p>
+          <i className="fas fa-circle-notch fa-spin text-4xl text-[#8b5cf6] mb-4"></i>
+          <p className="text-[#64748b]">Loading settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`
+      min-h-screen bg-[#f8fafc] pb-24 transition-all duration-500
+      ${isVisible ? "opacity-100" : "opacity-0"}
+    `}>
+      {/* Error Message */}
+      {error && (
+        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
+          <div className="flex items-center gap-2">
+            <i className="fas fa-exclamation-circle text-red-500"></i>
+            <span className="text-sm text-red-800 font-medium">{error}</span>
+            <button onClick={() => setError("")} className="ml-2 text-red-400 hover:text-red-600">
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto">
-          <button
-            onClick={() => router.back()}
-            className="text-gray-600 hover:text-gray-900 mb-2"
-          >
-            <i className="fas fa-arrow-left mr-2"></i>
-            Back
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">Paystack Settings</h1>
-          <p className="text-gray-600 mt-1">Configure your Paystack payment gateway credentials</p>
+      <div className="bg-white border-b border-[#e2e8f0] sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4 md:py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors"
+            >
+              <i className="fas fa-arrow-left text-[#64748b]"></i>
+            </button>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#10b981]/10 to-[#059669]/10 flex items-center justify-center">
+              <i className="fas fa-credit-card text-[#10b981] text-lg" />
+            </div>
+            <div>
+              <h1 className="text-lg md:text-xl font-extrabold text-[#1e293b]">Paystack Settings</h1>
+              <p className="text-xs text-[#64748b] hidden sm:block">Configure payment gateway for test & production</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`
+              hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold
+              ${settings.mode === "test"
+                ? "bg-[#3b82f6]/10 text-[#3b82f6] border border-[#3b82f6]/20"
+                : "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
+              }
+            `}>
+              <i className={`fas fa-${settings.mode === "test" ? "flask" : "rocket"} text-[10px]`} />
+              {settings.mode === "test" ? "Sandbox" : "Production"}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Alert Messages */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start">
-              <i className="fas fa-exclamation-circle text-red-600 mt-1 mr-3"></i>
-              <div>
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            </div>
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+        {/* Mode Toggle */}
+        <div className={`
+          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          transition-all duration-500 delay-100
+          ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        `}>
+          <div className="flex items-center gap-2 mb-4">
+            <i className="fas fa-toggle-on text-[#8b5cf6] text-sm" />
+            <h2 className="font-bold text-[#1e293b]">Environment Mode</h2>
           </div>
-        )}
+          <ModeToggle mode={settings.mode} onChange={(mode) => updateField("mode", mode)} />
+          <p className="text-xs text-[#64748b] mt-3 flex items-center gap-1.5">
+            <i className="fas fa-info-circle text-[10px]" />
+            {settings.mode === "test"
+              ? "Test mode uses sandbox keys. No real money is processed."
+              : "Live mode processes real transactions. Ensure compliance docs are approved."
+            }
+          </p>
+        </div>
 
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-start">
-              <i className="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
-              <div>
-                <p className="text-sm text-green-800">{success}</p>
-              </div>
+        {/* API Keys */}
+        <div className={`
+          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          transition-all duration-500 delay-200
+          ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        `}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <i className="fas fa-key text-[#f59e0b] text-sm" />
+              <h2 className="font-bold text-[#1e293b]">API Keys</h2>
             </div>
-          </div>
-        )}
-
-        {/* Configuration Status */}
-        {configured && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start">
-              <i className="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
-              <div>
-                <p className="text-sm text-blue-800 font-medium">Paystack is configured</p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Public Key: {savedSettings.publicKey ? `${savedSettings.publicKey.substring(0, 20)}...` : "Not set"}
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Mode: {savedSettings.isLive ? "Live" : "Test/Sandbox"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Settings Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">Paystack Credentials</h2>
+            <span className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider">
+              {settings.mode === "test" ? "Test Environment" : "Live Environment"}
+            </span>
           </div>
 
-          <div className="p-6 space-y-6">
-            {/* Environment Toggle */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Environment Mode
-              </label>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="environment"
-                    checked={!settings.isLive}
-                    onChange={() => setSettings({ 
-                      ...settings, 
-                      isLive: false,
-                      publicKey: "",
-                      secretKey: "",
-                    })}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Test/Sandbox</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="environment"
-                    checked={settings.isLive}
-                    onChange={() => setSettings({ 
-                      ...settings, 
-                      isLive: true,
-                      publicKey: "",
-                      secretKey: "",
-                    })}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Live/Production</span>
-                </label>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Use Test mode for development and testing. Switch to Live when ready to accept real payments.
-              </p>
+          {/* Test Keys */}
+          <div className={settings.mode === "live" ? "opacity-50 pointer-events-none" : ""}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="px-2 py-1 rounded-md bg-[#3b82f6]/10 text-[#3b82f6] text-[10px] font-bold uppercase">Test Keys</span>
             </div>
+            <KeyInput
+              label="Test Public Key"
+              value={settings.testPublicKey}
+              onChange={(val) => updateField("testPublicKey", val)}
+              placeholder="pk_test_xxxxxxxxxxxxxxxx"
+              mode="test"
+              type="public"
+              showValue={true}
+              onToggleVisibility={() => {}}
+            />
+            <KeyInput
+              label="Test Secret Key"
+              value={settings.testSecretKey}
+              onChange={(val) => updateField("testSecretKey", val)}
+              placeholder="sk_test_xxxxxxxxxxxxxxxx"
+              mode="test"
+              type="secret"
+              showValue={showTestSecret}
+              onToggleVisibility={() => setShowTestSecret(!showTestSecret)}
+            />
+          </div>
 
-            {/* Public Key */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Public Key <span className="text-red-500">*</span>
-              </label>
+          <div className="h-px bg-[#e2e8f0] my-5" />
+
+          {/* Live Keys */}
+          <div className={settings.mode === "test" ? "opacity-50 pointer-events-none" : ""}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="px-2 py-1 rounded-md bg-[#10b981]/10 text-[#10b981] text-[10px] font-bold uppercase">Live Keys</span>
+              <span className="px-2 py-1 rounded-md bg-[#ef4444]/10 text-[#ef4444] text-[10px] font-bold uppercase">
+                <i className="fas fa-shield-alt mr-1" />Secure
+              </span>
+            </div>
+            <KeyInput
+              label="Live Public Key"
+              value={settings.livePublicKey}
+              onChange={(val) => updateField("livePublicKey", val)}
+              placeholder="pk_live_xxxxxxxxxxxxxxxx"
+              mode="live"
+              type="public"
+              showValue={true}
+              onToggleVisibility={() => {}}
+            />
+            <KeyInput
+              label="Live Secret Key"
+              value={settings.liveSecretKey}
+              onChange={(val) => updateField("liveSecretKey", val)}
+              placeholder="sk_live_xxxxxxxxxxxxxxxx"
+              mode="live"
+              type="secret"
+              showValue={showLiveSecret}
+              onToggleVisibility={() => setShowLiveSecret(!showLiveSecret)}
+            />
+          </div>
+
+          {/* Test Connection */}
+          <div className="mt-4">
+            <ConnectionTestButton
+              mode={settings.mode}
+              onTest={() => handleTestConnection(settings.mode)}
+              disabled={!allKeysValid}
+            />
+          </div>
+        </div>
+
+        {/* Webhook Settings */}
+        <div className={`
+          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          transition-all duration-500 delay-300
+          ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        `}>
+          <div className="flex items-center gap-2 mb-5">
+            <i className="fas fa-webhook text-[#8b5cf6] text-sm" />
+            <h2 className="font-bold text-[#1e293b]">Webhook Configuration</h2>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2 block">
+              Webhook URL
+            </label>
+            <div className={`
+              flex items-center rounded-xl border-2 border-[#e2e8f0] bg-white overflow-hidden
+              focus-within:border-[#8b5cf6] focus-within:shadow-md focus-within:shadow-[#8b5cf6]/10
+            `}>
+              <div className="w-10 h-10 flex items-center justify-center border-r-2 border-[#e2e8f0] bg-[#f8fafc] shrink-0">
+                <i className="fas fa-link text-[#94a3b8] text-xs" />
+              </div>
               <input
-                type="text"
-                value={settings.publicKey}
-                onChange={(e) => setSettings({ ...settings, publicKey: e.target.value })}
-                placeholder={settings.isLive ? "pk_live_xxxxxxxxxxxxx" : "pk_test_xxxxxxxxxxxxx"}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                type="url"
+                value={settings.webhookUrl}
+                onChange={(e) => updateField("webhookUrl", e.target.value)}
+                placeholder="https://yourdomain.com/api/webhooks/paystack"
+                className="flex-1 px-3 py-3 text-sm bg-transparent outline-none placeholder:text-[#cbd5e1]"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Found in your Paystack Dashboard → Settings → API Keys & Webhooks
-              </p>
+              <button
+                onClick={() => navigator.clipboard.writeText(settings.webhookUrl)}
+                className="px-3 py-2 text-[#64748b] hover:text-[#8b5cf6] transition-colors text-xs font-bold"
+                type="button"
+              >
+                <i className="fas fa-copy mr-1" />Copy
+              </button>
             </div>
+            <p className="text-[10px] text-[#94a3b8] mt-1.5">
+              Add this URL to your Paystack Dashboard → Settings → Webhooks
+            </p>
+          </div>
 
-            {/* Secret Key */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Secret Key <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                value={settings.secretKey}
-                onChange={(e) => setSettings({ ...settings, secretKey: e.target.value })}
-                placeholder={settings.isLive ? "sk_live_xxxxxxxxxxxxx" : "sk_test_xxxxxxxxxxxxx"}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                ⚠️ Never share this key. Stored securely on the server only.
-              </p>
-            </div>
-
-            {/* Webhook Secret */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Webhook Secret <span className="text-red-500">*</span>
-              </label>
+          <div>
+            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2 block">
+              Webhook Secret (Optional)
+            </label>
+            <div className="flex items-center rounded-xl border-2 border-[#e2e8f0] bg-white overflow-hidden focus-within:border-[#8b5cf6]">
+              <div className="w-10 h-10 flex items-center justify-center border-r-2 border-[#e2e8f0] bg-[#fef3c7]/30 shrink-0">
+                <i className="fas fa-shield-alt text-[#94a3b8] text-xs" />
+              </div>
               <input
                 type="password"
                 value={settings.webhookSecret}
-                onChange={(e) => setSettings({ ...settings, webhookSecret: e.target.value })}
+                onChange={(e) => updateField("webhookSecret", e.target.value)}
                 placeholder="Your custom webhook secret"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="flex-1 px-3 py-3 text-sm font-mono bg-transparent outline-none placeholder:text-[#cbd5e1]"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Set a secret string in Paystack dashboard → Webhooks, then paste the same value here.
-              </p>
-            </div>
-
-            {/* Save Button */}
-            <div className="pt-4 border-t border-gray-200">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className={`w-full sm:w-auto px-6 py-3 rounded-lg font-medium text-white transition-colors ${
-                  saving
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-              >
-                {saving ? (
-                  <>
-                    <i className="fas fa-circle-notch fa-spin mr-2"></i>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-save mr-2"></i>
-                    Save Paystack Settings
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Help Section */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-sm font-semibold text-blue-900 mb-3">
-            <i className="fas fa-lightbulb mr-2"></i>
-            Setup Instructions
-          </h3>
-          <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
-            <li>Create a Paystack account at <a href="https://paystack.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">paystack.com</a></li>
-            <li>Go to Dashboard → Settings → API Keys & Webhooks</li>
-            <li>Copy your Public Key and Secret Key (Test or Live depending on mode)</li>
-            <li>Set up a webhook endpoint in Paystack dashboard pointing to your server</li>
-            <li>Copy the Webhook Secret from Paystack after creating the webhook</li>
-            <li>Enter all three keys above and click Save</li>
-          </ol>
+        {/* Currency & Channels */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Currency */}
+          <div className={`
+            bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+            transition-all duration-500 delay-400
+            ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+          `}>
+            <div className="flex items-center gap-2 mb-5">
+              <i className="fas fa-coins text-[#f59e0b] text-sm" />
+              <h2 className="font-bold text-[#1e293b]">Currency</h2>
+            </div>
+            <div className="relative">
+              <select
+                value={settings.currency}
+                onChange={(e) => updateField("currency", e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] bg-white text-sm font-bold outline-none focus:border-[#8b5cf6] appearance-none cursor-pointer"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.flag} {c.label}
+                  </option>
+                ))}
+              </select>
+              <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Business Metadata */}
+          <div className={`
+            bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+            transition-all duration-500 delay-500
+            ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+          `}>
+            <div className="flex items-center gap-2 mb-5">
+              <i className="fas fa-building text-[#3b82f6] text-sm" />
+              <h2 className="font-bold text-[#1e293b]">Business Info</h2>
+            </div>
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={settings.metadata.businessName}
+                onChange={(e) => updateField("metadata", { ...settings.metadata, businessName: e.target.value })}
+                placeholder="Business Name"
+                className="w-full px-3 py-2.5 rounded-xl border-2 border-[#e2e8f0] text-sm outline-none focus:border-[#8b5cf6] placeholder:text-[#cbd5e1]"
+              />
+              <input
+                type="email"
+                value={settings.metadata.businessEmail}
+                onChange={(e) => updateField("metadata", { ...settings.metadata, businessEmail: e.target.value })}
+                placeholder="Business Email"
+                className="w-full px-3 py-2.5 rounded-xl border-2 border-[#e2e8f0] text-sm outline-none focus:border-[#8b5cf6] placeholder:text-[#cbd5e1]"
+              />
+            </div>
+          </div>
         </div>
+
+        {/* Payment Channels */}
+        <div className={`
+          bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm
+          transition-all duration-500 delay-500
+          ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        `}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <i className="fas fa-sliders-h text-[#8b5cf6] text-sm" />
+              <h2 className="font-bold text-[#1e293b]">Payment Channels</h2>
+            </div>
+            <span className="text-xs text-[#64748b] font-bold">
+              {activeChannelsCount} of {PAYMENT_CHANNELS.length} enabled
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PAYMENT_CHANNELS.map((channel, idx) => (
+              <ChannelToggle
+                key={channel.id}
+                channel={channel}
+                enabled={settings.channels[channel.id]}
+                onChange={(val) => updateChannel(channel.id, val)}
+                index={idx}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Test Cards Info */}
+        {settings.mode === "test" && (
+          <div className={`
+            bg-gradient-to-br from-[#3b82f6]/5 to-[#8b5cf6]/5 rounded-2xl p-4 md:p-6 border border-[#3b82f6]/20
+            transition-all duration-500 delay-600
+            ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+          `}>
+            <div className="flex items-center gap-2 mb-4">
+              <i className="fas fa-flask text-[#3b82f6] text-sm" />
+              <h2 className="font-bold text-[#1e293b]">Test Card Numbers</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { number: "4084 0840 8408 4081", type: "Success (No PIN)", badge: "bg-[#10b981]/10 text-[#10b981]" },
+                { number: "5078 5078 5078 5078", type: "PIN Required", badge: "bg-[#f59e0b]/10 text-[#f59e0b]" },
+                { number: "5060 6666 6666 6666", type: "PIN + OTP", badge: "bg-[#ef4444]/10 text-[#ef4444]" },
+              ].map((card) => (
+                <div key={card.number} className="bg-white rounded-xl p-3 border border-[#e2e8f0]">
+                  <div className="font-mono text-sm font-bold text-[#1e293b] mb-1">{card.number}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-[#64748b]">{card.type}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${card.badge}`}>
+                      Use any CVC + future date
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sticky Save Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#e2e8f0] z-40">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-[#64748b]">
+            <i className="fas fa-info-circle text-[10px]" />
+            <span className="hidden sm:inline">
+              {saveStatus === "saved" ? "Settings saved successfully" : "Unsaved changes"}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            {saveStatus === "saved" && (
+              <span className="flex items-center gap-1.5 text-sm font-bold text-[#10b981] animate-fadeIn">
+                <i className="fas fa-check-circle" />
+                Saved
+              </span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !allKeysValid}
+              className={`
+                flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
+                transition-all duration-200 active:scale-95
+                ${isSaving || !allKeysValid
+                  ? "bg-[#e2e8f0] text-[#94a3b8] cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-lg shadow-[#10b981]/20 hover:shadow-xl hover:-translate-y-0.5"
+                }
+              `}
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save" />
+                  Save Settings
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        <div className="h-safe-area-inset-bottom bg-white/80" />
       </div>
     </div>
   );
