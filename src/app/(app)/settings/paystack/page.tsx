@@ -486,6 +486,11 @@ export default function PaystackSettingsPage() {
       return;
     }
 
+    // Use KES (Kenyan Shillings) - Paystack uses cents for KES
+    // KES 10.00 = 1000 cents (1000/100 = KES 10.00)
+    const amountInCents = 1000;
+    const currency = "KES";
+
     // Dynamically load Paystack Inline JS
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
@@ -495,13 +500,14 @@ export default function PaystackSettingsPage() {
       const handler = (window as any).PaystackPop.setup({
         key: publicKey,
         email: "test@example.com",
-        amount: 1000 * 100, // KES 10.00 in kobo/cents
-        currency: settings.currency || "KES",
+        amount: amountInCents,
+        currency: currency,
         ref: `test_${Date.now()}`,
         metadata: {
           custom_fields: [
             { display_name: "Test Mode", variable_name: "test_mode", value: settings.mode },
-            { display_name: "Purpose", variable_name: "purpose", value: "Settings Page Test" }
+            { display_name: "Purpose", variable_name: "purpose", value: "Settings Page Test" },
+            { display_name: "Country", variable_name: "country", value: "Kenya" }
           ]
         },
         callback: function(response: any) {
@@ -521,7 +527,7 @@ export default function PaystackSettingsPage() {
     };
 
     document.head.appendChild(script);
-  }, [settings.mode, settings.testPublicKey, settings.livePublicKey, settings.currency, currentModeKeysValid]);
+  }, [settings.mode, settings.testPublicKey, settings.livePublicKey, currentModeKeysValid]);
 
   const activeChannelsCount = Object.values(settings.channels).filter(Boolean).length;
 
