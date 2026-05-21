@@ -46,6 +46,7 @@ const FAB_MENU_SECTIONS = [
       { id: "products", label: "Products", icon: "fa-box", href: "/products" },
       { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services" },
       { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings" },
+      { id: "paystack", label: "Paystack", icon: "fa-credit-card", href: "/settings/paystack" },
     ],
   },
   {
