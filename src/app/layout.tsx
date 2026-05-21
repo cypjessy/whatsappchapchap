@@ -36,6 +36,15 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="ChapChap" />
         <meta name="format-detection" content="telephone=no" />
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js');
+              });
+            }
+          `,
+        }} />
       </head>
       <body className="font-sans">
         <ClientLayout>{children}</ClientLayout>

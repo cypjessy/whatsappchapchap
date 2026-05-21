@@ -142,10 +142,12 @@ export async function handleServiceSearch(
     
     debugLog(`[ServiceSearch] Querying services collection for tenantId: ${tenantId}, status: active`);
     
+    // LIMIT: 100 prevents unbounded reads — enough for meaningful results without risking timeout
     const servicesSnap = await adminDb
       .collection("services")
       .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
+      .limit(100)
       .get();
     
     debugLog(`[ServiceSearch] Found ${servicesSnap.size} services in Firestore`);
@@ -185,6 +187,11 @@ export async function handleServiceSearch(
       id: doc.id,
       ...doc.data()
     }));
+    
+    // PAGINATION: Warn if there may be more services beyond the limit
+    if (servicesSnap.docs.length === 100) {
+      debugLog(`[ServiceSearch] Hit 100-item limit — tenant may have more services beyond this batch`);
+    }
     
     debugLog(`[ServiceSearch] Processing ${allServices.length} services for scoring`);
     if (process.env.DEBUG === 'true' && allServices.length > 0) {
@@ -448,11 +455,16 @@ export async function handleServiceSearch(
     
     await deps.sendMessage(tenantId, phone, replyMessage);
     
+    // PAGINATION: Cap stored results to 50 items to avoid oversized Firestore documents
+    const MAX_STORED_RESULTS = 50;
+    const storedResults = scoredServices.slice(0, MAX_STORED_RESULTS);
+    
     await deps.setFlowState(tenantId, phone, {
       flowName: 'service_search',
       currentStep: 'search_results',
       searchQuery: searchTerm,
-      allResults: scoredServices,
+      allResults: storedResults,
+      hasMoreResults: scoredServices.length > MAX_STORED_RESULTS, // Flag for pagination hint
       currentIndex: 0,
       isActive: true,
       lastActivity: new Date().toISOString(),

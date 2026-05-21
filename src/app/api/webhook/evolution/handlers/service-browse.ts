@@ -30,6 +30,14 @@ export interface ServiceBrowseDeps {
   stopTyping: (tenantId: string, phone: string) => Promise<void>;
   sendWelcomeMenu: (tenantId: string, phone: string) => Promise<void>;
   debugLog?: (...args: any[]) => void;
+  /**
+   * Check if a message looks like a search query (not a menu number)
+   */
+  checkIfSearchQuery?: (message: string) => boolean;
+  /**
+   * Handle a service search query from within browse flow
+   */
+  handleServiceSearch?: (tenantId: string, phone: string, query: string) => Promise<void>;
 }
 
 // Service category icons (fallback - will be overridden by Firestore data)
@@ -235,6 +243,15 @@ async function handleCategorySelection(
   }
   
   if (isNaN(num) || num < 1 || num > categories.length) {
+    // ⭐ Check if it's a search query before showing invalid error
+    if (deps.checkIfSearchQuery && deps.checkIfSearchQuery(message)) {
+      await deps.stopTyping(tenantId, phone);
+      if (deps.handleServiceSearch) {
+        await deps.handleServiceSearch(tenantId, phone, message);
+      }
+      return;
+    }
+
     console.warn(`[ServiceBrowse] Invalid category selection: ${message}`);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
@@ -259,6 +276,7 @@ async function handleCategorySelection(
       .where("tenantId", "==", tenantId)
       .where("businessType", "==", selectedCategory.categorySlug)
       .where("status", "==", "active")
+      .limit(100)
       .get();
     
     console.log(`[ServiceBrowse] Found ${servicesSnap.size} active services for category ${selectedCategory.categorySlug}`);
@@ -350,6 +368,15 @@ async function handleSubcategorySelection(
   }
   
   if (isNaN(num) || num < 1 || num > categorySubcategories.length) {
+    // ⭐ Check if it's a search query before showing invalid error
+    if (deps.checkIfSearchQuery && deps.checkIfSearchQuery(message)) {
+      await deps.stopTyping(tenantId, phone);
+      if (deps.handleServiceSearch) {
+        await deps.handleServiceSearch(tenantId, phone, message);
+      }
+      return;
+    }
+
     console.warn(`[ServiceBrowse] Invalid subcategory selection: ${message}`);
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(
@@ -650,6 +677,17 @@ async function handleServiceListing(
       await showServicesForCategory(tenantId, phone, categorySlug, categoryName, deps);
     }
     return;
+  }
+  
+  // ⭐ Check if it's a search query (handle before invalid selection)
+  if (trimmed !== '0' && trimmed !== 'menu' && !(num >= 1 && num <= currentBatchIds.length) && num !== 6) {
+    if (deps.checkIfSearchQuery && deps.checkIfSearchQuery(message)) {
+      await deps.stopTyping(tenantId, phone);
+      if (deps.handleServiceSearch) {
+        await deps.handleServiceSearch(tenantId, phone, message);
+      }
+      return;
+    }
   }
   
   if (num === 3) {

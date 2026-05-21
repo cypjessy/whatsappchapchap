@@ -6,7 +6,8 @@ import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { 
   startTypingIndicator,
   stopTypingIndicator,
-  sendTypingIndicator
+  sendTypingIndicator,
+  withTypingIndicator
 } from "@/lib/typing-indicator";
 import { 
   startOrderStatusFlow, 
@@ -365,86 +366,183 @@ async function getBusinessContext(tenantId: string): Promise<AIContext> {
   }
 }
 
-export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
-  const settings = await getTenantSettings(tenantId);
-  const businessName = settings.businessName;
-  
-  let cartNote = '';
+// ============================================
+// MENU DYNAMIC HELPERS
+// ============================================
+
+/**
+ * Check whether the tenant has any active products or services in the database.
+ * Uses limit(1) for minimal cost since we only need existence.
+ */
+async function getAvailableMenuOptions(tenantId: string): Promise<{ hasProducts: boolean; hasServices: boolean }> {
   try {
+    const db = getAdminDb();
+    const [productSnap, serviceSnap] = await Promise.all([
+      db.collection("products")
+        .where("tenantId", "==", tenantId)
+        .where("status", "==", "active")
+        .limit(1)
+        .get(),
+      db.collection("services")
+        .where("tenantId", "==", tenantId)
+        .where("status", "==", "active")
+        .limit(1)
+        .get(),
+    ]);
+    return {
+      hasProducts: !productSnap.empty,
+      hasServices: !serviceSnap.empty,
+    };
+  } catch (error) {
+    console.error("[Webhook] Error checking available menu options:", error);
+    // Default to assuming both exist so the menu isn't broken on errors
+    return { hasProducts: true, hasServices: true };
+  }
+}
+
+/**
+ * Build a mapping from display number -> action number (1-6) based on what's available.
+ * actionMap[n] = the original action number for display number n.
+ * Always returns: order status (5) and booking status (6) at the end.
+ */
+async function getMenuActionMap(tenantId: string): Promise<(number | null)[]> {
+  const { hasProducts, hasServices } = await getAvailableMenuOptions(tenantId);
+  const actionMap: (number | null)[] = [null]; // index 0 unused
+  let display = 1;
+
+  if (hasProducts) {
+    actionMap[display++] = 1; // Browse Products
+    actionMap[display++] = 3; // Search Products
+  }
+  if (hasServices) {
+    actionMap[display++] = 2; // Browse Services
+    actionMap[display++] = 4; // Search Services
+  }
+
+  actionMap[display++] = 5; // Check Order Status
+  actionMap[display++] = 6; // Check Booking Status
+
+  return actionMap;
+}
+
+/** Convert a number (1-8) to its emoji counterpart */
+function getNumberEmoji(n: number): string {
+  const emojis = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣'];
+  return emojis[n] ?? `${n}.`;
+}
+
+/**
+ * Build the menu item lines and corresponding action map for the welcome menu.
+ */
+function buildMenu(
+  hasProducts: boolean,
+  hasServices: boolean
+): { lines: string[]; actionMap: (number | null)[]; total: number } {
+  const lines: string[] = [];
+  const actionMap: (number | null)[] = [null];
+  let display = 1;
+
+  if (hasProducts) {
+    lines.push(`${getNumberEmoji(display)} Browse Products`);
+    actionMap[display++] = 1;
+    lines.push(`${getNumberEmoji(display)} 🔍 Search Products`);
+    actionMap[display++] = 3;
+  }
+  if (hasServices) {
+    lines.push(`${getNumberEmoji(display)} Browse Services`);
+    actionMap[display++] = 2;
+    lines.push(`${getNumberEmoji(display)} 🔍 Search Services`);
+    actionMap[display++] = 4;
+  }
+
+  lines.push(`${getNumberEmoji(display)} Check Order Status`);
+  actionMap[display++] = 5;
+  lines.push(`${getNumberEmoji(display)} Check Booking Status`);
+  actionMap[display++] = 6;
+
+  return { lines, actionMap, total: display - 1 };
+}
+
+export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<void> {
+  await withTypingIndicator(tenantId, phone, async () => {
+    const settings = await getTenantSettings(tenantId);
+    const businessName = settings.businessName;
+    
+    let cartNote = '';
+    try {
+      const adminDb = getAdminDb();
+      const convoDoc = await adminDb
+        .collection("tenants")
+        .doc(tenantId)
+        .collection("conversations")
+        .doc(phone)
+        .get();
+      
+      const cartData = convoDoc.data()?.cart;
+      if (cartData && cartData.items && cartData.items.length > 0) {
+        cartNote = `\n\n🛒 *You have ${cartData.items.length} item(s) in your cart*\nReply *VIEW CART* to checkout`;
+      }
+    } catch (err) {
+      console.error('[Webhook] Error checking cart:', err);
+    }
+    
+    let welcomeText: string;
+    if (settings.welcomeMessageEnabled && settings.welcomeMessage) {
+      welcomeText = settings.welcomeMessage.replace(/\{\{business_name\}\}/g, businessName);
+    } else {
+      welcomeText = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?`;
+    }
+    
+    // Check what products/services exist for this tenant
+    const { hasProducts, hasServices } = await getAvailableMenuOptions(tenantId);
+    const { lines: menuLines, actionMap, total: totalOptions } = buildMenu(hasProducts, hasServices);
+    
+    const menuMsg = `${welcomeText}\n\n` +
+      menuLines.join('\n') +
+      `${cartNote}\n\n` +
+      `*Reply with a number (1-${totalOptions})*`;
+    
+    await sendEvolutionMessage(tenantId, phone, menuMsg);
+    
     const adminDb = getAdminDb();
-    const convoDoc = await adminDb
+    await adminDb
       .collection("tenants")
       .doc(tenantId)
       .collection("conversations")
       .doc(phone)
-      .get();
-    
-    const cartData = convoDoc.data()?.cart;
-    if (cartData && cartData.items && cartData.items.length > 0) {
-      cartNote = `\n\n🛒 *You have ${cartData.items.length} item(s) in your cart*\nReply *VIEW CART* to checkout`;
-    }
-  } catch (err) {
-    console.error('[Webhook] Error checking cart:', err);
-  }
-  
-  let welcomeText: string;
-  if (settings.welcomeMessageEnabled && settings.welcomeMessage) {
-    welcomeText = settings.welcomeMessage.replace(/\{\{business_name\}\}/g, businessName);
-  } else {
-    welcomeText = `Hello! 👋 Welcome to *${businessName}*!\n\nHow can we help you today?`;
-  }
-  
-  const menuMsg = `${welcomeText}\n\n` +
-    `1️⃣ Browse Products\n` +
-    `2️⃣ Browse Services\n` +
-    `3️⃣ 🔍 Search Products\n` +
-    `4️⃣ 🔍 Search Services\n` +
-    `5️⃣ Check Order Status\n` +
-    `6️⃣ Check Booking Status${cartNote}\n\n` +
-    `*Reply with a number (1-6)*`;
-  
-  await stopTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, menuMsg);
-  
-  const adminDb = getAdminDb();
-  await adminDb
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .collection("messages")
-    .doc(`ai_${Date.now()}`)
-    .set({
-      text: menuMsg,
-      from: tenantId,
-      fromMe: true,
-      sender: "business",
-      timestamp: new Date(),
-      status: "sent",
-      createdAt: new Date(),
-      isAI: false,
-    });
-    
-  await adminDb
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .set({
-      flowState: {
-        isActive: true,
-        flowName: 'main_menu',
-        currentStep: 'waiting_for_selection',
-        selections: {},
-        startedAt: new Date().toISOString(),
-        lastActivity: new Date().toISOString(),
-      }
-    }, { merge: true });
+      .collection("messages")
+      .doc(`ai_${Date.now()}`)
+      .set({
+        text: menuMsg,
+        from: tenantId,
+        fromMe: true,
+        sender: "business",
+        timestamp: new Date(),
+        status: "sent",
+        createdAt: new Date(),
+        isAI: false,
+      });
+      
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          isActive: true,
+          flowName: 'main_menu',
+          currentStep: 'waiting_for_selection',
+          menuActions: actionMap,
+          selections: {},
+          startedAt: new Date().toISOString(),
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  });
 }
 
-function parseMenuSelection(message: string): number | null {
+function parseMenuSelection(message: string, actionMap?: (number | null)[]): number | null {
   const trimmed = message.trim();
   const wordCount = trimmed.split(/\s+/).length;
   
@@ -455,21 +553,32 @@ function parseMenuSelection(message: string): number | null {
   
   if (wordCount <= 3) {
     const lower = trimmed.toLowerCase();
-    if (lower === 'products' || lower === 'browse' || lower === 'product') return 1;
-    if (lower === 'services' || lower === 'service') return 2;
-    if (lower === 'search' || lower === 'find') return 3;
-    if (lower === 'order' || lower === 'orders' || lower === 'track') return 5;
-    if (lower === 'booking' || lower === 'bookings' || lower === 'appointment') return 6;
-    if (lower === 'payment' || lower === 'payments' || lower === 'pay') return 7;
-    if (lower === 'support' || lower === 'help') return 8;
+    
+    // Map word matches to action numbers, then find the display number for that action
+    let targetAction: number | null = null;
+    if (lower === 'products' || lower === 'browse' || lower === 'product') targetAction = 1;
+    else if (lower === 'services' || lower === 'service') targetAction = 2;
+    else if (lower === 'search' || lower === 'find') targetAction = 3;
+    else if (lower === 'order' || lower === 'orders' || lower === 'track') targetAction = 5;
+    else if (lower === 'booking' || lower === 'bookings' || lower === 'appointment') targetAction = 6;
+    
+    if (targetAction !== null) {
+      // If we have an actionMap, find which display number maps to this action
+      if (actionMap) {
+        const displayIndex = actionMap.indexOf(targetAction);
+        if (displayIndex > 0) return displayIndex;
+        // Action not available — return null so we don't try to route to an unavailable option
+        return null;
+      }
+      // No actionMap provided, use the action number directly (backwards compatible)
+      return targetAction;
+    }
   }
   
   return null;
 }
 
 async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
   const response = `🔍 *Product Search*\n\n` +
     `Please type the product you're looking for.\n\n` +
     `📝 *Examples:*\n` +
@@ -478,29 +587,28 @@ async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
     `• "iPhone 14"\n\n` +
     `0️⃣ - Back to main menu`;
   
-  await stopTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, response);
+  await withTypingIndicator(tenantId, phone, async () => {
+    await sendEvolutionMessage(tenantId, phone, response);
   
-  const adminDb = getAdminDb();
-  await adminDb
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .set({
-      flowState: {
-        isActive: true,
-        flowName: 'search_prompt',
-        currentStep: 'waiting_for_search_term',
-        startedAt: new Date().toISOString(),
-        lastActivity: new Date().toISOString(),
-      }
-    }, { merge: true });
+    const adminDb = getAdminDb();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          isActive: true,
+          flowName: 'search_prompt',
+          currentStep: 'waiting_for_search_term',
+          startedAt: new Date().toISOString(),
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  });
 }
 
 async function startServiceSearchFlow(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
   const response = `🔍 *Service Search*\n\n` +
     `Please type the service you're looking for.\n\n` +
     `📝 *Examples:*\n` +
@@ -509,28 +617,32 @@ async function startServiceSearchFlow(tenantId: string, phone: string): Promise<
     `• "consultation"\n\n` +
     `0️⃣ - Back to main menu`;
   
-  await stopTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, response);
+  await withTypingIndicator(tenantId, phone, async () => {
+    await sendEvolutionMessage(tenantId, phone, response);
   
-  const adminDb = getAdminDb();
-  await adminDb
-    .collection("tenants")
-    .doc(tenantId)
-    .collection("conversations")
-    .doc(phone)
-    .set({
-      flowState: {
-        isActive: true,
-        flowName: 'service_search_prompt',
-        currentStep: 'waiting_for_search_term',
-        startedAt: new Date().toISOString(),
-        lastActivity: new Date().toISOString(),
-      }
-    }, { merge: true });
+    const adminDb = getAdminDb();
+    await adminDb
+      .collection("tenants")
+      .doc(tenantId)
+      .collection("conversations")
+      .doc(phone)
+      .set({
+        flowState: {
+          isActive: true,
+          flowName: 'service_search_prompt',
+          currentStep: 'waiting_for_search_term',
+          startedAt: new Date().toISOString(),
+          lastActivity: new Date().toISOString(),
+        }
+      }, { merge: true });
+  });
 }
 
-async function handleMenuSelection(tenantId: string, phone: string, selection: number): Promise<void> {
-  switch (selection) {
+async function handleMenuSelection(tenantId: string, phone: string, selection: number, actionMap?: (number | null)[]): Promise<void> {
+  // Resolve the action: either use the actionMap or fallback to the display number directly
+  const action = actionMap?.[selection] ?? selection;
+  
+  switch (action) {
     case 1:
       debugLog("[Webhook] Starting product browse flow");
       const productDeps: ProductBrowseDeps = { 
@@ -548,12 +660,14 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       
     case 2:
       debugLog("[Webhook] Starting service browse flow");
-      const serviceDeps: ServiceBrowseDeps = { 
+      const serviceDeps: ServiceBrowseDeps = {
         sendMessage: sendEvolutionMessage,
         sendMedia: sendEvolutionMedia,
         startTyping: startTypingIndicator,
         stopTyping: stopTypingIndicator,
         sendWelcomeMenu: sendWelcomeMenu,
+        checkIfSearchQuery: checkIfSearchQuery,
+        handleServiceSearch: handleServiceSearchWrapper,
       };
       await startServiceBrowseFlow(tenantId, phone, serviceDeps);
       break;
@@ -580,7 +694,7 @@ async function handleMenuSelection(tenantId: string, phone: string, selection: n
       
     default:
       debugLog("[Webhook] Unknown menu selection:", selection);
-      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number 1-6.");
+      await sendEvolutionMessage(tenantId, phone, "❌ Invalid selection. Please reply with a valid number from the menu.");
   }
 }
 
@@ -745,12 +859,14 @@ async function handleFlowInput(
   }
   
   if (flowName === 'service_browse') {
-    const deps: ServiceBrowseDeps = { 
+    const deps: ServiceBrowseDeps = {
       sendMessage: sendEvolutionMessage,
       sendMedia: sendEvolutionMedia,
       startTyping: startTypingIndicator,
       stopTyping: stopTypingIndicator,
       sendWelcomeMenu: sendWelcomeMenu,
+      checkIfSearchQuery: checkIfSearchQuery,
+      handleServiceSearch: handleServiceSearchWrapper,
     };
     await handleServiceBrowseInput(tenantId, phone, message, flowState, deps);
     return;
@@ -895,7 +1011,12 @@ async function handleProductSearchInput(
       
       if (nextBatch.length === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await sendEvolutionMessage(tenantId, phone, "✅ No more products to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu");
+        const capHint = flowState.hasMoreResults 
+          ? "\n\n💡 *Tip:* Try a more specific search to find what you need."
+          : '';
+        await sendEvolutionMessage(tenantId, phone, 
+          `✅ No more products to show.${capHint}\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+        );
         return;
       }
       
@@ -1037,7 +1158,12 @@ async function handleServiceSearchInput(
 
       if (nextBatch.length === 0) {
         await stopTypingIndicator(tenantId, phone);
-        await sendEvolutionMessage(tenantId, phone, "✅ No more services to show.\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu");
+        const capHint = flowState.hasMoreResults 
+          ? "\n\n💡 *Tip:* Try a more specific search to find what you need."
+          : '';
+        await sendEvolutionMessage(tenantId, phone, 
+          `✅ No more services to show.${capHint}\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
+        );
         return;
       }
 
@@ -1092,6 +1218,8 @@ async function handleServiceSearchInput(
         startTyping: startTypingIndicator,
         stopTyping: stopTypingIndicator,
         sendWelcomeMenu: sendWelcomeMenu,
+        checkIfSearchQuery: checkIfSearchQuery,
+        handleServiceSearch: handleServiceSearchWrapper,
       };
       await startServiceBrowseFlow(tenantId, phone, serviceDeps);
       return;
@@ -1106,6 +1234,8 @@ async function handleServiceSearchInput(
         startTyping: startTypingIndicator,
         stopTyping: stopTypingIndicator,
         sendWelcomeMenu: sendWelcomeMenu,
+        checkIfSearchQuery: checkIfSearchQuery,
+        handleServiceSearch: handleServiceSearchWrapper,
       };
       await startServiceBrowseFlow(tenantId, phone, serviceDeps);
       return;
@@ -1138,9 +1268,9 @@ async function sendOrderStatusInfo(tenantId: string, phone: string): Promise<voi
 }
 
 async function sendSupportInfo(tenantId: string, phone: string): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  await sendEvolutionMessage(tenantId, phone, "🆘 Our support team is here to help! Please describe your issue and we'll assist you.");
-  await stopTypingIndicator(tenantId, phone);
+  await withTypingIndicator(tenantId, phone, async () => {
+    await sendEvolutionMessage(tenantId, phone, "🆘 Our support team is here to help! Please describe your issue and we'll assist you.");
+  });
 }
 
 async function sendBookingStatusInfo(tenantId: string, phone: string): Promise<void> {
@@ -1302,223 +1432,51 @@ function checkIfSearchQuery(message: string): boolean {
 }
 
 // ============================================
-// ENHANCED PRODUCT SEARCH with Similar Products Support
+// DELEGATED SEARCH HANDLERS (wrappers that provide deps)
 // ============================================
+
+/**
+ * Wrapper that delegates product search to the dedicated handler
+ */
 async function handleProductSearch(
   tenantId: string,
   phone: string,
   query: string
 ): Promise<void> {
-  await startTypingIndicator(tenantId, phone);
-  
-  try {
-    debugLog(`[Webhook] Handling product search: "${query}"`);
-    
-    let searchTerm = query
-      .replace(/^(am looking for|i am looking for|looking for|searching for|want to buy|need to buy|do you have|show me|find|i want|i need|can i get)\s+/i, '')
-      .trim();
-    
-    if (!searchTerm) {
-      searchTerm = query.trim();
+  await handleProductSearchHandler(
+    tenantId,
+    phone,
+    query,
+    {
+      sendTypingIndicator: startTypingIndicator,
+      stopTypingIndicator: stopTypingIndicator,
+      sendMessage: sendEvolutionMessage,
+      sendMedia: sendEvolutionMedia,
+      setFlowState: setFlowState,
     }
-    
-    debugLog(`[Webhook] Extracted search term: "${searchTerm}"`);
-    
-    const adminDb = getAdminDb();
-    
-    const productsSnap = await adminDb
-      .collection("products")
-      .where("tenantId", "==", tenantId)
-      .where("status", "==", "active")
-      .get();
-    
-    if (productsSnap.empty) {
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(
-        tenantId,
-        phone,
-        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
-      );
-      return;
+  );
+}
+
+/**
+ * Wrapper that delegates service search to the dedicated handler
+ */
+async function handleServiceSearchWrapper(
+  tenantId: string,
+  phone: string,
+  query: string
+): Promise<void> {
+  await handleServiceSearchHandler(
+    tenantId,
+    phone,
+    query,
+    {
+      sendTypingIndicator: startTypingIndicator,
+      stopTypingIndicator: stopTypingIndicator,
+      sendMessage: sendEvolutionMessage,
+      sendMedia: sendEvolutionMedia,
+      setFlowState: setFlowState,
     }
-    
-    const searchLower = searchTerm.toLowerCase();
-    const allProducts = productsSnap.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    
-    const scoredProducts = allProducts.map((product: any) => {
-      let score = 0;
-      
-      const name = (product.name || "").toLowerCase();
-      const brand = (product.brand || "").toLowerCase();
-      const category = (product.category || product.categoryName || "").toLowerCase();
-      const description = (product.description || "").toLowerCase();
-      
-      if (name === searchLower) score += 200;
-      if (name.startsWith(searchLower)) score += 150;
-      if (name.includes(searchLower)) score += 100;
-      if (isFuzzyMatch(name, searchLower, 2) && !name.includes(searchLower)) score += 80;
-      
-      const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
-      const nameWords = name.split(/\s+/);
-      
-      for (const searchWord of searchWords) {
-        for (const nameWord of nameWords) {
-          if (nameWord === searchWord) score += 60;
-          else if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) score += 30;
-        }
-      }
-      
-      if (brand === searchLower) score += 80;
-      else if (brand.includes(searchLower)) score += 50;
-      else if (isFuzzyMatch(brand, searchLower, 2)) score += 30;
-      
-      if (category === searchLower) score += 60;
-      else if (category.includes(searchLower)) score += 40;
-      else if (isFuzzyMatch(category, searchLower, 2)) score += 20;
-      
-      if (description.includes(searchLower)) score += 15;
-      else if (isFuzzyMatch(description, searchLower, 3)) score += 10;
-      
-      return { ...product, score };
-    }).filter((p: any) => p.score > 0);
-    
-    scoredProducts.sort((a: any, b: any) => b.score - a.score);
-    
-    debugLog(`[Webhook] Search found ${scoredProducts.length} matching products for "${searchTerm}"`);
-    
-    let similarProducts: any[] = [];
-    if (scoredProducts.length === 0) {
-      const searchWords = searchLower.split(/\s+/).filter(w => w.length > 2);
-      
-      for (const product of allProducts) {
-        const name = (product.name || "").toLowerCase();
-        let matchScore = 0;
-        
-        for (const searchWord of searchWords) {
-          if (name.includes(searchWord)) matchScore += 10;
-        }
-        
-        if (matchScore > 0) {
-          similarProducts.push({ ...product, matchScore });
-        }
-      }
-      
-      similarProducts.sort((a, b) => b.matchScore - a.matchScore);
-      similarProducts.splice(5);
-    }
-    
-    if (scoredProducts.length === 0 && similarProducts.length > 0) {
-      await stopTypingIndicator(tenantId, phone);
-      
-      let suggestionMessage = `🔍 *No exact match for "${searchTerm}"*\n\n💡 *Did you mean?*\n\n`;
-      
-      similarProducts.forEach((product: any, idx: number) => {
-        suggestionMessage += `${idx + 1}. *${product.name}* - KES ${product.price?.toLocaleString()}\n`;
-        if (product.brand) suggestionMessage += `   🏷️ ${product.brand}\n`;
-        if (product.category || product.categoryName) {
-          suggestionMessage += `   📂 ${product.category || product.categoryName}\n`;
-        }
-        suggestionMessage += `\n`;
-      });
-      
-      suggestionMessage += `Reply with a number to see product details, or *0* to go back.\n\nOr try searching with different keywords!`;
-      
-      await sendEvolutionMessage(tenantId, phone, suggestionMessage);
-      
-      await setFlowState(tenantId, phone, {
-        flowName: 'similar_products_selection',
-        currentStep: 'waiting_for_selection',
-        similarProducts: similarProducts,
-        originalQuery: searchTerm,
-        isActive: true,
-        lastActivity: new Date().toISOString(),
-      });
-      return;
-    }
-    
-    if (scoredProducts.length === 0) {
-      await stopTypingIndicator(tenantId, phone);
-      await sendEvolutionMessage(
-        tenantId,
-        phone,
-        `🔍 No products found for "${searchTerm}".\n\nTry searching with different keywords or browse our categories!\n\n*Reply:*\n1️⃣ - View Categories\n2️⃣ - Main Menu`
-      );
-      return;
-    }
-    
-    const results = scoredProducts.slice(0, 5);
-    const totalResults = scoredProducts.length;
-    
-    // Stop typing indicator before sending messages
-    await stopTypingIndicator(tenantId, phone);
-    
-    let headerMessage = `🔍 *Search Results for "${searchTerm}"*\n\nFound ${totalResults} product${totalResults > 1 ? 's' : ''}:\n\n`;
-    await sendEvolutionMessage(tenantId, phone, headerMessage);
-    
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://yourdomain.com');
-    
-    for (let idx = 0; idx < results.length; idx++) {
-      const product = results[idx];
-      const imageUrl = product.image || product.images?.[0] || product.imageUrl;
-      
-      let productText = `*${idx + 1}. ${product.name}*\n`;
-
-      if (product.salePrice && product.salePrice < product.price) {
-        productText += `   💰 ~~KES ${product.price?.toLocaleString()}~~ → *KES ${product.salePrice.toLocaleString()}* 🔥\n`;
-      } else {
-        productText += `   💰 KES ${product.price?.toLocaleString() || 'N/A'}\n`;
-      }
-
-      if (product.stock !== undefined) {
-        const stockLabel = product.stock === 0 ? '❌ Out of stock' : product.stock <= 5 ? `⚠️ Only ${product.stock} left` : `✅ In stock (${product.stock})`;
-        productText += `   📦 ${stockLabel}\n`;
-      }
-
-      if (product.description) {
-        const shortDesc = product.description.substring(0, 100);
-        productText += `   📝 ${shortDesc}${product.description.length > 100 ? '...' : ''}\n`;
-      }
-
-      if (product.brand) productText += `   🏷️ Brand: ${product.brand}\n`;
-      if (product.category || product.categoryName) productText += `   📂 Category: ${product.category || product.categoryName}\n`;
-
-      const orderLink = `${baseUrl}/order?tenant=${tenantId}&product=${product.id}&phone=${phone}`;
-      productText += `   🛒 Order: ${orderLink}\n`;
-
-      if (imageUrl) {
-        await sendEvolutionMedia(tenantId, phone, imageUrl, productText);
-      } else {
-        await sendEvolutionMessage(tenantId, phone, productText);
-      }
-      
-      if (idx < results.length - 1) await new Promise(resolve => setTimeout(resolve, 600));
-    }
-    
-    let replyMessage = totalResults > 5 
-      ? `\n*Reply with a number:*\n1️⃣ - View More (${totalResults - 5} more)\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`
-      : `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
-    
-    await sendEvolutionMessage(tenantId, phone, replyMessage);
-    
-    await setFlowState(tenantId, phone, {
-      flowName: 'product_search',
-      currentStep: 'search_results',
-      searchQuery: searchTerm,
-      allResults: scoredProducts,
-      currentIndex: 0,
-      isActive: true,
-      lastActivity: new Date().toISOString(),
-    });
-    
-    debugLog(`[Webhook] Sent ${results.length} search results for "${searchTerm}" (total: ${totalResults})`);
-  } catch (error) {
-    console.error('[Webhook] Error handling product search:', error);
-    await stopTypingIndicator(tenantId, phone);
-    await sendEvolutionMessage(tenantId, phone, `❌ Search failed. Please try again or browse categories.\n\nReply *1* to browse products or *MENU* for main menu.`);
-  }
+  );
 }
 
 async function getFlowState(
@@ -1675,10 +1633,11 @@ async function processWithAI(
       }
       
       if (flowName === 'main_menu' && currentStep === 'waiting_for_selection') {
-        const menuSelection = parseMenuSelection(message);
+        const actionMap = currentFlowState.menuActions;
+        const menuSelection = parseMenuSelection(message, actionMap);
         if (menuSelection !== null) {
           debugLog("[Webhook] Main menu selection:", menuSelection);
-          await handleMenuSelection(tenantId, phone, menuSelection);
+          await handleMenuSelection(tenantId, phone, menuSelection, actionMap);
         } else {
           if (checkIfSearchQuery(message)) {
             debugLog("[Webhook] Natural language query from main menu:", message);
@@ -1696,8 +1655,11 @@ async function processWithAI(
             );
           } else {
             debugLog("[Webhook] Invalid main menu input:", message);
+            // Build a dynamic hint showing the actual available options
+            const { hasProducts, hasServices } = await getAvailableMenuOptions(tenantId);
+            const { lines: menuLines, total: totalOptions } = buildMenu(hasProducts, hasServices);
             await sendEvolutionMessage(tenantId, phone, 
-              "Please reply with a number *1-6* to continue:\n\n1 Browse Products\n2 Browse Services\n3 Search Products\n4 Search Services\n5 Check Order Status\n6 Check Booking Status"
+              `Please reply with a number *1-${totalOptions}* to continue:\n\n${menuLines.join('\n')}`
             );
           }
         }
@@ -1716,10 +1678,12 @@ async function processWithAI(
       return;
     }
     
-    const menuSelection = parseMenuSelection(message);
+    // For fresh messages without flow state, fetch the action map to resolve dynamic menu numbering
+    const freshActionMap = await getMenuActionMap(tenantId);
+    const menuSelection = parseMenuSelection(message, freshActionMap);
     if (menuSelection !== null) {
-      debugLog("[Webhook] Fresh menu selection detected:", menuSelection);
-      await handleMenuSelection(tenantId, phone, menuSelection);
+      debugLog("[Webhook] Fresh menu selection detected:", menuSelection, "-> action", freshActionMap[menuSelection]);
+      await handleMenuSelection(tenantId, phone, menuSelection, freshActionMap);
       return;
     }
     

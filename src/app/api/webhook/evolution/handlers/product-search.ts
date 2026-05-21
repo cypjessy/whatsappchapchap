@@ -101,10 +101,12 @@ export async function handleProductSearch(
     // Direct Firestore query
     const adminDb = getAdminDb();
     
+    // LIMIT: 100 prevents unbounded reads — enough for meaningful results without risking timeout
     const productsSnap = await adminDb
       .collection("products")
       .where("tenantId", "==", tenantId)
       .where("status", "==", "active")
+      .limit(100)
       .get();
     
     if (productsSnap.empty) {
@@ -123,6 +125,11 @@ export async function handleProductSearch(
       id: doc.id,
       ...doc.data()
     }));
+    
+    // PAGINATION: Warn if there may be more products beyond the limit
+    if (productsSnap.docs.length === 100) {
+      debugLog(`[ProductSearch] Hit 100-item limit — tenant may have more products beyond this batch`);
+    }
     
     const scoredProducts = allProducts.map((product: any) => {
       let score = 0;
@@ -359,13 +366,16 @@ export async function handleProductSearch(
       replyMessage = `\n*Reply with a number:*\n2️⃣ - Go back\n3️⃣ - View Categories\n4️⃣ - Main Menu`;
     }
     
-    await deps.sendMessage(tenantId, phone, replyMessage);
+    await deps.sendMessage(tenantId, phone, replyMessage);    // PAGINATION: Cap stored results to 50 items to avoid oversized Firestore documents
+    const MAX_STORED_RESULTS = 50;
+    const storedResults = scoredProducts.slice(0, MAX_STORED_RESULTS);
     
     await deps.setFlowState(tenantId, phone, {
       flowName: 'product_search',
       currentStep: 'search_results',
       searchQuery: searchTerm,
-      allResults: scoredProducts,
+      allResults: storedResults,
+      hasMoreResults: scoredProducts.length > MAX_STORED_RESULTS, // Flag for pagination hint
       currentIndex: 0,
       isActive: true,
       lastActivity: new Date().toISOString(),

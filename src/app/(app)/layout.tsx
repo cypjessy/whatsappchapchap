@@ -8,7 +8,8 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import { modalRegistry } from "@/lib/modal-registry";
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Helper function to show exit toast on Android back button
 const showExitToast = () => {
@@ -46,7 +47,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [showOfflineBanner, setShowOfflineBanner] = useState(false);
+  const router = useRouter();
   
   // Initialize app lifecycle management for Capacitor
   useAppLifecycle();
@@ -81,16 +82,12 @@ export default function DashboardLayout({
   // Will be updated dynamically when scrolling
   useStatusBar({ color: '#25D366', style: 'light' });
 
-  // Show offline banner when connection is lost
+  // Redirect to /offline when connection is lost
   useEffect(() => {
     if (!isOnline) {
-      setShowOfflineBanner(true);
-    } else {
-      // Hide banner after a short delay when back online
-      const timer = setTimeout(() => setShowOfflineBanner(false), 2000);
-      return () => clearTimeout(timer);
+      router.replace('/offline');
     }
-  }, [isOnline]);
+  }, [isOnline, router]);
 
   // Set up Capacitor native features (orientation, back button, splash)
   useEffect(() => {
@@ -167,64 +164,6 @@ export default function DashboardLayout({
     <>
       {/* Material Design 3 Page Background */}
       <div className="app-layout-surface">
-        {/* Premium Offline Modal - Mobile/Android Only */}
-        {showOfflineBanner && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 lg:hidden">
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn" />
-            
-            {/* Modal */}
-            <div className="relative w-full max-w-sm bg-surface rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
-            {/* Gradient Header */}
-            <div className="bg-gradient-to-br from-red-500 to-orange-500 p-6 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-surface/20 backdrop-blur-sm flex items-center justify-center">
-                <i className="fas fa-wifi-slash text-4xl text-white" />
-              </div>
-              <h2 className="text-2xl font-black text-white mb-1">No Internet</h2>
-              <p className="text-white/80 text-sm">Connection Lost</p>
-            </div>
-            
-            {/* Content */}
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
-                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <i className="fas fa-exclamation-triangle text-red-500 text-sm" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-on-surface mb-1">You're Offline</p>
-                    <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Some features require an internet connection. You can still view cached content.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <i className="fas fa-lightbulb text-blue-500 text-sm" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-on-surface mb-1">Quick Tip</p>
-                    <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Check your Wi-Fi or mobile data settings and try again.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Action Button */}
-              <button
-                onClick={() => setShowOfflineBanner(false)}
-                className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                <i className="fas fa-check-circle" />
-                Got It
-              </button>
-            </div>
-          </div>
-        </div>
-        )}
-        
         <ModeProvider>
           <AppLayout>
             <DashboardProtection>{children}</DashboardProtection>
