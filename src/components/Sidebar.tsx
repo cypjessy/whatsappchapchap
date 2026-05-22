@@ -50,6 +50,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { id: "products", label: "Products", icon: "fa-box", href: "/products" },
       { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services" },
+      { id: "properties", label: "Properties", icon: "fa-building", href: "/properties" },
     ],
   },
   {

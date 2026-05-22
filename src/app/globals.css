@@ -3281,12 +3281,14 @@ body:has(.landing-page-wrapper)::after {
 .md3-card-elevated {
   background: var(--md-sys-color-surface);
   border-radius: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
   overflow: hidden;
 }
 
 .md3-card-elevated:hover {
+  border-color: var(--md-sys-color-outline);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
 }
 
@@ -4083,3 +4085,43 @@ body:has(.landing-page-wrapper)::after {
     }
   }
 }
+
+/* ─── Display Font Utility ─── */
+.font-display {
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+/* ─── Animation Delay Utilities ─── */
+.delay-50 { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* ─── Surface Container Utilities ─── */
+.bg-surface-container-lowest { background-color: var(--md-sys-color-surface-container-lowest); }
+.bg-surface-container-low { background-color: var(--md-sys-color-surface-container-low); }
+.bg-surface-container { background-color: var(--md-sys-color-surface-container); }
+.bg-surface-container-high { background-color: var(--md-sys-color-surface-container-high); }
+.bg-surface-container-highest { background-color: var(--md-sys-color-surface-container-highest); }
+
+/* ─── Gradient Button Utilities ─── */
+.btn-gradient-green {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+.btn-gradient-green:hover {
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ─── WhatsApp Theme Colors ─── */
+.text-whatsapp { color: #25D366; }
+.bg-whatsapp { background-color: #25D366; }
+.bg-whatsapp-light { background-color: #DCF8C6; }
+.text-whatsapp-dark { color: #128C7E; }
+

@@ -7,8 +7,6 @@ interface Step4Props {
     country: string;
     currency: string;
   };
-  selectedPlan: string;
-  yearlyBilling: boolean;
   resendTimer: number;
   isLoading: boolean;
   error: string;
@@ -18,22 +16,12 @@ interface Step4Props {
 
 export default function Step4Verify({
   formData,
-  selectedPlan,
-  yearlyBilling,
   resendTimer,
   isLoading,
   error,
   onResendCode,
   onComplete,
 }: Step4Props) {
-  const getPlanName = (id: string) => {
-    const plans: Record<string, string> = {
-      free: "Free",
-      starter: "Starter",
-      professional: "Professional",
-    };
-    return plans[id] || id;
-  };
 
   return (
     <div className="animate-[fadeIn_0.4s_ease]">
@@ -65,10 +53,7 @@ export default function Step4Verify({
             <span className="text-on-surface-variant">Location</span>
             <span className="font-semibold">{formData.country} · {formData.currency}</span>
           </div>
-          <div className="flex justify-between pt-3 border-t border-outline-variant">
-            <span className="text-on-surface-variant">Plan</span>
-            <span className="font-bold text-[#25D366]">{getPlanName(selectedPlan)} {yearlyBilling && "(Yearly)"}</span>
-          </div>
+
         </div>
       </div>
 

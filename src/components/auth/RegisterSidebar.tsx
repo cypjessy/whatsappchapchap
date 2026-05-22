@@ -2,8 +2,8 @@ export default function RegisterSidebar({ currentStep }: { currentStep: number }
   const steps = [
     { step: 1, title: "Create Account", desc: "Basic information", active: currentStep === 1 },
     { step: 2, title: "Business Info", desc: "Tell us about your business", active: currentStep === 2 },
-    { step: 3, title: "Choose Plan", desc: "Select your subscription", active: currentStep === 3 },
-    { step: 4, title: "Verify & Launch", desc: "Confirm and start selling", active: currentStep === 4 },
+    { step: 3, title: "Verify & Launch", desc: "Confirm and get started", active: currentStep === 3 },
+    { step: 4, title: "Connect WhatsApp", desc: "Link your WhatsApp number", active: currentStep === 4 },
   ];
 
   return (

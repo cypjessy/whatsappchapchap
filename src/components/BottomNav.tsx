@@ -37,6 +37,7 @@ const FAB_MENU_SECTIONS = [
       { id: "new-order", label: "New Order", icon: "fa-shopping-cart", href: "/orders?new=true" },
       { id: "new-booking", label: "New Booking", icon: "fa-calendar-plus", href: "/bookings?new=true" },
       { id: "add-product", label: "Add Product", icon: "fa-plus-square", href: "/products?new=true" },
+      { id: "add-property", label: "Add Property", icon: "fa-building", href: "/properties?new=true" },
       { id: "add-customer", label: "Add Customer", icon: "fa-user-plus", href: "/customers?new=true" },
     ],
   },
@@ -45,6 +46,7 @@ const FAB_MENU_SECTIONS = [
     items: [
       { id: "products", label: "Products", icon: "fa-box", href: "/products" },
       { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services" },
+      { id: "properties", label: "Properties", icon: "fa-building", href: "/properties" },
       { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings" },
       { id: "paystack", label: "Paystack", icon: "fa-credit-card", href: "/settings/paystack" },
     ],

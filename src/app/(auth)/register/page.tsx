@@ -11,7 +11,7 @@ import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
 import FloatingShapes from "@/components/auth/FloatingShapes";
 import RegisterSidebar from "@/components/auth/RegisterSidebar";
-import { Step1Account, Step2Business, Step3Plan, Step4Verify, SuccessStep } from "@/components/auth/steps";
+import { Step1Account, Step2Business, Step4Verify, SuccessStep } from "@/components/auth/steps";
 
 export default function RegisterPage() {
   // Initialize Capacitor lifecycle management to prevent idle freeze
@@ -21,7 +21,6 @@ export default function RegisterPage() {
   useStatusBar({ color: '#ffffff', style: 'dark' });
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedBusinessType, setSelectedBusinessType] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("professional");
   const [resendTimer, setResendTimer] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +36,6 @@ export default function RegisterPage() {
     currency: "KES (Kenyan Shilling)",
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [yearlyBilling, setYearlyBilling] = useState(false);
   const [instanceName, setInstanceName] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const router = useRouter();
@@ -247,8 +245,8 @@ export default function RegisterPage() {
           <div className="flex justify-between text-xs text-on-surface-variant font-medium">
             <span>Account</span>
             <span>Business</span>
-            <span>Plan</span>
             <span>Verify</span>
+            <span>Connect</span>
             <span>Done</span>
           </div>
         </div>
@@ -302,19 +300,8 @@ export default function RegisterPage() {
           )}
 
           {currentStep === 3 && (
-            <Step3Plan
-              selectedPlan={selectedPlan}
-              yearlyBilling={yearlyBilling}
-              onPlanSelect={setSelectedPlan}
-              onBillingToggle={() => setYearlyBilling(!yearlyBilling)}
-            />
-          )}
-
-          {currentStep === 4 && (
             <Step4Verify
               formData={formData}
-              selectedPlan={selectedPlan}
-              yearlyBilling={yearlyBilling}
               resendTimer={resendTimer}
               isLoading={isLoading}
               error={error}
@@ -323,7 +310,7 @@ export default function RegisterPage() {
             />
           )}
 
-          {currentStep === 5 && (
+          {currentStep === 4 && (
             <div className="space-y-6">
               <div className="text-center">
                 <h2 className="text-3xl font-bold">Connect your WhatsApp Business</h2>
@@ -346,9 +333,9 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {currentStep === 6 && <SuccessStep />}
+          {currentStep === 5 && <SuccessStep />}
 
-          {currentStep < 4 && (
+          {currentStep < 3 && (
             <div className="flex justify-between mt-auto pt-6 md:pt-8 gap-3">
               {currentStep > 1 ? (
                 <button

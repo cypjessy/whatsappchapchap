@@ -286,30 +286,30 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   // ─── Mode Selector ──────────────────────────────────────────────────────────
 
   const renderModeSelector = () => (
-    <div className="flex gap-2 mb-6">
+    <div className="flex gap-2 mb-4">
       <button
         onClick={() => { setConnectMode('qr'); setError(null); setStatus('idle'); }}
-        className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+        className={`flex-1 px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-center gap-1.5 transition-all ${
           connectMode === 'qr'
-            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/30'
+            ? 'bg-[#25D366] text-white shadow-sm'
             : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-high'
         }`}
       >
-        <i className="fas fa-qrcode text-base" />
+        <i className="fas fa-qrcode text-sm" />
         Scan QR Code
-        <span className="text-[10px] opacity-70">(2 phones)</span>
+        <span className="text-[9px] opacity-70">(2 phones)</span>
       </button>
       <button
         onClick={() => { setConnectMode('pairing'); setError(null); setStatus('idle'); }}
-        className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+        className={`flex-1 px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-center gap-1.5 transition-all ${
           connectMode === 'pairing'
-            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/30'
+            ? 'bg-[#25D366] text-white shadow-sm'
             : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-high'
         }`}
       >
-        <i className="fas fa-keyboard text-base" />
+        <i className="fas fa-keyboard text-sm" />
         Pairing Code
-        <span className="text-[10px] opacity-70">(1 phone)</span>
+        <span className="text-[9px] opacity-70">(1 phone)</span>
       </button>
     </div>
   );
@@ -328,11 +328,11 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       <div className="flex flex-col items-center p-6">
         <div className="text-amber-500 text-5xl mb-3">⚠️</div>
         <p className="text-amber-600 text-center text-sm mb-4">{error}</p>
-        <div className="flex gap-3">
-          <button onClick={setupQRCode} className="px-5 py-2.5 bg-green-500 text-white rounded-xl hover:bg-green-600 font-semibold text-sm transition-all">
+        <div className="flex gap-2">
+          <button onClick={setupQRCode} className="px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all active:scale-95">
             Try Again
           </button>
-          <button onClick={handleContinue} className="px-5 py-2.5 bg-surface-variant text-on-surface rounded-xl hover:bg-surface-container-high font-semibold text-sm transition-all">
+          <button onClick={handleContinue} className="px-4 py-2 bg-surface-variant text-on-surface rounded-lg hover:bg-surface-container-high font-medium text-xs transition-all active:scale-95">
             Continue Anyway
           </button>
         </div>
@@ -345,26 +345,26 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           <i className="fas fa-qrcode text-green-500 text-lg" />
           <span className="font-semibold text-sm">QR Code Scan</span>
         </div>
-        <p className="text-on-surface-variant text-xs text-center mb-4">
+        <p className="text-on-surface-variant text-[10px] text-center mb-3">
           Open WhatsApp → Linked Devices → Link a Device → Scan this QR
         </p>
         {qrCode && (
           <div className="relative">
-            <img src={qrCode} alt="WhatsApp QR Code" className="w-56 h-56 md:w-64 md:h-64 border-4 border-green-500 rounded-xl" />
-            <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
-              <i className="fas fa-circle text-white text-[6px]" />
+            <img src={qrCode} alt="WhatsApp QR Code" className="w-48 h-48 md:w-52 md:h-52 border-[3px] border-[#25D366] rounded-xl" />
+            <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#25D366] rounded-full flex items-center justify-center animate-pulse shadow-sm">
+              <i className="fas fa-circle text-white text-[5px]" />
             </div>
           </div>
         )}
-        <p className="mt-4 text-xs text-on-surface-variant animate-pulse flex items-center gap-2">
-          <i className="fas fa-hourglass-half" />
+        <p className="mt-3 text-[11px] text-on-surface-variant animate-pulse flex items-center gap-1.5">
+          <i className="fas fa-hourglass-half text-[10px]" />
           Waiting for scan...
         </p>
         <button
           onClick={setupQRCode}
-          className="mt-3 px-4 py-2 text-xs text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-all"
+          className="mt-2.5 px-3 py-1.5 text-[11px] text-[#25D366] border border-[#25D366]/30 rounded-lg hover:bg-[#25D366]/5 transition-all active:scale-95"
         >
-          <i className="fas fa-refresh mr-1" /> Refresh QR
+          <i className="fas fa-refresh mr-1 text-[10px]" /> Refresh QR
         </button>
       </div>
     );
@@ -385,10 +385,10 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         <div className="text-amber-500 text-5xl mb-3">⚠️</div>
         <p className="text-amber-600 text-center text-sm mb-4">{error}</p>
         <div className="flex gap-3">
-          <button onClick={() => setStatus('idle')} className="px-5 py-2.5 bg-green-500 text-white rounded-xl hover:bg-green-600 font-semibold text-sm transition-all">
+          <button onClick={() => setStatus('idle')} className="px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all active:scale-95">
             Try Again
           </button>
-          <button onClick={handleContinue} className="px-5 py-2.5 bg-surface-variant text-on-surface rounded-xl hover:bg-surface-container-high font-semibold text-sm transition-all">
+          <button onClick={handleContinue} className="px-4 py-2 bg-surface-variant text-on-surface rounded-lg hover:bg-surface-container-high font-medium text-xs transition-all active:scale-95">
             Continue Anyway
           </button>
         </div>
@@ -405,58 +405,60 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           Open WhatsApp → Linked Devices → Link with phone number → Enter this code
         </p>
 
-        {/* Pairing Code Display */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl px-8 py-5 mb-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Your Code</p>
-          <p className="text-3xl md:text-4xl font-mono font-black tracking-[0.3em] text-green-700 select-all">
-            {pairingCode}
-          </p>
+        {/* Pairing Code Display - compact and scrollable for long codes */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl px-4 py-3 mb-3 text-center w-full max-w-xs">
+          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant mb-1.5 font-semibold">Your Code</p>
+          <div className="overflow-x-auto pb-1">
+            <p className="text-xl md:text-2xl font-mono font-bold tracking-wider text-green-700 select-all whitespace-nowrap">
+              {pairingCode}
+            </p>
+          </div>
         </div>
 
         {/* Instructions */}
-        <div className="bg-surface-variant rounded-xl p-4 w-full mb-4 space-y-2">
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[10px] font-bold">1</span>
+        <div className="bg-surface-variant rounded-lg p-3 w-full mb-3 space-y-1.5">
+          <div className="flex items-start gap-2">
+            <div className="w-4 h-4 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[8px] font-bold">1</span>
             </div>
-            <p className="text-xs text-on-surface-variant">Open <strong>WhatsApp</strong> on your phone</p>
+            <p className="text-[11px] text-on-surface-variant">Open <strong>WhatsApp</strong> on your phone</p>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[10px] font-bold">2</span>
+          <div className="flex items-start gap-2">
+            <div className="w-4 h-4 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[8px] font-bold">2</span>
             </div>
-            <p className="text-xs text-on-surface-variant">Go to <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
+            <p className="text-[11px] text-on-surface-variant">Go to <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[10px] font-bold">3</span>
+          <div className="flex items-start gap-2">
+            <div className="w-4 h-4 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[8px] font-bold">3</span>
             </div>
-            <p className="text-xs text-on-surface-variant">Enter this code: <strong className="text-green-700">{pairingCode}</strong></p>
+            <p className="text-[11px] text-on-surface-variant">Enter this code: <strong className="text-[#25D366]">{pairingCode}</strong></p>
           </div>
         </div>
 
         {/* Countdown / Status */}
-        <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+        <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
           {pairingCountdown > 0 ? (
             <>
-              <i className="fas fa-hourglass-half" />
-              Code expires in <span className="font-bold text-green-600">{pairingCountdown}s</span>
+              <i className="fas fa-hourglass-half text-[10px]" />
+              Code expires in <span className="font-bold text-[#25D366]">{pairingCountdown}s</span>
             </>
           ) : (
             <span className="text-amber-600 font-medium flex items-center gap-1">
-              <i className="fas fa-exclamation-triangle" />
-              Code expired — get a new one
+              <i className="fas fa-exclamation-triangle text-[10px]" />
+              Code expired
             </span>
           )}
         </div>
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-2 mt-3">
           {pairingCountdown <= 0 && (
             <button
               onClick={setupPairingCode}
-              className="px-5 py-2.5 bg-green-500 text-white rounded-xl hover:bg-green-600 font-semibold text-sm transition-all"
+              className="px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all active:scale-95"
             >
-              <i className="fas fa-refresh mr-1" /> Get New Code
+              <i className="fas fa-refresh mr-1 text-[10px]" /> Get New Code
             </button>
           )}
         </div>
@@ -465,22 +467,22 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
 
     // Show phone number input form
     return (
-      <div className="flex flex-col items-center p-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-3 shadow-lg shadow-blue-500/30">
-          <i className="fas fa-phone text-white text-xl" />
+      <div className="flex flex-col items-center p-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-2.5 shadow-md">
+          <i className="fas fa-phone text-white text-base" />
         </div>
-        <h4 className="font-bold text-lg mb-1">Link with Phone Number</h4>
-        <p className="text-on-surface-variant text-xs text-center mb-5">
-          Enter your WhatsApp number below to receive a pairing code
+        <h4 className="font-bold text-sm mb-0.5">Link with Phone Number</h4>
+        <p className="text-on-surface-variant text-[11px] text-center mb-4">
+          Enter your WhatsApp number to get a pairing code
         </p>
 
-        <div className="w-full space-y-3">
+        <div className="w-full space-y-2.5">
           <div>
-            <label className="block text-xs font-medium text-on-surface-variant mb-1.5">
+            <label className="block text-[11px] font-medium text-on-surface-variant mb-1">
               Your WhatsApp Number
             </label>
-            <div className="flex gap-2">
-              <div className="shrink-0 px-3 py-3 bg-surface-variant rounded-xl text-sm font-medium text-on-surface flex items-center border border-outline-variant">
+            <div className="flex gap-1.5">
+              <div className="shrink-0 px-2.5 py-2.5 bg-surface-variant rounded-lg text-xs font-medium text-on-surface flex items-center border border-outline-variant">
                 🇰🇪 +254
               </div>
               <input
@@ -494,26 +496,26 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
                   if (e.key === 'Enter') setupPairingCode();
                 }}
                 placeholder="712 345 678"
-                className="flex-1 px-4 py-3 border-2 border-outline rounded-xl text-sm font-medium outline-none focus:border-green-500 transition-all"
+                className="flex-1 px-3 py-2.5 border-2 border-outline rounded-lg text-xs font-medium outline-none focus:border-[#25D366] transition-all"
                 autoFocus
               />
             </div>
             {phoneError && (
-              <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                <i className="fas fa-exclamation-circle" /> {phoneError}
+              <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                <i className="fas fa-exclamation-circle text-[10px]" /> {phoneError}
               </p>
             )}
-            <p className="text-[10px] text-on-surface-variant mt-1.5">
-              Use format: 0712345678 or 712345678 or +254712345678
+            <p className="text-[9px] text-on-surface-variant mt-1">
+              Format: 0712345678 or +254712345678
             </p>
           </div>
 
           <button
             onClick={setupPairingCode}
             disabled={!phoneNumber.trim()}
-            className="w-full px-5 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full px-4 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 active:scale-[0.98]"
           >
-            <i className="fas fa-key" />
+            <i className="fas fa-key text-[11px]" />
             Get Pairing Code
           </button>
         </div>
@@ -524,16 +526,18 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   // ─── Connected View ────────────────────────────────────────────────────────
 
   if (status === 'connected') return (
-    <div className="flex flex-col items-center p-6">
-      <div className="text-green-500 text-6xl mb-2">✅</div>
-      <h3 className="text-xl font-bold text-green-600">WhatsApp Connected!</h3>
-      <p className="text-on-surface-variant text-sm mt-1 text-center">Your number is ready to use.</p>
+    <div className="flex flex-col items-center p-4">
+      <div className="w-12 h-12 rounded-full bg-[#25D366] flex items-center justify-center mb-2.5 shadow-sm">
+        <i className="fas fa-check text-white text-lg" />
+      </div>
+      <h3 className="text-base font-bold text-[#128C7E]">WhatsApp Connected!</h3>
+      <p className="text-on-surface-variant text-[11px] mt-0.5 text-center">Your number is ready to use.</p>
 
       <button
         onClick={handleContinue}
-        className="mt-5 px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 font-semibold text-sm transition-all shadow-lg shadow-green-500/30"
+        className="mt-4 px-6 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all shadow-sm active:scale-[0.98]"
       >
-        <i className="fas fa-check mr-2" />
+        <i className="fas fa-check mr-1.5 text-[11px]" />
         Continue to Dashboard
       </button>
     </div>
@@ -543,11 +547,11 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
 
   if (status === 'idle' && !autoStart) {
     return (
-      <div className="flex flex-col items-center p-6">
-        <div className="text-5xl mb-3">📱</div>
-        <h3 className="text-xl font-bold text-on-surface">Connect Your WhatsApp</h3>
-        <p className="text-on-surface-variant text-sm mt-1 text-center">
-          Choose your connection method below
+      <div className="flex flex-col items-center p-4">
+        <div className="text-4xl mb-2">📱</div>
+        <h3 className="text-base font-bold text-on-surface">Connect Your WhatsApp</h3>
+        <p className="text-on-surface-variant text-[11px] mt-0.5 text-center">
+          Choose your connection method
         </p>
 
         {showModeSelector && renderModeSelector()}
@@ -555,9 +559,9 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         {connectMode === 'qr' ? (
           <button
             onClick={setupQRCode}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 font-semibold text-sm transition-all shadow-lg shadow-green-500/30 flex items-center gap-2"
+            className="mt-3 px-5 py-2.5 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-[0.98]"
           >
-            <i className="fas fa-qrcode" />
+            <i className="fas fa-qrcode text-[11px]" />
             Start QR Scan
           </button>
         ) : (
