@@ -612,7 +612,6 @@ export default function CancellationRequests({
             <RequestCard
               key={request.id}
               request={request}
-              onAction={onAction}
               onConfirmAction={handleConfirmAction}
               index={index}
             />
