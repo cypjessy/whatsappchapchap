@@ -29,6 +29,10 @@ export interface Tenant {
   email: string;
   businessName: string;
   phone?: string;
+  businessType?: string;
+  category?: string;
+  country?: string;
+  currency?: string;
   plan: "free" | "starter" | "pro" | "enterprise";
   evolutionServerUrl?: string;
   evolutionInstanceId?: string;

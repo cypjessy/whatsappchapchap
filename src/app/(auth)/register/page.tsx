@@ -37,6 +37,7 @@ export default function RegisterPage() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [instanceName, setInstanceName] = useState<string | null>(null);
+  const [accountCreated, setAccountCreated] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const router = useRouter();
   const { signUp, user } = useAuth();
@@ -128,15 +129,10 @@ export default function RegisterPage() {
 
       const tenantId = `tenant_${user.uid}`;
       setInstanceName(tenantId);
-      await tenantService.createTenant(user, formData.businessName);
-      await tenantService.updateTenant(user, {
-        whatsappInstanceId: tenantId,
-        whatsappConnectionStatus: "pending",
-      });
 
       // Fire success haptic without blocking
       notificationSuccess().catch(() => {});
-      setCurrentStep(5);
+      setAccountCreated(true);
       setIsLoading(false);
     } catch (err: any) {
       setError(err.message || "Failed to create account");
@@ -149,6 +145,28 @@ export default function RegisterPage() {
     impactLight().catch(() => {});
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleVerifyComplete = async () => {
+    if (!user) return;
+    impactLight().catch(() => {});
+    
+    try {
+      const tenantId = `tenant_${user.uid}`;
+      await tenantService.createTenant(user, formData.businessName);
+      await tenantService.updateTenant(user, {
+        businessName: formData.businessName,
+        businessType: selectedBusinessType,
+        category: formData.category,
+        country: formData.country,
+        currency: formData.currency,
+        whatsappInstanceId: tenantId,
+        whatsappConnectionStatus: isConnected ? "connected" : "pending",
+      });
+      setCurrentStep(4);
+    } catch (err: any) {
+      setError(err.message || "Failed to complete setup");
     }
   };
 
@@ -192,7 +210,8 @@ export default function RegisterPage() {
     
     console.log('[Register] Tenant saved successfully with evolutionApiKey:', tenantUpdate.evolutionApiKey);
     
-    router.push("/dashboard");
+    // Go to next step (Business Info)
+    setCurrentStep(2);
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -233,7 +252,7 @@ export default function RegisterPage() {
         {/* Mobile Progress Bar - Material Design 3 */}
         <div className="md:hidden px-4 pt-4 pb-3">
           <div className="flex items-center gap-2 mb-3">
-            {[1, 2, 3, 4, 5].map((step) => (
+            {[1, 2, 3, 4].map((step) => (
               <div
                 key={step}
                 className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
@@ -246,7 +265,6 @@ export default function RegisterPage() {
             <span>Account</span>
             <span>Business</span>
             <span>Verify</span>
-            <span>Connect</span>
             <span>Done</span>
           </div>
         </div>
@@ -279,15 +297,60 @@ export default function RegisterPage() {
             </button>
           )}
 
-          {currentStep === 1 && (
-            <Step1Account
-              formData={formData}
-              termsAccepted={termsAccepted}
-              passwordStrength={passwordStrength}
-              strengthInfo={strengthInfo}
-              onChange={handleInputChange}
-              onTermsChange={setTermsAccepted}
-            />
+          {currentStep === 1 && !accountCreated && (
+            <div>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+                  <i className="fas fa-exclamation-circle shrink-0" />
+                  {error}
+                </div>
+              )}
+              <Step1Account
+                formData={formData}
+                termsAccepted={termsAccepted}
+                passwordStrength={passwordStrength}
+                strengthInfo={strengthInfo}
+                onChange={handleInputChange}
+                onTermsChange={setTermsAccepted}
+              />
+            </div>
+          )}
+
+          {currentStep === 1 && accountCreated && (
+            <div className="space-y-4">
+              {/* Success banner */}
+              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+                <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                  <i className="fas fa-check text-white text-xs" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-green-800">Account created successfully!</p>
+                  <p className="text-xs text-green-600">Now connect your WhatsApp to start selling</p>
+                </div>
+              </div>
+
+              {instanceName ? (
+                <WhatsAppConnect
+                  instanceName={instanceName}
+                  onConnected={handleWhatsAppConnected}
+                  autoStart={false}
+                />
+              ) : (
+                <div className="p-4 bg-white rounded-xl border border-outline-variant text-center">
+                  <p className="text-sm text-on-surface-variant">Initializing your account...</p>
+                </div>
+              )}
+
+              {/* Skip for now */}
+              <div className="text-center">
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  className="text-xs text-on-surface-variant hover:text-[#25D366] transition-colors underline underline-offset-2"
+                >
+                  Skip, I'll connect later
+                </button>
+              </div>
+            </div>
           )}
 
           {currentStep === 2 && (
@@ -306,36 +369,13 @@ export default function RegisterPage() {
               isLoading={isLoading}
               error={error}
               onResendCode={resendCode}
-              onComplete={verifyAndComplete}
+              onComplete={handleVerifyComplete}
             />
           )}
 
-          {currentStep === 4 && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-3xl font-bold">Connect your WhatsApp Business</h2>
-                <p className="text-on-surface-variant mt-3">
-                  Choose how to connect your WhatsApp number. Scan a QR code if you have a second device, or use a pairing code if you only have one phone.
-                </p>
-              </div>
+          {currentStep === 4 && <SuccessStep />}
 
-              {instanceName ? (
-                <WhatsAppConnect
-                  instanceName={instanceName}
-                  onConnected={handleWhatsAppConnected}
-                  autoStart={false}
-                />
-              ) : (
-                <div className="p-6 bg-white rounded-3xl border border-outline-variant text-center">
-                  <p className="text-on-surface-variant">Waiting for your account to initialize. Please try again if this message persists.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {currentStep === 5 && <SuccessStep />}
-
-          {currentStep < 3 && (
+          {currentStep < 3 && !(currentStep === 1 && accountCreated) && (
             <div className="flex justify-between mt-auto pt-6 md:pt-8 gap-3">
               {currentStep > 1 ? (
                 <button
@@ -353,8 +393,8 @@ export default function RegisterPage() {
                 <div></div>
               )}
               <button
-                onClick={handleNextStep}
-                disabled={!validateStep(currentStep)}
+                onClick={currentStep === 1 ? verifyAndComplete : handleNextStep}
+                disabled={!validateStep(currentStep) || isLoading}
                 className="py-3 px-5 md:px-8 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
                   text-white rounded-xl font-bold transition-all duration-300 
                   hover:translate-y-[-2px] hover:shadow-lg 
@@ -362,7 +402,16 @@ export default function RegisterPage() {
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
                   flex items-center gap-2 text-sm md:text-base"
               >
-                Continue <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                {isLoading ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    {currentStep === 1 ? "Create Account" : "Continue"} <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </>
+                )}
               </button>
             </div>
           )}

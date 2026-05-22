@@ -36,7 +36,6 @@ export default function WhatsAppConnectionManager({
     } catch (err) {
       console.error('Failed to disconnect:', err);
       await notificationError();
-      // Even on error, mark as disconnected so user can retry
       setConnectionStatus('disconnected');
       setConfirmingDisconnect(false);
       if (onConnectionChange) onConnectionChange(false);
@@ -55,11 +54,10 @@ export default function WhatsAppConnectionManager({
 
   const handleReconnect = useCallback(async () => {
     await impactLight();
-    // First logout, then show connect modal
     try {
       await logoutInstance(instanceName);
     } catch {
-      // Ignore logout errors - instance may not exist
+      // Ignore logout errors
     }
     setShowConnectModal(true);
   }, [instanceName, impactLight]);
@@ -172,7 +170,6 @@ export default function WhatsAppConnectionManager({
               <button
                 onClick={async () => {
                   await impactLight();
-                  // Quick re-sync
                   const state = await getConnectionState(instanceName).catch(() => null);
                   if (state?.instance?.state !== 'open') {
                     setConnectionStatus('disconnected');
@@ -239,7 +236,7 @@ export default function WhatsAppConnectionManager({
           )}
         </div>
       ) : (
-        /* Disconnected state - Show reconnect options */
+        /* Disconnected state */
         <div className="space-y-3">
           <div className="flex items-center gap-3 p-3 bg-surface-variant rounded-xl border border-outline-variant">
             <div className="w-9 h-9 bg-gray-400 rounded-full flex items-center justify-center shrink-0">
@@ -262,7 +259,6 @@ export default function WhatsAppConnectionManager({
             Connect WhatsApp Number
           </button>
 
-          {/* Quick info */}
           <div className="flex gap-2 pt-1">
             <div className="flex-1 p-2 bg-surface-variant rounded-lg text-center">
               <i className="fas fa-qrcode text-green-500 text-sm" />
@@ -280,34 +276,34 @@ export default function WhatsAppConnectionManager({
         </div>
       )}
 
-      {/* Connect Modal */}
+      {/* Compact Connect Modal */}
       {showConnectModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div 
-            className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slideUp shadow-2xl"
+            className="bg-white rounded-xl w-full max-w-sm overflow-hidden animate-slideUp shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-outline-variant p-4 flex items-center justify-between z-10 rounded-t-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-                  <i className="fab fa-whatsapp text-white text-sm" />
+            {/* Modal Header - Compact */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                  <i className="fab fa-whatsapp text-white text-[10px]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-on-surface">Connect WhatsApp</h3>
-                  <p className="text-[10px] text-on-surface-variant">Instance: {instanceName}</p>
+                  <h3 className="font-semibold text-xs text-on-surface">Connect WhatsApp</h3>
+                  <p className="text-[9px] text-on-surface-variant leading-tight">{instanceName}</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowConnectModal(false)}
-                className="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors"
+                className="w-7 h-7 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors shrink-0"
               >
-                <i className="fas fa-times text-on-surface-variant text-sm" />
+                <i className="fas fa-times text-on-surface-variant text-xs" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-5">
+            {/* Modal Body - Tight */}
+            <div className="px-3 py-3 max-h-[70vh] overflow-y-auto">
               <WhatsAppConnect 
                 instanceName={instanceName}
                 onConnected={handleConnectSuccess}
