@@ -21,6 +21,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
   const [createApiKey, setCreateApiKey] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pairingCountdown, setPairingCountdown] = useState(60);
+  const [copied, setCopied] = useState(false);
 
   const resetPairingCountdown = useCallback(() => {
     setPairingCountdown(60);
@@ -395,75 +396,147 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       </div>
     );
 
-    if (status === 'pairing' && pairingCode) return (
-      <div className="flex flex-col items-center p-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-3 shadow-lg shadow-green-500/30">
-          <i className="fas fa-key text-white text-xl" />
-        </div>
-        <h4 className="font-bold text-lg mb-1">Pairing Code</h4>
-        <p className="text-on-surface-variant text-xs text-center mb-4">
-          Open WhatsApp → Linked Devices → Link with phone number → Enter this code
-        </p>
+    if (status === 'pairing' && pairingCode) {
+      const isLongCode = pairingCode.length > 12;
+      const displayCode = isLongCode
+        ? `${pairingCode.slice(0, 4)}...${pairingCode.slice(-4)}`
+        : pairingCode;
+      const handleCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(pairingCode);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = pairingCode;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }
+      };
 
-        {/* Pairing Code Display - compact and scrollable for long codes */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl px-4 py-3 mb-3 text-center w-full max-w-xs">
-          <p className="text-[9px] uppercase tracking-widest text-on-surface-variant mb-1.5 font-semibold">Your Code</p>
-          <div className="overflow-x-auto pb-1">
-            <p className="text-xl md:text-2xl font-mono font-bold tracking-wider text-green-700 select-all whitespace-nowrap">
-              {pairingCode}
-            </p>
+      return (
+        <div className="flex flex-col items-center p-4">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-3 shadow-lg shadow-green-500/30">
+            <i className="fas fa-key text-white text-xl" />
           </div>
-        </div>
+          <h4 className="font-bold text-lg mb-1">Pairing Code</h4>
+          <p className="text-on-surface-variant text-xs text-center mb-4">
+            Open WhatsApp → Linked Devices → Link with phone number → Enter this code
+          </p>
 
-        {/* Instructions */}
-        <div className="bg-surface-variant rounded-lg p-3 w-full mb-3 space-y-1.5">
-          <div className="flex items-start gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[8px] font-bold">1</span>
+          {/* Premium Pairing Code Display */}
+          <div className="relative w-full max-w-xs mb-3">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl px-5 py-4 text-center">
+              <p className="text-[9px] uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Your Code</p>
+              <div className="flex items-center justify-center gap-2">
+                {isLongCode ? (
+                  <>
+                    <span className="text-lg font-mono font-bold tracking-wider text-green-700 select-all">
+                      {displayCode}
+                    </span>
+                    <button
+                      onClick={handleCopy}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
+                        copied
+                          ? 'bg-green-500 text-white'
+                          : 'bg-green-200 text-green-800 hover:bg-green-300'
+                      }`}
+                    >
+                      {copied ? (
+                        <><i className="fas fa-check text-[10px]" /> Copied</>
+                      ) : (
+                        <><i className="fas fa-copy text-[10px]" /> Copy</>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl font-mono font-bold tracking-wider text-green-700 select-all">
+                      {pairingCode}
+                    </span>
+                    <button
+                      onClick={handleCopy}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
+                        copied
+                          ? 'bg-green-500 text-white'
+                          : 'bg-green-200 text-green-800 hover:bg-green-300'
+                      }`}
+                    >
+                      {copied ? (
+                        <><i className="fas fa-check text-[10px]" /> Copied</>
+                      ) : (
+                        <><i className="fas fa-copy text-[10px]" /> Copy</>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            <p className="text-[11px] text-on-surface-variant">Open <strong>WhatsApp</strong> on your phone</p>
+            {copied && (
+              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full animate-bounce shadow-sm">
+                Copied!
+              </div>
+            )}
           </div>
-          <div className="flex items-start gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[8px] font-bold">2</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant">Go to <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="w-4 h-4 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[8px] font-bold">3</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant">Enter this code: <strong className="text-[#25D366]">{pairingCode}</strong></p>
-          </div>
-        </div>
 
-        {/* Countdown / Status */}
-        <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
-          {pairingCountdown > 0 ? (
-            <>
-              <i className="fas fa-hourglass-half text-[10px]" />
-              Code expires in <span className="font-bold text-[#25D366]">{pairingCountdown}s</span>
-            </>
-          ) : (
-            <span className="text-amber-600 font-medium flex items-center gap-1">
-              <i className="fas fa-exclamation-triangle text-[10px]" />
-              Code expired
-            </span>
-          )}
-        </div>
+          {/* Premium Steps */}
+          <div className="bg-white border border-outline-variant rounded-xl p-3.5 w-full mb-3 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant mb-2.5">How to connect</p>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  <span className="text-[9px] font-bold">1</span>
+                </div>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">Open <strong>WhatsApp</strong> on your phone</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  <span className="text-[9px] font-bold">2</span>
+                </div>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">Go to <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  <span className="text-[9px] font-bold">3</span>
+                </div>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">Paste the code and tap <strong>Link</strong></p>
+              </div>
+            </div>
+          </div>
 
-        <div className="flex gap-2 mt-3">
-          {pairingCountdown <= 0 && (
-            <button
-              onClick={setupPairingCode}
-              className="px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all active:scale-95"
-            >
-              <i className="fas fa-refresh mr-1 text-[10px]" /> Get New Code
-            </button>
-          )}
+          {/* Countdown / Status */}
+          <div className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+            {pairingCountdown > 0 ? (
+              <>
+                <i className="fas fa-hourglass-half text-[10px]" />
+                Code expires in <span className="font-bold text-[#25D366]">{pairingCountdown}s</span>
+              </>
+            ) : (
+              <span className="text-amber-600 font-medium flex items-center gap-1">
+                <i className="fas fa-exclamation-triangle text-[10px]" />
+                Code expired
+              </span>
+            )}
+          </div>
+
+          <div className="flex gap-2 mt-3">
+            {pairingCountdown <= 0 && (
+              <button
+                onClick={setupPairingCode}
+                className="px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-medium text-xs transition-all active:scale-95"
+              >
+                <i className="fas fa-refresh mr-1 text-[10px]" /> Get New Code
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
 
     // Show phone number input form
     return (

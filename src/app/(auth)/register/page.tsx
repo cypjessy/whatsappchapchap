@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
@@ -11,7 +10,7 @@ import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
 import FloatingShapes from "@/components/auth/FloatingShapes";
 import RegisterSidebar from "@/components/auth/RegisterSidebar";
-import { Step1Account, Step2Business, Step4Verify, SuccessStep } from "@/components/auth/steps";
+import { Step1Account, Step2Business, SuccessStep } from "@/components/auth/steps";
 
 export default function RegisterPage() {
   // Initialize Capacitor lifecycle management to prevent idle freeze
@@ -21,7 +20,6 @@ export default function RegisterPage() {
   useStatusBar({ color: '#ffffff', style: 'dark' });
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedBusinessType, setSelectedBusinessType] = useState("");
-  const [resendTimer, setResendTimer] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -37,9 +35,6 @@ export default function RegisterPage() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [instanceName, setInstanceName] = useState<string | null>(null);
-  const [accountCreated, setAccountCreated] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const router = useRouter();
   const { signUp, user } = useAuth();
   const { impactLight, notificationSuccess } = useHaptics();
 
@@ -77,15 +72,6 @@ export default function RegisterPage() {
     return true;
   };
 
-  const nextStep = (step: number) => {
-    if (!validateStep(currentStep)) return;
-    setCurrentStep(step);
-  };
-
-  const prevStep = (step: number) => {
-    setCurrentStep(step);
-  };
-
   const getPasswordStrength = (password: string) => {
     let strength = 0;
     if (password.length > 6) strength++;
@@ -102,18 +88,7 @@ export default function RegisterPage() {
     return { class: "strong", text: "Strong password", color: "text-green-500" };
   };
 
-  const resendCode = () => {
-    setResendTimer(30);
-  };
-
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendTimer]);
-
-  const verifyAndComplete = async () => {
+    const verifyAndComplete = async () => {
     setIsLoading(true);
     setError("");
     
@@ -132,7 +107,7 @@ export default function RegisterPage() {
 
       // Fire success haptic without blocking
       notificationSuccess().catch(() => {});
-      setAccountCreated(true);
+      setCurrentStep(2);
       setIsLoading(false);
     } catch (err: any) {
       setError(err.message || "Failed to create account");
@@ -148,7 +123,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleVerifyComplete = async () => {
+  const handleSaveBusiness = async () => {
     if (!user) return;
     impactLight().catch(() => {});
     
@@ -161,27 +136,17 @@ export default function RegisterPage() {
         category: formData.category,
         country: formData.country,
         currency: formData.currency,
-        whatsappInstanceId: tenantId,
-        whatsappConnectionStatus: isConnected ? "connected" : "pending",
       });
-      setCurrentStep(4);
+      setCurrentStep(3);
     } catch (err: any) {
-      setError(err.message || "Failed to complete setup");
+      setError(err.message || "Failed to save business info");
     }
-  };
-
-  const handleNextStep = () => {
-    if (!validateStep(currentStep)) return;
-    // Fire haptic feedback without blocking
-    impactLight().catch(() => {});
-    setCurrentStep(currentStep + 1);
   };
 
   const handleWhatsAppConnected = async (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string; evolutionUUID?: string }) => {
     if (!user || !instanceName) return;
 
     await notificationSuccess();
-    setIsConnected(true);
     
     const tenantId = `tenant_${user.uid}`;
     const { doc, setDoc } = await import("firebase/firestore");
@@ -210,8 +175,8 @@ export default function RegisterPage() {
     
     console.log('[Register] Tenant saved successfully with evolutionApiKey:', tenantUpdate.evolutionApiKey);
     
-    // Go to next step (Business Info)
-    setCurrentStep(2);
+    // Go to success step
+    setCurrentStep(4);
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -264,7 +229,7 @@ export default function RegisterPage() {
           <div className="flex justify-between text-xs text-on-surface-variant font-medium">
             <span>Account</span>
             <span>Business</span>
-            <span>Verify</span>
+            <span>WhatsApp</span>
             <span>Done</span>
           </div>
         </div>
@@ -297,7 +262,7 @@ export default function RegisterPage() {
             </button>
           )}
 
-          {currentStep === 1 && !accountCreated && (
+          {currentStep === 1 && (
             <div>
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
@@ -316,43 +281,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {currentStep === 1 && accountCreated && (
-            <div className="space-y-4">
-              {/* Success banner */}
-              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
-                <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                  <i className="fas fa-check text-white text-xs" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-green-800">Account created successfully!</p>
-                  <p className="text-xs text-green-600">Now connect your WhatsApp to start selling</p>
-                </div>
-              </div>
-
-              {instanceName ? (
-                <WhatsAppConnect
-                  instanceName={instanceName}
-                  onConnected={handleWhatsAppConnected}
-                  autoStart={false}
-                />
-              ) : (
-                <div className="p-4 bg-white rounded-xl border border-outline-variant text-center">
-                  <p className="text-sm text-on-surface-variant">Initializing your account...</p>
-                </div>
-              )}
-
-              {/* Skip for now */}
-              <div className="text-center">
-                <button
-                  onClick={() => setCurrentStep(2)}
-                  className="text-xs text-on-surface-variant hover:text-[#25D366] transition-colors underline underline-offset-2"
-                >
-                  Skip, I'll connect later
-                </button>
-              </div>
-            </div>
-          )}
-
           {currentStep === 2 && (
             <Step2Business
               formData={formData}
@@ -363,37 +291,52 @@ export default function RegisterPage() {
           )}
 
           {currentStep === 3 && (
-            <Step4Verify
-              formData={formData}
-              resendTimer={resendTimer}
-              isLoading={isLoading}
-              error={error}
-              onResendCode={resendCode}
-              onComplete={handleVerifyComplete}
-            />
+            <div className="animate-[fadeIn_0.4s_ease] space-y-4">
+              <h3 className="text-xl md:text-2xl font-extrabold mb-1 md:mb-2">Connect WhatsApp</h3>
+              <p className="text-on-surface-variant mb-2 text-sm md:text-base">Link your WhatsApp number to start selling</p>
+
+              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
+                  <i className="fab fa-whatsapp text-white text-sm" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-green-800">Almost there!</p>
+                  <p className="text-xs text-green-600">Connect your WhatsApp to receive orders and chat with customers</p>
+                </div>
+              </div>
+
+              {instanceName ? (
+                <WhatsAppConnect
+                  instanceName={instanceName}
+                  onConnected={handleWhatsAppConnected}
+                  autoStart={false}
+                  showModeSelector={true}
+                />
+              ) : (
+                <div className="p-4 bg-white rounded-xl border border-outline-variant text-center">
+                  <p className="text-sm text-on-surface-variant">Initializing your account...</p>
+                </div>
+              )}
+
+              {/* Skip for now */}
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => setCurrentStep(4)}
+                  className="text-xs text-on-surface-variant hover:text-[#25D366] transition-colors underline underline-offset-2"
+                >
+                  Skip, I'll connect later
+                </button>
+              </div>
+            </div>
           )}
 
           {currentStep === 4 && <SuccessStep />}
 
-          {currentStep < 3 && !(currentStep === 1 && accountCreated) && (
-            <div className="flex justify-between mt-auto pt-6 md:pt-8 gap-3">
-              {currentStep > 1 ? (
-                <button
-                  onClick={handleBack}
-                  className="py-3 px-4 md:px-6 bg-white text-[#1a1a2e] border-2 border-outline-variant 
-                    rounded-xl font-semibold transition-all duration-300 
-                    hover:border-[#25D366] hover:text-[#25D366] hover:shadow-md
-                    active:translate-y-0 active:shadow-none active:scale-[0.98]
-                    flex items-center gap-2 text-sm md:text-base"
-                >
-                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
-                  <span className="hidden sm:inline">Back</span>
-                </button>
-              ) : (
-                <div></div>
-              )}
+          {/* Navigation buttons - only on step 1 and 2 */}
+          {currentStep === 1 && (
+            <div className="flex justify-end mt-auto pt-6 md:pt-8 gap-3">
               <button
-                onClick={currentStep === 1 ? verifyAndComplete : handleNextStep}
+                onClick={verifyAndComplete}
                 disabled={!validateStep(currentStep) || isLoading}
                 className="py-3 px-5 md:px-8 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
                   text-white rounded-xl font-bold transition-all duration-300 
@@ -409,7 +352,44 @@ export default function RegisterPage() {
                   </>
                 ) : (
                   <>
-                    {currentStep === 1 ? "Create Account" : "Continue"} <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    Create Account <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="flex justify-between mt-auto pt-6 md:pt-8 gap-3">
+              <button
+                onClick={handleBack}
+                className="py-3 px-4 md:px-6 bg-white text-[#1a1a2e] border-2 border-outline-variant 
+                  rounded-xl font-semibold transition-all duration-300 
+                  hover:border-[#25D366] hover:text-[#25D366] hover:shadow-md
+                  active:translate-y-0 active:shadow-none active:scale-[0.98]
+                  flex items-center gap-2 text-sm md:text-base"
+              >
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+                <span className="hidden sm:inline">Back</span>
+              </button>
+              <button
+                onClick={handleSaveBusiness}
+                disabled={!validateStep(currentStep) || isLoading}
+                className="py-3 px-5 md:px-8 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
+                  text-white rounded-xl font-bold transition-all duration-300 
+                  hover:translate-y-[-2px] hover:shadow-lg 
+                  active:translate-y-0 active:shadow-md active:scale-[0.98]
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
+                  flex items-center gap-2 text-sm md:text-base"
+              >
+                {isLoading ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    Continue <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </>
                 )}
               </button>
