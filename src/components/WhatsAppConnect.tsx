@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceDetails, fetchInstanceApiKey } from '@/lib/evolution';
 
 interface Props {
@@ -10,12 +10,15 @@ interface Props {
 
 export default function WhatsAppConnect({ instanceName, onConnected, autoStart = true }: Props) {
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [connectionMethod, setConnectionMethod] = useState<'qr' | 'code'>('qr');
   const [status, setStatus] = useState<'loading' | 'qr' | 'connected' | 'error'>('loading');
   const [apiKeyFetched, setApiKeyFetched] = useState(false);
   const [fetchingApiKey, setFetchingApiKey] = useState(false);
   const [fetchedApiKey, setFetchedApiKey] = useState("");
   const [createApiKey, setCreateApiKey] = useState(""); // API key from create instance response
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const setupInstance = async () => {
     try {
@@ -83,6 +86,12 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       try {
         const qrData = await getQRCode(instanceName);
         console.log('QR Code data:', qrData);
+
+        // Capture pairing code if available
+        const rawCode = qrData?.pairingCode || qrData?.code || null;
+        if (rawCode) {
+          setPairingCode(rawCode);
+        }
 
         const rawQrData = qrData?.base64 || qrData?.code || qrData?.pairingCode;
 
@@ -391,29 +400,156 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     </div>
   );
 
+  const handleCopyCode = useCallback(() => {
+    if (pairingCode) {
+      navigator.clipboard.writeText(pairingCode)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          // Fallback for insecure (HTTP) contexts
+          const textarea = document.createElement('textarea');
+          textarea.value = pairingCode;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+    }
+  }, [pairingCode]);
+
   return (
     <div className="flex flex-col items-center p-6">
       <h3 className="text-xl font-bold mb-2">Connect Your WhatsApp</h3>
       <p className="text-gray-600 mb-4 text-center">
-        Open WhatsApp on your phone → Linked Devices → Link a Device → Scan this QR code
-      </p>
-      {qrCode && (
-        <img 
-          src={qrCode} 
-          alt="WhatsApp QR Code" 
-          className="w-64 h-64 border-4 border-green-500 rounded-lg"
-        />
-      )}
-      <p className="mt-4 text-sm text-gray-500 animate-pulse">
-        Waiting for you to scan...
+        Choose your preferred connection method below
       </p>
 
-      <button 
-        onClick={setupInstance}
-        className="mt-4 px-4 py-2 text-sm text-green-600 border border-green-500 rounded-lg hover:bg-green-50"
-      >
-        Refresh QR Code
-      </button>
+      {/* ── Method toggle chips ── */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setConnectionMethod('qr')}
+          className={`h-10 px-5 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${
+            connectionMethod === 'qr'
+              ? 'bg-[#DCF8C6] text-[#1C1B1F] shadow-sm border-2 border-[#25D366]'
+              : 'bg-white text-[#49454F] border-2 border-[#CAC4D0] hover:border-[#79747E]'
+          }`}
+        >
+          <i className="fas fa-qrcode text-sm" />
+          Scan QR Code
+        </button>
+        <button
+          onClick={() => setConnectionMethod('code')}
+          className={`h-10 px-5 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${
+            connectionMethod === 'code'
+              ? 'bg-[#DCF8C6] text-[#1C1B1F] shadow-sm border-2 border-[#25D366]'
+              : 'bg-white text-[#49454F] border-2 border-[#CAC4D0] hover:border-[#79747E]'
+          }`}
+        >
+          <i className="fas fa-keyboard text-sm" />
+          Enter Code
+        </button>
+      </div>
+
+      {/* ── QR Code Method ── */}
+      {connectionMethod === 'qr' && (
+        <>
+          <p className="text-sm text-[#49454F] mb-4 text-center leading-relaxed">
+            Open <strong>WhatsApp</strong> on your phone →
+            <br />
+            <strong>Linked Devices</strong> → <strong>Link a Device</strong>
+            <br />
+            Then scan this QR code
+          </p>
+          {qrCode && (
+            <div className="bg-white p-3 rounded-2xl shadow-md border border-[#CAC4D0]/40">
+              <img
+                src={qrCode}
+                alt="WhatsApp QR Code"
+                className="w-64 h-64 rounded-xl"
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Pairing Code Method ── */}
+      {connectionMethod === 'code' && (
+        <>
+          <p className="text-sm text-[#49454F] mb-4 text-center leading-relaxed">
+            Open <strong>WhatsApp</strong> on your phone →
+            <br />
+            <strong>Linked Devices</strong> →{' '}
+            <strong>Link with phone number</strong>
+            <br />
+            Then enter the pairing code below
+          </p>
+          {pairingCode ? (
+            <div className="w-full max-w-sm mx-auto">
+              <div
+                onClick={handleCopyCode}
+                className="bg-[#F5F5F5] rounded-2xl border-2 border-[#25D366] p-6 cursor-pointer select-none hover:bg-[#E8F5E9] hover:shadow-md active:scale-[0.98] transition-all relative overflow-hidden"
+              >
+                {/* Click hint */}
+                <div className="absolute top-3 right-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    copied
+                      ? 'bg-[#25D366] text-white scale-110'
+                      : 'bg-white/80 text-[#49454F] border border-[#CAC4D0]'
+                  }`}>
+                    <i className={`fas ${copied ? 'fa-check' : 'fa-copy'} text-xs`} />
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#49454F] font-semibold uppercase tracking-wide text-center mb-3">
+                  Pairing Code — tap to copy
+                </p>
+
+                {/* Code display: responsive sizing */}
+                <div className="flex justify-center">
+                  <p className="text-[1.6rem] sm:text-2xl md:text-3xl font-bold text-[#1C1B1F] text-center tracking-[0.08em] font-mono break-all leading-tight px-1">
+                    {pairingCode}
+                  </p>
+                </div>
+
+                {/* Copied overlay flash */}
+                {copied && (
+                  <div className="mt-3 text-center animate-fadeIn">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DCF8C6] text-[#1C6B3E] text-xs font-semibold">
+                      <i className="fas fa-check-circle text-[10px]" />
+                      Copied to clipboard!
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#F9DEDC] rounded-2xl p-4 text-center text-sm text-[#B3261E]">
+              <i className="fas fa-exclamation-triangle mr-2" />
+              Pairing code not available. Please use QR code method.
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Footer ── */}
+      <div className="mt-6 flex flex-col items-center gap-3 w-full max-w-xs">
+        <p className="text-xs text-[#49454F]/60 animate-pulse">
+          Waiting for you to connect...
+        </p>
+        <button
+          onClick={setupInstance}
+          className="w-full h-11 rounded-xl border-2 border-[#CAC4D0] text-sm font-semibold text-[#49454F] hover:bg-[#F5F5F5] hover:border-[#79747E] active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+        >
+          <i className="fas fa-sync-alt text-xs" />
+          Refresh Connection
+        </button>
+      </div>
     </div>
   );
 }

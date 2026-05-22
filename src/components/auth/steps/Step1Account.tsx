@@ -43,7 +43,7 @@ export default function Step1Account({
               value={formData.firstName}
               onChange={onChange}
               placeholder="First name"
-              className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5"
+              className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5 placeholder:text-transparent"
             />
             <label
               htmlFor="firstName"
@@ -61,7 +61,7 @@ export default function Step1Account({
               value={formData.lastName}
               onChange={onChange}
               placeholder="Last name"
-              className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5"
+              className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5 placeholder:text-transparent"
             />
             <label
               htmlFor="lastName"
@@ -81,7 +81,7 @@ export default function Step1Account({
           value={formData.email}
           onChange={onChange}
           placeholder="Email address"
-          className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5"
+          className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5 placeholder:text-transparent"
         />
         <label
           htmlFor="email"
@@ -99,7 +99,7 @@ export default function Step1Account({
           value={formData.phone}
           onChange={onChange}
           placeholder="Phone number"
-          className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5"
+          className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5 placeholder:text-transparent"
         />
         <label
           htmlFor="phone"
@@ -118,7 +118,7 @@ export default function Step1Account({
             value={formData.password}
             onChange={onChange}
             placeholder="Password"
-            className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5"
+            className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5 placeholder:text-transparent"
           />
           <label
             htmlFor="password"

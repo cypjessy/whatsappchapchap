@@ -66,7 +66,7 @@ export default function Step2Business({
           value={formData.businessName}
           onChange={onChange}
           placeholder="Business name"
-          className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5"
+          className="peer w-full h-14 px-4 pt-4 pb-1.5 text-base text-[#1C1B1F] bg-transparent border-2 border-[#79747E] rounded-xl focus:border-[#25D366] focus:outline-none transition-colors placeholder-shown:pt-3.5 placeholder:text-transparent"
         />
         <label
           htmlFor="businessName"
