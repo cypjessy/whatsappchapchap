@@ -106,11 +106,31 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
     if (!phoneNumber.trim()) { setPhoneError('Enter your WhatsApp number'); return; }
     const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
     let normalizedPhone = cleanPhone;
-    if (cleanPhone.startsWith('0') && cleanPhone.length === 10) normalizedPhone = '254' + cleanPhone.slice(1);
-    else if (!cleanPhone.startsWith('254') && !cleanPhone.startsWith('+')) normalizedPhone = '254' + cleanPhone;
+    
+    // Kenyan number normalization
+    // 07XX XXX XXX or 01XX XXX XXX (10 digits starting with 0) → 2547XX XXX XXX or 2541XX XXX XXX
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 10) {
+      normalizedPhone = '254' + cleanPhone.slice(1);
+    } 
+    // 7XX XXX XXX or 1XX XXX XXX (9 digits) → 2547XX XXX XXX or 2541XX XXX XXX
+    else if ((cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) && cleanPhone.length === 9) {
+      normalizedPhone = '254' + cleanPhone;
+    }
+    // Already has 254 prefix
+    else if (cleanPhone.startsWith('254')) {
+      normalizedPhone = cleanPhone;
+    }
+    // Other numbers without country code - assume Kenya (254)
+    else if (!cleanPhone.startsWith('254')) {
+      normalizedPhone = '254' + cleanPhone;
+    }
+    
+    // Remove any leading + if present
     normalizedPhone = normalizedPhone.replace(/^\+/, '');
-    if (normalizedPhone.length < 9 || normalizedPhone.length > 15) {
-      setPhoneError('Invalid phone number');
+    
+    // Validate: Kenyan numbers should be 12 digits (254 + 9 digits)
+    if (normalizedPhone.length !== 12) {
+      setPhoneError('Invalid phone number. Use format: 07XX XXX XXX, 01XX XXX XXX, or +254XXXXXXXXX');
       return;
     }
     setPhoneError('');
