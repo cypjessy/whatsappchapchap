@@ -230,20 +230,18 @@ export const getPairingCode = async (instanceName: string, phoneNumber: string):
       }
     }
 
-    // Try the correct Evolution API endpoint for pairing code
-    // The endpoint is /instance/connect/{instanceName} with phone number in body
-    const result = await callEvolutionApi(`instance/connect/${instanceName}`, "POST", {
-      number: phoneNumber,
-    });
+    // Evolution API uses GET request with phone number as query parameter
+    // The endpoint is /instance/connect/{instanceName}?number={phoneNumber}
+    const result = await callEvolutionApi(`instance/connect/${instanceName}?number=${encodeURIComponent(phoneNumber)}`, "GET");
 
     console.log('[Evolution] Pairing code result:', JSON.stringify(result));
 
     // Extract pairing code from response - check multiple possible field names
-    const pairingCode = result?.pairingCode || result?.code || result?.pairing_code || result?.token || null;
+    const pairingCode = result?.pairingCode || result?.code || result?.pairing_code || null;
     
     if (pairingCode) {
       // Validate that the pairing code looks like a real code (not an error message)
-      // Real pairing codes are typically 6-8 digits or short alphanumeric
+      // Real pairing codes are typically 6-8 alphanumeric characters
       const isValidCode = /^[A-Z0-9]{4,12}$/i.test(pairingCode);
       
       if (!isValidCode) {
