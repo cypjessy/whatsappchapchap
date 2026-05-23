@@ -209,28 +209,8 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Mobile Progress Bar - MD3 */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-20 px-4 pt-4 pb-3 bg-white/95 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-2">
-            {[1, 2, 3, 4].map((step) => (
-              <div
-                key={step}
-                className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-                  step <= currentStep ? "bg-gradient-to-r from-[#25D366] to-[#128C7E]" : "bg-surface-variant"
-                }`}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between text-[10px] text-on-surface-variant font-medium">
-            <span>Account</span>
-            <span>Business</span>
-            <span>WhatsApp</span>
-            <span>Done</span>
-          </div>
-        </div>
-
         {/* Back Link - Mobile */}
-        <div className="lg:hidden fixed top-12 left-4 z-20">
+        <div className="lg:hidden fixed top-4 left-4 z-20">
           <Link href="/" className="text-on-surface-variant hover:text-[#25D366] transition-colors inline-flex items-center gap-1.5 text-xs">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -240,7 +220,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 px-4 sm:px-6 lg:px-8 pt-16 pb-6 lg:pt-6 lg:pb-8 flex flex-col overflow-y-auto">
+        <div className="flex-1 px-4 sm:px-6 lg:px-8 pt-12 pb-6 lg:pt-8 lg:pb-8 flex flex-col justify-center overflow-y-auto">
           {/* Mobile Back Button */}
           {currentStep > 1 && (
             <button

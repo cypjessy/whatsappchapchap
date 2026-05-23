@@ -477,10 +477,15 @@ export default function WhatsAppDialog({ instanceName, isOpen, onClose, onConnec
                     </p>
 
                     {/* Premium Code Display */}
-                    <div className="relative w-full bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-[#25D366]/30 rounded-2xl p-5 mb-5">
-                      <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-3 font-semibold text-center">Pairing Code</p>
-                      <div className="flex items-center justify-center gap-3">
-                        <span className={`font-mono font-bold tracking-wider text-green-700 select-all ${pairingCode.length > 8 ? 'text-3xl' : 'text-4xl'}`}>
+                    <div className="relative w-full bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-[#25D366]/30 rounded-2xl p-4 mb-4">
+                      <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2 font-semibold text-center">Pairing Code</p>
+                      <div className="flex items-center justify-center gap-2 overflow-hidden">
+                        <span 
+                          className={`font-mono font-bold tracking-wider text-green-700 select-all break-all text-center ${
+                            pairingCode.length > 12 ? 'text-lg' : pairingCode.length > 8 ? 'text-2xl' : 'text-3xl'
+                          }`}
+                          style={{ wordBreak: 'break-all', maxWidth: '100%' }}
+                        >
                           {pairingCode}
                         </span>
                         <button
@@ -491,7 +496,7 @@ export default function WhatsAppDialog({ instanceName, isOpen, onClose, onConnec
                               setTimeout(() => setCopied(false), 2000);
                             } catch {}
                           }}
-                          className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
                             copied ? 'bg-[#25D366] text-white' : 'bg-green-200 text-green-800 hover:bg-green-300'
                           }`}
                         >

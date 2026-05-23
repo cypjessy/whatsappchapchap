@@ -302,10 +302,15 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           </p>
 
           {/* Code Display */}
-          <div className="relative w-full max-w-[200px] bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-[#25D366]/30 rounded-xl p-3 mb-3">
+          <div className="relative w-full max-w-[240px] bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-[#25D366]/30 rounded-xl p-3 mb-3">
             <p className="text-[8px] uppercase tracking-wider text-on-surface-variant mb-1.5 font-semibold text-center">Your Code</p>
-            <div className="flex items-center justify-center gap-2">
-              <span className={`font-mono font-bold tracking-wider text-green-700 select-all ${pairingCode.length > 6 ? 'text-xl' : 'text-2xl'}`}>
+            <div className="flex items-center justify-center gap-2 overflow-hidden">
+              <span 
+                className={`font-mono font-bold tracking-wider text-green-700 select-all break-all text-center ${
+                  pairingCode.length > 12 ? 'text-sm' : pairingCode.length > 6 ? 'text-lg' : 'text-2xl'
+                }`}
+                style={{ wordBreak: 'break-all', maxWidth: '100%' }}
+              >
                 {pairingCode}
               </span>
               <button
@@ -325,7 +330,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
                     setTimeout(() => setCopied(false), 2000);
                   }
                 }}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${
+                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all shrink-0 ${
                   copied ? 'bg-[#25D366] text-white' : 'bg-green-200 text-green-800 hover:bg-green-300'
                 }`}
               >
