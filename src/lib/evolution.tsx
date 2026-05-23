@@ -230,17 +230,27 @@ export const getPairingCode = async (instanceName: string, phoneNumber: string):
       }
     }
 
-    // Call connectPairing endpoint with phone number
-    const result = await callEvolutionApi(`instance/connectPairing/${instanceName}`, "POST", {
+    // Try the correct Evolution API endpoint for pairing code
+    // The endpoint is /instance/connect/{instanceName} with phone number in body
+    const result = await callEvolutionApi(`instance/connect/${instanceName}`, "POST", {
       number: phoneNumber,
     });
 
     console.log('[Evolution] Pairing code result:', JSON.stringify(result));
 
-    // Extract pairing code from response
-    const pairingCode = result?.pairingCode || result?.code || result?.pairing_code || null;
+    // Extract pairing code from response - check multiple possible field names
+    const pairingCode = result?.pairingCode || result?.code || result?.pairing_code || result?.token || null;
     
     if (pairingCode) {
+      // Validate that the pairing code looks like a real code (not an error message)
+      // Real pairing codes are typically 6-8 digits or short alphanumeric
+      const isValidCode = /^[A-Z0-9]{4,12}$/i.test(pairingCode);
+      
+      if (!isValidCode) {
+        console.warn('[Evolution] Invalid pairing code format received:', pairingCode);
+        throw new Error('Invalid pairing code format received from server');
+      }
+      
       return {
         pairingCode,
         count: result?.count,
@@ -252,17 +262,7 @@ export const getPairingCode = async (instanceName: string, phoneNumber: string):
   } catch (err: any) {
     console.error('[Evolution] getPairingCode error:', err);
     
-    // Fallback: try connect endpoint which may return pairingCode for non-QR instances
-    try {
-      const fallbackResult = await callEvolutionApi(`instance/connect/${instanceName}`);
-      const pairingCode = fallbackResult?.pairingCode || fallbackResult?.code || null;
-      if (pairingCode) {
-        return { pairingCode, count: fallbackResult?.count, phoneNumber };
-      }
-    } catch {
-      // Fallback also failed
-    }
-    
-    return null;
+    // Don't return invalid data - let the caller handle the error
+    throw err;
   }
 };

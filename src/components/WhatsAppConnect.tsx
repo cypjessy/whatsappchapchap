@@ -283,14 +283,48 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mb-3">
           <i className="fas fa-exclamation-triangle text-2xl text-amber-500" />
         </div>
-        <p className="text-amber-700 text-sm text-center mb-4 px-2">{error}</p>
-        <button onClick={() => setStatus('idle')} className="px-4 py-2 bg-[#25D366] text-white rounded-lg font-semibold text-sm hover:bg-[#128C7E] transition-colors">
-          Try Again
-        </button>
+        <p className="text-amber-700 text-sm text-center mb-2 px-2 font-medium">{error}</p>
+        <p className="text-on-surface-variant text-xs text-center mb-4 px-4">
+          The pairing code method may not be available. Try using QR code instead.
+        </p>
+        <div className="flex gap-2">
+          <button onClick={() => setConnectMode('qr')} className="px-4 py-2 bg-[#25D366] text-white rounded-lg font-semibold text-sm hover:bg-[#128C7E] transition-colors active:scale-95">
+            Use QR Code
+          </button>
+          <button onClick={() => setStatus('idle')} className="px-4 py-2 bg-surface-variant text-on-surface rounded-lg font-semibold text-sm hover:bg-surface-container-high transition-colors">
+            Try Again
+          </button>
+        </div>
       </div>
     );
 
     if (status === 'pairing' && pairingCode) {
+      // Validate pairing code format - should be short (4-12 chars) alphanumeric
+      const isValidCode = /^[A-Z0-9]{4,12}$/i.test(pairingCode);
+      
+      // If code is too long or invalid, show error instead
+      if (!isValidCode) {
+        return (
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mb-3">
+              <i className="fas fa-exclamation-triangle text-2xl text-amber-500" />
+            </div>
+            <p className="text-amber-700 text-sm text-center mb-2 px-2 font-medium">Invalid pairing code received</p>
+            <p className="text-on-surface-variant text-xs text-center mb-4 px-4">
+              The server returned an invalid response. Please try the QR code method instead.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setConnectMode('qr')} className="px-4 py-2 bg-[#25D366] text-white rounded-lg font-semibold text-sm hover:bg-[#128C7E] transition-colors active:scale-95">
+                Use QR Code
+              </button>
+              <button onClick={() => setStatus('idle')} className="px-4 py-2 bg-surface-variant text-on-surface rounded-lg font-semibold text-sm hover:bg-surface-container-high transition-colors">
+                Try Again
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="flex flex-col items-center px-2 py-4">
           <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-full flex items-center justify-center mb-2 shadow-md3-level1">
@@ -302,43 +336,40 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           </p>
 
           {/* Code Display */}
-          <div className="relative w-full max-w-[240px] bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-[#25D366]/30 rounded-xl p-3 mb-3">
-            <p className="text-[8px] uppercase tracking-wider text-on-surface-variant mb-1.5 font-semibold text-center">Your Code</p>
-            <div className="flex items-center justify-center gap-2 overflow-hidden">
+          <div className="relative w-full max-w-[200px] bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-[#25D366]/30 rounded-xl p-4 mb-3">
+            <p className="text-[8px] uppercase tracking-wider text-on-surface-variant mb-2 font-semibold text-center">Your Code</p>
+            <div className="flex items-center justify-center">
               <span 
-                className={`font-mono font-bold tracking-wider text-green-700 select-all break-all text-center ${
-                  pairingCode.length > 12 ? 'text-sm' : pairingCode.length > 6 ? 'text-lg' : 'text-2xl'
-                }`}
-                style={{ wordBreak: 'break-all', maxWidth: '100%' }}
+                className="font-mono font-bold tracking-[0.2em] text-green-700 select-all text-center text-2xl"
               >
                 {pairingCode}
               </span>
-              <button
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(pairingCode);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  } catch {
-                    const ta = document.createElement('textarea');
-                    ta.value = pairingCode;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }
-                }}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all shrink-0 ${
-                  copied ? 'bg-[#25D366] text-white' : 'bg-green-200 text-green-800 hover:bg-green-300'
-                }`}
-              >
-                {copied ? <><i className="fas fa-check" /> Copied</> : <><i className="fas fa-copy" /> Copy</>}
-              </button>
             </div>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(pairingCode);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch {
+                  const ta = document.createElement('textarea');
+                  ta.value = pairingCode;
+                  document.body.appendChild(ta);
+                  ta.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(ta);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }
+              }}
+              className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold transition-all ${
+                copied ? 'bg-[#25D366] text-white' : 'bg-green-200 text-green-800 hover:bg-green-300'
+              }`}
+            >
+              {copied ? <><i className="fas fa-check mr-1" /> Copied!</> : <><i className="fas fa-copy mr-1" /> Copy Code</>}
+            </button>
             {copied && (
-              <div className="absolute -top-2 -right-2 bg-[#25D366] text-white text-[8px] font-bold px-2 py-0.5 rounded-full animate-bounce">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#25D366] text-white text-[8px] font-bold px-2 py-0.5 rounded-full animate-bounce">
                 Copied!
               </div>
             )}
