@@ -197,43 +197,44 @@ export default function RegisterPage() {
       <div className="relative z-10 min-h-screen flex items-center justify-center">
         <div className="w-full min-h-screen md:min-h-0 md:h-[calc(100vh-2rem)] md:max-w-5xl bg-white md:rounded-2xl md:shadow-xl overflow-hidden flex">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex relative w-72 shrink-0">
+        <div className="hidden lg:flex w-72 shrink-0">
           <RegisterSidebar currentStep={currentStep} />
-          <div className="absolute bottom-6 left-6 right-6">
-            <Link href="/" className="text-white/70 hover:text-white transition-colors inline-flex items-center gap-2 text-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Home
-            </Link>
-          </div>
-        </div>
-
-        {/* Back Link - Mobile */}
-        <div className="lg:hidden fixed top-4 left-4 z-20">
-          <Link href="/" className="text-on-surface-variant hover:text-[#25D366] transition-colors inline-flex items-center gap-1.5 text-xs">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back
-          </Link>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 px-4 sm:px-6 lg:px-8 pt-12 pb-6 lg:pt-8 lg:pb-8 flex flex-col justify-center overflow-y-auto">
-          {/* Mobile Back Button */}
-          {currentStep > 1 && (
-            <button
-              onClick={handleBack}
-              className="lg:hidden flex items-center gap-2 text-on-surface-variant mb-3 hover:text-[#25D366] transition-colors active:scale-95"
-            >
-              <i className="fas fa-arrow-left text-sm"></i>
-              <span className="text-sm">Back</span>
-            </button>
-          )}
+        <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col overflow-y-auto">
+          {/* Header with Back Button */}
+          <div className="flex items-center gap-3 mb-6">
+            {currentStep > 1 ? (
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-variant hover:bg-surface-container-high text-on-surface transition-all active:scale-95 border border-outline-variant"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-sm font-medium">Back</span>
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-variant hover:bg-surface-container-high text-on-surface transition-all active:scale-95 border border-outline-variant"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-sm font-medium">Back to Login</span>
+              </Link>
+            )}
+            <div className="flex-1" />
+            <span className="text-xs text-on-surface-variant font-medium">Step {currentStep} of 4</span>
+          </div>
+
+          {/* Centered Content */}
+          <div className="flex-1 flex flex-col justify-center">
 
           {currentStep === 1 && (
-            <div>
+            <div className="animate-[fadeIn_0.4s_ease]">
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
                   <i className="fas fa-exclamation-circle shrink-0" />
@@ -315,7 +316,7 @@ export default function RegisterPage() {
 
           {/* Navigation buttons */}
           {currentStep === 1 && (
-            <div className="flex justify-end mt-auto pt-4 gap-2">
+            <div className="flex justify-end mt-6 pt-4 gap-2">
               <button
                 onClick={verifyAndComplete}
                 disabled={!validateStep(currentStep) || isLoading}
@@ -340,16 +341,7 @@ export default function RegisterPage() {
           )}
 
           {currentStep === 2 && (
-            <div className="flex justify-between mt-auto pt-4 gap-3">
-              <button
-                onClick={handleBack}
-                className="py-2.5 px-4 bg-surface-variant text-on-surface rounded-lg font-semibold transition-all 
-                  hover:bg-surface-container-high active:scale-[0.98]
-                  flex items-center gap-2 text-sm border border-outline-variant"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
-                <span className="hidden sm:inline">Back</span>
-              </button>
+            <div className="flex justify-end mt-6 pt-4 gap-3">
               <button
                 onClick={handleSaveBusiness}
                 disabled={!validateStep(currentStep) || isLoading}
@@ -372,6 +364,7 @@ export default function RegisterPage() {
               </button>
             </div>
           )}
+        </div>
         </div>
         </div>
       </div>

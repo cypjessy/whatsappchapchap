@@ -1,11 +1,4 @@
 export default function RegisterSidebar({ currentStep }: { currentStep: number }) {
-  const steps = [
-    { step: 1, title: "Create Account", desc: "Your account details", active: currentStep === 1 },
-    { step: 2, title: "Business Info", desc: "Tell us about your business", active: currentStep === 2 },
-    { step: 3, title: "Connect WhatsApp", desc: "Link your WhatsApp number", active: currentStep === 3 },
-    { step: 4, title: "Done", desc: "You're all set!", active: currentStep === 4 },
-  ];
-
   return (
     <div className="md:col-span-2 bg-gradient-to-br from-[#25D366] to-[#128C7E] p-8 md:p-12 text-white flex flex-col justify-between">
       <div>
@@ -18,31 +11,49 @@ export default function RegisterSidebar({ currentStep }: { currentStep: number }
           <span className="text-2xl font-extrabold">Chap Chap</span>
         </div>
 
-        <div className="space-y-8">
-          {steps.map((s) => (
-            <div
-              key={s.step}
-              className={`flex items-center gap-4 ${s.active ? "opacity-100" : "opacity-60"}`}
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                  s.active ? "bg-white text-[#25D366]" : "bg-white/20 text-white"
-                }`}
-              >
-                {s.step}
-              </div>
-              <div>
-                <div className="font-bold text-lg">{s.title}</div>
-                <div className="text-sm opacity-80">{s.desc}</div>
-              </div>
+        {/* Feature highlights instead of step indicators */}
+        <div className="space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
             </div>
-          ))}
+            <div>
+              <div className="font-bold text-lg">Quick Setup</div>
+              <div className="text-sm opacity-80">Get started in minutes</div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-bold text-lg">Connect WhatsApp</div>
+              <div className="text-sm opacity-80">Link your business number</div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-bold text-lg">Start Selling</div>
+              <div className="text-sm opacity-80">Automate your sales</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="text-sm opacity-80">
         Already have an account?{" "}
-        <a href="/" className="font-bold text-white hover:underline">
+        <a href="/login" className="font-bold text-white hover:underline">
           Sign in
         </a>
       </div>
