@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { createInstance, getQRCode, getConnectionState, setWebhook, getInstanceDetails, fetchInstanceApiKey, getPairingCode } from '@/lib/evolution';
 
 interface WhatsAppDialogProps {
@@ -239,11 +240,15 @@ export default function WhatsAppDialog({ instanceName, isOpen, onClose, onConnec
     onConnected({ instanceId: instanceName, evolutionUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io", evolutionKey: actualApiKey, evolutionUUID: evolutionUUID });
   }, [instanceName, onConnected, createApiKey]);
 
-  if (!isOpen && !isVisible) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  return (
+  if (!isOpen && !isVisible) return null;
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className={`fixed inset-0 z-[100] transition-all duration-300 ${
+      className={`fixed inset-0 z-[9999] transition-all duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
@@ -577,6 +582,7 @@ export default function WhatsAppDialog({ instanceName, isOpen, onClose, onConnec
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
