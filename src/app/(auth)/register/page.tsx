@@ -184,28 +184,23 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Background decoration - top and bottom only */}
+      {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-[#667eea]/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#764ba2]/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-[#667eea]/15 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#764ba2]/15 to-transparent" />
       </div>
-      
+
       {/* Floating shapes for visual interest */}
       <FloatingShapes />
 
-      {/* Main content container - full screen, centered */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-8 md:py-12">
-        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-5 bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Desktop Sidebar only */}
-        <div className="hidden md:block relative">
+      {/* Main content container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center">
+        <div className="w-full min-h-screen md:min-h-0 md:h-[calc(100vh-2rem)] md:max-w-5xl bg-white md:rounded-2xl md:shadow-xl overflow-hidden flex">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:flex relative w-72 shrink-0">
           <RegisterSidebar currentStep={currentStep} />
-          
-          {/* Back to Home Link - Desktop */}
           <div className="absolute bottom-6 left-6 right-6">
-            <Link
-              href="/"
-              className="text-white/70 hover:text-white transition-colors inline-flex items-center gap-2 text-sm"
-            >
+            <Link href="/" className="text-white/70 hover:text-white transition-colors inline-flex items-center gap-2 text-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
@@ -214,51 +209,46 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Mobile Progress Bar - Material Design 3 */}
-        <div className="md:hidden px-4 pt-4 pb-3">
-          <div className="flex items-center gap-2 mb-3">
+        {/* Mobile Progress Bar - MD3 */}
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-20 px-4 pt-4 pb-3 bg-white/95 backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-2">
             {[1, 2, 3, 4].map((step) => (
               <div
                 key={step}
-                className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
+                className={`flex-1 h-1 rounded-full transition-all duration-300 ${
                   step <= currentStep ? "bg-gradient-to-r from-[#25D366] to-[#128C7E]" : "bg-surface-variant"
                 }`}
               />
             ))}
           </div>
-          <div className="flex justify-between text-xs text-on-surface-variant font-medium">
+          <div className="flex justify-between text-[10px] text-on-surface-variant font-medium">
             <span>Account</span>
             <span>Business</span>
             <span>WhatsApp</span>
             <span>Done</span>
           </div>
         </div>
-        
-        {/* Back to Home Link - Mobile */}
-        <div className="md:hidden px-4 pb-2">
-          <Link
-            href="/"
-            className="text-on-surface-variant hover:text-[#25D366] transition-colors inline-flex items-center gap-2 text-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        {/* Back Link - Mobile */}
+        <div className="lg:hidden fixed top-12 left-4 z-20">
+          <Link href="/" className="text-on-surface-variant hover:text-[#25D366] transition-colors inline-flex items-center gap-1.5 text-xs">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Home
+            Back
           </Link>
         </div>
 
-        {/* Content - Full width on mobile, col-span-3 on desktop */}
-        <div className="md:col-span-3 px-4 sm:px-6 md:px-12 py-6 md:py-8 flex flex-col max-h-[calc(100vh-4rem)] md:max-h-none overflow-y-auto">
-          {/* Mobile Back Button - Material Design 3 */}
+        {/* Content Area */}
+        <div className="flex-1 px-4 sm:px-6 lg:px-8 pt-16 pb-6 lg:pt-6 lg:pb-8 flex flex-col overflow-y-auto">
+          {/* Mobile Back Button */}
           {currentStep > 1 && (
             <button
               onClick={handleBack}
-              className="md:hidden flex items-center gap-2 text-on-surface-variant mb-4 
-                hover:text-[#25D366] transition-colors duration-300 
-                active:scale-95 px-3 py-2 rounded-lg hover:bg-surface-container-lowest"
+              className="lg:hidden flex items-center gap-2 text-on-surface-variant mb-3 hover:text-[#25D366] transition-colors active:scale-95"
             >
-              <i className="fas fa-arrow-left"></i>
-              <span>Back</span>
+              <i className="fas fa-arrow-left text-sm"></i>
+              <span className="text-sm">Back</span>
             </button>
           )}
 
@@ -291,40 +281,51 @@ export default function RegisterPage() {
           )}
 
           {currentStep === 3 && (
-            <div className="animate-[fadeIn_0.4s_ease] space-y-4">
-              <h3 className="text-xl md:text-2xl font-extrabold mb-1 md:mb-2">Connect WhatsApp</h3>
-              <p className="text-on-surface-variant mb-2 text-sm md:text-base">Link your WhatsApp number to start selling</p>
+            <div className="animate-[fadeIn_0.4s_ease] flex-1 flex flex-col">
+              {/* MD3 Header */}
+              <div className="text-center mb-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md3-level1">
+                  <i className="fab fa-whatsapp text-2xl text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-on-surface mb-1">Connect WhatsApp</h3>
+                <p className="text-xs text-on-surface-variant">Link your number to start selling</p>
+              </div>
 
-              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                  <i className="fab fa-whatsapp text-white text-sm" />
+              {/* Info Banner */}
+              <div className="flex items-center gap-2.5 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg mb-4">
+                <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-sm">
+                  <i className="fas fa-check text-white text-xs" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-green-800">Almost there!</p>
-                  <p className="text-xs text-green-600">Connect your WhatsApp to receive orders and chat with customers</p>
+                  <p className="text-xs font-semibold text-green-800">Almost done!</p>
+                  <p className="text-[10px] text-green-600 leading-tight">Connect WhatsApp for orders & chat</p>
                 </div>
               </div>
 
+              {/* Connection Section */}
               {instanceName ? (
-                <WhatsAppConnect
-                  instanceName={instanceName}
-                  onConnected={handleWhatsAppConnected}
-                  autoStart={false}
-                  showModeSelector={true}
-                />
+                <div className="flex-1 bg-surface-variant/50 rounded-xl border border-outline-variant p-3 overflow-y-auto">
+                  <WhatsAppConnect
+                    instanceName={instanceName}
+                    onConnected={handleWhatsAppConnected}
+                    autoStart={false}
+                    showModeSelector={true}
+                  />
+                </div>
               ) : (
-                <div className="p-4 bg-white rounded-xl border border-outline-variant text-center">
-                  <p className="text-sm text-on-surface-variant">Initializing your account...</p>
+                <div className="p-4 bg-surface-variant/50 rounded-xl border border-outline-variant text-center">
+                  <div className="w-10 h-10 border-3 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-xs text-on-surface-variant">Initializing...</p>
                 </div>
               )}
 
-              {/* Skip for now */}
-              <div className="text-center pt-2">
+              {/* Skip Link */}
+              <div className="text-center pt-3">
                 <button
                   onClick={() => setCurrentStep(4)}
-                  className="text-xs text-on-surface-variant hover:text-[#25D366] transition-colors underline underline-offset-2"
+                  className="text-[11px] text-on-surface-variant hover:text-[#25D366] transition-colors underline underline-offset-2"
                 >
-                  Skip, I'll connect later
+                  Skip for now
                 </button>
               </div>
             </div>
@@ -332,27 +333,26 @@ export default function RegisterPage() {
 
           {currentStep === 4 && <SuccessStep />}
 
-          {/* Navigation buttons - only on step 1 and 2 */}
+          {/* Navigation buttons */}
           {currentStep === 1 && (
-            <div className="flex justify-end mt-auto pt-6 md:pt-8 gap-3">
+            <div className="flex justify-end mt-auto pt-4 gap-2">
               <button
                 onClick={verifyAndComplete}
                 disabled={!validateStep(currentStep) || isLoading}
-                className="py-3 px-5 md:px-8 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
-                  text-white rounded-xl font-bold transition-all duration-300 
-                  hover:translate-y-[-2px] hover:shadow-lg 
-                  active:translate-y-0 active:shadow-md active:scale-[0.98]
-                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
-                  flex items-center gap-2 text-sm md:text-base"
+                className="py-2.5 px-5 bg-[#25D366] text-white rounded-lg font-semibold transition-all 
+                  hover:shadow-md3-level2 active:scale-[0.98]
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  flex items-center gap-2 text-sm shadow-md3-level1"
               >
                 {isLoading ? (
                   <>
-                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                     <span>Creating...</span>
                   </>
                 ) : (
                   <>
-                    Create Account <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    Create Account
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </>
                 )}
               </button>
@@ -360,43 +360,40 @@ export default function RegisterPage() {
           )}
 
           {currentStep === 2 && (
-            <div className="flex justify-between mt-auto pt-6 md:pt-8 gap-3">
+            <div className="flex justify-between mt-auto pt-4 gap-3">
               <button
                 onClick={handleBack}
-                className="py-3 px-4 md:px-6 bg-white text-[#1a1a2e] border-2 border-outline-variant 
-                  rounded-xl font-semibold transition-all duration-300 
-                  hover:border-[#25D366] hover:text-[#25D366] hover:shadow-md
-                  active:translate-y-0 active:shadow-none active:scale-[0.98]
-                  flex items-center gap-2 text-sm md:text-base"
+                className="py-2.5 px-4 bg-surface-variant text-on-surface rounded-lg font-semibold transition-all 
+                  hover:bg-surface-container-high active:scale-[0.98]
+                  flex items-center gap-2 text-sm border border-outline-variant"
               >
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
                 <span className="hidden sm:inline">Back</span>
               </button>
               <button
                 onClick={handleSaveBusiness}
                 disabled={!validateStep(currentStep) || isLoading}
-                className="py-3 px-5 md:px-8 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
-                  text-white rounded-xl font-bold transition-all duration-300 
-                  hover:translate-y-[-2px] hover:shadow-lg 
-                  active:translate-y-0 active:shadow-md active:scale-[0.98]
-                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
-                  flex items-center gap-2 text-sm md:text-base"
+                className="py-2.5 px-5 bg-[#25D366] text-white rounded-lg font-semibold transition-all 
+                  hover:shadow-md3-level2 active:scale-[0.98]
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  flex items-center gap-2 text-sm shadow-md3-level1"
               >
                 {isLoading ? (
                   <>
-                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                     <span>Saving...</span>
                   </>
                 ) : (
                   <>
-                    Continue <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    Continue
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </>
                 )}
               </button>
             </div>
           )}
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

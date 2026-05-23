@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useHaptics } from '@/hooks/useNativeAndroid';
 import { logoutInstance, getConnectionState } from '@/lib/evolution';
-import WhatsAppConnect from '@/components/WhatsAppConnect';
+import WhatsAppDialog from './WhatsAppDialog';
 
 interface WhatsAppConnectionManagerProps {
   instanceName: string;
@@ -17,7 +17,7 @@ export default function WhatsAppConnectionManager({
   onConnectionChange 
 }: WhatsAppConnectionManagerProps) {
   const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
-  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
@@ -48,7 +48,7 @@ export default function WhatsAppConnectionManager({
   const handleConnectSuccess = useCallback(() => {
     impactLight();
     setConnectionStatus('connected');
-    setShowConnectModal(false);
+    setShowConnectDialog(false);
     if (onConnectionChange) onConnectionChange(true);
   }, [impactLight, onConnectionChange]);
 
@@ -59,7 +59,7 @@ export default function WhatsAppConnectionManager({
     } catch {
       // Ignore logout errors
     }
-    setShowConnectModal(true);
+    setShowConnectDialog(true);
   }, [instanceName, impactLight]);
 
   // Check initial connection state
@@ -251,7 +251,7 @@ export default function WhatsAppConnectionManager({
           <button
             onClick={() => {
               impactLight();
-              setShowConnectModal(true);
+              setShowConnectDialog(true);
             }}
             className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-green-500/30"
           >
@@ -276,44 +276,13 @@ export default function WhatsAppConnectionManager({
         </div>
       )}
 
-      {/* Compact Connect Modal */}
-      {showConnectModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div 
-            className="bg-white rounded-xl w-full max-w-sm overflow-hidden animate-slideUp shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header - Compact */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-                  <i className="fab fa-whatsapp text-white text-[10px]" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-xs text-on-surface">Connect WhatsApp</h3>
-                  <p className="text-[9px] text-on-surface-variant leading-tight">{instanceName}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowConnectModal(false)}
-                className="w-7 h-7 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors shrink-0"
-              >
-                <i className="fas fa-times text-on-surface-variant text-xs" />
-              </button>
-            </div>
-
-            {/* Modal Body - Tight */}
-            <div className="px-3 py-3 max-h-[70vh] overflow-y-auto">
-              <WhatsAppConnect 
-                instanceName={instanceName}
-                onConnected={handleConnectSuccess}
-                autoStart={true}
-                showModeSelector={true}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Premium WhatsApp Connection Dialog */}
+      <WhatsAppDialog
+        instanceName={instanceName}
+        isOpen={showConnectDialog}
+        onClose={() => setShowConnectDialog(false)}
+        onConnected={handleConnectSuccess}
+      />
     </div>
   );
 }
