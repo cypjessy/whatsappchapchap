@@ -372,11 +372,13 @@ export default function LoginPage() {
           w-full lg:w-[600px] bg-white flex flex-col justify-center
           p-4 sm:p-6 lg:p-12
           pt-[calc(64px+env(safe-area-inset-top,24px)+16px)] lg:pt-12
+          pb-[calc(24px+env(safe-area-inset-bottom,0px))] lg:pb-12
+          min-h-screen
           transition-all duration-700 ease-out
           ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}
         `}
       >
-        <div className="w-full max-w-[420px] mx-auto">
+        <div className="w-full max-w-[420px] mx-auto my-auto">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">
             <MobileLogo />
