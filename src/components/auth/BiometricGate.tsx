@@ -16,16 +16,7 @@ export default function BiometricGate({ email, onVerified, onFallback, onLogout 
   const [hasAttempted, setHasAttempted] = useState(false);
   const { authenticate, biometricType, getBiometricIcon, getBiometricLabel, isAvailable } = useBiometricAuth();
 
-  // Auto-trigger biometric on mount
-  useEffect(() => {
-    if (!hasAttempted && isAvailable) {
-      const timer = setTimeout(() => {
-        handleAuthenticate();
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isAvailable, hasAttempted]);
-
+  // Define handleAuthenticate BEFORE the useEffect that uses it
   const handleAuthenticate = useCallback(async () => {
     if (isAuthenticating) return;
     setIsAuthenticating(true);
@@ -47,6 +38,16 @@ export default function BiometricGate({ email, onVerified, onFallback, onLogout 
       setIsAuthenticating(false);
     }
   }, [authenticate, onVerified, isAuthenticating]);
+
+  // Auto-trigger biometric on mount - NOW handleAuthenticate is defined above
+  useEffect(() => {
+    if (!hasAttempted && isAvailable) {
+      const timer = setTimeout(() => {
+        handleAuthenticate();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isAvailable, hasAttempted, handleAuthenticate]);
 
   const getIcon = () => {
     switch (biometricType) {
