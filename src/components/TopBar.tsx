@@ -97,7 +97,7 @@ function ActionIcon({
           min-w-[20px] h-[20px] px-1
           bg-red-500 text-white text-[11px] font-bold
           rounded-full flex items-center justify-center
-          border-2 ${isScrolled ? 'border-white' : 'border-[#25D366]'} shadow-md3-level1 animate-badgePop
+          border-2 ${isScrolled ? 'border-white' : 'border-[#667eea]'} shadow-md3-level1 animate-badgePop
           z-20
         `}>
           {action.badge > 99 ? "99+" : action.badge}
@@ -162,7 +162,7 @@ export default function AndroidTopBar({
 
   // Dynamic status bar color - matches TopBar background
   useStatusBar({
-    color: isScrolled ? '#ffffff' : '#25D366',
+    color: isScrolled ? '#ffffff' : '#667eea',
     style: isScrolled ? 'dark' : 'light'
   });
 
@@ -249,7 +249,7 @@ export default function AndroidTopBar({
           className="relative transition-all duration-300 flex-shrink-0 w-full"
           style={{
             minHeight: '64px',
-            backgroundColor: isScrolled ? '#ffffff' : '#25D366',
+            backgroundColor: isScrolled ? '#ffffff' : '#667eea',
             boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
           }}
         >
