@@ -452,9 +452,13 @@ export default function OrderDetailModal({
     setOrderNotes("");
   }, [handleAction, onAddNote, orderNotes]);
 
-  // Helper to look up product image from productImages map
-  const getProductImage = (product: { productId?: string; name?: string } | null): string | undefined => {
+  // Helper to look up product image - check imageUrl on product first, then productImages map
+  const getProductImage = (product: { productId?: string; name?: string; imageUrl?: string; image?: string } | null): string | undefined => {
     if (!product) return undefined;
+    // 1. Check if product has imageUrl (new field) or image directly
+    if (product.imageUrl) return product.imageUrl;
+    if (product.image) return product.image;
+    // 2. Fall back to productImages map
     if (product.productId && productImages[product.productId]) return productImages[product.productId];
     if (product.name) return productImages[`name:${product.name.toLowerCase().trim()}`];
     return undefined;
