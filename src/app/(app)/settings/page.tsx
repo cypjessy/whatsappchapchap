@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { businessProfileService, whatsappSettingsService, shippingService, productSettingsService, serviceSettingsService, BusinessProfile, WhatsAppSettings, ShippingMethod, PickupStation, ProductSettings, ServiceSettings } from "@/lib/db";
 import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { PreferenceService, PREF_KEYS } from "@/lib/preference-service";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -156,6 +157,20 @@ export default function SettingsPage() {
   // Load data on component mount
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Load biometric preference from Capacitor Preferences
+  useEffect(() => {
+    const loadBiometricPreference = async () => {
+      try {
+        const enabled = await PreferenceService.get(PREF_KEYS.BIOMETRIC_ENABLED);
+        setBiometricEnabled(enabled === "true");
+        console.log("[Settings] Loaded biometric preference:", enabled);
+      } catch (err) {
+        console.error("[Settings] Error loading biometric preference:", err);
+      }
+    };
+    loadBiometricPreference();
   }, []);
 
   const loadData = async () => {
@@ -2130,10 +2145,17 @@ export default function SettingsPage() {
                       await showToastNative({ text: 'Biometric authentication not available on this device', position: 'top' });
                       return;
                     }
-                    setBiometricEnabled(!biometricEnabled);
+                    const newValue = !biometricEnabled;
+                    setBiometricEnabled(newValue);
+                    try {
+                      await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_ENABLED, value: newValue ? 'true' : 'false' });
+                      console.log('[Settings] Biometric preference saved:', newValue);
+                    } catch (err) {
+                      console.error('[Settings] Failed to save biometric preference:', err);
+                    }
                     await notificationSuccess();
                     await showToastNative({ 
-                      text: biometricEnabled ? 'Biometric login disabled' : 'Biometric login enabled', 
+                      text: newValue ? 'Biometric login enabled' : 'Biometric login disabled', 
                       position: 'top' 
                     });
                   }}

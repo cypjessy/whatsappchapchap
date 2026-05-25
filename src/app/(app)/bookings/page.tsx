@@ -942,9 +942,9 @@ export default function BookingsPage() {
           }}
         />
 
-        {/* View Tabs */}
-        <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-1 shadow-md3-level1">
-          <div className="flex overflow-x-auto scrollbar-hide">
+        {/* View Tabs - flex-wrap chip layout */}
+        <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-2 shadow-md3-level1">
+          <div className="flex flex-wrap gap-1.5">
             {VIEW_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -953,43 +953,41 @@ export default function BookingsPage() {
                   setViewMode(tab.id);
                 }}
                 className={`
-                  flex-1 min-w-[80px] flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2
-                  px-3 py-2.5 md:px-4 md:py-3 rounded-lg font-bold text-[10px] md:text-xs transition-all duration-200
+                  inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-[11px] leading-none
+                  transition-all duration-200 active:scale-95 select-none
                   ${viewMode === tab.id
                     ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant"
+                    : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
                   }
                 `}
               >
-                <i className={`fas ${tab.icon} text-xs`} />
+                <i className={`fas ${tab.icon} text-[10px]`} />
                 <span>{tab.label}</span>
-                <span className={`hidden lg:inline text-[9px] opacity-70 ${viewMode === tab.id ? "text-white/70" : "text-outline"}`}>
-                  {tab.desc}
-                </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Status Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {/* Status Chips - flex-wrap chip layout */}
+        <div className="flex flex-wrap gap-1.5">
           {STATUS_CHIPS.map((chip) => (
             <button
               key={chip.id}
               onClick={() => setFilterStatus(chip.id)}
               className={`
-                shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-bold text-[11px] md:text-xs transition-all duration-200 active:scale-95
+                inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[11px] leading-none
+                transition-all duration-200 active:scale-95 select-none
                 ${filterStatus === chip.id
                   ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
-                  : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
+                  : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
                 }
               `}
             >
               <i className={`fas ${chip.icon} text-[10px]`} />
               {chip.label}
               <span className={`
-                ml-0.5 px-1.5 py-0.5 rounded-full text-[9px]
-                ${filterStatus === chip.id ? "bg-surface/20" : "bg-surface-variant"}
+                ml-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold
+                ${filterStatus === chip.id ? "bg-white/20" : "bg-surface-variant"}
               `}>
                 {chip.id === "all" ? bookings.length : bookings.filter((b) => b.status === chip.id).length}
               </span>

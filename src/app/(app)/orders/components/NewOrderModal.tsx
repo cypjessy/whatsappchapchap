@@ -23,9 +23,13 @@ interface NewOrderForm {
   notes: string;
   sendWhatsApp: boolean;
   markAsPaid: boolean;
+  paymentRef: string;
   expressDelivery: boolean;
+  deliveryType: 'delivery' | 'pickup';
+  deliveryDate: string;
   discountCode: string;
   discountAmount: number;
+  saveCustomer: boolean;
 }
 
 interface NewOrderModalProps {
@@ -45,8 +49,6 @@ const PAYMENT_METHODS = [
   { id: "Bank Transfer", icon: "fa-university", desc: "Direct bank deposit" },
   { id: "Credit Card", icon: "fa-credit-card", desc: "Card payment" },
 ] as const;
-
-const DELIVERY_TYPES = ["Home", "Work", "Other"] as const;
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -230,15 +232,19 @@ export default function NewOrderModal({
     notes: "",
     sendWhatsApp: true,
     markAsPaid: false,
+    paymentRef: "",
     expressDelivery: false,
+    deliveryType: 'delivery',
+    deliveryDate: "",
     discountCode: "",
     discountAmount: 0,
+    saveCustomer: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [customerSearch, setCustomerSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [activeDeliveryType, setActiveDeliveryType] = useState("Home");
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -258,15 +264,19 @@ export default function NewOrderModal({
         notes: "",
         sendWhatsApp: true,
         markAsPaid: false,
+        paymentRef: "",
         expressDelivery: false,
+        deliveryType: 'delivery',
+        deliveryDate: "",
         discountCode: "",
         discountAmount: 0,
+        saveCustomer: true,
       });
       setErrors({});
       setCustomerSearch("");
       setProductSearch("");
       setShowCustomerDropdown(false);
-      setActiveDeliveryType("Home");
+      setIsNewCustomer(false);
       setShowConfirm(false);
     }
   }, [isOpen]);
@@ -356,6 +366,7 @@ export default function NewOrderModal({
     }));
     setCustomerSearch("");
     setShowCustomerDropdown(false);
+    setIsNewCustomer(false);
     setErrors((prev) => ({ ...prev, customerName: undefined, customerPhone: undefined }));
   }, []);
 
@@ -568,10 +579,10 @@ export default function NewOrderModal({
                   {errors.customerName && <p className="text-xs text-red-500 font-medium mt-2 animate-fadeIn">{errors.customerName}</p>}
 
                   {/* Manual Entry Toggle */}
-                  {!form.customerName && (
+                  {!form.customerName && !isNewCustomer && (
                     <button
                       className="w-full py-2.5 mt-2 bg-surface border-2 border-dashed border-outline-variant rounded-xl text-[#25D366] font-semibold text-sm flex items-center justify-center gap-2 hover:border-[#25D366] transition-all"
-                      onClick={() => setForm((prev) => ({ ...prev, customerName: "New Customer" }))}
+                      onClick={() => setIsNewCustomer(true)}
                     >
                       <i className="fas fa-user-plus" />
                       Create New Customer
@@ -579,12 +590,12 @@ export default function NewOrderModal({
                   )}
 
                   {/* Manual Fields */}
-                  {form.customerName === "New Customer" && (
+                  {isNewCustomer && (
                     <div className="space-y-3 mt-3 animate-fadeIn">
                       <FormInput
                         label="Full Name"
                         name="customerName"
-                        value={form.customerName === "New Customer" ? "" : form.customerName}
+                        value={form.customerName}
                         onChange={handleInputChange}
                         placeholder="Enter customer name"
                         error={errors.customerName}
@@ -642,10 +653,16 @@ export default function NewOrderModal({
                       ) : (
                         filteredProducts.map((product) => {
                           const prodImg = product.image || product.images?.[0];
+                          const stock = product.stock;
+                          const lowStockAlert = product.lowStockAlert || 5;
+                          const isOutOfStock = stock !== undefined && stock <= 0;
+                          const isLowStock = stock !== undefined && stock > 0 && stock <= lowStockAlert;
                           return (
                             <div
                               key={product.id}
-                              className="flex items-center gap-3 p-3 border-b border-outline-variant last:border-b-0 hover:bg-surface transition-colors group"
+                              className={`flex items-center gap-3 p-3 border-b border-outline-variant last:border-b-0 transition-colors group ${
+                                isOutOfStock ? 'opacity-50 bg-red-50/30' : 'hover:bg-surface'
+                              }`}
                             >
                               <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
                                 {prodImg ? (
@@ -656,11 +673,32 @@ export default function NewOrderModal({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-sm truncate">{product.name}</div>
-                                <div className="text-xs text-on-surface-variant">{formatCurrency(product.price)} each</div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-on-surface-variant">{formatCurrency(product.price)} each</span>
+                                  {stock !== undefined && (
+                                    <span
+                                      className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                        isOutOfStock
+                                          ? 'bg-red-100 text-red-600'
+                                          : isLowStock
+                                          ? 'bg-amber-100 text-amber-700'
+                                          : 'bg-green-100 text-green-700'
+                                      }`}
+                                    >
+                                      <i className={`fas ${isOutOfStock ? 'fa-times-circle' : isLowStock ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-[8px]`} />
+                                      {isOutOfStock ? 'Out of Stock' : `${stock} in stock`}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <button
                                 onClick={() => addProduct(product)}
-                                className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center hover:bg-[#22c55e] transition-all active:scale-90 shadow-md3-level1 opacity-0 group-hover:opacity-100 sm:opacity-100"
+                                disabled={isOutOfStock}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90 shadow-md3-level1 ${
+                                  isOutOfStock
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-[#25D366] text-white hover:bg-[#22c55e] opacity-0 group-hover:opacity-100 sm:opacity-100'
+                                }`}
                               >
                                 <i className="fas fa-plus text-xs" />
                               </button>
@@ -824,36 +862,73 @@ export default function NewOrderModal({
                   )}
                 </div>
 
-                {/* Delivery */}
+                {/* Delivery/Pickup Toggle */}
                 <div className="animate-fadeIn" style={{ animationDelay: '0.3s' }}>
-                  <SectionHeader icon="fa-truck" title="Delivery" />
-                  <div className="flex gap-2 mb-3">
-                    {DELIVERY_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setActiveDeliveryType(type)}
-                        className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                          activeDeliveryType === type
-                            ? "bg-[#25D366] text-white shadow-md3-level2"
-                            : "bg-surface text-on-surface-variant hover:bg-surface-variant"
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                  <SectionHeader icon="fa-truck" title="Fulfillment" />
+                  
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={() => setForm((prev) => ({ ...prev, deliveryType: 'delivery' }))}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
+                        form.deliveryType === 'delivery'
+                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-md3-level1'
+                          : 'border-outline-variant text-on-surface-variant hover:border-[#25D366]/50'
+                      }`}
+                    >
+                      <i className="fas fa-truck" />
+                      Delivery
+                    </button>
+                    <button
+                      onClick={() => setForm((prev) => ({ ...prev, deliveryType: 'pickup' }))}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
+                        form.deliveryType === 'pickup'
+                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-md3-level1'
+                          : 'border-outline-variant text-on-surface-variant hover:border-[#25D366]/50'
+                      }`}
+                    >
+                      <i className="fas fa-store" />
+                      Pickup
+                    </button>
                   </div>
 
                   <div className="space-y-3">
-                    <FormInput
-                      label="Delivery Address"
-                      name="customerAddress"
-                      value={form.customerAddress}
-                      onChange={handleInputChange}
-                      placeholder="Enter full delivery address"
-                      error={errors.customerAddress}
-                      icon="fa-map-marker-alt"
-                      required
-                    />
+                    {form.deliveryType === 'delivery' && (
+                      <FormInput
+                        label="Delivery Address"
+                        name="customerAddress"
+                        value={form.customerAddress}
+                        onChange={handleInputChange}
+                        placeholder="Enter full delivery address"
+                        error={errors.customerAddress}
+                        icon="fa-map-marker-alt"
+                        required={form.deliveryType === 'delivery'}
+                      />
+                    )}
+
+                    {form.deliveryType === 'pickup' && (
+                      <div className="p-3 bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl">
+                        <div className="flex items-center gap-2 text-sm">
+                          <i className="fas fa-store text-[#25D366]" />
+                          <span className="text-on-surface-variant">Customer will pick up at store location</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Delivery Date */}
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-semibold text-on-surface-variant">
+                        {form.deliveryType === 'pickup' ? 'Pickup Date (Optional)' : 'Delivery Date (Optional)'}
+                      </label>
+                      <div className="relative">
+                        <i className="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <input
+                          type="date"
+                          value={form.deliveryDate}
+                          onChange={(e) => setForm((prev) => ({ ...prev, deliveryDate: e.target.value }))}
+                          className="w-full pl-9 pr-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                        />
+                      </div>
+                    </div>
 
                     <ToggleSwitch
                       label="Express Delivery"
@@ -878,10 +953,37 @@ export default function NewOrderModal({
                       label="Mark as Paid"
                       description="Payment already received"
                       checked={form.markAsPaid}
-                      onChange={(checked) => setForm((prev) => ({ ...prev, markAsPaid: checked }))}
+                      onChange={(checked) => {
+                        setForm((prev) => ({ ...prev, markAsPaid: checked }));
+                        if (!checked) setForm((prev) => ({ ...prev, paymentRef: '' }));
+                      }}
                       activeColor="bg-green-500"
                     />
                   </div>
+                  
+                  {form.markAsPaid && (
+                    <div className="animate-fadeIn mt-3">
+                      <FormInput
+                        label="Payment Reference / Transaction ID"
+                        name="paymentRef"
+                        value={form.paymentRef}
+                        onChange={handleInputChange}
+                        placeholder="e.g., M-Pesa transaction ID"
+                        icon="fa-receipt"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Customer */}
+                <div className="animate-fadeIn" style={{ animationDelay: '0.37s' }}>
+                  <ToggleSwitch
+                    label="Save Customer to Database"
+                    description="Create a customer profile for future orders"
+                    checked={form.saveCustomer}
+                    onChange={(checked) => setForm((prev) => ({ ...prev, saveCustomer: checked }))}
+                    activeColor="bg-[#25D366]"
+                  />
                 </div>
 
                 {/* Discount */}

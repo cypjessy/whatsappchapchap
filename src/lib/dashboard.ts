@@ -26,6 +26,7 @@ export interface DashboardStats {
 export interface OrderData {
   id: string;
   productName: string;
+  productImage?: string;
   productEmoji: string;
   productEmojiBg: string;
   details: string;
@@ -94,12 +95,54 @@ export const dashboardService = {
     );
     
     const snap = await getDocs(q);
+    const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Collect all product IDs referenced in these orders to batch-fetch their images
+    const productIds = new Set<string>();
+    orders.forEach((order: any) => {
+      if (order.productImage) return; // Already has direct image
+      if (order.products?.[0]?.productId) {
+        productIds.add(order.products[0].productId);
+      }
+    });
+
+    // Batch-fetch product images if there are any product IDs to look up
+    let productImageMap: Record<string, string> = {};
+    if (productIds.size > 0) {
+      try {
+        const ids = Array.from(productIds);
+        // Firestore 'in' queries support up to 30 values
+        if (ids.length <= 30) {
+          const productsQuery = query(
+            collection(db, "products"),
+            where("__name__", "in", ids)
+          );
+          const productsSnap = await getDocs(productsQuery);
+          productsSnap.docs.forEach(productDoc => {
+            const productData = productDoc.data();
+            const img = productData.image || productData.imageUrl || productData.images?.[0];
+            if (img) {
+              productImageMap[productDoc.id] = img;
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching product images:", error);
+        // Non-critical — fall back to emoji
+      }
+    }
     
-    return snap.docs.map(doc => {
-      const data = doc.data();
+    return orders.map((data: any) => {
+      // Determine product image: direct field → product lookup → fallback
+      let productImage = data.productImage || undefined;
+      if (!productImage && data.products?.[0]?.productId) {
+        productImage = productImageMap[data.products[0].productId] || undefined;
+      }
+
       return {
-        id: doc.id.substring(0, 8),
+        id: data.id.substring(0, 8),
         productName: data.products?.[0]?.name || "Product",
+        productImage,
         productEmoji: "📦",
         productEmojiBg: "from-[#DCF8C6] to-[#e0e7ff]",
         details: `Qty: ${data.products?.[0]?.quantity || 1}`,

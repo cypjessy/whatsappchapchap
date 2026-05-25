@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import { useAppLifecycle } from "@/hooks/useAppLifecycle";
+import { PreferenceService, PREF_KEYS } from "@/lib/preference-service";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
 import MobileLogo from "@/components/auth/MobileLogo";
 import FloatingShapes from "@/components/auth/FloatingShapes";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
+import LoginTopBar from "@/components/auth/LoginTopBar";
+import BiometricGate from "@/components/auth/BiometricGate";
 import "./page-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -127,17 +130,97 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const [showBiometricGate, setShowBiometricGate] = useState(false);
+  const [checkingBiometric, setCheckingBiometric] = useState(true);
+  const sessionRestored = useRef(false);
   const router = useRouter();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { user, loading: authLoading, signIn, signInWithGoogle, logout } = useAuth();
   const { impactLight, notificationSuccess, notificationError } = useHaptics();
 
   // Set status bar to match purple gradient background with white icons
+  // LoginTopBar also uses this color to match seamlessly
   useStatusBar({ color: '#667eea', style: 'light' });
+
+  // Check if user is already authenticated & biometric should be used
+  useEffect(() => {
+    if (authLoading) return;
+    if (sessionRestored.current) return;
+
+    if (user) {
+      // User is already signed in via Firebase persistence
+      PreferenceService.get(PREF_KEYS.BIOMETRIC_ENABLED).then((enabled) => {
+        sessionRestored.current = true;
+        if (enabled === "true") {
+          // Show biometric gate to verify identity on app reopen
+          setShowBiometricGate(true);
+          setCheckingBiometric(false);
+        } else {
+          // No biometric — show login form so user must re-enter credentials
+          setCheckingBiometric(false);
+          requestAnimationFrame(() => setIsVisible(true));
+        }
+      }).catch(() => {
+        // If error reading preference, show login form
+        sessionRestored.current = true;
+        setCheckingBiometric(false);
+        requestAnimationFrame(() => setIsVisible(true));
+      });
+    } else {
+      // No user — show login form
+      setCheckingBiometric(false);
+      // Show splash animation
+      setShowSplash(true);
+    }
+  }, [user, authLoading, router]);
+
+  const handleBiometricVerified = useCallback(() => {
+    setShowBiometricGate(false);
+    router.push("/dashboard");
+  }, [router]);
+
+  const handleBiometricFallback = useCallback(() => {
+    // User is already authenticated — skip biometric and go to dashboard
+    setShowBiometricGate(false);
+    router.push("/dashboard");
+  }, [router]);
+
+  const handleBiometricLogout = useCallback(async () => {
+    await logout();
+    setShowBiometricGate(false);
+    setCheckingBiometric(false);
+    requestAnimationFrame(() => setIsVisible(true));
+  }, [logout]);
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false);
     requestAnimationFrame(() => setIsVisible(true));
   }, []);
+
+  // Don't render login form while checking biometric status
+  if (checkingBiometric || authLoading) {
+    return (
+      <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+          <p className="text-white/60 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If showing biometric gate, render that instead of login form
+  if (showBiometricGate && user) {
+    return (
+      <>
+        <BiometricGate
+          email={user.email || ""}
+          onVerified={handleBiometricVerified}
+          onFallback={handleBiometricFallback}
+          onLogout={handleBiometricLogout}
+        />
+      </>
+    );
+  }
 
   const togglePassword = useCallback(() => {
     setShowPassword((prev) => !prev);
@@ -197,6 +280,9 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden">
+      {/* Material 3 Android Top App Bar — visible on mobile only */}
+      <LoginTopBar title="ChapChap" subtitle="WhatsApp Sales Automation" />
+
       <FloatingShapes />
       <BrandPanel />
 
@@ -229,11 +315,6 @@ export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps)
           ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}
         `}
       >
-        {/* Mobile Header */}
-        <div className="lg:hidden w-full max-w-md mx-auto mb-6">
-          <MobileLogo />
-        </div>
-
         <div className="w-full max-w-[420px] mx-auto">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">

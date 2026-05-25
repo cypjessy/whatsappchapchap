@@ -35,6 +35,17 @@ const ALL_STATUSES: { value: OrderStatus; label: string; color: string; icon: st
   { value: "refunded", label: "Refunded", color: "#f59e0b", icon: "fa-undo", desc: "Payment has been refunded" },
 ];
 
+// Valid status transitions (current → allowed next statuses)
+const VALID_TRANSITIONS: Record<string, Set<string>> = {
+  pending: new Set(["confirmed", "cancelled", "refunded"]),
+  confirmed: new Set(["processing", "cancelled"]),
+  processing: new Set(["shipped", "cancelled"]),
+  shipped: new Set(["delivered", "cancelled"]),
+  delivered: new Set(["refunded"]),
+  cancelled: new Set([]),
+  refunded: new Set([]),
+};
+
 const STATUS_ORDER = ["pending", "confirmed", "processing", "shipped", "delivered"] as const;
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -88,6 +99,67 @@ function ActionButton({
       {loading ? <i className="fas fa-circle-notch fa-spin text-xs" /> : <i className={`fas ${icon} text-xs`} />}
       <span className="hidden md:inline">{label}</span>
     </button>
+  );
+}
+
+// ─── Copy Button ──────────────────────────────────────────────────────────────
+
+function CopyButton({ text, label }: { text: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  }, [text]);
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all active:scale-90 ${
+        copied
+          ? "bg-[#25D366]/10 text-[#25D366]"
+          : "bg-surface-variant text-on-surface-variant hover:bg-[#25D366]/10 hover:text-[#25D366]"
+      }`}
+      title={`Copy ${label || text}`}
+    >
+      <i className={`fas ${copied ? "fa-check" : "fa-copy"} text-[9px]`} />
+      {copied ? "Copied!" : "Copy"}
+    </button>
+  );
+}
+
+// ─── Image Viewer Modal ────────────────────────────────────────────────────────
+
+function ImageViewer({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[2600] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn p-4"
+      onClick={onClose}
+    >
+      <button
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-all"
+        onClick={onClose}
+      >
+        <i className="fas fa-times" />
+      </button>
+      <img
+        src={src}
+        alt={alt}
+        className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain animate-scaleIn"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
   );
 }
 
@@ -229,17 +301,22 @@ function StatusDropdown({
       className="absolute bottom-full right-0 mb-2 bg-surface rounded-xl shadow-md3-level4 border border-outline-variant min-w-[220px] z-50 overflow-hidden animate-fadeIn"
     >
       <div className="py-1">
-        {ALL_STATUSES.map((s) => (
-          <button
-            key={s.value}
-            className={`w-full px-4 py-3 text-sm flex items-center gap-3 hover:bg-surface transition-colors text-left ${
-              currentStatus === s.value ? "bg-[rgba(37,211,102,0.05)]" : ""
-            }`}
-            onClick={() => {
-              onUpdate(s.value);
-              onClose();
-            }}
-          >
+        {ALL_STATUSES.map((s) => (              <button
+                key={s.value}
+                disabled={!VALID_TRANSITIONS[currentStatus]?.has(s.value) && currentStatus !== s.value}
+                className={`w-full px-4 py-3 text-sm flex items-center gap-3 transition-colors text-left ${
+                  currentStatus === s.value ? "bg-[rgba(37,211,102,0.05)]" : "hover:bg-surface"
+                } ${
+                  !VALID_TRANSITIONS[currentStatus]?.has(s.value) && currentStatus !== s.value
+                    ? "opacity-40 cursor-not-allowed"
+                    : ""
+                }`}
+                onClick={() => {
+                  if (!VALID_TRANSITIONS[currentStatus]?.has(s.value) && currentStatus !== s.value) return;
+                  onUpdate(s.value);
+                  onClose();
+                }}
+              >
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
             <div className="flex-1">
               <div className="font-semibold text-on-surface">{s.label}</div>
@@ -284,6 +361,7 @@ export default function OrderDetailModal({
     icon: string;
     handler: () => void;
   }>({ isOpen: false, action: "", title: "", message: "", confirmText: "", confirmColor: "", icon: "", handler: () => {} });
+  const [imageViewer, setImageViewer] = useState<{ src: string; alt: string } | null>(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -292,6 +370,7 @@ export default function OrderDetailModal({
       setShowStatusMenu(false);
       setLoadingAction(null);
       setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      setImageViewer(null);
     }
   }, [isOpen]);
 
@@ -619,7 +698,10 @@ export default function OrderDetailModal({
                           key={idx}
                           className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all"
                         >
-                          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                          <div
+                            className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1 cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
+                            onClick={() => prodImg && setImageViewer({ src: prodImg, alt: product.name })}
+                          >
                             {prodImg ? (
                               <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
@@ -640,7 +722,10 @@ export default function OrderDetailModal({
                     })
                   ) : order.productName ? (
                     <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                      <div
+                        className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1 cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
+                        onClick={() => order.productImage && setImageViewer({ src: order.productImage, alt: order.productName || 'Product' })}
+                      >
                         {order.productImage ? (
                           <img src={order.productImage} alt={order.productName} className="w-full h-full object-cover" />
                         ) : (
@@ -678,7 +763,10 @@ export default function OrderDetailModal({
                               <tr key={idx} className="border-t border-outline-variant hover:bg-surface transition-colors">
                                 <td className="py-4 px-4">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                                    <div
+                                      className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1 cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
+                                      onClick={() => prodImg && setImageViewer({ src: prodImg, alt: product.name })}
+                                    >
                                       {prodImg ? (
                                         <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
                                       ) : (
@@ -799,27 +887,66 @@ export default function OrderDetailModal({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3 text-sm group">
                       <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
                         <i className="fas fa-phone text-on-surface-variant text-xs" />
                       </div>
-                      <a href={`tel:${order.customerPhone}`} className="text-[#25D366] font-medium hover:underline">
+                      <a href={`tel:${order.customerPhone}`} className="text-[#25D366] font-medium hover:underline flex-1">
                         {order.customerPhone || "N/A"}
                       </a>
+                      {order.customerPhone && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(order.customerPhone!);
+                            } catch {}
+                          }}
+                          className="sm:opacity-0 opacity-100 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-[#25D366]"
+                          title="Copy phone"
+                        >
+                          <i className="fas fa-copy text-xs" />
+                        </button>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3 text-sm group">
                       <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
                         <i className="fas fa-envelope text-on-surface-variant text-xs" />
                       </div>
-                      <span className="text-on-surface truncate">{order.customerEmail || "N/A"}</span>
+                      <span className="text-on-surface truncate flex-1">{order.customerEmail || "N/A"}</span>
+                      {order.customerEmail && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(order.customerEmail!);
+                            } catch {}
+                          }}
+                          className="sm:opacity-0 opacity-100 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-[#25D366]"
+                          title="Copy email"
+                        >
+                          <i className="fas fa-copy text-xs" />
+                        </button>
+                      )}
                     </div>
-                    <div className="flex items-start gap-3 text-sm">
+                    <div className="flex items-start gap-3 text-sm group">
                       <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0 mt-0.5">
                         <i className="fas fa-map-marker-alt text-on-surface-variant text-xs" />
                       </div>
-                      <span className="text-on-surface leading-relaxed">
+                      <span className="text-on-surface leading-relaxed flex-1">
                         {order.deliveryAddress || order.customerAddress || "N/A"}
                       </span>
+                      {(order.deliveryAddress || order.customerAddress) && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(order.deliveryAddress || order.customerAddress || "");
+                            } catch {}
+                          }}
+                          className="sm:opacity-0 opacity-100 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-[#25D366] mt-1"
+                          title="Copy address"
+                        >
+                          <i className="fas fa-copy text-xs" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -841,6 +968,17 @@ export default function OrderDetailModal({
                         WhatsApp
                       </span>
                     </InfoRow>
+                    {order.deliveryMethod && (
+                      <InfoRow label="Order Type">
+                        <span className="flex items-center gap-1.5">
+                          <i className={`fas ${order.deliveryMethod?.toLowerCase().includes('pickup') ? 'fa-store' : 'fa-truck'} text-[#25D366]`} />
+                          {order.deliveryMethod?.toLowerCase().includes('pickup') ? 'Pickup' : 'Delivery'}
+                        </span>
+                      </InfoRow>
+                    )}
+                    {order.deliveryCost && (
+                      <InfoRow label="Delivery Cost">{formatCurrency(order.deliveryCost)}</InfoRow>
+                    )}
                   </div>
                 </div>
 
@@ -859,7 +997,16 @@ export default function OrderDetailModal({
                               : "fa-money-bill-wave text-[#10b981]"
                           }`}
                         />
-                        {order.paymentMethod || "COD"}
+                        {(order as any).paymentRef ? (
+                          <span className="flex items-center gap-1.5">
+                            {order.paymentMethod || " — "}
+                            <span className="text-[10px] font-mono bg-surface px-1.5 py-0.5 rounded">
+                              Ref: {(order as any).paymentRef}
+                            </span>
+                          </span>
+                        ) : (
+                          order.paymentMethod || "COD"
+                        )}
                       </span>
                     </InfoRow>
                     <InfoRow label="Status">
@@ -1083,6 +1230,15 @@ export default function OrderDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Image Viewer */}
+      {imageViewer && (
+        <ImageViewer
+          src={imageViewer.src}
+          alt={imageViewer.alt}
+          onClose={() => setImageViewer(null)}
+        />
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmModal

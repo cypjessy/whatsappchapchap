@@ -96,6 +96,31 @@ function formatRelativeTime(createdAt: any): string {
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
+// ─── Product Thumbnail ────────────────────────────────────────────────────────
+function ProductThumbnail({ image, name, emoji }: { image?: string; name: string; emoji: string }) {
+  const [imgError, setImgError] = useState(false);
+
+  if (image && !imgError) {
+    return (
+      <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-surface-variant ring-1 ring-black/5">
+        <img
+          src={image}
+          alt={name}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 bg-surface-variant">
+      {emoji || "📦"}
+    </div>
+  );
+}
+
 function ShimmerRow() {
   return (
     <div className="relative overflow-hidden p-4 border-b border-[#F1F5F9]">
@@ -171,12 +196,10 @@ function MobileOrderCard({
 
       <div className="flex items-center gap-3">
         <div className={`
-          w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0
-          bg-surface-variant
           transition-transform duration-200
           ${isHovered ? "scale-105" : "scale-100"}
         `}>
-          {order.productEmoji || "📦"}
+          <ProductThumbnail image={order.productImage} name={order.productName} emoji={order.productEmoji} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -244,12 +267,10 @@ function DesktopTableRow({
       <td className="p-4">
         <div className="flex items-center gap-3">
           <div className={`
-            w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0
-            bg-surface-variant
             transition-transform duration-200
             ${isHovered ? "scale-105" : "scale-100"}
           `}>
-            {order.productEmoji || "📦"}
+            <ProductThumbnail image={order.productImage} name={order.productName} emoji={order.productEmoji} />
           </div>
           <div className="min-w-0">
             <div className="font-medium text-sm truncate">{order.productName}</div>

@@ -4,3 +4,4 @@ export { StatsGrid } from "./StatsGrid";
 export { SalesChart } from "./SalesChart";
 export { RecentActivity } from "./RecentActivity";
 export { RecentOrders } from "./RecentOrders";
+export { BiometricPromptBanner } from "./BiometricPromptBanner";

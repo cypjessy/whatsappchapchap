@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MATERIAL DESIGN 3 — LOGIN TOP APP BAR
+   Optimized for Capacitor Android WebView
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Root Container ─── */
+.login-topbar-root {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top, 0px);
+  /* Material 3 Surface Tint — matches the login page gradient */
+  background: linear-gradient(
+    180deg,
+    rgba(102, 126, 234, 0.98) 0%,
+    rgba(118, 75, 162, 0.95) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Inner Container ─── */
+.login-topbar-container {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 4px 0 8px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* ─── Navigation Button (Leading) ─── */
+.login-topbar-nav-btn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.login-topbar-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.login-topbar-nav-btn:active {
+  transform: scale(0.92);
+}
+
+/* ─── Navigation Icon ─── */
+.login-topbar-nav-icon {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-topbar-nav-btn:active .login-topbar-nav-icon {
+  transform: scale(0.9);
+}
+
+/* ─── MD3 Ripple ─── */
+.login-topbar-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  animation: loginTopbarRipple 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes loginTopbarRipple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* ─── Brand Section (Center) ─── */
+.login-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  margin-left: 4px;
+}
+
+/* ─── WhatsApp Icon Wrapper ─── */
+.login-topbar-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-topbar-icon {
+  width: 22px;
+  height: 22px;
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* ─── Title Group ─── */
+.login-topbar-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.login-topbar-title {
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.15px;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login-topbar-subtitle {
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.25px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Trailing Spacer ─── */
+.login-topbar-trailing {
+  width: 48px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — Slide-down entrance with child stagger
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes loginTopbarSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loginTopbarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE: Only show on mobile (< 1024px)
+   Trigger entrance animation when becoming visible
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  .login-topbar-root {
+    display: block;
+    animation: loginTopbarSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .login-topbar-nav-btn {
+    animation: loginTopbarFadeIn 0.3s ease-out 0.1s both;
+  }
+
+  .login-topbar-brand {
+    animation: loginTopbarFadeIn 0.3s ease-out 0.15s both;
+  }
+
+  .login-topbar-trailing {
+    animation: loginTopbarFadeIn 0.3s ease-out 0.2s both;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CAPACITOR / ANDROID SPECIFIC — Hardware acceleration + native feel
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* GPU compositing for smooth animations on Android WebView */
+.login-topbar-root,
+.login-topbar-nav-btn,
+.login-topbar-brand {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Prevent text selection for native feel */
+.login-topbar-root * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Disable hover states on touch devices */
+@media (hover: none) {
+  .login-topbar-nav-btn:hover {
+    background: transparent;
+  }
+}
+
+/* Dark mode — slightly deeper purple tones */
+@media (prefers-color-scheme: dark) {
+  .login-topbar-root {
+    background: linear-gradient(
+      180deg,
+      rgba(80, 60, 180, 0.98) 0%,
+      rgba(90, 50, 140, 0.95) 100%
+    );
+  }
+}

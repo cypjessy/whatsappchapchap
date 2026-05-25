@@ -670,8 +670,8 @@ export default function ServicesPage() {
           onCardClick={handleStatCardClick}
         />
 
-        {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 md:mx-0 md:px-0 scrollbar-hide">
+        {/* Filter Chips - flex-wrap chip layout */}
+        <div className="flex flex-wrap gap-1.5">
           {FILTER_CHIPS.map((chip) => {
             const count = getStatusCount(services, chip.id);
             const isActive = filterStatus === chip.id;
@@ -681,50 +681,46 @@ export default function ServicesPage() {
                 key={chip.id}
                 onClick={() => setFilterStatus(chip.id)}
                 className={`
-                  flex-shrink-0 relative px-4 py-2.5 rounded-full font-bold text-sm
-                  transition-all duration-200 active:scale-95
+                  relative inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[11px] leading-none
+                  transition-all duration-200 active:scale-95 select-none
                   ${isActive
                     ? `bg-gradient-to-r ${chip.color} text-white shadow-md3-level2`
-                    : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
+                    : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                   }
                 `}
               >
-                <span className="flex items-center gap-2">
-                  {chip.label}
-                  <span
-                    className={`
-                      px-1.5 py-0.5 rounded-full text-[10px] font-extrabold min-w-[20px] text-center
-                      ${isActive ? "bg-surface/25 text-white" : "bg-surface-variant text-on-surface-variant"}
-                    `}
-                  >
-                    {count}
-                  </span>
+                <span>{chip.label}</span>
+                <span
+                  className={`
+                    px-1.5 py-0.5 rounded-md text-[9px] font-bold min-w-[18px] text-center leading-none
+                    ${isActive ? "bg-white/20" : "bg-surface-variant text-on-surface-variant"}
+                  `}
+                >
+                  {count}
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Business Type Category Tabs - MD3 Style */}
+        {/* Business Type Category Tabs - flex-wrap chip layout */}
         {businessTypes.length > 0 && (
-          <div className="relative mb-4 -mx-3 px-3 md:mx-0 md:px-0">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-1.5">
               {/* All Categories Tab */}
               <button
                 onClick={() => setSelectedBusinessType("")}
                 className={`
-                  flex-shrink-0 snap-start px-4 py-2 rounded-lg font-semibold text-sm
-                  transition-all duration-200 active:scale-95
+                  inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-[11px] leading-none
+                  transition-all duration-200 active:scale-95 select-none
                   ${!selectedBusinessType
-                    ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/20"
-                    : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/50"
+                    ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                    : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                   }
                 `}
               >
-                <span className="flex items-center gap-1.5">
-                  <i className="fas fa-th-large text-xs" />
-                  All Types
-                </span>
+                <i className="fas fa-th-large text-[10px]" />
+                All Types
               </button>
 
               {/* Dynamic Business Type Tabs */}
@@ -733,18 +729,16 @@ export default function ServicesPage() {
                   key={type}
                   onClick={() => setSelectedBusinessType(type)}
                   className={`
-                    flex-shrink-0 snap-start px-4 py-2 rounded-lg font-semibold text-sm capitalize
-                    transition-all duration-200 active:scale-95 whitespace-nowrap
+                    inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-[11px] leading-none capitalize
+                    transition-all duration-200 active:scale-95 select-none
                     ${selectedBusinessType === type
-                      ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/20"
-                      : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/50"
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                      : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                     }
                   `}
                 >
-                  <span className="flex items-center gap-1.5">
-                    <i className="fas fa-briefcase text-xs" />
-                    {type}
-                  </span>
+                  <i className="fas fa-briefcase text-[10px]" />
+                  {type}
                 </button>
               ))}
             </div>

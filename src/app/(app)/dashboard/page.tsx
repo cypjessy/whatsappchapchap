@@ -11,6 +11,7 @@ import {
   SalesChart,
   RecentActivity,
   RecentOrders,
+  BiometricPromptBanner,
 } from "./components";
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -113,6 +114,11 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <SectionWrapper delay={100}>
         <QuickActions />
+      </SectionWrapper>
+
+      {/* Biometric Prompt Banner - Android users without biometric enabled */}
+      <SectionWrapper delay={150}>
+        <BiometricPromptBanner />
       </SectionWrapper>
 
       {/* WhatsApp Connection Manager */}

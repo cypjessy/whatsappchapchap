@@ -6,3 +6,4 @@ export { default as CancellationRequests } from './CancellationRequests';
 export { default as OrderDetailModal } from './OrderDetailModal';
 export { default as NewOrderModal } from './NewOrderModal';
 export { default as EditOrderModal } from './EditOrderModal';
+export { default as OrderTabSwitcher } from './OrderTabSwitcher';

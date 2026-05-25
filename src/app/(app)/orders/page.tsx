@@ -47,6 +47,7 @@ import OrderDetailModal from "./components/OrderDetailModal";
 import EditOrderModal from "./components/EditOrderModal";
 import NewOrderModal from "./components/NewOrderModal";
 import CancellationRequests from "./components/CancellationRequests";
+import OrderTabSwitcher from "./components/OrderTabSwitcher";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1158,40 +1159,14 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Mobile Tabs — MD3 scrollable tabs */}
+      {/* Mobile Tabs — MD3 compact chip switcher (all tabs visible at once) */}
       <div className="md:hidden">
-        <div className="flex gap-0 overflow-x-auto pb-0 scrollbar-hide border-b border-outline-variant">
-          {tabs.map((tab) => {
-            const isActive = (tab.id === "cancellation_requests" && viewMode === "cancellations") ||
-              (tab.id !== "cancellation_requests" && activeStatus === tab.id);
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`relative px-3 py-3 font-medium text-xs whitespace-nowrap transition-all active:scale-95 flex-shrink-0 ${
-                  isActive
-                    ? "text-[#25D366]"
-                    : "text-on-surface-variant"
-                }`}
-              >
-                {tab.icon && <i className={`fas ${tab.icon} mr-1.5 text-[10px]`} />}
-                {tab.label}
-                <span
-                  className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    isActive
-                      ? "bg-[rgba(37,211,102,0.15)] text-[#25D366]"
-                      : "bg-surface-variant text-on-surface-variant"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-                {isActive && (
-                  <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-[#25D366] rounded-full" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <OrderTabSwitcher
+          tabs={tabs}
+          activeTab={activeStatus}
+          viewMode={viewMode}
+          onTabClick={handleTabClick}
+        />
       </div>
 
       {/* Desktop Tabs */}

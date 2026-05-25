@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useNavLiveState } from "@/hooks/useNavLiveState";
 import "./bottomnav-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -71,9 +72,27 @@ function RippleButton({
   active?: boolean;
 }) {
   const [ripples, setRipples] = useState<{ x: number; y: number; id: number }[]>([]);
+  const [isPressed, setIsPressed] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { healthTick, wake } = useNavLiveState();
+
+  // ── Immediate pointer wake ──────────────────────────────────────────
+  const handlePointerDown = useCallback(() => {
+    wake();
+    setIsPressed(true);
+    sessionStorage.setItem('lastActiveTime', Date.now().toString());
+    window.dispatchEvent(new Event('focus'));
+  }, [wake]);
+
+  const handlePointerUp = useCallback(() => {
+    setIsPressed(false);
+  }, []);
 
   const handleClick = (e: React.MouseEvent) => {
+    wake();
+    sessionStorage.setItem('lastActiveTime', Date.now().toString());
+    window.dispatchEvent(new Event('focus'));
+    
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) return;
     
@@ -91,7 +110,11 @@ function RippleButton({
     <button
       ref={buttonRef}
       onClick={handleClick}
-      className={`relative overflow-hidden ${className}`}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      data-live={healthTick}
+      className={`relative overflow-hidden touch-manipulation ${className}`}
     >
       {ripples.map((ripple) => (
         <span
@@ -122,26 +145,67 @@ function BottomNavItem({
   onClick?: () => void;
 }) {
   const [isPressed, setIsPressed] = useState(false);
+  const { healthTick, wake } = useNavLiveState();
+  const navFallbackRef = useRef(false);
 
-  const handleNavigation = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    // Ensure app is awake and responsive
+  // ── Immediate pointer wake ──────────────────────────────────────────
+  // onPointerDown fires BEFORE onTouchStart/onMouseDown and always works
+  // even after long idle because it's a native browser event
+  const handlePointerDown = useCallback(() => {
+    wake();
+    setIsPressed(true);
+    
+    // Update session storage so app-lifecycle knows we're active
     sessionStorage.setItem('lastActiveTime', Date.now().toString());
     
-    // Dispatch focus event to wake up any suspended listeners
+    // Dispatch wake events for any suspended listeners
     window.dispatchEvent(new Event('focus'));
+    
+    // Reset fallback flag — next navigation will try React router first
+    navFallbackRef.current = false;
+  }, [wake]);
+
+  // ── Primary navigation handler ───────────────────────────────────────
+  const handleNavigation = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    // Wake up immediately
+    wake();
+    sessionStorage.setItem('lastActiveTime', Date.now().toString());
+    window.dispatchEvent(new Event('focus'));
+    
+    // If the app was idle for a very long time (>10 min), React Router's
+    // Link may be unresponsive — fall back to direct navigation
+    const lastActive = sessionStorage.getItem('lastActiveTime');
+    if (lastActive) {
+      const idleMs = Date.now() - parseInt(lastActive);
+      if (idleMs > 10 * 60 * 1000 && !navFallbackRef.current) {
+        console.log('[BottomNav] Long idle detected — using direct navigation fallback:', item.href);
+        navFallbackRef.current = true;
+        e.preventDefault();
+        window.location.href = item.href;
+        return;
+      }
+    }
     
     // Call parent onClick if provided
     onClick?.();
-  }, [onClick]);
+  }, [onClick, wake, item.href]);
+
+  const handlePointerUp = useCallback(() => {
+    setIsPressed(false);
+  }, []);
 
   return (
     <Link
       href={item.href}
       onClick={handleNavigation}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
       onTouchStart={() => setIsPressed(true)}
       onTouchEnd={() => setIsPressed(false)}
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
+      data-live={healthTick}
       className={`
         bottom-nav-item relative flex-1 flex flex-col items-center justify-center h-full py-2 px-1
         transition-all duration-200 select-none rounded-xl mx-1
@@ -150,6 +214,7 @@ function BottomNavItem({
           ? "text-primary" 
           : "text-on-surface-variant"
         }
+        touch-manipulation
       `}
     >
       {/* MD3 Active Indicator - Pill shape */}
@@ -372,6 +437,7 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
   const { logout } = useAuth();
   const [fabOpen, setFabOpen] = useState(false);
   const [fabPressed, setFabPressed] = useState(false);
+  const [navHealth, setNavHealth] = useState(0);
 
   const handleLogout = async () => {
     try {
@@ -408,18 +474,38 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [fabOpen]);
 
-  // Fix: Force re-render on app resume to prevent black/invisible state
+  // ── Live State Manager ───────────────────────────────────────────────
+  // Periodically forces React re-render of the entire nav bar to prevent
+  // stale fibers. This is critical for preventing "unpressable button"
+  // after the app has been idle for a long time.
+  useEffect(() => {
+    // Force a state bump every 6 seconds to keep the React fiber alive
+    const healthInterval = setInterval(() => {
+      setNavHealth((h) => h + 1);
+    }, 6_000);
+
+    return () => clearInterval(healthInterval);
+  }, []);
+
+  // ── App Resume / Wake-Up Handler ─────────────────────────────────────
+  // Resets all interactive state and forces a full re-render so every
+  // button is guaranteed to have fresh event listeners.
   useEffect(() => {
     const handleAppResume = () => {
-      console.log('[BottomNav] App resumed - forcing re-render');
-      // Force immediate state reset
+      console.log('[BottomNav] App resumed - resetting interactive state');
+      
+      // Reset ALL interactive state immediately
       setFabOpen(false);
       setFabPressed(false);
       
-      // Force React to re-render by triggering a micro-state change
+      // Force a full re-render of the nav bar — this gives every
+      // BottomNavItem and RippleButton fresh event listeners
+      setNavHealth((h) => h + 1);
+      
+      // Second pulse after a tick to catch any lingering stale state
       setTimeout(() => {
-        setFabOpen(prev => prev);
-      }, 50);
+        setNavHealth((h) => h + 1);
+      }, 100);
     };
 
     // Listen for app resume event
@@ -434,21 +520,41 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
     };
   }, []);
 
-  // Fix: Force bottom nav safe area re-paint on visibility change (app resume)
+  // ── Visibility Change Handler ────────────────────────────────────────
+  // Forces bottom nav safe area re-paint on resume and re-triggers
+  // all live state listeners so buttons remain pressable.
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[BottomNav] Visibility changed to visible - forcing safe area re-paint');
-        // Force bottom nav safe area re-paint on resume
+        console.log('[BottomNav] Visibility changed to visible - re-painting nav bar');
+        
+        // Force safe area re-paint
         document.documentElement.style.setProperty(
           '--sab',
           'env(safe-area-inset-bottom, 0px)'
         );
+        
+        // Force state refresh to wake up all nav item live listeners
+        setFabOpen(false);
+        setNavHealth((h) => h + 1);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // ── Global Pointer Wake (capture phase) ──────────────────────────────
+  // Ensures ANY touch/click on the page wakes up BottomNav state
+  // before the event reaches individual components
+  useEffect(() => {
+    const wakeNav = () => {
+      setFabOpen(false);
+      sessionStorage.setItem('lastActiveTime', Date.now().toString());
+    };
+
+    document.addEventListener('pointerdown', wakeNav, { capture: true, passive: true });
+    return () => document.removeEventListener('pointerdown', wakeNav, { capture: true } as any);
   }, []);
 
   return (

@@ -349,28 +349,37 @@ export default function ProductCategoryTabs({
 
   return (
     <div className="relative mb-3 md:mb-6 px-0">
-      {/* Mobile: MD3 scrollable tabs with active indicator */}
-      <div className="md:hidden">
-        <div className="flex gap-0 overflow-x-auto pb-0 scrollbar-hide border-b border-outline-variant">
+      {/* Mobile: flex-wrap chip layout */}
+      <div className="md:hidden mb-2">
+        <div className="flex flex-wrap gap-1.5">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id;
             return (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`relative px-3 py-3 font-medium text-xs whitespace-nowrap transition-colors ${
-                  isActive ? "text-[#25D366]" : "text-on-surface-variant"
-                }`}
+                className={`
+                  inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold leading-none
+                  transition-all duration-200 active:scale-95 select-none
+                  ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                      : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
+                  }
+                `}
               >
-                {cat.icon && <span className="mr-1">{cat.icon}</span>}
-                {cat.label}
+                {cat.icon && <span className="text-sm">{cat.icon}</span>}
+                <span>{cat.label}</span>
                 {cat.count > 0 && (
-                  <span className={`ml-1 ${isActive ? "text-[#25D366]" : "text-outline"}`}>
-                    ({cat.count})
+                  <span
+                    className={`
+                      inline-flex items-center justify-center min-w-[18px] h-[16px] px-1
+                      rounded-md text-[9px] font-bold leading-none
+                      ${isActive ? "bg-white/20" : "bg-surface-variant text-on-surface-variant"}
+                    `}
+                  >
+                    {cat.count > 999 ? "999+" : cat.count}
                   </span>
-                )}
-                {isActive && (
-                  <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-[#25D366] rounded-full" />
                 )}
               </button>
             );
