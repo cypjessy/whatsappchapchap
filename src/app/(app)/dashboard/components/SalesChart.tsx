@@ -414,12 +414,12 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
             </div>
             {/* Desktop Chart (Recharts) - shown on screens >= 768px */}
             <div className="hidden md:block">
-              <div 
+              <div
                 ref={containerRef}
-                className="h-[320px] w-full relative"
+                className="h-[320px] w-full relative min-h-[320px] min-w-[300px]"
               >
                 {chartReady && (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={300} minHeight={320}>
                     <AreaChart
                       data={salesData}
                       margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
