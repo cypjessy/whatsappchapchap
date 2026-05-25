@@ -21,34 +21,32 @@ export default function LandingPage() {
 
   // Check if running in Capacitor (mobile app)
   useEffect(() => {
-    const checkPlatform = () => {
-      const capacitor = (window as any).Capacitor;
-      const isCap = capacitor?.isNativePlatform?.() || capacitor?.getPlatform?.() === 'android';
-      setIsCapacitor(isCap);
-      setIsChecking(false);
+    // Pre-fetch the login page for instant navigation
+    router.prefetch('/login');
 
-      if (isCap) {
-        // Hide splash screen immediately on mobile app
-        try {
-          const { SplashScreen } = capacitor.Plugins;
-          SplashScreen.hide();
-        } catch (e) {
-          // Fallback: auto-hide after 3 seconds if plugin fails
-          setTimeout(() => {
-            if ((window as any).Capacitor?.Plugins?.SplashScreen) {
-              (window as any).Capacitor.Plugins.SplashScreen.hide();
-            }
-          }, 3000);
-        }
-        // Redirect to login page for mobile app
-        window.location.href = '/login';
+    const capacitor = (window as any).Capacitor;
+    const isCap = capacitor?.isNativePlatform?.() || capacitor?.getPlatform?.() === 'android';
+    setIsCapacitor(isCap);
+    setIsChecking(false);
+
+    if (isCap) {
+      // Hide splash screen immediately on mobile app
+      try {
+        const { SplashScreen } = capacitor.Plugins;
+        SplashScreen.hide();
+      } catch (e) {
+        // Fallback: auto-hide after 3 seconds if plugin fails
+        setTimeout(() => {
+          if ((window as any).Capacitor?.Plugins?.SplashScreen) {
+            (window as any).Capacitor.Plugins.SplashScreen.hide();
+          }
+        }, 3000);
       }
-    };
 
-    // Check immediately and also after a short delay as backup
-    checkPlatform();
-    const backupCheck = setTimeout(checkPlatform, 500);
-    return () => clearTimeout(backupCheck);
+      // Use Next.js router for client-side navigation — avoids full page reload
+      // which can cause 'this page could not load' errors in Capacitor WebView
+      router.push('/login');
+    }
   }, [router]);
 
   // Typing animation for hero

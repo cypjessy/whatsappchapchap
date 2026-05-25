@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { serviceService, bookingService, Booking, Service } from "@/lib/db";
+import { serviceService, bookingService, customerService, Booking, Service } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -18,9 +18,18 @@ type Step = "client" | "service" | "schedule" | "payment" | "review";
 interface FormErrors {
   clientName?: string;
   clientPhone?: string;
+  clientEmail?: string;
   serviceId?: string;
   selectedDate?: string;
   selectedTime?: string;
+}
+
+interface CustomerResult {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  location?: string;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -412,15 +421,22 @@ export default function ManualBookingModal({
 }: ManualBookingModalProps) {
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
+  const [customers, setCustomers] = useState<CustomerResult[]>([]);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [loadingServices, setLoadingServices] = useState(false);
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("client");
   const [errors, setErrors] = useState<FormErrors>({});
   const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
+  const [saveCustomer, setSaveCustomer] = useState(true);
+  const customerRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<"basic" | "standard" | "premium">("standard");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -475,11 +491,54 @@ export default function ManualBookingModal({
     localStorage.setItem("booking_draft", JSON.stringify(draft));
   }, [open, clientName, clientPhone, serviceId, selectedPackage, selectedDate, selectedTime, selectedLocation, deposit, paymentMethod, status, notes]);
 
+  // Load customers for search
   useEffect(() => {
     if (open && user) {
+      loadCustomers();
       loadServices();
     }
   }, [open, user]);
+
+  // Close customer dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (customerRef.current && !customerRef.current.contains(e.target as Node)) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const loadCustomers = async () => {
+    if (!user) return;
+    setLoadingCustomers(true);
+    try {
+      const data = await customerService.getClients(user);
+      setCustomers(data.map((c) => ({ id: c.id, name: c.name, phone: c.phone, email: c.email, location: c.location })));
+    } catch (error) {
+      console.error("Error loading customers:", error);
+    } finally {
+      setLoadingCustomers(false);
+    }
+  };
+
+  const selectCustomer = useCallback((customer: CustomerResult) => {
+    setClientName(customer.name);
+    setClientPhone(customer.phone);
+    setClientEmail(customer.email || "");
+    setCustomerSearch("");
+    setShowCustomerDropdown(false);
+    setErrors((prev) => ({ ...prev, clientName: undefined, clientPhone: undefined }));
+  }, []);
+
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearch.trim()) return customers.slice(0, 5);
+    const q = customerSearch.toLowerCase();
+    return customers.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)
+    ).slice(0, 10);
+  }, [customers, customerSearch]);
 
   const loadServices = async () => {
     if (!user) return;
@@ -497,6 +556,10 @@ export default function ManualBookingModal({
   const resetForm = useCallback(() => {
     setClientName("");
     setClientPhone("");
+    setClientEmail("");
+    setCustomerSearch("");
+    setShowCustomerDropdown(false);
+    setSaveCustomer(true);
     setServiceId("");
     setSelectedPackage("standard");
     setSelectedDate(null);
@@ -619,6 +682,7 @@ export default function ManualBookingModal({
         client: clientName,
         clientInitials: getInitials(clientName),
         phone: clientPhone,
+        email: clientEmail || undefined,
         service: selectedService!.name,
         serviceId,
         date: selectedDate.toISOString().split("T")[0],
@@ -635,9 +699,38 @@ export default function ManualBookingModal({
         paymentStatus: deposit && deposit > 0
           ? (deposit >= finalPrice ? "paid" : "partial")
           : "unpaid",
+        source: "manual",
       };
 
       await bookingService.createBooking(user, bookingData);
+
+      // Save customer to database if toggled
+      if (saveCustomer) {
+        try {
+          const existingCustomer = customers.find(
+            (c) => c.phone.replace(/\D/g, "") === clientPhone.replace(/\D/g, "")
+          );
+          if (!existingCustomer) {
+            await customerService.createClient(user, {
+              name: clientName,
+              initials: getInitials(clientName),
+              phone: clientPhone,
+              email: clientEmail || undefined,
+              location: selectedLocation,
+              status: "active",
+              verified: false,
+              visits: 1,
+              totalSpent: finalPrice,
+              rating: 0,
+              services: [selectedService!.name],
+            });
+          }
+        } catch (err) {
+          console.error("Error saving customer:", err);
+          // Non-blocking: booking already created
+        }
+      }
+
       localStorage.removeItem("booking_draft");
       handleClose();
       onBookingCreated();
@@ -666,6 +759,56 @@ export default function ManualBookingModal({
         return (
           <div className="space-y-4 animate-fadeIn">
             <SectionCard icon="fa-user" title="Client Information">
+              {/* Customer Search */}
+              <div className="mb-4" ref={customerRef}>
+                <FormField label="Search Existing Customer">
+                  <div className="relative">
+                    <Input
+                      value={customerSearch}
+                      onChange={(e) => {
+                        setCustomerSearch(e.target.value);
+                        setShowCustomerDropdown(true);
+                      }}
+                      onFocus={() => setShowCustomerDropdown(true)}
+                      placeholder="Search by name or phone..."
+                    />
+                    <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-outline text-sm" />
+                  </div>
+                  {showCustomerDropdown && (
+                    <div className="mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-md3-level3 max-h-48 overflow-y-auto z-50">
+                      {loadingCustomers ? (
+                        <div className="p-3 text-sm text-on-surface-variant flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-outline-variant border-t-[#8b5cf6] rounded-full animate-spin" />
+                          Loading customers...
+                        </div>
+                      ) : filteredCustomers.length === 0 ? (
+                        <div className="p-3 text-sm text-outline">No customers found. Enter details manually below.</div>
+                      ) : (
+                        filteredCustomers.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => selectCustomer(c)}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#F3E8FF] transition-colors text-sm border-b border-outline-variant/50 last:border-b-0"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                              {c.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-on-surface truncate">{c.name}</div>
+                              <div className="text-[11px] text-on-surface-variant">{c.phone}</div>
+                            </div>
+                            <i className="fas fa-chevron-right text-[10px] text-outline" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </FormField>
+              </div>
+
+              <div className="h-px bg-gradient-to-r from-transparent via-outline-variant to-transparent mb-4" />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField label="Full Name" required error={errors.clientName}>
                   <Input
@@ -683,6 +826,42 @@ export default function ManualBookingModal({
                     error={errors.clientPhone}
                   />
                 </FormField>
+                <FormField label="Email Address">
+                  <Input
+                    value={clientEmail}
+                    onChange={(e) => setClientEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    type="email"
+                  />
+                </FormField>
+              </div>
+
+              {/* Save Customer Toggle */}
+              <div className="mt-4 flex items-center justify-between p-3 bg-[#F8FAFC] rounded-xl border border-outline-variant">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#EDE9FE] flex items-center justify-center">
+                    <i className="fas fa-database text-[#8b5cf6] text-xs" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-on-surface">Save to Customers</div>
+                    <div className="text-[11px] text-on-surface-variant">Add this client to your customer database</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSaveCustomer(!saveCustomer)}
+                  className={`
+                    relative w-12 h-6 rounded-full transition-all duration-200
+                    ${saveCustomer ? "bg-[#8b5cf6]" : "bg-outline-variant"}
+                  `}
+                >
+                  <div
+                    className={`
+                      absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md3-level2 transition-all duration-200
+                      ${saveCustomer ? "left-[26px]" : "left-0.5"}
+                    `}
+                  />
+                </button>
               </div>
             </SectionCard>
           </div>
@@ -882,10 +1061,14 @@ export default function ManualBookingModal({
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] text-[#8b5cf6] font-bold flex items-center justify-center text-sm">
                     {getInitials(clientName)}
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-bold text-sm">{clientName}</div>
                     <div className="text-xs text-on-surface-variant">{clientPhone}</div>
+                    {clientEmail && <div className="text-xs text-on-surface-variant truncate">{clientEmail}</div>}
                   </div>
+                  <span className="text-[10px] text-on-surface-variant bg-surface-variant px-2 py-1 rounded-full">
+                    {saveCustomer ? "Save" : "Skip"}
+                  </span>
                 </div>
 
                 {/* Service summary */}

@@ -19,9 +19,6 @@ import "./page-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface LoginPageProps {
-  redirectTo?: string;
-}
 
 function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss: () => void }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -119,9 +116,20 @@ function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss:
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function LoginPage({ redirectTo = "/dashboard" }: LoginPageProps) {
+export default function LoginPage() {
   // Initialize Capacitor lifecycle management to prevent idle freeze
   useAppLifecycle();
+  const [redirectTo, setRedirectTo] = useState("/dashboard");
+  
+  // Read redirect param from URL — avoids useSearchParams() which needs Suspense in static export
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("redirect")) {
+        setRedirectTo(params.get("redirect")!);
+      }
+    }
+  }, []);
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading only during sign-in

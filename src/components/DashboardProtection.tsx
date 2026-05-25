@@ -12,7 +12,10 @@ export default function DashboardProtection({ children }: { children: React.Reac
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/?redirect=" + pathname);
+      // Redirect directly to login — avoids an intermediate redirect through
+      // the landing page, which caused 'page could not load' in Capacitor
+      router.prefetch('/login');
+      router.push("/login?redirect=" + encodeURIComponent(pathname));
     }
   }, [user, loading, router, pathname]);
 

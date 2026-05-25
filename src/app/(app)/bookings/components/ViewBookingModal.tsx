@@ -342,6 +342,34 @@ export default function ViewBookingModal({
     addToast("Booking ID copied!", "success");
   }, [booking?.id, addToast]);
 
+  const handleCopyPhone = useCallback(() => {
+    if (!booking) return;
+    navigator.clipboard.writeText(booking.phone);
+    addToast("Phone number copied!", "success");
+  }, [booking?.phone, addToast]);
+
+  const handleCopyEmail = useCallback(() => {
+    if (!booking?.email) return;
+    navigator.clipboard.writeText(booking.email);
+    addToast("Email copied!", "success");
+  }, [booking?.email, addToast]);
+
+  // Valid status transitions (disallow invalid transitions)
+  const VALID_TRANSITIONS: Record<string, Set<string>> = {
+    confirmed: new Set(["completed", "cancelled"]),
+    pending: new Set(["confirmed", "completed", "cancelled"]),
+    completed: new Set([]), // No transitions from completed
+    cancelled: new Set([]), // No transitions from cancelled
+  };
+
+  const isTransitionValid = useCallback(
+    (targetStatus: string): boolean => {
+      if (!booking) return false;
+      return VALID_TRANSITIONS[booking.status]?.has(targetStatus) ?? false;
+    },
+    [booking?.status]
+  );
+
   const safeFirstLetter = useMemo(() => {
     const clientName = booking?.client || "";
     return clientName ? clientName.charAt(0).toUpperCase() : "?";
@@ -510,14 +538,28 @@ export default function ViewBookingModal({
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-lg md:text-xl text-on-surface truncate">{booking.client}</div>
                     <div className="flex flex-col gap-1 mt-1">
-                      <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                      <div className="flex items-center gap-2 text-sm text-on-surface-variant group">
                         <i className="fab fa-whatsapp text-[#25D366] text-sm" />
                         <span className="truncate">{booking.phone}</span>
+                        <button
+                          onClick={handleCopyPhone}
+                          className="shrink-0 opacity-0 md:group-hover:opacity-100 transition-opacity w-5 h-5 rounded-md bg-[#EDE9FE] text-[#8B5CF6] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white active:scale-90"
+                          title="Copy phone number"
+                        >
+                          <i className="fas fa-copy text-[8px]" />
+                        </button>
                       </div>
                       {booking.email && (
-                        <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                        <div className="flex items-center gap-2 text-sm text-on-surface-variant group">
                           <i className="fas fa-envelope text-[#8B5CF6] text-xs" />
                           <span className="truncate">{booking.email}</span>
+                          <button
+                            onClick={handleCopyEmail}
+                            className="shrink-0 opacity-0 md:group-hover:opacity-100 transition-opacity w-5 h-5 rounded-md bg-[#EDE9FE] text-[#8B5CF6] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white active:scale-90"
+                            title="Copy email"
+                          >
+                            <i className="fas fa-copy text-[8px]" />
+                          </button>
                         </div>
                       )}
                     </div>

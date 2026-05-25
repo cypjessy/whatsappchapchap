@@ -9,6 +9,7 @@ import { serviceService, bookingService, Booking, Service } from "@/lib/db";
 import { db } from "@/lib/firebase";
 import ManualBookingModal from "./components/ManualBookingModal";
 import ViewBookingModal from "./components/ViewBookingModal";
+import EditBookingDialog from "./components/EditBookingDialog";
 import PaymentConfirmationModal from "./components/PaymentConfirmationModal";
 import BookingStats from "./components/BookingStats";
 import BookingAnalytics from "./components/BookingAnalytics";
@@ -1117,127 +1118,19 @@ export default function BookingsPage() {
         onBookingCreated={handleBookingCreated}
       />
 
-      {/* Edit Modal - simplified inline for now */}
-      {editModalOpen && editingBooking && (
-        <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setEditModalOpen(false); setEditingBooking(null); }} />
-          <div className="relative md3-card-elevated w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
-            <div className="px-5 py-4 border-b border-[var(--md-sys-color-outline-variant)] flex justify-between items-center">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--md-sys-color-on-surface)]">
-                <div className="w-8 h-8 rounded-lg bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center">
-                  <i className="fas fa-edit text-[var(--md-sys-color-on-surface-variant)] text-sm" />
-                </div>
-                Edit Booking
-              </h2>
-              <button
-                onClick={() => { setEditModalOpen(false); setEditingBooking(null); }}
-                className="w-9 h-9 rounded-full border-2 border-[var(--md-sys-color-outline-variant)] flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:border-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-primary)] transition-all active:scale-95"
-              >
-                <i className="fas fa-times text-sm" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5">
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!user || !editingBooking) return;
-                  try {
-                    const formData = new FormData(e.currentTarget);
-                    const updates: Partial<Booking> = {
-                      client: formData.get("client") as string,
-                      phone: formData.get("phone") as string,
-                      date: formData.get("date") as string,
-                      time: formData.get("time") as string,
-                      duration: formData.get("duration") as string,
-                      location: formData.get("location") as string,
-                      price: Number(formData.get("price")),
-                      deposit: Number(formData.get("deposit") || 0),
-                      paymentMethod: formData.get("paymentMethod") as any,
-                      notes: formData.get("notes") as string,
-                    };
-                    updates.clientInitials = (updates.client || "").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
-                    updates.balance = (updates.price || 0) - (updates.deposit || 0);
-                    updates.paymentStatus = updates.deposit && updates.deposit > 0 ? (updates.deposit >= (updates.price || 0) ? "paid" : "partial") : "unpaid";
-
-                    await bookingService.updateBooking(user, editingBooking.id, updates);
-                    reloadBookings();
-                    setEditModalOpen(false);
-                    setEditingBooking(null);
-                    addToast("Booking updated successfully!");
-                  } catch (error) {
-                    console.error("Error updating booking:", error);
-                    addToast("Failed to update booking", "error");
-                  }
-                }}
-                className="space-y-4"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { name: "client", label: "Client Name", type: "text", defaultValue: editingBooking.client },
-                    { name: "phone", label: "Phone", type: "tel", defaultValue: editingBooking.phone },
-                    { name: "date", label: "Date", type: "date", defaultValue: editingBooking.date },
-                    { name: "time", label: "Time", type: "time", defaultValue: editingBooking.time },
-                    { name: "duration", label: "Duration", type: "text", defaultValue: editingBooking.duration },
-                    { name: "location", label: "Location", type: "text", defaultValue: editingBooking.location },
-                    { name: "price", label: "Price (KES)", type: "number", defaultValue: String(editingBooking.price) },
-                    { name: "deposit", label: "Deposit (KES)", type: "number", defaultValue: String(editingBooking.deposit || 0) },
-                  ].map((field) => (
-                    <div key={field.name}>
-                      <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] mb-1.5">{field.label}</label>
-                      <input
-                        name={field.name}
-                        type={field.type}
-                        defaultValue={field.defaultValue}
-                        className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md3-level2 focus:outline-none text-sm transition-all md3-input-outlined"
-                        required={field.name !== "deposit"}
-                      />
-                    </div>
-                  ))}
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] mb-1.5">Payment Method</label>
-                    <select
-                      name="paymentMethod"
-                      defaultValue={editingBooking.paymentMethod || ""}
-                      className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md3-level2 focus:outline-none text-sm transition-all md3-input-outlined"
-                    >
-                      <option value="">Select method</option>
-                      <option value="cash">Cash</option>
-                      <option value="mpesa">M-Pesa</option>
-                      <option value="card">Card</option>
-                      <option value="bank">Bank Transfer</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] mb-1.5">Notes</label>
-                  <textarea
-                    name="notes"
-                    defaultValue={editingBooking.notes || ""}
-                    rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-[var(--md-sys-color-outline)] focus:border-[var(--md-sys-color-primary)] focus:shadow-md3-level2 focus:outline-none text-sm resize-none transition-all md3-input-outlined"
-                  />
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setEditModalOpen(false); setEditingBooking(null); }}
-                    className="flex-1 px-4 py-3 md3-button-outlined rounded-xl font-medium text-sm transition-all active:scale-95"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-3 md3-button-filled rounded-xl font-medium text-sm transition-all active:scale-95 shadow-md3-level3"
-                  >
-                    <i className="fas fa-save mr-2 text-xs" />
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Edit Booking Dialog */}
+      <EditBookingDialog
+        booking={editingBooking}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingBooking(null);
+        }}
+        onSaved={() => {
+          reloadBookings();
+          addToast("Booking updated successfully!");
+        }}
+      />
     </div>
   );
 }

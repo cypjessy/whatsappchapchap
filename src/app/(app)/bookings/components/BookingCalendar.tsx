@@ -412,12 +412,55 @@ function BookingCard({ booking, index, onViewBooking }: {
   );
 }
 
-function DayBookingsList({ currentDate, bookings, onViewBooking }: {
-  currentDate: Date;
+function MonthlyStats({ bookings, currentDate }: { bookings: Booking[]; currentDate: Date }) {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const monthBookings = bookings.filter((b) => {
+    if (!b?.date) return false;
+    const d = new Date(b.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  const totalRevenue = monthBookings.reduce((sum, b) => sum + b.price, 0);
+  const totalDeposits = monthBookings.reduce((sum, b) => sum + (b.deposit || 0), 0);
+  const confirmed = monthBookings.filter((b) => b.status === "confirmed").length;
+  const completed = monthBookings.filter((b) => b.status === "completed").length;
+  const pending = monthBookings.filter((b) => b.status === "pending").length;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
+      <div className="bg-gradient-to-br from-[#EDE9FE] to-[#F5F3FF] rounded-xl p-3 border border-[#8B5CF6]/10">
+        <div className="text-[10px] text-[#8B5CF6] font-bold uppercase tracking-wider mb-1">Revenue</div>
+        <div className="font-extrabold text-sm md:text-base text-[#8B5CF6]">KES {totalRevenue.toLocaleString()}</div>
+      </div>
+      <div className="bg-gradient-to-br from-[#D1FAE5] to-[#ECFDF5] rounded-xl p-3 border border-[#10B981]/10">
+        <div className="text-[10px] text-[#10B981] font-bold uppercase tracking-wider mb-1">Deposits</div>
+        <div className="font-extrabold text-sm md:text-base text-[#10B981]">KES {totalDeposits.toLocaleString()}</div>
+      </div>
+      <div className="bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] rounded-xl p-3 border border-[#3B82F6]/10">
+        <div className="text-[10px] text-[#3B82F6] font-bold uppercase tracking-wider mb-1">Bookings</div>
+        <div className="font-extrabold text-sm md:text-base text-[#3B82F6]">{monthBookings.length}</div>
+        <div className="flex gap-2 mt-1 text-[9px]">
+          <span className="text-[#10B981]">{completed} done</span>
+          <span className="text-[#D97706]">{pending} pending</span>
+        </div>
+      </div>
+      <div className="bg-gradient-to-br from-[#FEF3C7] to-[#FFFBEB] rounded-xl p-3 border border-[#F59E0B]/10">
+        <div className="text-[10px] text-[#F59E0B] font-bold uppercase tracking-wider mb-1">Confirmed</div>
+        <div className="font-extrabold text-sm md:text-base text-[#F59E0B]">{confirmed}</div>
+      </div>
+    </div>
+  );
+}
+
+function DayBookingsList({ selectedDate, bookings, onViewBooking }: {
+  selectedDate: Date | null;
   bookings: Booking[];
   onViewBooking: (booking: Booking) => void;
 }) {
-  const dayBookings = getBookingsForDate(bookings, currentDate);
+  const targetDate = selectedDate || new Date();
+  const dayBookings = getBookingsForDate(bookings, targetDate);
   const totalRevenue = dayBookings.reduce((sum, b) => sum + b.price, 0);
 
   if (dayBookings.length === 0) {
@@ -535,6 +578,10 @@ export default function BookingCalendar({
           onNavigate={navigateMonth}
           onToday={goToToday}
         />
+
+        {/* Monthly Stats Summary */}
+        <MonthlyStats bookings={bookings} currentDate={currentDate} />
+
         <div className={`
           transition-transform duration-300 ease-out
           ${slideDirection === "left" ? "-translate-x-4 opacity-50" : ""}
@@ -556,7 +603,7 @@ export default function BookingCalendar({
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center">
               <i className="fas fa-calendar-check text-[#8B5CF6] text-xs md:text-sm" />
             </div>
-            <span>{formatShortDate(currentDate)}</span>
+            <span>{selectedDate ? formatShortDate(selectedDate) : formatShortDate(currentDate)}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] md:text-xs text-on-surface-variant bg-surface/80 px-2 py-1 rounded-full border border-outline-variant/50">
@@ -566,7 +613,7 @@ export default function BookingCalendar({
         </div>
 
         <DayBookingsList
-          currentDate={currentDate}
+          selectedDate={selectedDate}
           bookings={bookings}
           onViewBooking={onViewBooking}
         />
