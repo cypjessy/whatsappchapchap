@@ -67,10 +67,10 @@ export default function DashboardLayout({
         ]);
         // CRITICAL: Disable overlay mode so status bar doesn't cover content
         await StatusBar.setOverlaysWebView({ overlay: false });
-        // Set purple status bar to match topbar gradient
-        await StatusBar.setBackgroundColor({ color: '#667eea' });
+        // Set green status bar to match topbar
+        await StatusBar.setBackgroundColor({ color: '#25D366' });
         await StatusBar.setStyle({ style: Style.Light });
-        console.log('[AppLayout] Initial status bar set to purple (overlay: false)');
+        console.log('[AppLayout] Initial status bar set to green (overlay: false)');
       } catch (err) {
         console.log('[AppLayout] Not in Capacitor environment or StatusBar failed:', err);
       }
@@ -78,8 +78,9 @@ export default function DashboardLayout({
     setInitialStatusBar();
   }, []);
 
-  // Default status bar color - matches TopBar's purple gradient
-  useStatusBar({ color: '#667eea', style: 'light' });
+  // Default status bar color - matches TopBar's green state
+  // Will be updated dynamically when scrolling
+  useStatusBar({ color: '#25D366', style: 'light' });
 
   // Redirect to /offline when connection is lost
   useEffect(() => {
