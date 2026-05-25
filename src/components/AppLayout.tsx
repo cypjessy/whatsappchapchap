@@ -5,8 +5,11 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
+import { useStatusBar } from "@/hooks/useStatusBar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  // Set purple status bar to match login page and topbar gradient
+  useStatusBar({ color: '#667eea', style: 'light' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(false); // Start collapsed on desktop
   const [isMobile, setIsMobile] = useState(false);

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
-import { useStatusBar } from "@/hooks/useStatusBar";
 import "./topbar-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -81,12 +80,6 @@ export default function AndroidTopBar({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [onScrollChange]);
-
-  // Purple gradient status bar to match login page
-  useStatusBar({ 
-    color: '#667eea',
-    style: 'light'
-  });
 
   // Reset on route change
   useEffect(() => {
