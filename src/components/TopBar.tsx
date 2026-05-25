@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { orderService, bookingService } from "@/lib/db";
 import { useHaptics } from "@/hooks/useNativeAndroid";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import "./topbar-styles.css";
@@ -24,127 +23,50 @@ interface TopBarProps {
   onScrollChange?: (isScrolled: boolean) => void;
 }
 
-interface ActionButton {
-  icon: string;
-  label: string;
-  onClick?: () => void;
-  badge?: number;
-  href?: string;
-}
-
-// ─── Sub-Components ───────────────────────────────────────────────────────────
-
-function ActionIcon({
-  action,
-  isScrolled,
-}: {
-  action: ActionButton;
-  isScrolled: boolean;
-}) {
-  const [isPressed, setIsPressed] = useState(false);
-  const [showRipple, setShowRipple] = useState(false);
-  const rippleRef = useRef<HTMLSpanElement>(null);
-  const { impactLight } = useHaptics();
-
-  const handlePress = () => {
-    setIsPressed(true);
-    setShowRipple(true);
-    impactLight();
-    
-    // Remove ripple after animation
-    setTimeout(() => {
-      setShowRipple(false);
-      setIsPressed(false);
-    }, 600);
-  };
-
-  const content = (
-    <button
-      onClick={action.onClick}
-      onTouchStart={() => setIsPressed(true)}
-      onTouchEnd={handlePress}
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={handlePress}
-      className={`
-        relative w-11 h-11 rounded-full flex items-center justify-center
-        overflow-hidden
-        transition-all duration-200 ease-out
-        ${isPressed ? "scale-90" : "scale-100"}
-        ${isScrolled 
-          ? "hover:bg-surface-variant active:bg-surface-container-high text-on-surface" 
-          : "hover:bg-white/20 active:bg-white/30 text-white"
-        }
-      `}
-      aria-label={action.label}
-    >
-      {/* Ripple effect */}
-      {showRipple && (
-        <span
-          ref={rippleRef}
-          className={`
-            absolute inset-0 rounded-full
-            ${isScrolled ? 'bg-gray-400/30' : 'bg-white/30'}
-            animate-md3Ripple
-          `}
-        />
-      )}
-      
-      <i className={`fas ${action.icon} text-lg relative z-10`} />
-      
-      {action.badge && action.badge > 0 && (
-        <span className={`
-          absolute -top-0.5 -right-0.5
-          min-w-[20px] h-[20px] px-1
-          bg-red-500 text-white text-[11px] font-bold
-          rounded-full flex items-center justify-center
-          border-2 ${isScrolled ? 'border-white' : 'border-[#25D366]'} shadow-md3-level1 animate-badgePop
-          z-20
-        `}>
-          {action.badge > 99 ? "99+" : action.badge}
-        </span>
-      )}
-    </button>
-  );
-
-  if (action.href) {
-    return <Link href={action.href}>{content}</Link>;
-  }
-
-  return content;
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AndroidTopBar({
-  title,
-  subtitle,
+  title = "ChapChap",
+  subtitle = "WhatsApp Sales Automation",
   onMenuClick,
-  onSearchClick,
-  onNotificationClick,
-  notificationCount = 0,
-  transparent = false,
-  scrollThreshold = 50,
   onScrollChange,
 }: TopBarProps) {
   const router = useRouter();
-  const { user, logout } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
+  const { impactLight } = useHaptics();
+  const [showRipple, setShowRipple] = useState(false);
 
-  // Scroll behavior
+  const handleBack = useCallback(() => {
+    impactLight().catch(() => {});
+    setShowRipple(true);
+
+    setTimeout(() => {
+      setShowRipple(false);
+    }, 600);
+
+    if (onMenuClick) {
+      onMenuClick();
+    } else {
+      router.push("/");
+    }
+  }, [onMenuClick, router, impactLight]);
+
+  const triggerRipple = useCallback(() => {
+    setShowRipple(true);
+    setTimeout(() => setShowRipple(false), 600);
+  }, []);
+
+  // Scroll behavior - auto hide on scroll down
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
       
-      // Background transition
-      const scrolled = currentY > scrollThreshold;
-      setIsScrolled(scrolled);
-      
       // Notify parent of scroll state change
       if (onScrollChange) {
-        onScrollChange(scrolled);
+        onScrollChange(currentY > 50);
       }
       
       // Auto-hide on scroll down, show on scroll up
@@ -158,36 +80,27 @@ export default function AndroidTopBar({
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [scrollThreshold, onScrollChange]);
+  }, [onScrollChange]);
 
-  // Dynamic status bar color - matches TopBar background
+  // Purple gradient status bar to match login page
   useStatusBar({ 
-    color: isScrolled ? '#ffffff' : '#25D366',
-    style: isScrolled ? 'dark' : 'light'
+    color: '#667eea',
+    style: 'light'
   });
 
   // Reset on route change
   useEffect(() => {
-    setIsScrolled(false);
     setIsVisible(true);
     lastScrollY.current = 0;
   }, [pathname]);
 
-  // Fix: Force re-render on app resume to prevent black/invisible state
+  // Fix: Force re-render on app resume
   useEffect(() => {
     const handleAppResume = () => {
-      console.log('[TopBar] App resumed - forcing re-render');
-      // Force immediate state reset to ensure correct rendering
-      setIsScrolled(window.scrollY > scrollThreshold);
       setIsVisible(true);
-      
-      // Force React to re-render by triggering a micro-state change
-      setTimeout(() => {
-        setIsVisible(prev => prev);
-      }, 50);
+      setTimeout(() => setIsVisible(prev => prev), 50);
     };
 
-    // Listen for app resume event
     window.addEventListener('appresumed', handleAppResume);
     window.addEventListener('focus', handleAppResume);
     window.addEventListener('pageshow', handleAppResume);
@@ -197,42 +110,19 @@ export default function AndroidTopBar({
       window.removeEventListener('focus', handleAppResume);
       window.removeEventListener('pageshow', handleAppResume);
     };
-  }, [scrollThreshold]);
-
-  // Fix: Force safe area re-paint on visibility change (app resume)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('[TopBar] Visibility changed to visible - forcing safe area re-paint');
-        // Force re-paint of safe area when app resumes
-        document.documentElement.style.setProperty(
-          '--sat', 
-          'env(safe-area-inset-top, 0px)'
-        );
-        // Force browser to recalculate layout
-        window.dispatchEvent(new Event('resize'));
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
-
-  const leftActions: ActionButton[] = [];
-
-  const rightActions: ActionButton[] = [];
 
   return (
     <>
-      {/* Spacer for fixed header - matches TopBar height (no safe area needed when overlay=false) */}
+      {/* Spacer for fixed header - matches TopBar height including safe area */}
       <div 
         className="lg:hidden flex-shrink-0" 
         style={{ 
-          height: '64px'
+          height: 'calc(64px + env(safe-area-inset-top, 24px))'
         }} 
       />
 
-      {/* Minimal TopBar - Just background */}
+      {/* Material 3 Top App Bar - Matches Login Page Style */}
       <header
         className={`
           fixed left-0 right-0 z-50 lg:hidden
@@ -244,17 +134,88 @@ export default function AndroidTopBar({
           willChange: 'transform',
         }}
       >
-        {/* App Bar Container */}
+        {/* Status Bar Spacer - Creates boundary from Android status bar */}
+        <div 
+          className="w-full"
+          style={{
+            height: 'env(safe-area-inset-top, 24px)',
+            minHeight: '24px',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 50%, transparent 100%)',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+          }}
+        />
+
+        {/* App Bar Container - Purple gradient to match login page */}
         <div
-          className="relative transition-all duration-300 flex-shrink-0 w-full"
+          className="relative w-full"
           style={{ 
-            minHeight: '64px',
-            backgroundColor: isScrolled ? '#ffffff' : '#25D366',
-            boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
+            height: '64px',
+            background: 'linear-gradient(180deg, rgba(102, 126, 234, 0.98) 0%, rgba(118, 75, 162, 0.95) 100%)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {/* Content Container - Empty, just provides structure */}
-          <div className="flex items-center justify-between px-3 h-16 min-h-[64px] w-full">
+          {/* Content Container */}
+          <div className="flex items-center h-full px-2">
+            {/* Leading: Menu/Back Button */}
+            <button
+              className="relative w-12 h-12 rounded-full flex items-center justify-center text-white/90 overflow-hidden flex-shrink-0 transition-all duration-200 hover:bg-white/10 active:scale-95"
+              onClick={handleBack}
+              onTouchStart={triggerRipple}
+              onMouseDown={triggerRipple}
+              aria-label="Open menu"
+            >
+              {/* Ripple */}
+              {showRipple && (
+                <span className="absolute inset-0 rounded-full bg-white/30 animate-md3Ripple" />
+              )}
+              
+              {/* Menu icon */}
+              <svg
+                className="w-6 h-6 relative z-10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+
+            {/* Center: App Icon + Title */}
+            <div className="flex items-center gap-3 flex-1 min-w-0 ml-1">
+              {/* WhatsApp Icon */}
+              <div className="w-9 h-9 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 text-white"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                </svg>
+              </div>
+
+              {/* Title */}
+              <div className="flex flex-col min-w-0">
+                <span className="text-white font-bold text-base leading-tight truncate">
+                  {title}
+                </span>
+                {subtitle && (
+                  <span className="text-white/70 text-xs truncate">
+                    {subtitle}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Trailing: Empty spacer for symmetry */}
+            <div className="w-12 flex-shrink-0" />
           </div>
         </div>
       </header>
