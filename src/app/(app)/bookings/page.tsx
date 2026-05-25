@@ -16,7 +16,7 @@ import BookingAnalytics from "./components/BookingAnalytics";
 import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import BookingCancellationRequests from "./components/BookingCancellationRequests";
-import { CalendarTab, TimelineTab, ListTab, GridTab } from "./components/tabs";
+import { ListTab, GridTab } from "./components/tabs";
 import { collection, query, where, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
 import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore } from "firebase/firestore";
@@ -33,7 +33,7 @@ const getTenantId = (user: any): string => `tenant_${user.uid}`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ViewMode = "calendar" | "timeline" | "list" | "grid" | "cancellations";
+type ViewMode = "list" | "grid" | "cancellations";
 
 interface Toast {
   id: number;
@@ -44,11 +44,8 @@ interface Toast {
 // ─── Constants ─────────────────────────────────────────────────────────────
 
 const VIEW_TABS = [
-  { id: "calendar" as ViewMode, label: "Calendar", icon: "fa-calendar", desc: "Monthly overview" },
-  { id: "timeline" as ViewMode, label: "Timeline", icon: "fa-stream", desc: "Chronological" },
   { id: "list" as ViewMode, label: "List", icon: "fa-list", desc: "Detailed rows" },
-  { id: "grid" as ViewMode, label: "Grid", icon: "fa-th-large", desc: "Card view" },
-  { id: "cancellations" as ViewMode, label: "Cancellations", icon: "fa-exclamation-triangle", desc: "Pending requests" },
+  { id: "grid" as ViewMode, label: "Grid", icon: "fa-th", desc: "Card view" },
 ];
 
 const STATUS_CHIPS = [
@@ -142,8 +139,6 @@ function DeleteConfirmDialog({
 
 function EmptyState({ viewMode }: { viewMode: ViewMode }) {
   const icons: Record<ViewMode, string> = {
-    calendar: "fa-calendar-times",
-    timeline: "fa-stream",
     list: "fa-list",
     grid: "fa-th-large",
     cancellations: "fa-exclamation-triangle",
@@ -170,7 +165,7 @@ export default function BookingsPage() {
   const { copy } = useClipboard();
   const { share } = useShare();
   const { show: showToastNative } = useToast();
-  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -1015,24 +1010,6 @@ export default function BookingsPage() {
             <EmptyState viewMode={viewMode} />
           ) : (
             <>
-              {viewMode === "calendar" && (
-                <CalendarTab
-                  bookings={filteredBookings}
-                  selectedDate={selectedDate}
-                  onDateSelect={setSelectedDate}
-                  onViewBooking={setSelectedBooking}
-                  isLoading={loading}
-                />
-              )}
-              {viewMode === "timeline" && (
-                <TimelineTab
-                  bookings={filteredBookings}
-                  onViewBooking={setSelectedBooking}
-                  isLoading={loading}
-                  onUpdateStatus={handleUpdateStatus}
-                  onDelete={handleDeleteBooking}
-                />
-              )}
               {viewMode === "list" && (
                 <ListTab
                   bookings={filteredBookings}
@@ -1053,7 +1030,7 @@ export default function BookingsPage() {
               )}
 
               {/* Load More */}
-              {hasMoreBookings && viewMode !== "calendar" && (
+              {hasMoreBookings && (
                 <div className="flex justify-center pt-4 pb-8">
                   <button
                     onClick={loadMoreBookings}
