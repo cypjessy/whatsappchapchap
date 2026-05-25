@@ -121,4 +121,6 @@ export const PREF_KEYS = {
   APP_SETTINGS: "app_settings",
   CACHED_TOKEN: "cached_token",
   OFFLINE_DATA: "offline_data",
+  BIOMETRIC_EMAIL: "biometric_email",
+  BIOMETRIC_PASSWORD: "biometric_password",
 } as const;

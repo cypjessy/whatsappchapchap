@@ -1,5 +1,6 @@
 "use client";
 
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import "./login-styles.css";
 
 interface LoginFormProps {
@@ -13,6 +14,7 @@ interface LoginFormProps {
   onTogglePassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onGoogleLogin: () => void;
+  onBiometricLogin?: () => void;
 }
 
 export default function LoginForm({
@@ -26,7 +28,9 @@ export default function LoginForm({
   onTogglePassword,
   onSubmit,
   onGoogleLogin,
+  onBiometricLogin,
 }: LoginFormProps) {
+  const { isAvailable, getBiometricIcon, getBiometricLabel } = useBiometricAuth();
   return (
     <>
       <form onSubmit={onSubmit}>
@@ -120,9 +124,9 @@ export default function LoginForm({
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3.5 lg:py-4 px-6 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
-            text-white border-none rounded-xl text-base lg:text-lg font-bold cursor-pointer 
-            transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md3-level3 
+          className="w-full py-3.5 lg:py-4 px-6 bg-gradient-to-r from-[#25D366] to-[#128C7E]
+            text-white border-none rounded-xl text-base lg:text-lg font-bold cursor-pointer
+            transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md3-level3
             active:translate-y-0 active:shadow-md3-level2 active:scale-[0.98]
             disabled:opacity-70 disabled:hover:translate-y-0 disabled:cursor-not-allowed
             relative overflow-hidden"
@@ -136,6 +140,26 @@ export default function LoginForm({
             "Sign In"
           )}
         </button>
+
+        {/* Biometric Login Button - Only show if available */}
+        {isAvailable && onBiometricLogin && (
+          <>
+            <div className="flex items-center my-4 text-[#6b7280] text-xs font-medium">
+              <div className="flex-1 h-px bg-[#e5e7eb]" />
+              <span className="px-4">or</span>
+              <div className="flex-1 h-px bg-[#e5e7eb]" />
+            </div>
+            <button
+              type="button"
+              onClick={onBiometricLogin}
+              disabled={isLoading}
+              className="w-full py-3.5 px-6 bg-white border-2 border-[#e5e7eb] text-[#1a1a2e] rounded-xl text-base font-bold cursor-pointer transition-all duration-300 hover:border-[#25D366] hover:bg-[#f0fdf4] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            >
+              <i className={`${getBiometricIcon()} text-[#25D366] text-lg`}></i>
+              <span>{getBiometricLabel()}</span>
+            </button>
+          </>
+        )}
       </form>
     </>
   );

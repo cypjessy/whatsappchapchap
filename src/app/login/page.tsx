@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import { useAppLifecycle } from "@/hooks/useAppLifecycle";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { PreferenceService, PREF_KEYS } from "@/lib/preference-service";
 import LoginForm from "@/components/auth/LoginForm";
 import BrandPanel from "@/components/auth/BrandPanel";
@@ -143,6 +144,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, loading: authLoading, signIn, signInWithGoogle, logout } = useAuth();
   const { impactLight, notificationSuccess, notificationError } = useHaptics();
+  const { authenticate, isAvailable: isBiometricAvailable } = useBiometricAuth();
 
   // Set status bar to match purple gradient background with white icons
   // LoginTopBar also uses this color to match seamlessly
@@ -223,6 +225,14 @@ export default function LoginPage() {
 
       try {
         await signIn(email, password);
+
+        // Save credentials for biometric login if biometric is available
+        const biometricEnabled = await PreferenceService.get(PREF_KEYS.BIOMETRIC_ENABLED);
+        if (biometricEnabled === "true" && isBiometricAvailable) {
+          await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_EMAIL, value: email });
+          await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_PASSWORD, value: password });
+        }
+
         // Fire success haptic without blocking
         notificationSuccess().catch(() => {});
         // Use Next.js router for client-side navigation (preserves auth state, no full reload)
@@ -259,6 +269,48 @@ export default function LoginPage() {
       notificationError().catch(() => {});
     }
   }, [signInWithGoogle, router, redirectTo, impactLight, notificationSuccess, notificationError]);
+
+  const handleBiometricLogin = useCallback(async () => {
+    if (!isBiometricAvailable) {
+      setError("Biometric authentication is not available on this device.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // First, authenticate with biometrics
+      const bioResult = await authenticate("Verify your identity to sign in");
+
+      if (!bioResult.success) {
+        setError(bioResult.error || "Biometric authentication failed.");
+        setIsLoading(false);
+        notificationError().catch(() => {});
+        return;
+      }
+
+      // Get stored credentials
+      const storedEmail = await PreferenceService.get(PREF_KEYS.BIOMETRIC_EMAIL);
+      const storedPassword = await PreferenceService.get(PREF_KEYS.BIOMETRIC_PASSWORD);
+
+      if (!storedEmail || !storedPassword) {
+        setError("No saved credentials found. Please sign in with email and password first.");
+        setIsLoading(false);
+        notificationError().catch(() => {});
+        return;
+      }
+
+      // Sign in with stored credentials
+      await signIn(storedEmail, storedPassword);
+      notificationSuccess().catch(() => {});
+      router.push(redirectTo);
+    } catch (err: any) {
+      setError(err.message || "Biometric sign-in failed. Please try again.");
+      setIsLoading(false);
+      notificationError().catch(() => {});
+    }
+  }, [isBiometricAvailable, authenticate, signIn, router, redirectTo, notificationSuccess, notificationError]);
 
   // ✅ Early returns AFTER all hooks
   if (checkingBiometric || authLoading) {
@@ -365,6 +417,7 @@ export default function LoginPage() {
               onTogglePassword={togglePassword}
               onSubmit={handleSubmit}
               onGoogleLogin={handleGoogleLogin}
+              onBiometricLogin={handleBiometricLogin}
             />
           </div>
 
