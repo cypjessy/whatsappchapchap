@@ -21,21 +21,20 @@ import "./page-styles.css";
 
 
 function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  // Early return before any hooks if no message
+  if (!message) return null;
+
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (message) {
-      setIsVisible(true);
-      // Auto-dismiss after 6 seconds
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(onDismiss, 300);
-      }, 6000);
-      return () => clearTimeout(timer);
-    }
+    setIsVisible(true);
+    // Auto-dismiss after 6 seconds
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(onDismiss, 300);
+    }, 6000);
+    return () => clearTimeout(timer);
   }, [message, onDismiss]);
-
-  if (!message) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
