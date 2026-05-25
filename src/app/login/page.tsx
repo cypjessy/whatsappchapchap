@@ -203,7 +203,64 @@ export default function LoginPage() {
     requestAnimationFrame(() => setIsVisible(true));
   }, []);
 
-  // Don't render login form while checking biometric status
+  // ✅ ALL useCallbacks defined here, before any early returns
+  const togglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
+  const clearError = useCallback(() => setError(""), []);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      // Immediate loading feedback (no delay)
+      setIsLoading(true);
+      setError("");
+
+      // Fire haptic feedback without blocking
+      impactLight().catch(() => {});
+
+      try {
+        await signIn(email, password);
+        // Fire success haptic without blocking
+        notificationSuccess().catch(() => {});
+        // Use Next.js router for client-side navigation (preserves auth state, no full reload)
+        router.push(redirectTo);
+      } catch (err: any) {
+        setError(err.message || "Invalid email or password. Please try again.");
+        setIsLoading(false);
+
+        // Fire error haptic without blocking
+        notificationError().catch(() => {});
+      }
+    },
+    [email, password, signIn, router, redirectTo, impactLight, notificationSuccess, notificationError]
+  );
+
+  const handleGoogleLogin = useCallback(async () => {
+    // Immediate loading feedback (no delay)
+    setIsLoading(true);
+    setError("");
+
+    // Fire haptic feedback without blocking
+    impactLight().catch(() => {});
+
+    try {
+      await signInWithGoogle();
+      // Fire success haptic without blocking
+      notificationSuccess().catch(() => {});
+      // Use Next.js router for client-side navigation (preserves auth state, no full reload)
+      router.push(redirectTo);
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed. Please try again.");
+      setIsLoading(false);
+      // Fire error haptic without blocking
+      notificationError().catch(() => {});
+    }
+  }, [signInWithGoogle, router, redirectTo, impactLight, notificationSuccess, notificationError]);
+
+  // ✅ Early returns AFTER all hooks
   if (checkingBiometric || authLoading) {
     return (
       <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden items-center justify-center">
@@ -228,62 +285,6 @@ export default function LoginPage() {
       </>
     );
   }
-
-  const togglePassword = useCallback(() => {
-    setShowPassword((prev) => !prev);
-  }, []);
-
-  const clearError = useCallback(() => setError(""), []);
-
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      
-      // Immediate loading feedback (no delay)
-      setIsLoading(true);
-      setError("");
-      
-      // Fire haptic feedback without blocking
-      impactLight().catch(() => {});
-
-      try {
-        await signIn(email, password);
-        // Fire success haptic without blocking
-        notificationSuccess().catch(() => {});
-        // Use Next.js router for client-side navigation (preserves auth state, no full reload)
-        router.push(redirectTo);
-      } catch (err: any) {
-        setError(err.message || "Invalid email or password. Please try again.");
-        setIsLoading(false);
-        
-        // Fire error haptic without blocking
-        notificationError().catch(() => {});
-      }
-    },
-    [email, password, signIn, router, redirectTo, impactLight, notificationSuccess, notificationError]
-  );
-
-  const handleGoogleLogin = useCallback(async () => {
-    // Immediate loading feedback (no delay)
-    setIsLoading(true);
-    setError("");
-    
-    // Fire haptic feedback without blocking
-    impactLight().catch(() => {});
-
-    try {
-      await signInWithGoogle();
-      // Fire success haptic without blocking
-      notificationSuccess().catch(() => {});
-      // Use Next.js router for client-side navigation (preserves auth state, no full reload)
-      router.push(redirectTo);
-    } catch (err: any) {
-      setError(err.message || "Google sign-in failed. Please try again.");
-      setIsLoading(false);
-      // Fire error haptic without blocking
-      notificationError().catch(() => {});
-    }
-  }, [signInWithGoogle, router, redirectTo, impactLight, notificationSuccess, notificationError]);
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden">
