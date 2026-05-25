@@ -21,12 +21,10 @@ import "./page-styles.css";
 
 
 function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss: () => void }) {
-  // Early return before any hooks if no message
-  if (!message) return null;
-
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (!message) return; // guard inside the effect, not before hooks
     setIsVisible(true);
     // Auto-dismiss after 6 seconds
     const timer = setTimeout(() => {
@@ -35,6 +33,8 @@ function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss:
     }, 6000);
     return () => clearTimeout(timer);
   }, [message, onDismiss]);
+
+  if (!message) return null; // guard AFTER all hooks
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
