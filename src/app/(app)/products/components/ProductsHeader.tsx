@@ -193,7 +193,7 @@ export default function ProductsHeader({
   return (
     <header
       className={`
-        sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-outline-variant
+        sticky top-0 z-30 bg-white border-b border-outline-variant
         transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
       `}

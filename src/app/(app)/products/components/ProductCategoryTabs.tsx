@@ -40,7 +40,7 @@ function ScrollButton({
       onClick={onClick}
       className={`
         absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-10 md:h-10
-        rounded-full bg-[var(--md-sys-color-surface)]/95 backdrop-blur-md shadow-md3-level3 border border-[var(--md-sys-color-outline-variant)]/80
+        rounded-full bg-white shadow-md3-level3 border border-[var(--md-sys-color-outline-variant)]/80
         flex items-center justify-center transition-all duration-300
         hover:shadow-md3-level4 hover:border-[var(--md-sys-color-primary)]/30 hover:text-[var(--md-sys-color-primary)]
         active:scale-90
@@ -406,16 +406,16 @@ export default function ProductCategoryTabs({
         {/* Gradient fade indicators */}
         <div
           className={`
-            absolute left-0 top-0 bottom-4 w-14 
-            bg-gradient-to-r from-white via-white/80 to-transparent 
+            absolute left-0 top-0 bottom-4 w-14
+            bg-gradient-to-r from-white to-transparent
             z-[5] pointer-events-none transition-opacity duration-300
             ${canScrollLeft ? "opacity-100" : "opacity-0"}
           `}
         />
         <div
           className={`
-            absolute right-0 top-0 bottom-4 w-14 
-            bg-gradient-to-l from-white via-white/80 to-transparent 
+            absolute right-0 top-0 bottom-4 w-14
+            bg-gradient-to-l from-white to-transparent
             z-[5] pointer-events-none transition-opacity duration-300
             ${canScrollRight ? "opacity-100" : "opacity-0"}
           `}

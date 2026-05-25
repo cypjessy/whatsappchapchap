@@ -810,7 +810,7 @@ export default function BookingsPage() {
       {/* Sticky Header - Desktop only (TopBar handles mobile) */}
       <div
         className={`
-          sticky top-0 z-[60] bg-surface/80 backdrop-blur-md border-b transition-all duration-300 hidden md:block
+          sticky top-0 z-[60] bg-white border-b transition-all duration-300 hidden md:block
           ${headerScrolled ? "border-outline-variant shadow-md3-level1" : "border-transparent"}
         `}
       >

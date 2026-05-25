@@ -221,7 +221,7 @@ export default function ServicesHeader({
   }, [setBulkMode]);
 
   return (
-    <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl border-b border-outline-variant">
+    <header className="sticky top-0 z-30 bg-white border-b border-outline-variant">
       <div className="px-4 md:px-6 py-3 md:py-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
           {/* Left: Title */}

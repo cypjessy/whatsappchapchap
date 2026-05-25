@@ -372,8 +372,8 @@ export default function ProductStats({
       <button
         onClick={() => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
         className={`
-          absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full 
-          bg-surface/95 backdrop-blur-md shadow-md3-level3 border border-outline-variant 
+          absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full
+          bg-white shadow-md3-level3 border border-outline-variant
           flex items-center justify-center text-on-surface-variant hover:text-[#128C7E] hover:border-[#25D366]
           transition-all duration-300 active:scale-90 md:hidden
           ${canScrollRight ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}
@@ -386,7 +386,7 @@ export default function ProductStats({
       {/* Gradient fade */}
       <div
         className={`
-          absolute right-0 top-0 bottom-2 w-12 md:w-16 bg-gradient-to-l from-white via-white/80 to-transparent 
+          absolute right-0 top-0 bottom-2 w-12 md:w-16 bg-gradient-to-l from-white to-transparent
           z-[5] pointer-events-none transition-opacity duration-300
           ${canScrollRight ? "opacity-100" : "opacity-0"}
         `}

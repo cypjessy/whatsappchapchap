@@ -127,7 +127,7 @@ function MobileHeader({
         </div>
 
         {/* Avatar - MD3 styling */}
-        <div className="w-12 h-12 rounded-full bg-surface/20 backdrop-blur-sm flex items-center justify-center font-semibold text-lg shrink-0 border-2 border-white/30">
+        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center font-semibold text-lg shrink-0 border-2 border-gray-200 shadow-sm">
           {getInitials(tenantName)}
         </div>
       </div>

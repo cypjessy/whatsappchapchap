@@ -50,7 +50,7 @@ const STATS_CONFIG: StatConfig[] = [
     label: "Total Services",
     icon: Layers,
     color: "#8b5cf6",
-    bgGradient: "from-[#8b5cf6]/10 via-[#8b5cf6]/5 to-transparent",
+    bgGradient: "from-white to-white",
     iconBg: "bg-[#8b5cf6]/12",
     ringColor: "ring-[#8b5cf6]/30",
   },
@@ -59,7 +59,7 @@ const STATS_CONFIG: StatConfig[] = [
     label: "Total Bookings",
     icon: CalendarCheck,
     color: "#10b981",
-    bgGradient: "from-[#10b981]/10 via-[#10b981]/5 to-transparent",
+    bgGradient: "from-white to-white",
     iconBg: "bg-[#10b981]/12",
     ringColor: "ring-[#10b981]/30",
   },
@@ -68,7 +68,7 @@ const STATS_CONFIG: StatConfig[] = [
     label: "Revenue",
     icon: DollarSign,
     color: "#3b82f6",
-    bgGradient: "from-[#3b82f6]/10 via-[#3b82f6]/5 to-transparent",
+    bgGradient: "from-white to-white",
     iconBg: "bg-[#3b82f6]/12",
     ringColor: "ring-[#3b82f6]/30",
     isCurrency: true,
@@ -78,7 +78,7 @@ const STATS_CONFIG: StatConfig[] = [
     label: "Avg Rating",
     icon: Star,
     color: "#f59e0b",
-    bgGradient: "from-[#f59e0b]/10 via-[#f59e0b]/5 to-transparent",
+    bgGradient: "from-white to-white",
     iconBg: "bg-[#f59e0b]/12",
     ringColor: "ring-[#f59e0b]/30",
     isRating: true,
@@ -448,8 +448,8 @@ export default function ServiceStats({
         <button
           onClick={() => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
           className={`
-            absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full 
-            bg-surface/95 backdrop-blur-md shadow-md3-level3 border border-outline-variant 
+            absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full
+            bg-white shadow-md3-level3 border border-outline-variant
             flex items-center justify-center text-on-surface-variant hover:text-[#8b5cf6] hover:border-[#8b5cf6]
             transition-all duration-300 active:scale-90
             ${canScrollRight ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}
@@ -462,7 +462,7 @@ export default function ServiceStats({
         {/* Gradient fade */}
         <div
           className={`
-            absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-white via-white/80 to-transparent 
+            absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-white to-transparent
             z-[5] pointer-events-none transition-opacity duration-300
             ${canScrollRight ? "opacity-100" : "opacity-0"}
           `}
