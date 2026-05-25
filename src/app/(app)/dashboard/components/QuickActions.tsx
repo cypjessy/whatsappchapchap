@@ -83,7 +83,9 @@ function useAnimatedCounter(target: number | undefined, duration: number = 800) 
       if (progress < 1) frameRef.current = requestAnimationFrame(animate);
     };
     frameRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameRef.current!);
+    return () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    };
   }, [actualTarget, duration]);
 
   return count;

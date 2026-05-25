@@ -14,6 +14,7 @@ interface ServiceGridViewProps {
   toggleBulkSelect: (id: string) => void;
   onSelectService: (service: Service) => void;
   onShareService: (service: Service) => void;
+  onCopyLink: (service: Service) => void;
   onToggleStatus: (service: Service) => void;
   onDuplicateService: (service: Service) => void;
   onDeleteService: (serviceId: string) => void;
@@ -117,6 +118,7 @@ function ServiceCard({
   toggleBulkSelect,
   onSelectService,
   onShareService,
+  onCopyLink,
   onToggleStatus,
   onDuplicateService,
   onDeleteService,
@@ -128,6 +130,7 @@ function ServiceCard({
   toggleBulkSelect: (id: string) => void;
   onSelectService: (service: Service) => void;
   onShareService: (service: Service) => void;
+  onCopyLink: (service: Service) => void;
   onToggleStatus: (service: Service) => void;
   onDuplicateService: (service: Service) => void;
   onDeleteService: (serviceId: string) => void;
@@ -374,7 +377,7 @@ function ServiceCard({
                 hoverText="hover:text-white"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onShareService(service);
+                  onCopyLink(service);
                 }}
                 label="Copy Link"
               />
@@ -457,6 +460,7 @@ export default function ServiceGridView({
   toggleBulkSelect,
   onSelectService,
   onShareService,
+  onCopyLink,
   onToggleStatus,
   onDuplicateService,
   onDeleteService,
@@ -488,6 +492,7 @@ export default function ServiceGridView({
           toggleBulkSelect={toggleBulkSelect}
           onSelectService={onSelectService}
           onShareService={onShareService}
+          onCopyLink={onCopyLink}
           onToggleStatus={onToggleStatus}
           onDuplicateService={onDuplicateService}
           onDeleteService={onDeleteService}

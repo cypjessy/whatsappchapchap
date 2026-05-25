@@ -381,16 +381,49 @@ export default function OrdersPage() {
 
   // ─── Filtered Orders ────────────────────────────────────────────────────────
 
-  // Create product images mapping (productId -> imageUrl)
+  // Create product images mapping (productId -> imageUrl AND product name -> imageUrl)
+  // The name-based lookup helps WhatsApp/text orders that store product names instead of IDs
   const productImagesMap = useMemo(() => {
     const map: Record<string, string> = {};
     products.forEach((product) => {
       if (product.image) {
+        // Map by product ID
         map[product.id] = product.image;
+        // Also map by lowercase product name for WhatsApp/text orders
+        if (product.name) {
+          map[`name:${product.name.toLowerCase().trim()}`] = product.image;
+        }
       }
     });
     return map;
   }, [products]);
+
+  // Helper to get product image from order (checks productImage, productId, product name)
+  const getOrderProductImage = useCallback((order: Order): string | undefined => {
+    // 1. Direct productImage field
+    if (order.productImage) return order.productImage;
+    
+    // 2. Check by product ID from the products array
+    if (order.products?.[0]) {
+      const firstProduct = order.products[0];
+      // Try by productId
+      if (firstProduct.productId && productImagesMap[firstProduct.productId]) {
+        return productImagesMap[firstProduct.productId];
+      }
+      // Try by name-based lookup
+      if (firstProduct.name) {
+        const nameLookup = productImagesMap[`name:${firstProduct.name.toLowerCase().trim()}`];
+        if (nameLookup) return nameLookup;
+      }
+    }
+    
+    // 3. Try order.productName as fallback
+    if (order.productName) {
+      return productImagesMap[`name:${order.productName.toLowerCase().trim()}`];
+    }
+    
+    return undefined;
+  }, [productImagesMap]);
 
   const filteredOrders = useMemo(() => {
     let result = [...orders];
@@ -702,6 +735,10 @@ export default function OrdersPage() {
           customerEmail: order.customerEmail || "",
           customerAddress: order.customerAddress || "",
           products: order.products || [],
+          productName: order.productName || "",
+          productImage: order.productImage || "",
+          quantity: order.quantity || 1,
+          basePrice: order.basePrice || 0,
           subtotal: order.subtotal || 0,
           shipping: order.shipping || 0,
           tax: order.tax || 0,
@@ -884,17 +921,24 @@ export default function OrdersPage() {
             updatedAt: new Date(),
           });
 
-          // Send WhatsApp
-          const customerPhone = orderData.customerPhone;
+          // Send WhatsApp (fire-and-forget with .catch so failures don't block UI reload)
+          const customerPhone = getWhatsAppPhone({
+            customerPhone: orderData.customerPhone,
+            whatsappJid: orderData.whatsappJid,
+          });
           const customerName = orderData.customerName || "Customer";
           const orderTotal = orderData.total || 0;
 
-          if (customerPhone && isValidWhatsAppPhone(customerPhone)) {
+          if (isValidWhatsAppPhone(customerPhone)) {
             const message = isApproving
               ? `✅ *REFUND PROCESSED* ✅\n\nDear ${customerName},\n\nYour refund for order *${orderId}* has been processed.\n\n💰 *Amount:* ${formatCurrency(orderTotal)}\n⏱️ *Time:* 24-48 hours\n\nThank you! 🙏`
               : `ℹ️ *CANCELLATION UPDATE*\n\nDear ${customerName},\n\nYour cancellation request for order *${orderId}* was not approved.\n\nYour order will be delivered as planned.\n\nThank you for understanding!`;
 
-            await sendEvolutionWhatsAppMessage(customerPhone, message, user.uid);
+            sendEvolutionWhatsAppMessage(customerPhone, message, user.uid).catch(err =>
+              console.error("Failed to send cancellation WhatsApp:", err)
+            );
+          } else {
+            console.warn("Cancellation WhatsApp not sent — invalid phone:", customerPhone);
           }
         }
 
@@ -1229,6 +1273,11 @@ export default function OrdersPage() {
               setAmountMin={setAmountMin}
               amountMax={amountMax}
               setAmountMax={setAmountMax}
+              statusFilter={activeStatus}
+              setStatusFilter={(value) => {
+                setActiveStatus(value);
+                setViewMode("orders");
+              }}
               resultCount={filteredOrders.length}
               totalCount={orders.length}
             />
@@ -1403,6 +1452,7 @@ export default function OrdersPage() {
         getStatusBadge={getStatusBadge}
         formatDate={formatDate}
         formatTime={formatTime}
+        productImages={productImagesMap}
       />
 
       <EditOrderModal

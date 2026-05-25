@@ -19,6 +19,8 @@ interface BookingFiltersProps {
   selectedDate: Date | null;
   setSelectedDate: (date: Date | null) => void;
   services: Service[];
+  sourceFilter: string;
+  setSourceFilter: (value: string) => void;
 }
 
 interface ActiveFilter {
@@ -266,10 +268,13 @@ export default function BookingFilters({
   selectedDate,
   setSelectedDate,
   services,
+  sourceFilter,
+  setSourceFilter,
 }: BookingFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [serviceFocused, setServiceFocused] = useState(false);
+  const [sourceFocused, setSourceFocused] = useState(false);
   const [paymentFocused, setPaymentFocused] = useState(false);
   const [startFocused, setStartFocused] = useState(false);
   const [endFocused, setEndFocused] = useState(false);
@@ -280,7 +285,8 @@ export default function BookingFilters({
     filterPaymentStatus !== "all" ||
     dateRangeStart ||
     dateRangeEnd ||
-    selectedDate
+    selectedDate ||
+    sourceFilter !== "all"
   );
 
   const activeFilterCount = [
@@ -290,6 +296,7 @@ export default function BookingFilters({
     dateRangeStart,
     dateRangeEnd,
     selectedDate ? "date" : "",
+    sourceFilter !== "all" ? sourceFilter : "",
   ].filter(Boolean).length;
 
   const getActiveFilters = useCallback((): ActiveFilter[] => {
@@ -351,8 +358,18 @@ export default function BookingFilters({
       });
     }
 
+    if (sourceFilter !== "all") {
+      const labels: Record<string, string> = { whatsapp: "WhatsApp", online: "Online", phone: "Phone", manual: "Manual" };
+      filters.push({
+        key: "source",
+        label: `Source: ${labels[sourceFilter] || sourceFilter}`,
+        value: sourceFilter,
+        onRemove: () => setSourceFilter("all"),
+      });
+    }
+
     return filters;
-  }, [searchQuery, selectedServiceFilter, filterPaymentStatus, dateRangeStart, dateRangeEnd, selectedDate, services]);
+  }, [searchQuery, selectedServiceFilter, filterPaymentStatus, dateRangeStart, dateRangeEnd, selectedDate, sourceFilter, services, setSourceFilter]);
 
   const clearAllFilters = useCallback(() => {
     setSearchQuery("");
@@ -361,7 +378,8 @@ export default function BookingFilters({
     setDateRangeStart("");
     setDateRangeEnd("");
     setSelectedDate(null);
-  }, [setSearchQuery, setSelectedServiceFilter, setFilterPaymentStatus, setDateRangeStart, setDateRangeEnd, setSelectedDate]);
+    setSourceFilter("all");
+  }, [setSearchQuery, setSelectedServiceFilter, setFilterPaymentStatus, setDateRangeStart, setDateRangeEnd, setSelectedDate, setSourceFilter]);
 
   const activeFilters = getActiveFilters();
 
@@ -426,6 +444,21 @@ export default function BookingFilters({
               setIsFocused={setPaymentFocused}
             />
 
+            <SelectDropdown
+              value={sourceFilter}
+              onChange={setSourceFilter}
+              options={[
+                { value: "whatsapp", label: "WhatsApp" },
+                { value: "online", label: "Online" },
+                { value: "phone", label: "Phone" },
+                { value: "manual", label: "Manual" },
+              ]}
+              icon="fas fa-upload"
+              placeholder="All Sources"
+              isFocused={sourceFocused}
+              setIsFocused={setSourceFocused}
+            />
+
             <DateRangePicker
               start={dateRangeStart}
               end={dateRangeEnd}
@@ -477,6 +510,21 @@ export default function BookingFilters({
               placeholder="All Payments"
               isFocused={paymentFocused}
               setIsFocused={setPaymentFocused}
+            />
+
+            <SelectDropdown
+              value={sourceFilter}
+              onChange={setSourceFilter}
+              options={[
+                { value: "whatsapp", label: "WhatsApp" },
+                { value: "online", label: "Online" },
+                { value: "phone", label: "Phone" },
+                { value: "manual", label: "Manual" },
+              ]}
+              icon="fas fa-upload"
+              placeholder="All Sources"
+              isFocused={sourceFocused}
+              setIsFocused={setSourceFocused}
             />
 
             <DateRangePicker

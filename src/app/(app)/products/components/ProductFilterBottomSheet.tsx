@@ -11,6 +11,8 @@ interface ProductFilterBottomSheetProps {
   setSearchTerm: (value: string) => void;
   stockFilter: string;
   setStockFilter: (value: string) => void;
+  statusFilter: string;
+  setStatusFilter: (value: string) => void;
   priceRangeMin: number | "";
   setPriceRangeMin: (value: number | "") => void;
   priceRangeMax: number | "";
@@ -32,6 +34,13 @@ const STOCK_OPTIONS = [
   { value: "in", label: "In Stock" },
   { value: "low", label: "Low Stock" },
   { value: "out", label: "Out of Stock" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
+  { value: "draft", label: "Draft" },
 ];
 
 const SORT_OPTIONS = [
@@ -85,6 +94,8 @@ export default function ProductFilterBottomSheet({
   setSearchTerm,
   stockFilter,
   setStockFilter,
+  statusFilter,
+  setStatusFilter,
   priceRangeMin,
   setPriceRangeMin,
   priceRangeMax,
@@ -100,6 +111,7 @@ export default function ProductFilterBottomSheet({
 }: ProductFilterBottomSheetProps) {
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [localStock, setLocalStock] = useState(stockFilter);
+  const [localStatus, setLocalStatus] = useState(statusFilter);
   const [localSort, setLocalSort] = useState(sortBy);
   const [localPriceMin, setLocalPriceMin] = useState<number | "">(priceRangeMin);
   const [localPriceMax, setLocalPriceMax] = useState<number | "">(priceRangeMax);
@@ -111,24 +123,26 @@ export default function ProductFilterBottomSheet({
     if (isOpen) {
       setLocalSearch(searchTerm);
       setLocalStock(stockFilter);
+      setLocalStatus(statusFilter);
       setLocalSort(sortBy);
       setLocalPriceMin(priceRangeMin);
       setLocalPriceMax(priceRangeMax);
       setLocalDateStart(dateRangeStart);
       setLocalDateEnd(dateRangeEnd);
     }
-  }, [isOpen, searchTerm, stockFilter, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
+  }, [isOpen, searchTerm, stockFilter, statusFilter, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
   const handleApply = useCallback(() => {
     setSearchTerm(localSearch);
     setStockFilter(localStock);
+    setStatusFilter(localStatus);
     setSortBy(localSort);
     setPriceRangeMin(localPriceMin);
     setPriceRangeMax(localPriceMax);
     setDateRangeStart(localDateStart);
     setDateRangeEnd(localDateEnd);
     onClose();
-  }, [localSearch, localStock, localSort, localPriceMin, localPriceMax, localDateStart, localDateEnd, onClose, setSearchTerm, setStockFilter, setSortBy, setPriceRangeMin, setPriceRangeMax, setDateRangeStart, setDateRangeEnd]);
+  }, [localSearch, localStock, localStatus, localSort, localPriceMin, localPriceMax, localDateStart, localDateEnd, onClose, setSearchTerm, setStockFilter, setStatusFilter, setSortBy, setPriceRangeMin, setPriceRangeMax, setDateRangeStart, setDateRangeEnd]);
 
   const handleClearAll = useCallback(() => {
     onClearAll();
@@ -201,7 +215,7 @@ export default function ProductFilterBottomSheet({
             </div>
           </div>
 
-          {/* Stock & Sort Row */}
+          {/* Stock & Status Row */}
           <div className="grid grid-cols-2 gap-3">
             <SelectField
               label="Stock"
@@ -209,6 +223,16 @@ export default function ProductFilterBottomSheet({
               onChange={setLocalStock}
               options={STOCK_OPTIONS}
             />
+            <SelectField
+              label="Status"
+              value={localStatus}
+              onChange={setLocalStatus}
+              options={STATUS_OPTIONS}
+            />
+          </div>
+
+          {/* Sort By */}
+          <div>
             <SelectField
               label="Sort By"
               value={localSort}

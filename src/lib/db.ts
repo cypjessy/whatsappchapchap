@@ -34,6 +34,8 @@ export interface Tenant {
   country?: string;
   currency?: string;
   plan: "free" | "starter" | "pro" | "enterprise";
+  status?: "active" | "suspended" | "pending" | "expired";
+  role?: "user" | "admin" | "superadmin";
   evolutionServerUrl?: string;
   evolutionInstanceId?: string;
   evolutionApiUrl?: string;
@@ -44,6 +46,16 @@ export interface Tenant {
   shippingMethods?: Array<{ id: string; name: string; price: number }>;
   createdAt: any;
   updatedAt: any;
+  // UI helper fields
+  owner?: string;
+  initials?: string;
+  grad?: string;
+  cat?: "products" | "services" | "both";
+  rev?: number;
+  last?: string;
+  online?: boolean;
+  lastActive?: any;
+  lastLoginAt?: any;
 }
 
 export interface BusinessProfile {
@@ -2032,6 +2044,7 @@ export const tenantService = {
       email: user.email || "",
       businessName,
       plan: "free",
+      status: "pending",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -2049,6 +2062,335 @@ export const tenantService = {
   async updateTenant(user: User, data: Partial<Tenant>): Promise<void> {
     const tenantId = getTenantId(user);
     await setDoc(doc(db, "tenants", tenantId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  },
+
+  async getTenantById(tenantId: string): Promise<Tenant | null> {
+    const snap = await getDoc(doc(db, "tenants", tenantId));
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() } as Tenant;
+  },
+};
+
+// Admin Service - for managing all tenants
+export const adminService = {
+  async getAllTenants(): Promise<Tenant[]> {
+    const snap = await getDocs(collection(db, "tenants"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Tenant);
+  },
+
+  async updateTenantStatus(tenantId: string, status: "active" | "suspended" | "pending"): Promise<void> {
+    await updateDoc(doc(db, "tenants", tenantId), { status, updatedAt: serverTimestamp() });
+  },
+
+  async updateTenantPlan(tenantId: string, plan: "free" | "starter" | "pro" | "enterprise"): Promise<void> {
+    await updateDoc(doc(db, "tenants", tenantId), { plan, updatedAt: serverTimestamp() });
+  },
+
+  async deleteTenant(tenantId: string): Promise<void> {
+    await deleteDoc(doc(db, "tenants", tenantId));
+  },
+
+  async getTenantStats(): Promise<{
+    total: number;
+    active: number;
+    suspended: number;
+    pending: number;
+    plans: Record<string, number>;
+  }> {
+    const tenants = await this.getAllTenants();
+    const stats = {
+      total: tenants.length,
+      active: tenants.filter(t => t.status === "active" || !t.status).length,
+      suspended: tenants.filter(t => t.status === "suspended").length,
+      pending: tenants.filter(t => t.status === "pending").length,
+      plans: { free: 0, starter: 0, pro: 0, enterprise: 0 } as Record<string, number>,
+    };
+    tenants.forEach(t => {
+      const plan = t.plan || "free";
+      stats.plans[plan] = (stats.plans[plan] || 0) + 1;
+    });
+    return stats;
+  },
+
+  async updateTenant(tenantId: string, data: Partial<Tenant>): Promise<void> {
+    await updateDoc(doc(db, "tenants", tenantId), { ...data, updatedAt: serverTimestamp() });
+  },
+
+  async addTenantNote(tenantId: string, note: string, adminId: string): Promise<void> {
+    const notesRef = collection(db, "tenants", tenantId, "notes");
+    await addDoc(notesRef, {
+      note,
+      adminId,
+      createdAt: serverTimestamp(),
+    });
+  },
+
+  async getTenantNotes(tenantId: string): Promise<Array<{ id: string; note: string; adminId: string; createdAt: any }>> {
+    const q = query(collection(db, "tenants", tenantId, "notes"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; note: string; adminId: string; createdAt: any }));
+  },
+
+  async addActivityLog(tenantId: string, activity: { action: string; details: string; metadata?: Record<string, any> }): Promise<void> {
+    const logsRef = collection(db, "tenants", tenantId, "activityLogs");
+    await addDoc(logsRef, {
+      ...activity,
+      createdAt: serverTimestamp(),
+    });
+  },
+
+  async getActivityLogs(tenantId: string): Promise<Array<{ id: string; action: string; details: string; metadata?: Record<string, any>; createdAt: any }>> {
+    const q = query(collection(db, "tenants", tenantId, "activityLogs"), orderBy("createdAt", "desc"), limit(50));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; action: string; details: string; metadata?: Record<string, any>; createdAt: any }));
+  },
+
+  exportTenantsToCSV(tenants: Tenant[]): string {
+    const headers = ["ID", "Business Name", "Owner", "Email", "Phone", "Plan", "Status", "Category", "Country", "Created At"];
+    const rows = tenants.map(t => [
+      t.id,
+      t.businessName || t.name || "",
+      t.name || "",
+      t.email || "",
+      t.phone || "",
+      t.plan || "free",
+      t.status || "pending",
+      t.category || t.businessType || "",
+      t.country || "",
+      t.createdAt?.toDate?.() ? t.createdAt.toDate().toISOString() : new Date().toISOString(),
+    ]);
+    return [headers.join(","), ...rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))].join("\n");
+  },
+
+  async getTenantDetailedStats(tenantId: string): Promise<{
+    totalOrders: number;
+    totalCustomers: number;
+    totalRevenue: number;
+    pendingOrders: number;
+    completedOrders: number;
+  }> {
+    // Get orders for tenant
+    const ordersQuery = query(collection(db, "orders"), where("tenantId", "==", tenantId));
+    const ordersSnap = await getDocs(ordersQuery);
+    const orders = ordersSnap.docs.map(d => d.data() as Order);
+
+    // Get customers for tenant
+    const customersQuery = query(collection(db, "customers"), where("tenantId", "==", tenantId));
+    const customersSnap = await getDocs(customersQuery);
+
+    return {
+      totalOrders: orders.length,
+      totalCustomers: customersSnap.size,
+      totalRevenue: orders.reduce((sum, o) => sum + (o.total || 0), 0),
+      pendingOrders: orders.filter(o => o.status === "pending").length,
+      completedOrders: orders.filter(o => o.status === "delivered" || o.status === "confirmed").length,
+    };
+  },
+};
+
+// Pricing Plan Interface
+export interface PricingPlan {
+  id: string;
+  name: string;
+  slug: "free" | "starter" | "pro" | "enterprise";
+  price: number;
+  currency: string;
+  billingPeriod: "monthly" | "yearly";
+  description?: string;
+  features: Array<{
+    name: string;
+    included: boolean;
+    limit?: number | string;
+  }>;
+  limits: {
+    products?: number;
+    messages?: number;
+    storage?: string;
+    aiAssistant?: boolean;
+    analytics?: boolean;
+    apiAccess?: boolean;
+    customDomain?: boolean;
+    prioritySupport?: boolean;
+    bulkMessaging?: boolean;
+  };
+  isActive: boolean;
+  isPopular?: boolean;
+  tenantCount?: number;
+  createdAt: any;
+  updatedAt: any;
+}
+
+// Default pricing plans
+export const defaultPricingPlans: Omit<PricingPlan, "id" | "createdAt" | "updatedAt">[] = [
+  {
+    name: "Free",
+    slug: "free",
+    price: 0,
+    currency: "KSh",
+    billingPeriod: "monthly",
+    description: "Perfect for getting started",
+    features: [
+      { name: "Products", included: true, limit: 10 },
+      { name: "Messages per month", included: true, limit: 100 },
+      { name: "Basic bot flow", included: true },
+      { name: "AI Assistant", included: false },
+      { name: "Analytics", included: false },
+      { name: "API Access", included: false },
+    ],
+    limits: {
+      products: 10,
+      messages: 100,
+      aiAssistant: false,
+      analytics: false,
+      apiAccess: false,
+    },
+    isActive: true,
+    isPopular: false,
+  },
+  {
+    name: "Starter",
+    slug: "starter",
+    price: 999,
+    currency: "KSh",
+    billingPeriod: "monthly",
+    description: "For small businesses",
+    features: [
+      { name: "Products", included: true, limit: 100 },
+      { name: "Messages per month", included: true, limit: 1000 },
+      { name: "Basic AI", included: true },
+      { name: "Order management", included: true },
+      { name: "Advanced analytics", included: false },
+      { name: "API Access", included: false },
+    ],
+    limits: {
+      products: 100,
+      messages: 1000,
+      aiAssistant: true,
+      analytics: false,
+      apiAccess: false,
+    },
+    isActive: true,
+    isPopular: false,
+  },
+  {
+    name: "Pro",
+    slug: "pro",
+    price: 2999,
+    currency: "KSh",
+    billingPeriod: "monthly",
+    description: "For growing businesses",
+    features: [
+      { name: "Unlimited products", included: true },
+      { name: "Messages per month", included: true, limit: 10000 },
+      { name: "Advanced AI", included: true },
+      { name: "Analytics dashboard", included: true },
+      { name: "Priority support", included: true },
+      { name: "API Access", included: false },
+    ],
+    limits: {
+      products: -1, // unlimited
+      messages: 10000,
+      aiAssistant: true,
+      analytics: true,
+      apiAccess: false,
+      prioritySupport: true,
+    },
+    isActive: true,
+    isPopular: true,
+  },
+  {
+    name: "Enterprise",
+    slug: "enterprise",
+    price: 9999,
+    currency: "KSh",
+    billingPeriod: "monthly",
+    description: "For large organizations",
+    features: [
+      { name: "Everything unlimited", included: true },
+      { name: "Full API access", included: true },
+      { name: "Custom domain", included: true },
+      { name: "Dedicated support", included: true },
+      { name: "White-label option", included: true },
+      { name: "SLA guarantee", included: true },
+    ],
+    limits: {
+      products: -1,
+      messages: -1,
+      aiAssistant: true,
+      analytics: true,
+      apiAccess: true,
+      customDomain: true,
+      prioritySupport: true,
+      bulkMessaging: true,
+    },
+    isActive: true,
+    isPopular: false,
+  },
+];
+
+// Pricing Plan Service
+export const pricingPlanService = {
+  async getAllPlans(): Promise<PricingPlan[]> {
+    const snap = await getDocs(collection(db, "pricingPlans"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }) as PricingPlan);
+  },
+
+  async getPlanBySlug(slug: string): Promise<PricingPlan | null> {
+    const q = query(collection(db, "pricingPlans"), where("slug", "==", slug));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() } as PricingPlan;
+  },
+
+  async createPlan(plan: Omit<PricingPlan, "id" | "createdAt" | "updatedAt">): Promise<PricingPlan> {
+    const docRef = await addDoc(collection(db, "pricingPlans"), {
+      ...plan,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return { id: docRef.id, ...plan, createdAt: new Date(), updatedAt: new Date() };
+  },
+
+  async initializeDefaultPlans(): Promise<PricingPlan[]> {
+    const plans: PricingPlan[] = [];
+    for (const plan of defaultPricingPlans) {
+      const docRef = await addDoc(collection(db, "pricingPlans"), {
+        ...plan,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      plans.push({ id: docRef.id, ...plan, createdAt: new Date(), updatedAt: new Date() });
+    }
+    return plans;
+  },
+
+  async updatePlan(planId: string, data: Partial<PricingPlan>): Promise<void> {
+    await updateDoc(doc(db, "pricingPlans", planId), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  async togglePlanStatus(planId: string, isActive: boolean): Promise<void> {
+    await updateDoc(doc(db, "pricingPlans", planId), {
+      isActive,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  async updatePlanPrice(planId: string, price: number): Promise<void> {
+    await updateDoc(doc(db, "pricingPlans", planId), {
+      price,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  subscribeToPlans(callback: (plans: PricingPlan[]) => void) {
+    const q = query(collection(db, "pricingPlans"), orderBy("price", "asc"));
+    return onSnapshot(q, (snapshot) => {
+      const plans = snapshot.docs.map(d => ({ id: d.id, ...d.data() }) as PricingPlan);
+      callback(plans);
+    });
   },
 };
 

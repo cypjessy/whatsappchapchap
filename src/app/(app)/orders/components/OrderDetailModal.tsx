@@ -20,6 +20,7 @@ interface OrderDetailModalProps {
   getStatusBadge: (status?: string) => { bg: string; color: string; label: string; icon?: string };
   formatDate: (date: any) => string;
   formatTime: (date: any) => string;
+  productImages?: Record<string, string>; // Map of productId (and name) to image URL
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -268,6 +269,7 @@ export default function OrderDetailModal({
   getStatusBadge,
   formatDate,
   formatTime,
+  productImages = {},
 }: OrderDetailModalProps) {
   const [orderNotes, setOrderNotes] = useState("");
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -370,6 +372,14 @@ export default function OrderDetailModal({
     handleAction("add-note", () => onAddNote(orderNotes.trim()));
     setOrderNotes("");
   }, [handleAction, onAddNote, orderNotes]);
+
+  // Helper to look up product image from productImages map
+  const getProductImage = (product: { productId?: string; name?: string } | null): string | undefined => {
+    if (!product) return undefined;
+    if (product.productId && productImages[product.productId]) return productImages[product.productId];
+    if (product.name) return productImages[`name:${product.name.toLowerCase().trim()}`];
+    return undefined;
+  };
 
   if (!isOpen || !order) return null;
 
@@ -602,29 +612,40 @@ export default function OrderDetailModal({
                 {/* Mobile Cards */}
                 <div className="lg:hidden space-y-3 mb-6">
                   {order.products && order.products.length > 0 ? (
-                    order.products.map((product, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all"
-                      >
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
-                          📦
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm truncate">{product.name}</h4>
-                          <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-                            <span>{formatCurrency(product.price)}</span>
-                            <span>×</span>
-                            <span>{product.quantity}</span>
+                    order.products.map((product, idx) => {
+                      const prodImg = getProductImage(product);
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all"
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                            {prodImg ? (
+                              <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">📦</div>
+                            )}
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm truncate">{product.name}</h4>
+                            <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+                              <span>{formatCurrency(product.price)}</span>
+                              <span>×</span>
+                              <span>{product.quantity}</span>
+                            </div>
+                          </div>
+                          <div className="font-bold text-sm text-on-surface">{formatCurrency(product.price * product.quantity)}</div>
                         </div>
-                        <div className="font-bold text-sm text-on-surface">{formatCurrency(product.price * product.quantity)}</div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : order.productName ? (
                     <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
-                        📦
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                        {order.productImage ? (
+                          <img src={order.productImage} alt={order.productName} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">📦</div>
+                        )}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-sm">{order.productName}</h4>
@@ -651,36 +672,43 @@ export default function OrderDetailModal({
                       </thead>
                       <tbody>
                         {order.products && order.products.length > 0 ? (
-                          order.products.map((product, idx) => (
-                            <tr key={idx} className="border-t border-outline-variant hover:bg-surface transition-colors">
-                              <td className="py-4 px-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
-                                    📦
+                          order.products.map((product, idx) => {
+                            const prodImg = getProductImage(product);
+                            return (
+                              <tr key={idx} className="border-t border-outline-variant hover:bg-surface transition-colors">
+                                <td className="py-4 px-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                                      {prodImg ? (
+                                        <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">📦</div>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <h4 className="font-bold text-sm text-on-surface">{product.name}</h4>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <h4 className="font-bold text-sm text-on-surface">{product.name}</h4>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-4 px-4 text-sm font-semibold text-right">{formatCurrency(product.price)}</td>
-                              <td className="py-4 px-4 text-sm text-on-surface-variant text-center">× {product.quantity}</td>
-                              <td className="py-4 px-4 text-sm font-bold text-right text-on-surface">
-                                {formatCurrency(product.price * product.quantity)}
-                              </td>
-                            </tr>
-                          ))
+                                </td>
+                                <td className="py-4 px-4 text-sm font-semibold text-right">{formatCurrency(product.price)}</td>
+                                <td className="py-4 px-4 text-sm text-on-surface-variant text-center">× {product.quantity}</td>
+                                <td className="py-4 px-4 text-sm font-bold text-right text-on-surface">
+                                  {formatCurrency(product.price * product.quantity)}
+                                </td>
+                              </tr>
+                            );
+                          })
                         ) : order.productName ? (
                           <tr className="border-t border-outline-variant">
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-3">
-                                {order.productImage ? (
-                                  <img src={order.productImage} alt={order.productName} className="w-11 h-11 rounded-lg object-cover" />
-                                ) : (
-                                  <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">
-                                    📦
-                                  </div>
-                                )}
+                                <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                                  {order.productImage ? (
+                                    <img src={order.productImage} alt={order.productName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">📦</div>
+                                  )}
+                                </div>
                                 <div>
                                   <h4 className="font-bold text-sm">{order.productName}</h4>
                                 </div>

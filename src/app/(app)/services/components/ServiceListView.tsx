@@ -14,6 +14,7 @@ interface ServiceListViewProps {
   toggleBulkSelect: (id: string) => void;
   onSelectService: (service: Service) => void;
   onShareService: (service: Service) => void;
+  onCopyLink: (service: Service) => void;
   onToggleStatus: (service: Service) => void;
   onDuplicateService: (service: Service) => void;
   onDeleteService: (serviceId: string) => void;
@@ -114,6 +115,7 @@ function ServiceRow({
   toggleBulkSelect,
   onSelectService,
   onShareService,
+  onCopyLink,
   onToggleStatus,
   onDuplicateService,
   onDeleteService,
@@ -125,6 +127,7 @@ function ServiceRow({
   toggleBulkSelect: (id: string) => void;
   onSelectService: (service: Service) => void;
   onShareService: (service: Service) => void;
+  onCopyLink: (service: Service) => void;
   onToggleStatus: (service: Service) => void;
   onDuplicateService: (service: Service) => void;
   onDeleteService: (serviceId: string) => void;
@@ -287,7 +290,7 @@ function ServiceRow({
               hoverText="hover:text-white"
               onClick={(e) => {
                 e.stopPropagation();
-                onShareService(service);
+                onCopyLink(service);
               }}
               label="Copy Link"
             />
@@ -382,6 +385,7 @@ export default function ServiceListView({
   toggleBulkSelect,
   onSelectService,
   onShareService,
+  onCopyLink,
   onToggleStatus,
   onDuplicateService,
   onDeleteService,
@@ -413,6 +417,7 @@ export default function ServiceListView({
           toggleBulkSelect={toggleBulkSelect}
           onSelectService={onSelectService}
           onShareService={onShareService}
+          onCopyLink={onCopyLink}
           onToggleStatus={onToggleStatus}
           onDuplicateService={onDuplicateService}
           onDeleteService={onDeleteService}

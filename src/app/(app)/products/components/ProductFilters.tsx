@@ -30,6 +30,8 @@ interface ProductFiltersProps {
   setSearchTerm: (value: string) => void;
   stockFilter: string;
   setStockFilter: (value: string) => void;
+  statusFilter: string;
+  setStatusFilter: (value: string) => void;
   priceRangeMin: number | "";
   setPriceRangeMin: (value: number | "") => void;
   priceRangeMax: number | "";
@@ -72,6 +74,13 @@ const STOCK_OPTIONS = [
   { value: "in", label: "In Stock" },
   { value: "low", label: "Low Stock" },
   { value: "out", label: "Out of Stock" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
+  { value: "draft", label: "Draft" },
 ];
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -356,6 +365,8 @@ export default function ProductFilters({
   setSearchTerm,
   stockFilter,
   setStockFilter,
+  statusFilter,
+  setStatusFilter,
   priceRangeMin,
   setPriceRangeMin,
   priceRangeMax,
@@ -424,6 +435,15 @@ export default function ProductFilters({
       });
     }
 
+    if (statusFilter !== "all") {
+      const option = STATUS_OPTIONS.find((o) => o.value === statusFilter);
+      chips.push({
+        key: "status",
+        label: option?.label || statusFilter,
+        onRemove: () => setStatusFilter("all"),
+      });
+    }
+
     if (priceRangeMin !== "") {
       chips.push({
         key: "min",
@@ -460,12 +480,14 @@ export default function ProductFilters({
   }, [
     searchTerm,
     stockFilter,
+    statusFilter,
     priceRangeMin,
     priceRangeMax,
     dateRangeStart,
     dateRangeEnd,
     setSearchTerm,
     setStockFilter,
+    setStatusFilter,
     setPriceRangeMin,
     setPriceRangeMax,
     setDateRangeStart,
@@ -569,6 +591,12 @@ export default function ProductFilters({
               options={STOCK_OPTIONS}
               icon={Package}
             />
+            <SelectField
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={STATUS_OPTIONS}
+              icon={Package}
+            />
             <PriceRangeField
               min={priceRangeMin}
               max={priceRangeMax}
@@ -634,27 +662,28 @@ export default function ProductFilters({
         </div>
       )}
 
-      {/* Mobile Filter Bottom Sheet */}
-      <ProductFilterBottomSheet
-        isOpen={showMobileFilters}
-        onClose={() => setShowMobileFilters(false)}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        stockFilter={stockFilter}
-        setStockFilter={setStockFilter}
-        priceRangeMin={priceRangeMin}
-        setPriceRangeMin={setPriceRangeMin}
-        priceRangeMax={priceRangeMax}
-        setPriceRangeMax={setPriceRangeMax}
-        dateRangeStart={dateRangeStart}
-        setDateRangeStart={setDateRangeStart}
-        dateRangeEnd={dateRangeEnd}
-        setDateRangeEnd={setDateRangeEnd}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        activeFilterCount={filterChips.length}
-        onClearAll={handleClearAll}
-      />
+      {/* Mobile Filter Bottom Sheet */}          <ProductFilterBottomSheet
+            isOpen={showMobileFilters}
+            onClose={() => setShowMobileFilters(false)}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            stockFilter={stockFilter}
+            setStockFilter={setStockFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            priceRangeMin={priceRangeMin}
+            setPriceRangeMin={setPriceRangeMin}
+            priceRangeMax={priceRangeMax}
+            setPriceRangeMax={setPriceRangeMax}
+            dateRangeStart={dateRangeStart}
+            setDateRangeStart={setDateRangeStart}
+            dateRangeEnd={dateRangeEnd}
+            setDateRangeEnd={setDateRangeEnd}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            activeFilterCount={filterChips.length}
+            onClearAll={handleClearAll}
+          />
     </div>
   );
 }

@@ -142,7 +142,13 @@ export default function DashboardPage() {
 
           {/* Recent Activity - Takes 1/3 */}
           <div className="min-w-0">
-            <RecentActivity refreshTrigger={refreshTrigger} />
+            <RecentActivity
+              refreshTrigger={refreshTrigger}
+              showViewAll={true}
+              onViewAll={() => {
+                window.location.href = '/customers';
+              }}
+            />
           </div>
         </div>
       </SectionWrapper>

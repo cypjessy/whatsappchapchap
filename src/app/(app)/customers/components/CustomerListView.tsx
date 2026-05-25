@@ -13,6 +13,7 @@ interface CustomerListViewProps {
   onSelectCustomer: (customer: Customer) => void;
   onShareWhatsApp: (customer: Customer) => void;
   onPrintProfile: (customer: Customer) => void;
+  onClearSelection?: () => void;
   getColorFromString: (str: string) => string;
   getInitials: (name: string) => string;
   formatCurrency: (amount: number) => string;
@@ -295,6 +296,7 @@ export default function CustomerListView({
   onSelectCustomer,
   onShareWhatsApp,
   onPrintProfile,
+  onClearSelection,
   getColorFromString,
   getInitials,
   formatCurrency,
@@ -322,10 +324,7 @@ export default function CustomerListView({
             {selectedCount} selected
           </span>
           <button
-            onClick={() => {
-              // Clear all selection - you'd need to expose this from parent
-              // For now, just visual indicator
-            }}
+            onClick={onClearSelection}
             className="text-xs font-semibold text-[#ef4444] hover:underline"
           >
             Clear

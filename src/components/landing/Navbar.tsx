@@ -47,6 +47,9 @@ export default function Navbar({ scrolled, onNavigate, onScroll }: NavbarProps) 
           Start Selling Free
           <i className="fas fa-arrow-right"></i>
         </button>
+        <div className="nav-link" onClick={() => handleNavClick(() => onNavigate('/admin/upgrade'))} style={{ color: '#64748b', fontSize: '12px', marginLeft: '8px' }}>
+          Admin Tools
+        </div>
       </div>
     </nav>
   );

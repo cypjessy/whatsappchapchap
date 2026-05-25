@@ -168,12 +168,12 @@ function CheckoutPage() {
 
       const orderId = orderRef.id;
 
-      // If Paystack payment method, initialize payment
+      // ✅ Send WhatsApp order pending message for non-Paystack methods
+      // Paystack sends "paid & confirmed" via webhook instead
       if (paymentMethod === "paystack") {
         await handlePaystackPayment(orderId, orderNumber, total);
       } else {
         // For other payment methods, send WhatsApp notification and redirect to success
-        // ✅ Send WhatsApp order pending message (fire and forget - don't block redirect)
         const customerPhone = checkoutData.customerPhone;
         const productName = isCartOrder
           ? `${checkoutData.cartItems!.length} items`

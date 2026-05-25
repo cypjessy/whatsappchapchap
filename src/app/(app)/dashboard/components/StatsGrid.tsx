@@ -9,7 +9,6 @@ import { formatCurrency } from "@/lib/currency";
 
 interface StatsGridProps {
   refreshTrigger?: number;
-  previousStats?: DashboardStats;
 }
 
 interface StatConfig {
@@ -384,7 +383,7 @@ function StatCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function StatsGrid({ refreshTrigger, previousStats }: StatsGridProps) {
+export function StatsGrid({ refreshTrigger }: StatsGridProps) {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);

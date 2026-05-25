@@ -411,25 +411,35 @@ export default function OrderTable({
                     {/* Products */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        {order.productImage ? (
-                          <img
-                            src={order.productImage}
-                            alt={order.products?.[0]?.name || order.productName || "Product"}
-                            className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface-variant"
-                            onError={(e) => {
-                              const img = e.target as HTMLImageElement;
-                              img.style.display = 'none';
-                              const fallback = img.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div 
-                          className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0"
-                          style={{ display: order.productImage ? 'none' : 'flex' }}
-                        >
+                        {(function() {
+                          // Resolve product image: direct field, productId map, or name-based lookup
+                          const imgSrc = order.productImage ||
+                            (order.products?.[0]?.productId && productImages[order.products[0].productId]) ||
+                            (order.products?.[0]?.name && productImages[`name:${order.products[0].name.toLowerCase().trim()}`]) ||
+                            (order.productName && productImages[`name:${order.productName.toLowerCase().trim()}`]) ||
+                            null;
                           
-                        </div>
+                          if (imgSrc) {
+                            return (
+                              <img
+                                src={imgSrc}
+                                alt={order.products?.[0]?.name || order.productName || "Product"}
+                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface-variant shadow-md3-level1"
+                                onError={(e) => {
+                                  const img = e.target as HTMLImageElement;
+                                  img.style.display = 'none';
+                                  const fallback = img.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            );
+                          }
+                          return (
+                            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0 shadow-md3-level1">
+                              📦
+                            </div>
+                          );
+                        })()}
                         <div className="min-w-0">
                           <div className="font-bold text-sm text-on-surface truncate max-w-[120px]">
                             {order.products?.[0]?.name || order.productName || "Product"}

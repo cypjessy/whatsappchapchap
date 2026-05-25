@@ -237,6 +237,23 @@ export default function OrderCard({
     setShowDropdown(false);
   }, [order, impactLight, share, showToast]);
 
+  // Get product image for this order
+  const getProductImage = () => {
+    if (order.productImage) return order.productImage;
+    if (order.products?.[0]?.productId && productImages[order.products[0].productId]) {
+      return productImages[order.products[0].productId];
+    }
+    if (order.products?.[0]?.name) {
+      const nameLookup = productImages[`name:${order.products[0].name.toLowerCase().trim()}`];
+      if (nameLookup) return nameLookup;
+    }
+    if (order.productName) {
+      return productImages[`name:${order.productName.toLowerCase().trim()}`];
+    }
+    return undefined;
+  };
+
+  const productImg = getProductImage();
   const itemCount = order.products?.length || 0;
   const isPending = order.status === "pending";
   const isDelivered = order.status === "delivered";
@@ -281,21 +298,48 @@ export default function OrderCard({
           </span>
         </div>
 
-        {/* Customer Section - MD3 avatar */}
-        <div className="flex items-center gap-3 mb-3">
-          {/* Customer Avatar */}
-          <div className="w-10 h-10 rounded-xl bg-[var(--md-sys-color-primary-container)] flex items-center justify-center font-medium text-sm text-[var(--md-sys-color-on-primary-container)] flex-shrink-0">
-            {order.customerName?.charAt(0)?.toUpperCase() || "C"}
+        {/* Product Image + Customer Section */}
+        <div className="flex items-start gap-3 mb-3">
+          {/* Product Thumbnail */}
+          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant relative shadow-md3-level1">
+            {productImg ? (
+              <img
+                src={productImg}
+                alt={order.products?.[0]?.name || order.productName || "Product"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                  const fallback = img.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              className={`w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-2xl ${productImg ? 'hidden' : 'flex'}`}
+            >
+              📦
+            </div>
           </div>
           
           {/* Customer Details */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pt-1">
             <div className="font-medium text-sm text-[var(--md-sys-color-on-surface)] truncate">
               {order.customerName || "Customer"}
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
               <i className="fab fa-whatsapp text-[#25D366] text-[10px]" />
               <span className="truncate">{order.customerPhone || "N/A"}</span>
+            </div>
+            <div className="mt-1 flex items-center gap-1.5">
+              <div className="text-[11px] font-medium text-on-surface truncate">
+                {order.products?.[0]?.name || order.productName || ""}
+              </div>
+              {itemCount > 1 && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-surface-variant rounded-full font-medium text-on-surface-variant">
+                  +{itemCount - 1} more
+                </span>
+              )}
             </div>
           </div>
         </div>

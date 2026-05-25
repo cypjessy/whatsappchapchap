@@ -9,6 +9,8 @@ interface BookingGridViewProps {
   bookings: Booking[];
   onViewBooking: (booking: Booking) => void;
   isLoading?: boolean;
+  onUpdateStatus?: (bookingId: string, status: Booking["status"]) => void;
+  onDelete?: (bookingId: string) => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -117,14 +119,17 @@ function BookingCard({
   booking,
   index,
   onViewBooking,
+  onUpdateStatus,
+  onDelete,
 }: {
   booking: Booking;
   index: number;
   onViewBooking: (booking: Booking) => void;
+  onUpdateStatus?: (bookingId: string, status: Booking["status"]) => void;
+  onDelete?: (bookingId: string) => void;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [imageError, setImageError] = useState(false);
 
   const statusConfig = getStatusConfig(booking?.status || "pending");
   const paymentConfig = getPaymentConfig(booking?.paymentStatus);
@@ -294,6 +299,46 @@ function BookingCard({
           >
             <i className="fas fa-eye text-sm" />
           </button>
+
+          {/* Quick complete */}
+          {onUpdateStatus && booking.status !== "completed" && booking.status !== "cancelled" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(booking.id, "completed");
+              }}
+              className={`
+                relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
+                transition-all duration-200 active:scale-90
+                bg-[var(--md-sys-color-success-container)] text-[var(--md-sys-color-on-success-container)]
+                hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md3-level2
+              `}
+              aria-label="Mark completed"
+              title="Mark as completed"
+            >
+              <i className="fas fa-check-double text-sm" />
+            </button>
+          )}
+
+          {/* Quick cancel */}
+          {onUpdateStatus && booking.status !== "cancelled" && booking.status !== "completed" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(booking.id, "cancelled");
+              }}
+              className={`
+                relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
+                transition-all duration-200 active:scale-90
+                bg-[#FEE2E2] text-[#DC2626]
+                hover:bg-[#DC2626] hover:text-white hover:shadow-md3-level2
+              `}
+              aria-label="Cancel booking"
+              title="Cancel booking"
+            >
+              <i className="fas fa-times text-sm" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -320,6 +365,8 @@ export default function BookingGridView({
   bookings,
   onViewBooking,
   isLoading = false,
+  onUpdateStatus,
+  onDelete,
 }: BookingGridViewProps) {
   if (isLoading) {
     return (
@@ -343,6 +390,8 @@ export default function BookingGridView({
           booking={booking}
           index={index}
           onViewBooking={onViewBooking}
+          onUpdateStatus={onUpdateStatus}
+          onDelete={onDelete}
         />
       ))}
     </div>

@@ -276,6 +276,7 @@ export default function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [priceRangeMin, setPriceRangeMin] = useState<number | "">("");
   const [priceRangeMax, setPriceRangeMax] = useState<number | "">("");
@@ -409,6 +410,8 @@ export default function ProductsPage() {
       .filter((p) => {
         const matchesCategory = activeCategory === "all" || p.category === activeCategory;
         const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const status = p.status || "active";
+        const matchesStatus = statusFilter === "all" || status === statusFilter;
         const stock = p.stock || 0;
         const matchesStock = stockFilter === "all" || (stockFilter === "in" && stock > 5) || (stockFilter === "low" && stock > 0 && stock <= 5) || (stockFilter === "out" && stock === 0);
         const matchesPriceMin = priceRangeMin === "" || p.price >= Number(priceRangeMin);
@@ -425,7 +428,7 @@ export default function ProductsPage() {
           }
         }
 
-        return matchesCategory && matchesSearch && matchesStock && matchesPriceMin && matchesPriceMax && matchesDate;
+        return matchesCategory && matchesSearch && matchesStatus && matchesStock && matchesPriceMin && matchesPriceMax && matchesDate;
       })
       .sort((a, b) => {
         const getDate = (p: Product) => (p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt)).getTime();
@@ -640,6 +643,7 @@ export default function ProductsPage() {
   const clearAllFilters = useCallback(() => {
     setSearchTerm("");
     setStockFilter("all");
+    setStatusFilter("all");
     setPriceRangeMin("");
     setPriceRangeMax("");
     setDateRangeStart("");
@@ -653,19 +657,20 @@ export default function ProductsPage() {
     if (searchTerm) pills.push({ label: `Search: "${searchTerm}"`, onRemove: () => setSearchTerm(""), color: "purple" });
     if (activeCategory !== "all") pills.push({ label: `Category: ${activeCategory}`, onRemove: () => setActiveCategory("all"), color: "blue" });
     if (stockFilter !== "all") pills.push({ label: `Stock: ${stockFilter}`, onRemove: () => setStockFilter("all"), color: "amber" });
+    if (statusFilter !== "all") pills.push({ label: `Status: ${statusFilter}`, onRemove: () => setStatusFilter("all"), color: "purple" });
     if (priceRangeMin !== "") pills.push({ label: `Min: ${priceRangeMin}`, onRemove: () => setPriceRangeMin(""), color: "green" });
     if (priceRangeMax !== "") pills.push({ label: `Max: ${priceRangeMax}`, onRemove: () => setPriceRangeMax(""), color: "green" });
     if (dateRangeStart) pills.push({ label: `From: ${dateRangeStart}`, onRemove: () => setDateRangeStart(""), color: "blue" });
     if (dateRangeEnd) pills.push({ label: `To: ${dateRangeEnd}`, onRemove: () => setDateRangeEnd(""), color: "blue" });
     return pills;
-  }, [searchTerm, activeCategory, stockFilter, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
+  }, [searchTerm, activeCategory, stockFilter, statusFilter, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
   const activeFiltersCount = activeFilterPills.length;
 
   // Exit bulk mode when filters change
   useEffect(() => {
     if (bulkMode) setBulkSelected([]);
-  }, [searchTerm, stockFilter, activeCategory, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
+  }, [searchTerm, stockFilter, statusFilter, activeCategory, sortBy, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
 
   // Infinite scroll
   useEffect(() => {
@@ -752,6 +757,8 @@ export default function ProductsPage() {
           setSearchTerm={setSearchTerm}
           stockFilter={stockFilter}
           setStockFilter={setStockFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
           priceRangeMin={priceRangeMin}
           setPriceRangeMin={setPriceRangeMin}
           priceRangeMax={priceRangeMax}
@@ -842,6 +849,7 @@ export default function ProductsPage() {
                 handleShareProduct={handleShareProduct}
                 shareProductWhatsApp={shareProductWhatsApp}
                 printProductCatalog={printProductCatalog}
+                handleDeleteProduct={handleDeleteProduct}
                 getCategoryEmoji={getCategoryEmoji}
                 getCategoryColor={getCategoryColor}
                 getStockStyle={getStockStyle}
@@ -860,6 +868,7 @@ export default function ProductsPage() {
                 handleShareProduct={handleShareProduct}
                 shareProductWhatsApp={shareProductWhatsApp}
                 printProductCatalog={printProductCatalog}
+                handleDeleteProduct={handleDeleteProduct}
                 getCategoryEmoji={getCategoryEmoji}
                 getCategoryColor={getCategoryColor}
                 getStockStyle={getStockStyle}

@@ -195,58 +195,82 @@ async function handleChargeSuccess(event: any, tenantId?: string) {
 
       // 📱 Send WhatsApp payment confirmation to customer
       try {
-        if (existingData) {
-          const evolutionApiUrl = process.env.EVOLUTION_API_URL || "";
-          const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
+        if (!existingData) {
+          console.warn("[Paystack Webhook] ⚠️ No order data available, skipping WhatsApp notification");
+          return;
+        }
 
-          if (evolutionApiUrl && evolutionApiKey) {
-            const customerPhone = existingData.customerPhone || "";
-            const customerName = existingData.customerName || "Customer";
-            const orderNumber = existingData.orderNumber || orderId.substring(0, 8);
-            const productName = existingData.products?.[0]?.name || existingData.productName || "Order";
-            const total = existingData.total || 0;
+        if (!tenantId) {
+          console.warn("[Paystack Webhook] ⚠️ No tenantId available, skipping WhatsApp notification");
+          return;
+        }
 
-            // Clean phone number for WhatsApp
-            const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
-            const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+        const evolutionApiUrl = process.env.EVOLUTION_API_URL?.replace(/\/$/, '') || "";
+        const evolutionApiKey = process.env.EVOLUTION_API_KEY || "";
 
-            if (fullPhone.length >= 10) {
-              const formattedTotal = new Intl.NumberFormat("en-KE", {
-                style: "currency",
-                currency: "KES",
-              }).format(total);
+        if (!evolutionApiUrl || !evolutionApiKey) {
+          console.warn("[Paystack Webhook] ⚠️ Evolution API credentials not configured, skipping WhatsApp notification");
+          return;
+        }
 
-              const message = `━━━━━━━━━━━━━━━━━━━━\n✅ *PAYMENT CONFIRMED & ORDER PAID* ✅\n━━━━━━━━━━━━━━━━━━━━\n\nDear *${customerName}*,\n\nThank you for your order! 🎉\n\nYour payment has been successfully processed and your order is now confirmed!\n\n📋 *ORDER DETAILS*\n━━━━━━━━━━━━━━━━━━\n🏷️ *Product:* ${productName}\n🔖 *Order ID:* ${orderNumber}\n💰 *Amount Paid:* ${formattedTotal}\n📊 *Status:* Processing\n━━━━━━━━━━━━━━━━━━\n\nWe will begin preparing your order shortly. You'll receive updates as it progresses.\n\n💬 Need help? Just reply to this message!\n\n━━━━━━━━━━━━━━━━━━━━\n✨ *Thank you for choosing us!* ✨\n━━━━━━━━━━━━━━━━━━━━`;
-
-              if (!tenantId) {
-                console.warn("[Paystack Webhook] ⚠️ No tenantId available, skipping WhatsApp notification");
-                return;
+        // 🔍 Get the correct Evolution instance name from the tenant document
+        let instanceName = tenantId;
+        try {
+          if (adminDb) {
+            const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+            if (tenantDoc.exists) {
+              const tenantData = tenantDoc.data();
+              const evoId = tenantData?.evolutionInstanceId || tenantData?.evolutionInstance || tenantData?.whatsappInstanceId;
+              if (evoId) {
+                instanceName = evoId;
               }
-
-              const waResponse = await fetch(`${evolutionApiUrl}/message/sendText/${tenantId}`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  apikey: evolutionApiKey,
-                },
-                body: JSON.stringify({
-                  number: fullPhone,
-                  text: message,
-                }),
-              });
-
-              if (waResponse.ok) {
-                console.log(`[Paystack Webhook] ✅ WhatsApp payment confirmation sent to ${fullPhone} for order ${orderId}`);
-              } else {
-                const waError = await waResponse.text();
-                console.error(`[Paystack Webhook] ❌ Failed to send WhatsApp (${waResponse.status}): ${waError.substring(0, 200)}`);
-              }
-            } else {
-              console.warn(`[Paystack Webhook] ⚠️ Invalid phone number for WhatsApp: ${customerPhone} (cleaned: ${fullPhone})`);
             }
-          } else {
-            console.warn("[Paystack Webhook] ⚠️ Evolution API credentials not configured, skipping WhatsApp notification");
           }
+        } catch (err) {
+          console.warn(`[Paystack Webhook] ⚠️ Failed to fetch tenant evolution instance, falling back to tenantId:`, err);
+        }
+
+        const customerPhone = existingData.customerPhone || "";
+        const customerName = existingData.customerName || "Customer";
+        const orderNumberVal = existingData.orderNumber || orderId.substring(0, 8);
+        const productName = existingData.products?.[0]?.name || existingData.productName || "Order";
+        const total = existingData.total || 0;
+
+        // Clean phone number for WhatsApp
+        const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
+        const fullPhone = cleanPhone.startsWith("254") ? cleanPhone : "254" + cleanPhone.slice(-9);
+
+        if (fullPhone.length < 10) {
+          console.warn(`[Paystack Webhook] ⚠️ Invalid phone number for WhatsApp: ${customerPhone} (cleaned: ${fullPhone})`);
+          return;
+        }
+
+        const formattedTotal = new Intl.NumberFormat("en-KE", {
+          style: "currency",
+          currency: "KES",
+        }).format(total);
+
+        const message = `━━━━━━━━━━━━━━━━━━━━\n✅ *PAYMENT CONFIRMED & ORDER PAID* ✅\n━━━━━━━━━━━━━━━━━━━━\n\nDear *${customerName}*,\n\nThank you for your order! 🎉\n\nYour payment has been successfully processed and your order is now confirmed!\n\n📋 *ORDER DETAILS*\n━━━━━━━━━━━━━━━━━━\n🏷️ *Product:* ${productName}\n🔖 *Order ID:* ${orderNumberVal}\n💰 *Amount Paid:* ${formattedTotal}\n📊 *Status:* Processing\n━━━━━━━━━━━━━━━━━━\n\nWe will begin preparing your order shortly. You'll receive updates as it progresses.\n\n💬 Need help? Just reply to this message!\n\n━━━━━━━━━━━━━━━━━━━━\n✨ *Thank you for choosing us!* ✨\n━━━━━━━━━━━━━━━━━━━━`;
+
+        console.log(`[Paystack Webhook] Sending WhatsApp via instance: ${instanceName} to ${fullPhone}`);
+
+        const waResponse = await fetch(`${evolutionApiUrl}/message/sendText/${instanceName}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: evolutionApiKey,
+          },
+          body: JSON.stringify({
+            number: fullPhone,
+            text: message,
+          }),
+        });
+
+        if (waResponse.ok) {
+          console.log(`[Paystack Webhook] ✅ WhatsApp payment confirmation sent to ${fullPhone} for order ${orderId}`);
+        } else {
+          const waError = await waResponse.text();
+          console.error(`[Paystack Webhook] ❌ Failed to send WhatsApp (${waResponse.status}): ${waError.substring(0, 500)}`);
         }
       } catch (waErr) {
         console.error("[Paystack Webhook] ❌ Error sending WhatsApp payment confirmation:", waErr);

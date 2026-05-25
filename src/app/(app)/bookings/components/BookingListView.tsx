@@ -9,6 +9,8 @@ interface BookingListViewProps {
   bookings: Booking[];
   onViewBooking: (booking: Booking) => void;
   isLoading?: boolean;
+  onUpdateStatus?: (bookingId: string, status: Booking["status"]) => void;
+  onDelete?: (bookingId: string) => void;
 }
 
 type SortField = "client" | "date" | "price" | "status";
@@ -170,10 +172,14 @@ function DesktopRow({
   booking,
   index,
   onViewBooking,
+  onUpdateStatus,
+  onDelete,
 }: {
   booking: Booking;
   index: number;
   onViewBooking: (booking: Booking) => void;
+  onUpdateStatus?: (bookingId: string, status: Booking["status"]) => void;
+  onDelete?: (bookingId: string) => void;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -318,6 +324,46 @@ function DesktopRow({
         >
           <i className="fas fa-eye text-xs" />
         </button>
+
+        {/* Quick status actions */}
+        {onUpdateStatus && booking.status !== "completed" && booking.status !== "cancelled" && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(booking.id, "completed");
+              }}
+              className={`
+                w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
+                ${isHovered
+                  ? "bg-[#10B981] text-white shadow-md3-level1"
+                  : "bg-surface-variant text-[#10B981] opacity-50"
+                }
+              `}
+              aria-label="Complete"
+              title="Mark as completed"
+            >
+              <i className="fas fa-check-double text-xs" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(booking.id, "cancelled");
+              }}
+              className={`
+                w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
+                ${isHovered
+                  ? "bg-[#EF4444] text-white shadow-md3-level1"
+                  : "bg-surface-variant text-[#EF4444] opacity-50"
+                }
+              `}
+              aria-label="Cancel"
+              title="Cancel booking"
+            >
+              <i className="fas fa-times text-xs" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -327,10 +373,14 @@ function MobileRow({
   booking,
   index,
   onViewBooking,
+  onUpdateStatus,
+  onDelete,
 }: {
   booking: Booking;
   index: number;
   onViewBooking: (booking: Booking) => void;
+  onUpdateStatus?: (bookingId: string, status: Booking["status"]) => void;
+  onDelete?: (bookingId: string) => void;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -449,6 +499,33 @@ function MobileRow({
             View
           </button>
         </div>
+
+        {/* Quick status actions */}
+        {onUpdateStatus && booking.status !== "completed" && booking.status !== "cancelled" && (
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(booking.id, "completed");
+              }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#D1FAE5] text-[#059669] text-xs font-semibold hover:bg-[#059669] hover:text-white transition-all duration-200 active:scale-95"
+            >
+              <i className="fas fa-check-double" />
+              Complete
+            </button>
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm("Delete this booking?")) onDelete(booking.id);
+                }}
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#FEE2E2] text-[#DC2626] text-xs font-semibold hover:bg-[#DC2626] hover:text-white transition-all duration-200 active:scale-95"
+              >
+                <i className="fas fa-trash-alt" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -474,6 +551,8 @@ export default function BookingListView({
   bookings,
   onViewBooking,
   isLoading = false,
+  onUpdateStatus,
+  onDelete,
 }: BookingListViewProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -557,16 +636,19 @@ export default function BookingListView({
 
       {/* Rows */}
       {bookings.map((booking, index) => (
-        <div key={booking.id}>
-          <DesktopRow
-            booking={booking}
-            index={index}
-            onViewBooking={onViewBooking}
-          />
+        <div key={booking.id}>            <DesktopRow
+              booking={booking}
+              index={index}
+              onViewBooking={onViewBooking}
+              onUpdateStatus={onUpdateStatus}
+              onDelete={onDelete}
+            />
           <MobileRow
             booking={booking}
             index={index}
             onViewBooking={onViewBooking}
+            onUpdateStatus={onUpdateStatus}
+            onDelete={onDelete}
           />
         </div>
       ))}

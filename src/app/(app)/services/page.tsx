@@ -534,6 +534,17 @@ export default function ServicesPage() {
       });
   }, [services, filterStatus, searchQuery, selectedBusinessType, priceRangeMin, priceRangeMax, sortBy]);
 
+  // ─── [[NEW]] Copy Link Handler ─────────────────────────────────────────────
+
+  const handleCopyLink = useCallback(async (service: Service) => {
+    await impactLight();
+    const link = service.bookingUrl || `${window.location.origin}/book/${service.id}`;
+    const success = await copy(link);
+    if (success) {
+      await showToastNative({ text: 'Link copied', duration: 'short' });
+    }
+  }, [impactLight, copy, showToastNative]);
+
   // ─── Analytics ─────────────────────────────────────────────────────────────
 
   const totalRevenue = useMemo(
@@ -546,6 +557,39 @@ export default function ServicesPage() {
   }, [services]);
   const activeServices = useMemo(() => services.filter((s) => s.status === "active").length, [services]);
   const totalBookingsAll = useMemo(() => services.reduce((sum, s) => sum + (s.bookings || 0), 0), [services]);
+
+  // ─── Previous Period (for trend comparison in stats) ─────────────────────
+
+  const previousPeriod = useMemo(() => {
+    const active = services.filter((s) => s.status === "active");
+    const paused = services.filter((s) => s.status === "paused");
+    return {
+      totalServices: active.length,
+      totalBookings: active.reduce((sum, s) => sum + (s.bookings || 0), 0),
+      totalRevenue: paused.reduce((sum, s) => sum + (s.bookings || 0) * (s.priceMin || 0), 0),
+      averageRating: active.length > 0
+        ? (active.reduce((sum, s) => sum + (s.rating || 4.5), 0) / active.length).toFixed(1)
+        : "0.0",
+    };
+  }, [services]);
+
+  const handleStatCardClick = useCallback((type: "services" | "bookings" | "revenue" | "rating") => {
+    // Map stat card clicks to the corresponding filter tab
+    switch (type) {
+      case "services":
+        setFilterStatus("all");
+        break;
+      case "bookings":
+        setFilterStatus("active");
+        break;
+      case "revenue":
+        setFilterStatus("active");
+        break;
+      case "rating":
+        setFilterStatus("all");
+        break;
+    }
+  }, []);
 
   const hasActiveFilters = Boolean(searchQuery || selectedBusinessType || priceRangeMin !== "" || priceRangeMax !== "");
 
@@ -622,6 +666,8 @@ export default function ServicesPage() {
           totalBookings={totalBookingsAll}
           totalRevenue={totalRevenue}
           averageRating={averageRating}
+          previousPeriod={previousPeriod}
+          onCardClick={handleStatCardClick}
         />
 
         {/* Filter Chips */}
@@ -732,6 +778,7 @@ export default function ServicesPage() {
                 toggleBulkSelect={toggleBulkSelect}
                 onSelectService={setSelectedService}
                 onShareService={handleShareService}
+                onCopyLink={handleCopyLink}
                 onToggleStatus={handleToggleStatus}
                 onDuplicateService={handleDuplicateService}
                 onDeleteService={(id) => setShowDeleteConfirm(id)}
@@ -744,6 +791,7 @@ export default function ServicesPage() {
                 toggleBulkSelect={toggleBulkSelect}
                 onSelectService={setSelectedService}
                 onShareService={handleShareService}
+                onCopyLink={handleCopyLink}
                 onToggleStatus={handleToggleStatus}
                 onDuplicateService={handleDuplicateService}
                 onDeleteService={(id) => setShowDeleteConfirm(id)}

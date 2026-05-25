@@ -174,15 +174,7 @@ export default function CustomerGridView({
           />
         ))}
 
-        {customers.length === 0 && (
-          <EmptyState
-            hasFilters={true}
-            onClearFilters={() => {
-              // This should be passed from parent or handled via context
-              window.dispatchEvent(new CustomEvent("clearCustomerFilters"));
-            }}
-          />
-        )}
+
       </div>
 
       {/* Load more indicator */}

@@ -640,26 +640,33 @@ export default function NewOrderModal({
                           description="Try a different search term"
                         />
                       ) : (
-                        filteredProducts.map((product) => (
-                          <div
-                            key={product.id}
-                            className="flex items-center gap-3 p-3 border-b border-outline-variant last:border-b-0 hover:bg-surface transition-colors group"
-                          >
-                            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0">
-                              📦
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-sm truncate">{product.name}</div>
-                              <div className="text-xs text-on-surface-variant">{formatCurrency(product.price)} each</div>
-                            </div>
-                            <button
-                              onClick={() => addProduct(product)}
-                              className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center hover:bg-[#22c55e] transition-all active:scale-90 shadow-md3-level1 opacity-0 group-hover:opacity-100 sm:opacity-100"
+                        filteredProducts.map((product) => {
+                          const prodImg = product.image || product.images?.[0];
+                          return (
+                            <div
+                              key={product.id}
+                              className="flex items-center gap-3 p-3 border-b border-outline-variant last:border-b-0 hover:bg-surface transition-colors group"
                             >
-                              <i className="fas fa-plus text-xs" />
-                            </button>
-                          </div>
-                        ))
+                              <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                                {prodImg ? (
+                                  <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">📦</div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm truncate">{product.name}</div>
+                                <div className="text-xs text-on-surface-variant">{formatCurrency(product.price)} each</div>
+                              </div>
+                              <button
+                                onClick={() => addProduct(product)}
+                                className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center hover:bg-[#22c55e] transition-all active:scale-90 shadow-md3-level1 opacity-0 group-hover:opacity-100 sm:opacity-100"
+                              >
+                                <i className="fas fa-plus text-xs" />
+                              </button>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </div>
@@ -677,44 +684,53 @@ export default function NewOrderModal({
                       title={`Order Items (${form.selectedProducts.reduce((s, p) => s + p.quantity, 0)})`}
                     />
                     <div className="space-y-2">
-                      {form.selectedProducts.map((item) => (
-                        <div
-                          key={item.productId}
-                          className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all group"
-                        >
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-lg flex-shrink-0">
-                            📦
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm truncate">{item.name}</div>
-                            <div className="text-xs text-on-surface-variant">{formatCurrency(item.price)} each</div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                              className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
-                            >
-                              -
-                            </button>
-                            <span className="font-bold w-7 text-center text-sm">{item.quantity}</span>
-                            <button
-                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                              className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <div className="font-bold text-[#25D366] min-w-[60px] text-right text-sm">
-                            {formatCurrency(item.price * item.quantity)}
-                          </div>
-                          <button
-                            onClick={() => removeProduct(item.productId)}
-                            className="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
+                      {form.selectedProducts.map((item) => {
+                        // Look up product image from the products array
+                        const product = products.find(p => p.id === item.productId);
+                        const prodImg = product?.image || product?.images?.[0];
+                        return (
+                          <div
+                            key={item.productId}
+                            className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all group"
                           >
-                            <i className="fas fa-trash text-xs" />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                              {prodImg ? (
+                                <img src={prodImg} alt={item.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-lg">📦</div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-sm truncate">{item.name}</div>
+                              <div className="text-xs text-on-surface-variant">{formatCurrency(item.price)} each</div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="font-bold w-7 text-center text-sm">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className="font-bold text-[#25D366] min-w-[60px] text-right text-sm">
+                              {formatCurrency(item.price * item.quantity)}
+                            </div>
+                            <button
+                              onClick={() => removeProduct(item.productId)}
+                              className="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
+                            >
+                              <i className="fas fa-trash text-xs" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

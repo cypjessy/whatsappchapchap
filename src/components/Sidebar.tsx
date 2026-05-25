@@ -33,6 +33,12 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
+    title: "Payments",
+    items: [
+      { id: "pricing-plans", label: "Pricing Plans", icon: "fa-tags", href: "/all-tenants?tab=plans" },
+    ],
+  },
+  {
     title: "Overview",
     items: [
       { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard" },
@@ -185,11 +191,19 @@ function NavLink({
 export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [localCollapsed, setLocalCollapsed] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const [businessName, setBusinessName] = useState("User");
   const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Admin section definition
+  const ADMIN_SECTION: NavSection = {
+    title: "Admin",
+    items: [
+      { id: "all-tenants", label: "All Tenants", icon: "fa-building", href: "/all-tenants" },
+    ],
+  };
 
   // Fetch business name from database
   useEffect(() => {
@@ -325,6 +339,28 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
             ))}
           </div>
         ))}
+
+        {/* Admin Section - only visible to admin */}
+        {isAdmin && (
+          <div className="mt-4 pt-4 border-t border-surface-container-high">
+            {NAV_SECTIONS[NAV_SECTIONS.length - 1]?.title === "System" && !isCollapsed && (
+              <div className="sidebar-section-label px-6 py-2">
+                <span className="md3-label-small text-primary uppercase tracking-widest">
+                  {ADMIN_SECTION.title}
+                </span>
+              </div>
+            )}
+            {ADMIN_SECTION.items.map((item) => (
+              <NavLink
+                key={item.id}
+                item={item}
+                isCollapsed={isCollapsed}
+                isActive={pathname === item.href}
+                onClick={onClose}
+              />
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* Profile Card */}

@@ -22,6 +22,7 @@ import {
   Loader2,
   X,
   ImageOff,
+  Trash2,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ interface ProductGridViewProps {
   handleShareProduct: (product: Product) => void;
   shareProductWhatsApp: (product: Product) => void;
   printProductCatalog: (product: Product) => void;
+  handleDeleteProduct: (productId: string) => void;
   getCategoryEmoji: (category: string) => string;
   getCategoryColor: (category: string) => string;
   getStockStyle: (stock: number) => { color: string; width: string };
@@ -105,6 +107,15 @@ const ACTION_CONFIG: readonly ActionConfig[] = [
     handler: "printProductCatalog",
     ariaLabel: "Print product catalog",
     shouldShow: () => true, // Always available
+  },
+  {
+    key: "delete",
+    icon: Trash2,
+    label: "Delete",
+    color: "amber",
+    handler: "handleDelete",
+    ariaLabel: "Delete product",
+    shouldShow: (product: Product) => product.status !== "draft", // Hide for draft products
   },
 ] as const;
 
@@ -665,6 +676,7 @@ export default function ProductGridView({
   handleShareProduct,
   shareProductWhatsApp,
   printProductCatalog,
+  handleDeleteProduct,
   getCategoryEmoji,
   getCategoryColor,
   getStockStyle,
@@ -678,9 +690,10 @@ export default function ProductGridView({
       handleShareProduct,
       shareProductWhatsApp,
       printProductCatalog,
+      handleDelete: (p) => handleDeleteProduct(p.id),
     };
     handlers[handler]?.(product);
-  }, [handleToggleStatus, handleDuplicateProduct, handleShareProduct, shareProductWhatsApp, printProductCatalog]);
+  }, [handleToggleStatus, handleDuplicateProduct, handleShareProduct, shareProductWhatsApp, printProductCatalog, handleDeleteProduct]);
 
   if (isLoading) {
     return (

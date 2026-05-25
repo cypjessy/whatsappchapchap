@@ -42,6 +42,7 @@ interface ProductListViewProps {
   handleShareProduct: (product: Product) => void;
   shareProductWhatsApp: (product: Product) => void;
   printProductCatalog: (product: Product) => void;
+  handleDeleteProduct: (productId: string) => void;
   getCategoryEmoji: (category: string) => string;
   getCategoryColor: (category: string) => string;
   getStockStyle: (stock: number) => { color: string; width: string };
@@ -593,16 +594,17 @@ function EmptyState() {
 export default function ProductListView({
   products, bulkMode, bulkSelected, toggleBulkSelect, selectAllProducts,
   openProductModal, handleToggleStatus, handleDuplicateProduct, handleShareProduct,
-  shareProductWhatsApp, printProductCatalog, getCategoryEmoji, getCategoryColor,
+  shareProductWhatsApp, printProductCatalog, handleDeleteProduct, getCategoryEmoji, getCategoryColor,
   getStockStyle, isLoading = false,
 }: ProductListViewProps) {
   const handleAction = useCallback((handler: string, product: Product) => {
     const handlers: Record<string, (p: Product) => void> = {
       handleToggleStatus, handleDuplicateProduct, handleShareProduct,
-      shareProductWhatsApp, printProductCatalog, handleDelete: () => {},
+      shareProductWhatsApp, printProductCatalog,
+      handleDelete: (p) => handleDeleteProduct(p.id),
     };
     handlers[handler]?.(product);
-  }, [handleToggleStatus, handleDuplicateProduct, handleShareProduct, shareProductWhatsApp, printProductCatalog]);
+  }, [handleToggleStatus, handleDuplicateProduct, handleShareProduct, shareProductWhatsApp, printProductCatalog, handleDeleteProduct]);
 
   if (isLoading) {
     return (

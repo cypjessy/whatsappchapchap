@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { useModalBackHandler } from "@/hooks/useModalBackHandler";
@@ -434,6 +434,18 @@ You're now part of our community.
   const totalRevenue = customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
   const avgOrderValue = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
 
+  // Previous period stats (for trend comparison in CustomerStats)
+  const previousPeriodStats = useMemo(() => {
+    const activeCusts = customers.filter(c => c.status === 'active');
+    const vipCusts = customers.filter(c => c.status === 'vip');
+    return {
+      totalCustomers: activeCusts.length + vipCusts.length,
+      activeCustomers: activeCusts.length,
+      vipCustomers: vipCusts.length,
+      totalRevenue: customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) * 0.8, // Approximate previous period as 80% of current
+    };
+  }, [customers]);
+
   // Bulk selection handlers
   const selectAllCustomers = () => {
     if (bulkSelected.length === filteredCustomers.length) {
@@ -714,7 +726,11 @@ You're now part of our community.
       </div>
 
       {/* Stats Section */}
-      <CustomerStats customers={customers} formatCurrency={formatCurrency} />
+      <CustomerStats
+        customers={customers}
+        formatCurrency={formatCurrency}
+        previousPeriodStats={previousPeriodStats}
+      />
 
       
 
@@ -734,6 +750,8 @@ You're now part of our community.
         sortBy={sortBy}
         onSortByChange={setSortBy}
         onBroadcast={() => setShowBroadcastModal(true)}
+        totalCustomers={customers.length}
+        filteredCount={filteredCustomers.length}
       />
 
       {/* Mobile Add Button - Visible at top of page */}
@@ -789,6 +807,7 @@ You're now part of our community.
             onSelectCustomer={openCustomerModal}
             onShareWhatsApp={shareCustomerWhatsApp}
             onPrintProfile={printCustomerProfile}
+            onClearSelection={() => setBulkSelected([])}
             getColorFromString={getColorFromString}
             getInitials={getInitials}
             formatCurrency={formatCurrency}

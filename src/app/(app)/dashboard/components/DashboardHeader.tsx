@@ -221,14 +221,11 @@ export function DashboardHeader({ showBreadcrumb = true }: DashboardHeaderProps)
       }
     };
     loadTenant();
-  }, [user]);
-
-  // Update greeting every minute
+  }, [user]);    // Update greeting every minute
   useEffect(() => {
     const updateGreeting = () => {
       setGreeting(getGreeting(new Date().getHours()));
     };
-    updateGreeting();
     const interval = setInterval(updateGreeting, 60000);
     return () => clearInterval(interval);
   }, []);

@@ -197,6 +197,7 @@ export default function BookingsPage() {
   const bookingsCursorRef = useRef<any>(null);
   const BOOKINGS_PAGE_SIZE = 20;
   const [cancellationFilter, setCancellationFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
 
   // Status bar: green when at top, white when scrolled
   useStatusBar({
@@ -731,9 +732,11 @@ export default function BookingsPage() {
         if (booking.date !== selectedDateStr) return false;
       }
 
+      if (sourceFilter !== "all" && booking.source !== sourceFilter) return false;
+
       return true;
     });
-  }, [bookings, searchQuery, selectedServiceFilter, filterPaymentStatus, dateRangeStart, dateRangeEnd, selectedDate]);
+  }, [bookings, searchQuery, selectedServiceFilter, filterPaymentStatus, dateRangeStart, dateRangeEnd, selectedDate, sourceFilter]);
 
   const handleExportCSV = useCallback(async () => {
     await impactLight();
@@ -922,6 +925,8 @@ export default function BookingsPage() {
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           services={services}
+          sourceFilter={sourceFilter}
+          setSourceFilter={setSourceFilter}
         />
 
         {/* Bulk Toolbar */}
@@ -1025,6 +1030,8 @@ export default function BookingsPage() {
                   bookings={filteredBookings}
                   onViewBooking={setSelectedBooking}
                   isLoading={loading}
+                  onUpdateStatus={handleUpdateStatus}
+                  onDelete={handleDeleteBooking}
                 />
               )}
               {viewMode === "list" && (
@@ -1032,6 +1039,8 @@ export default function BookingsPage() {
                   bookings={filteredBookings}
                   onViewBooking={setSelectedBooking}
                   isLoading={loading}
+                  onUpdateStatus={handleUpdateStatus}
+                  onDelete={handleDeleteBooking}
                 />
               )}
               {viewMode === "grid" && (
@@ -1039,6 +1048,8 @@ export default function BookingsPage() {
                   bookings={filteredBookings}
                   onViewBooking={setSelectedBooking}
                   isLoading={loading}
+                  onUpdateStatus={handleUpdateStatus}
+                  onDelete={handleDeleteBooking}
                 />
               )}
 
