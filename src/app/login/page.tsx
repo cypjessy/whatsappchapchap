@@ -319,6 +319,7 @@ export default function LoginPage() {
         className={`
           w-full lg:w-[600px] bg-white flex flex-col justify-center
           p-4 sm:p-6 lg:p-12
+          pt-[calc(64px+env(safe-area-inset-top,24px)+16px)] lg:pt-12
           transition-all duration-700 ease-out
           ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}
         `}

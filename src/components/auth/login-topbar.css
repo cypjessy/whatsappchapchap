@@ -11,7 +11,6 @@
   left: 0;
   right: 0;
   z-index: 100;
-  padding-top: env(safe-area-inset-top, 0px);
   /* Material 3 Surface Tint — matches the login page gradient */
   background: linear-gradient(
     180deg,
@@ -23,6 +22,20 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Status Bar Spacer ───
+   Creates a clear boundary between Android status bar and app header */
+.login-topbar-status-spacer {
+  height: env(safe-area-inset-top, 24px);
+  min-height: 24px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.05) 50%,
+    transparent 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ─── Inner Container ─── */

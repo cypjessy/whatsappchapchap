@@ -48,6 +48,8 @@ export default function LoginTopBar({
     <>
       {/* ── Material 3 Top App Bar ── */}
       <header className="login-topbar-root">
+        {/* Status bar spacer - creates boundary from Android status bar */}
+        <div className="login-topbar-status-spacer" />
         <div className="login-topbar-container">
           {/* Leading: Back/Home Navigation Icon */}
           <button
