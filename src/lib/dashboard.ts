@@ -111,6 +111,7 @@ export const dashboardService = {
     if (productIds.size > 0) {
       try {
         const ids = Array.from(productIds);
+        console.log("[Dashboard] Fetching product images for IDs:", ids);
         // Firestore 'in' queries support up to 30 values
         if (ids.length <= 30) {
           const productsQuery = query(
@@ -118,9 +119,11 @@ export const dashboardService = {
             where("__name__", "in", ids)
           );
           const productsSnap = await getDocs(productsQuery);
+          console.log(`[Dashboard] Found ${productsSnap.docs.length} products`);
           productsSnap.docs.forEach(productDoc => {
             const productData = productDoc.data();
-            const img = productData.image || productData.imageUrl || productData.images?.[0];
+            const img = productData.image || productData.imageUrl || productData.images?.[0] || productData.photoUrl || productData.picture;
+            console.log(`[Dashboard] Product ${productDoc.id} image:`, img ? "found" : "not found", img);
             if (img) {
               productImageMap[productDoc.id] = img;
             }
@@ -134,18 +137,32 @@ export const dashboardService = {
     
     return orders.map((data: any) => {
       // Determine product image: direct field → product lookup → fallback
-      let productImage = data.productImage || undefined;
+      let productImage = data.productImage || data.productImageUrl || undefined;
+
+      // Check if product image is in the products array
+      if (!productImage && data.products?.[0]?.image) {
+        productImage = data.products[0].image;
+      }
+
+      // Check if product image is in the items array
+      if (!productImage && data.items?.[0]?.image) {
+        productImage = data.items[0].image;
+      }
+
+      // Look up from product map
       if (!productImage && data.products?.[0]?.productId) {
         productImage = productImageMap[data.products[0].productId] || undefined;
       }
 
+      console.log(`[Dashboard] Order ${data.id.substring(0, 8)} product image:`, productImage ? "found" : "not found");
+
       return {
         id: data.id.substring(0, 8),
-        productName: data.products?.[0]?.name || "Product",
+        productName: data.products?.[0]?.name || data.items?.[0]?.name || "Product",
         productImage,
         productEmoji: "📦",
         productEmojiBg: "from-[#DCF8C6] to-[#e0e7ff]",
-        details: `Qty: ${data.products?.[0]?.quantity || 1}`,
+        details: `Qty: ${data.products?.[0]?.quantity || data.items?.[0]?.quantity || 1}`,
         customerName: data.customerName || "Customer",
         amount: data.total || 0,
         status: data.status || "pending",

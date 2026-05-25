@@ -99,15 +99,32 @@ function formatRelativeTime(createdAt: any): string {
 // ─── Product Thumbnail ────────────────────────────────────────────────────────
 function ProductThumbnail({ image, name, emoji }: { image?: string; name: string; emoji: string }) {
   const [imgError, setImgError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Reset error state when image prop changes
+  useEffect(() => {
+    setImgError(false);
+    setIsLoading(!!image);
+  }, [image]);
 
   if (image && !imgError) {
     return (
-      <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-surface-variant ring-1 ring-black/5">
+      <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-surface-variant ring-1 ring-black/5 relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-surface-variant">
+            <div className="w-5 h-5 border-2 border-outline-variant border-t-primary rounded-full animate-spin" />
+          </div>
+        )}
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-cover"
-          onError={() => setImgError(true)}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          onError={() => {
+            console.warn(`[ProductThumbnail] Failed to load image: ${image}`);
+            setImgError(true);
+            setIsLoading(false);
+          }}
+          onLoad={() => setIsLoading(false)}
           loading="lazy"
         />
       </div>
