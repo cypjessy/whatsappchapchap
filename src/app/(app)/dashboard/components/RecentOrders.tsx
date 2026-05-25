@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { dashboardService, OrderData } from "@/lib/dashboard";
 import { formatCurrency } from "@/lib/currency";
 import Link from "next/link";
+import { db } from "@/lib/firebase";
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from "firebase/firestore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,59 +15,25 @@ interface RecentOrdersProps {
   showViewAll?: boolean;
 }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+interface OrderWithImage {
+  id: string;
+  productName: string;
+  productImage?: string;
+  customerName: string;
+  amount: number;
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  createdAt: any;
+}
 
-const STATUS_CONFIG: Record<string, {
-  bg: string;
-  text: string;
-  border: string;
-  dot: string;
-  label: string;
-  icon: string;
-}> = {
-  pending: {
-    bg: "bg-[#FEF3C7]",
-    text: "text-[#F59E0B]",
-    border: "border-[#F59E0B]/20",
-    dot: "bg-[#F59E0B]",
-    label: "Pending",
-    icon: "fa-clock",
-  },
-  processing: {
-    bg: "bg-[#EFF6FF]",
-    text: "text-[#3B82F6]",
-    border: "border-[#3B82F6]/20",
-    dot: "bg-[#3B82F6]",
-    label: "Processing",
-    icon: "fa-cog fa-spin",
-  },
-  shipped: {
-    bg: "bg-[#F3E8FF]",
-    text: "text-[#8B5CF6]",
-    border: "border-[#8B5CF6]/20",
-    dot: "bg-[#8B5CF6]",
-    label: "Shipped",
-    icon: "fa-truck",
-  },
-  delivered: {
-    bg: "bg-[#E8F5E9]",
-    text: "text-[#25D366]",
-    border: "border-[#25D366]/20",
-    dot: "bg-[#25D366]",
-    label: "Delivered",
-    icon: "fa-check-circle",
-  },
-  cancelled: {
-    bg: "bg-[#FEE2E2]",
-    text: "text-[#EF4444]",
-    border: "border-[#EF4444]/20",
-    dot: "bg-[#EF4444]",
-    label: "Cancelled",
-    icon: "fa-times-circle",
-  },
+// ─── Status Config ────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; dot: string; label: string }> = {
+  pending: { bg: "bg-[#FEF3C7]", text: "text-[#F59E0B]", border: "border-[#F59E0B]/20", dot: "bg-[#F59E0B]", label: "Pending" },
+  processing: { bg: "bg-[#EFF6FF]", text: "text-[#3B82F6]", border: "border-[#3B82F6]/20", dot: "bg-[#3B82F6]", label: "Processing" },
+  shipped: { bg: "bg-[#F3E8FF]", text: "text-[#8B5CF6]", border: "border-[#8B5CF6]/20", dot: "bg-[#8B5CF6]", label: "Shipped" },
+  delivered: { bg: "bg-[#E8F5E9]", text: "text-[#25D366]", border: "border-[#25D366]/20", dot: "bg-[#25D366]", label: "Delivered" },
+  cancelled: { bg: "bg-[#FEE2E2]", text: "text-[#EF4444]", border: "border-[#EF4444]/20", dot: "bg-[#EF4444]", label: "Cancelled" },
 };
-
-// ─── Helper Functions ─────────────────────────────────────────────────────────
 
 function getStatusConfig(status: string) {
   return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
@@ -87,307 +54,165 @@ function formatRelativeTime(createdAt: any): string {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   } catch {
     return "Just now";
   }
 }
 
-// ─── Sub-Components ───────────────────────────────────────────────────────────
+// ─── Product Image Component ──────────────────────────────────────────────────
 
-// ─── Product Thumbnail ────────────────────────────────────────────────────────
-function ProductThumbnail({ image, name, emoji }: { image?: string; name: string; emoji: string }) {
-  const [imgError, setImgError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+function ProductImage({ src, name }: { src?: string; name: string }) {
+  const [error, setError] = useState(false);
 
-  // Reset error state when image prop changes
-  useEffect(() => {
-    setImgError(false);
-    setIsLoading(!!image);
-  }, [image]);
-
-  if (image && !imgError) {
+  if (!src || error) {
     return (
-      <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-surface-variant ring-1 ring-black/5 relative">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface-variant">
-            <div className="w-5 h-5 border-2 border-outline-variant border-t-primary rounded-full animate-spin" />
-          </div>
-        )}
-        <img
-          src={image}
-          alt={name}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-          onError={() => {
-            console.warn(`[ProductThumbnail] Failed to load image: ${image}`);
-            setImgError(true);
-            setIsLoading(false);
-          }}
-          onLoad={() => setIsLoading(false)}
-          loading="lazy"
-        />
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-surface-variant shrink-0">
+        📦
       </div>
     );
   }
 
   return (
-    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 bg-surface-variant">
-      {emoji || "📦"}
-    </div>
-  );
-}
-
-function ShimmerRow() {
-  return (
-    <div className="relative overflow-hidden p-4 border-b border-[#F1F5F9]">
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-surface-variant rounded-xl shrink-0 animate-pulse" />
-        <div className="flex-1 space-y-2">
-          <div className="flex justify-between">
-            <div className="h-4 bg-surface-variant rounded-lg w-24 animate-pulse" />
-            <div className="h-4 bg-surface-variant rounded-lg w-20 animate-pulse" />
-          </div>
-          <div className="h-3 bg-surface-variant rounded-lg w-3/4 animate-pulse" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ShimmerTableRow() {
-  return (
-    <tr className="border-t border-outline-variant">
-      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-16 animate-pulse" /></td>
-      <td className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-surface-variant rounded-xl animate-pulse" />
-          <div className="space-y-2">
-            <div className="h-4 bg-surface-variant rounded w-32 animate-pulse" />
-            <div className="h-3 bg-surface-variant rounded w-24 animate-pulse" />
-          </div>
-        </div>
-      </td>
-      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-24 animate-pulse" /></td>
-      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-20 animate-pulse" /></td>
-      <td className="p-4"><div className="h-6 bg-surface-variant rounded-full w-20 animate-pulse" /></td>
-      <td className="p-4"><div className="h-4 bg-surface-variant rounded w-16 animate-pulse" /></td>
-    </tr>
-  );
-}
-
-function MobileOrderCard({
-  order,
-  index,
-}: {
-  order: OrderData;
-  index: number;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const status = getStatusConfig(order.status);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), index * 80);
-    return () => clearTimeout(timer);
-  }, [index]);
-
-  return (
-    <Link
-      href="/orders"
-      className={`
-        block p-4 border-b border-outline-variant relative overflow-hidden
-        transition-all duration-200 hover:bg-surface-container-lowest
-        ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}
-      `}
-      style={{ transitionDelay: `${index * 80}ms` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Left accent on hover */}
-      <div className={`
-        absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-all duration-200
-        ${isHovered ? "opacity-100" : "opacity-0"}
-      `} style={{ backgroundColor: status.dot.replace("bg-[", "").replace("]", "") }} />
-
-      <div className="flex items-center gap-3">
-        <div className={`
-          transition-transform duration-200
-          ${isHovered ? "scale-105" : "scale-100"}
-        `}>
-          <ProductThumbnail image={order.productImage} name={order.productName} emoji={order.productEmoji} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-sm text-[#25D366]">#{order.id}</span>
-            <span className="font-bold text-sm">{formatCurrency(order.amount || 0)}</span>
-          </div>
-          <div className="flex items-center justify-between mt-1.5 gap-2">
-            <span className="text-sm text-on-surface truncate">{order.productName}</span>
-            <span className={`
-              shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full 
-              text-[10px] font-semibold uppercase border
-              ${status.bg} ${status.text} ${status.border}
-            `}>
-              <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-              {status.label}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-outline">
-            <i className="fas fa-user text-[10px]" />
-            <span className="truncate">{order.customerName}</span>
-            <span>•</span>
-            <span>{formatRelativeTime(order.createdAt)}</span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function DesktopTableRow({
-  order,
-  index,
-}: {
-  order: OrderData;
-  index: number;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const status = getStatusConfig(order.status);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), index * 60);
-    return () => clearTimeout(timer);
-  }, [index]);
-
-  return (
-    <tr
-      className={`
-        border-t border-outline-variant relative cursor-pointer
-        transition-all duration-200 hover:bg-surface-container-lowest
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
-      `}
-      style={{ transitionDelay: `${index * 60}ms` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Left accent */}
-      <td className="relative p-4">
-        <div className={`
-          absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full transition-all duration-200
-          ${isHovered ? "opacity-100" : "opacity-0"}
-        `} style={{ backgroundColor: status.dot.replace("bg-[", "").replace("]", "") }} />
-        <span className="font-semibold text-sm text-[#25D366]">#{order.id}</span>
-      </td>
-      <td className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={`
-            transition-transform duration-200
-            ${isHovered ? "scale-105" : "scale-100"}
-          `}>
-            <ProductThumbnail image={order.productImage} name={order.productName} emoji={order.productEmoji} />
-          </div>
-          <div className="min-w-0">
-            <div className="font-medium text-sm truncate">{order.productName}</div>
-            <div className="text-xs text-on-surface-variant truncate">{order.details}</div>
-          </div>
-        </div>
-      </td>
-      <td className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[10px] font-semibold text-[#8B5CF6]">
-            {order.customerName?.charAt(0).toUpperCase() || "?"}
-          </div>
-          <span className="text-sm truncate">{order.customerName}</span>
-        </div>
-      </td>
-      <td className="p-4">
-        <span className="font-bold text-sm">{formatCurrency(order.amount || 0)}</span>
-      </td>
-      <td className="p-4">
-        <span className={`
-          inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full 
-          text-[10px] font-semibold uppercase border
-          ${status.bg} ${status.text} ${status.border}
-        `}>
-          <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-          {status.label}
-        </span>
-      </td>
-      <td className="p-4 text-sm text-on-surface-variant">
-        {formatRelativeTime(order.createdAt)}
-      </td>
-    </tr>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 md:py-16 text-on-surface-variant animate-fadeIn">
-      <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-surface-variant flex items-center justify-center mb-4">
-        <i className="fas fa-shopping-bag text-2xl md:text-3xl text-[#CBD5E1]" />
-      </div>
-      <h4 className="font-semibold text-base md:text-lg text-on-surface-variant mb-1">No orders yet</h4>
-      <p className="text-sm text-outline max-w-xs text-center">
-        When customers order from you, they will appear here automatically.
-      </p>
-      <Link
-        href="/orders"
-        className={`
-          mt-4 px-4 py-2 rounded-xl text-sm font-semibold
-          bg-[#F3E8FF] text-[#8B5CF6] border-2 border-[#EDE9FE]
-          hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6]
-          transition-all duration-200 active:scale-95
-        `}
-      >
-        Go to Orders
-      </Link>
+    <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-variant shrink-0">
+      <img
+        src={src}
+        alt={name}
+        className="w-full h-full object-cover"
+        onError={() => setError(true)}
+        loading="lazy"
+      />
     </div>
   );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function RecentOrders({
-  refreshTrigger,
-  maxItems = 5,
-  showViewAll = true,
-}: RecentOrdersProps) {
+export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true }: RecentOrdersProps) {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [orders, setOrders] = useState<OrderWithImage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true);
-  }, []);
+    if (!user) return;
 
-  useEffect(() => {
     const loadOrders = async () => {
-      if (!user) return;
       setLoading(true);
       try {
-        const data = await dashboardService.getRecentOrders(user, maxItems);
-        setOrders(data);
+        const tenantId = `tenant_${user.uid}`;
+
+        // Fetch recent orders
+        const ordersQuery = query(
+          collection(db, "orders"),
+          where("tenantId", "==", tenantId),
+          orderBy("createdAt", "desc"),
+          limit(maxItems)
+        );
+
+        const ordersSnap = await getDocs(ordersQuery);
+        const ordersData: OrderWithImage[] = [];
+
+        for (const orderDoc of ordersSnap.docs) {
+          const orderData = orderDoc.data();
+
+          // Get product image - try multiple sources
+          let productImage: string | undefined;
+          let productName = "Product";
+
+          // 1. Try to get from order's product data
+          if (orderData.products?.[0]) {
+            const product = orderData.products[0];
+            productName = product.name || productName;
+            productImage = product.image || product.imageUrl || product.photoUrl;
+
+            // 2. If no image, fetch from products collection
+            if (!productImage && product.productId) {
+              try {
+                const productRef = doc(db, "products", product.productId);
+                const productSnap = await getDoc(productRef);
+                if (productSnap.exists()) {
+                  const pData = productSnap.data();
+                  productImage = pData.image || pData.imageUrl || pData.images?.[0] || pData.photoUrl;
+                  productName = pData.name || productName;
+                }
+              } catch (e) {
+                console.log("Failed to fetch product:", e);
+              }
+            }
+          }
+
+          // 3. Try items array if products not available
+          if (!productImage && orderData.items?.[0]) {
+            const item = orderData.items[0];
+            productName = item.name || productName;
+            productImage = item.image || item.imageUrl;
+          }
+
+          ordersData.push({
+            id: orderDoc.id.substring(0, 8),
+            productName,
+            productImage,
+            customerName: orderData.customerName || orderData.customer?.name || "Customer",
+            amount: orderData.total || 0,
+            status: orderData.status || "pending",
+            createdAt: orderData.createdAt,
+          });
+        }
+
+        setOrders(ordersData);
       } catch (error) {
         console.error("Error loading orders:", error);
-        setOrders([]);
       } finally {
         setLoading(false);
       }
     };
+
     loadOrders();
   }, [user, refreshTrigger, maxItems]);
 
+  if (loading) {
+    return (
+      <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="p-4 md:p-5 border-b border-outline-variant">
+          <div className="h-6 bg-surface-variant rounded w-32 animate-pulse" />
+        </div>
+        <div className="divide-y divide-outline-variant">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 bg-surface-variant rounded-xl animate-pulse shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-surface-variant rounded w-3/4 animate-pulse" />
+                <div className="h-3 bg-surface-variant rounded w-1/2 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between">
+          <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Orders</h3>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
+          <div className="w-16 h-16 rounded-2xl bg-surface-variant flex items-center justify-center mb-4 text-3xl">
+            📦
+          </div>
+          <h4 className="font-semibold text-base mb-1">No orders yet</h4>
+          <p className="text-sm text-outline text-center max-w-xs">
+            When customers order from you, they will appear here automatically.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`
-      bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden
-      transition-all duration-300
-      ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
-    `}>
-      {/* Header - MD3 styling */}
+    <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+      {/* Header */}
       <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
@@ -395,99 +220,106 @@ export function RecentOrders({
           </div>
           <div>
             <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Orders</h3>
-            <span className="text-[10px] text-outline font-medium">
-              {orders.length > 0 ? `Last ${orders.length} orders` : "No orders"}
-            </span>
+            <span className="text-[10px] text-outline font-medium">Last {orders.length} orders</span>
           </div>
         </div>
 
         {showViewAll && (
           <Link
             href="/orders"
-            className={`
-              px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-semibold
-              bg-surface-variant text-on-surface-variant border border-outline-variant
-              hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6]
-              hover:shadow-md3-level2 hover:shadow-[#8B5CF6]/20
-              transition-all duration-200 active:scale-95
-            `}
+            className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-semibold bg-surface-variant text-on-surface-variant border border-outline-variant hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6] transition-all duration-200"
           >
             View All
           </Link>
         )}
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <>
-          <div className="md:hidden divide-y divide-[#F1F5F9]">
-            {[0, 1, 2].map((i) => (
-              <ShimmerRow key={i} />
-            ))}
-          </div>
-          <div className="hidden md:block">
-            <table className="w-full">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-surface border-b border-outline-variant">
-                  {["Order ID", "Product", "Customer", "Amount", "Status", "Date"].map((h) => (
-                    <th key={h} className="text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[0, 1, 2].map((i) => (
-                  <ShimmerTableRow key={i} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      ) : orders.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <>
-          {/* Mobile */}
-          <div className="md:hidden divide-y divide-[#E2E8F0]">
-            {orders.map((order, index) => (
-              <MobileOrderCard key={order.id || index} order={order} index={index} />
-            ))}
-          </div>
+      {/* Mobile List */}
+      <div className="md:hidden divide-y divide-outline-variant">
+        {orders.map((order, index) => {
+          const status = getStatusConfig(order.status);
+          return (
+            <Link
+              key={order.id}
+              href="/orders"
+              className="block p-4 hover:bg-surface-container-lowest transition-colors"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="flex items-center gap-3">
+                <ProductImage src={order.productImage} name={order.productName} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm text-primary">#{order.id}</span>
+                    <span className="font-bold text-sm">{formatCurrency(order.amount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm text-on-surface truncate">{order.productName}</span>
+                    <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${status.bg} ${status.text} ${status.border}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                      {status.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-outline">
+                    <span className="truncate">{order.customerName}</span>
+                    <span>•</span>
+                    <span>{formatRelativeTime(order.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
 
-          {/* Desktop */}
-          <div className="hidden md:block">
-            <div className="overflow-x-auto rounded-b-2xl">
-              <table className="w-full min-w-[800px]">
-                <thead className="sticky top-0 z-10">
-                  <tr className="bg-surface border-b border-outline-variant">
-                    {[
-                      { label: "Order ID", width: "w-24" },
-                      { label: "Product", width: "w-auto" },
-                      { label: "Customer", width: "w-40" },
-                      { label: "Amount", width: "w-28" },
-                      { label: "Status", width: "w-32" },
-                      { label: "Date", width: "w-28" },
-                    ].map((h) => (
-                      <th
-                        key={h.label}
-                        className={`text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant ${h.width}`}
-                      >
-                        {h.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((order, index) => (
-                    <DesktopTableRow key={order.id || index} order={order} index={index} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full min-w-[700px]">
+          <thead>
+            <tr className="bg-surface border-b border-outline-variant">
+              {["Order ID", "Product", "Customer", "Amount", "Status", "Date"].map((h) => (
+                <th key={h} className="text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => {
+              const status = getStatusConfig(order.status);
+              return (
+                <tr key={order.id} className="border-t border-outline-variant hover:bg-surface-container-lowest transition-colors">
+                  <td className="p-4">
+                    <span className="font-semibold text-sm text-primary">#{order.id}</span>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <ProductImage src={order.productImage} name={order.productName} />
+                      <div>
+                        <div className="font-medium text-sm">{order.productName}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <span className="text-sm">{order.customerName}</span>
+                  </td>
+                  <td className="p-4">
+                    <span className="font-bold text-sm">{formatCurrency(order.amount)}</span>
+                  </td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase border ${status.bg} ${status.text} ${status.border}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                      {status.label}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-on-surface-variant">
+                    {formatRelativeTime(order.createdAt)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
