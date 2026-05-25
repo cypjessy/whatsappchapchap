@@ -2145,19 +2145,58 @@ export default function SettingsPage() {
                       await showToastNative({ text: 'Biometric authentication not available on this device', position: 'top' });
                       return;
                     }
+
                     const newValue = !biometricEnabled;
-                    setBiometricEnabled(newValue);
-                    try {
-                      await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_ENABLED, value: newValue ? 'true' : 'false' });
-                      console.log('[Settings] Biometric preference saved:', newValue);
-                    } catch (err) {
-                      console.error('[Settings] Failed to save biometric preference:', err);
+
+                    // If enabling biometric, we need to save credentials
+                    if (newValue && user?.email) {
+                      // Prompt user for password to save for biometric login
+                      const password = prompt('Please enter your password to enable biometric login:');
+                      if (!password) {
+                        await showToastNative({ text: 'Password required to enable biometric login', position: 'top' });
+                        return;
+                      }
+
+                      // Verify biometric works before saving
+                      const bioResult = await authenticate('Verify your identity to enable biometric login');
+                      if (!bioResult.success) {
+                        await showToastNative({ text: 'Biometric verification failed', position: 'top' });
+                        return;
+                      }
+
+                      // Save credentials for biometric login
+                      try {
+                        await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_EMAIL, value: user.email });
+                        await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_PASSWORD, value: password });
+                        await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_ENABLED, value: 'true' });
+                        setBiometricEnabled(true);
+                        console.log('[Settings] Biometric enabled and credentials saved');
+                        await notificationSuccess();
+                        await showToastNative({ text: 'Biometric login enabled', position: 'top' });
+                      } catch (err) {
+                        console.error('[Settings] Failed to save biometric credentials:', err);
+                        await showToastNative({ text: 'Failed to enable biometric login', position: 'top' });
+                      }
+                    } else {
+                      // Disabling biometric - just update the flag
+                      setBiometricEnabled(newValue);
+                      try {
+                        await PreferenceService.set({ key: PREF_KEYS.BIOMETRIC_ENABLED, value: newValue ? 'true' : 'false' });
+                        if (!newValue) {
+                          // Clear saved credentials when disabling
+                          await PreferenceService.remove(PREF_KEYS.BIOMETRIC_EMAIL);
+                          await PreferenceService.remove(PREF_KEYS.BIOMETRIC_PASSWORD);
+                        }
+                        console.log('[Settings] Biometric preference saved:', newValue);
+                        await notificationSuccess();
+                        await showToastNative({
+                          text: newValue ? 'Biometric login enabled' : 'Biometric login disabled',
+                          position: 'top'
+                        });
+                      } catch (err) {
+                        console.error('[Settings] Failed to save biometric preference:', err);
+                      }
                     }
-                    await notificationSuccess();
-                    await showToastNative({ 
-                      text: newValue ? 'Biometric login enabled' : 'Biometric login disabled', 
-                      position: 'top' 
-                    });
                   }}
                   disabled={!biometricAvailable}
                   className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 ${
