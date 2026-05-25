@@ -395,6 +395,7 @@ export interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  imageUrl?: string; // Snapshot of product image at order time
 }
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";

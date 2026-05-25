@@ -125,7 +125,8 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
             const product = orderData.products[0];
             console.log("[RecentOrders] Product from products[0]:", product);
             productName = product.name || product.productName || productName;
-            productImage = product.image || product.imageUrl || product.photoUrl || product.picture;
+            // Check imageUrl first (new field), then fall back to other fields
+            productImage = product.imageUrl || product.image || product.photoUrl || product.picture;
 
             // 2. If no image, fetch from products collection
             if (!productImage && product.productId) {
@@ -135,7 +136,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
                 console.log("[RecentOrders] Fetched product:", productSnap.exists(), productSnap.data());
                 if (productSnap.exists()) {
                   const pData = productSnap.data();
-                  productImage = pData.image || pData.imageUrl || pData.images?.[0] || pData.photoUrl || pData.picture;
+                  productImage = pData.imageUrl || pData.image || pData.images?.[0] || pData.photoUrl || pData.picture;
                   productName = pData.name || pData.productName || productName;
                 }
               } catch (e) {
@@ -149,7 +150,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
             const item = orderData.items[0];
             console.log("[RecentOrders] Product from items[0]:", item);
             productName = item.name || item.productName || productName;
-            productImage = item.image || item.imageUrl || item.photoUrl || item.picture;
+            productImage = item.imageUrl || item.image || item.photoUrl || item.picture;
           }
 
           // 4. Try direct order fields

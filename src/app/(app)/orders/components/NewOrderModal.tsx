@@ -11,6 +11,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  imageUrl?: string;
 }
 
 interface NewOrderForm {
@@ -385,7 +386,7 @@ export default function NewOrderModal({
         ...prev,
         selectedProducts: [
           ...prev.selectedProducts,
-          { productId: product.id, name: product.name, quantity: 1, price: product.price },
+          { productId: product.id, name: product.name, quantity: 1, price: product.price, imageUrl: product.imageUrl || product.image || "" },
         ],
       };
     });
