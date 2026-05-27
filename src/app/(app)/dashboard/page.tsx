@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useOtaUpdate } from "@/hooks/useOtaUpdate";
 import WhatsAppConnectionManager from "@/components/WhatsAppConnectionManager";
 import {
   DashboardHeader,
@@ -15,31 +14,6 @@ import {
 } from "./components";
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
-
-function UpdatesButton({ onCheckUpdate, hasUpdate }: {
-  onCheckUpdate: () => void;
-  hasUpdate: boolean;
-}) {
-  if (!hasUpdate) return null;
-
-  return (
-    <button
-      onClick={onCheckUpdate}
-      className="
-        fixed bottom-6 left-6 z-40 w-12 h-12 rounded-full
-        bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white
-        shadow-md3-level3 shadow-[#F59E0B]/30 hover:shadow-md3-level4 hover:shadow-[#F59E0B]/40
-        hover:-translate-y-0.5 active:scale-95
-        flex items-center justify-center
-        transition-all duration-300
-        animate-pulse
-      "
-      aria-label="Check for updates"
-    >
-      <i className="fas fa-cloud-download-alt text-sm" />
-    </button>
-  );
-}
 
 function SectionWrapper({
   children,
@@ -75,7 +49,6 @@ function SectionWrapper({
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { hasUpdate, checkForUpdate } = useOtaUpdate();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [instanceName, setInstanceName] = useState<string | null>(null);
 
@@ -164,8 +137,6 @@ export default function DashboardPage() {
         <RecentOrders refreshTrigger={refreshTrigger} />
       </SectionWrapper>
 
-      {/* Updates Button - Only shows when update is available */}
-      <UpdatesButton onCheckUpdate={checkForUpdate} hasUpdate={hasUpdate} />
     </div>
   );
 }
