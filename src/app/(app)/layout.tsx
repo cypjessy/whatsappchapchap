@@ -160,10 +160,13 @@ export default function DashboardLayout({
     setupCapacitor();
   }, []);
 
+  // Background image URL — replace with any image link to change the app background
+  const BACKGROUND_IMAGE = "https://i.postimg.cc/NFTQkTpQ/pexels-steve-13934811-(1).jpg";
+
   return (
     <>
-      {/* Material Design 3 Page Background */}
-      <div className="app-layout-surface">
+      {/* Material Design 3 Page Background with optional background image */}
+      <div className="app-layout-surface" style={{ "--app-bg-image": `url(${BACKGROUND_IMAGE})` } as React.CSSProperties}>
         <ModeProvider>
           <AppLayout>
             <DashboardProtection>{children}</DashboardProtection>

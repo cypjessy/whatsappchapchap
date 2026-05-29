@@ -6,13 +6,13 @@ import { businessProfileService, whatsappSettingsService, shippingService, produ
 import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { PreferenceService, PREF_KEYS } from "@/lib/preference-service";
-import IntegrationsTab from "@/components/IntegrationsTab";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
   const { show: showToastNative } = useToast();
-  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments" | "security" | "integrations">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments" | "security">("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -638,18 +638,20 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 animate-fadeIn bg-surface">
+    <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 animate-fadeIn bg-surface-dim">
       {/* Header */}
       <div className="mb-4 md:mb-6">
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">
-          <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6]/10 to-[#7c3aed]/10 flex items-center justify-center shrink-0">
-            <i className="fas fa-cog text-[#8b5cf6] text-sm md:text-base"></i>
-          </div>
-          <span>Settings</span>
-        </h1>
-        <p className="text-on-surface-variant text-sm mt-1.5 md:mt-2 max-w-2xl">
-          Manage your business profile, products, services, shipping, and WhatsApp automation
-        </p>
+        <PageHeaderCard>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6]/10 to-[#7c3aed]/10 flex items-center justify-center shrink-0">
+              <i className="fas fa-cog text-[#8b5cf6] text-sm md:text-base"></i>
+            </div>
+            <span>Settings</span>
+          </h1>
+          <p className="text-on-surface-variant text-sm mt-1.5 md:mt-2 max-w-2xl">
+            Manage your business profile, products, services, shipping, and WhatsApp automation
+          </p>
+        </PageHeaderCard>
       </div>
 
       {/* Tabs - Android Material Design 3 Grid Style */}
@@ -664,7 +666,6 @@ export default function SettingsPage() {
             { id: "whatsapp", label: "WhatsApp", sublabel: "", icon: "fab fa-whatsapp", color: "from-[#25D366] to-[#128C7E]" },
             { id: "payments", label: "Payment", sublabel: "Methods", icon: "fa-credit-card", color: "from-green-500 to-emerald-500" },
             { id: "security", label: "Security", sublabel: "Biometrics", icon: "fa-fingerprint", color: "from-orange-500 to-red-500" },
-            { id: "integrations", label: "Integrations", sublabel: "Firebase, Evolution, Bunny", icon: "fa-plug", color: "from-purple-500 to-[#8b5cf6]" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -2281,11 +2282,6 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Integrations Tab */}
-      {activeTab === "integrations" && (
-        <IntegrationsTab />
       )}
     </div>
   );

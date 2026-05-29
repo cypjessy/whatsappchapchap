@@ -4,9 +4,11 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import AddTenantDialog from "@/components/AddTenantDialog";
+import PageHeaderCard from "@/components/PageHeaderCard";
 import { adminService, Tenant, pricingPlanService, PricingPlan } from "@/lib/db";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import IntegrationsTab from "@/components/IntegrationsTab";
 
 // Toast type
 interface Toast {
@@ -82,7 +84,7 @@ export default function AllTenantsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [activeModalTab, setActiveModalTab] = useState("overview");
-  const [activeMainTab, setActiveMainTab] = useState<"tenants" | "plans">("tenants");
+  const [activeMainTab, setActiveMainTab] = useState<"tenants" | "plans" | "diagnostics">("tenants");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
@@ -1524,14 +1526,16 @@ export default function AllTenantsPage() {
       </div>
 
       {/* Page Header */}
-      <div className="page-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
-        <div>
-          <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text)", display: "flex", alignItems: "center", gap: "10px" }}>
-            <i className="fas fa-shield-alt" style={{ color: "var(--primary-dark)", fontSize: "22px" }}></i> Tenant Management
-          </h1>
-          <p style={{ color: "var(--text-2)", marginTop: "4px", fontSize: "14px" }}>Manage all sellers, service providers, subscriptions and platform settings</p>
+      <PageHeaderCard className="mb-4">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+          <div>
+            <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text)", display: "flex", alignItems: "center", gap: "10px" }}>
+              <i className="fas fa-shield-alt" style={{ color: "var(--primary-dark)", fontSize: "22px" }}></i> Tenant Management
+            </h1>
+            <p style={{ color: "var(--text-2)", marginTop: "4px", fontSize: "14px" }}>Manage all sellers, service providers, subscriptions and platform settings</p>
+          </div>
         </div>
-      </div>
+      </PageHeaderCard>
 
       {/* Main Tabs - Moved to top */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
@@ -1548,6 +1552,13 @@ export default function AllTenantsPage() {
           style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
         >
           <i className="fas fa-tags"></i> Pricing Plans
+        </button>
+        <button
+          className={`btn ${activeMainTab === "diagnostics" ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setActiveMainTab("diagnostics")}
+          style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
+        >
+          <i className="fas fa-stethoscope"></i> Diagnostics
         </button>
       </div>
 

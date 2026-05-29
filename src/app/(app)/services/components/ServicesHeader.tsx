@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -221,8 +222,7 @@ export default function ServicesHeader({
   }, [setBulkMode]);
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-outline-variant">
-      <div className="px-4 md:px-6 py-3 md:py-4">
+    <PageHeaderCard className="sticky top-0 z-30">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
           {/* Left: Title */}
           <div className="flex items-center gap-3 w-full md:w-auto">
@@ -279,7 +279,6 @@ export default function ServicesHeader({
             />
           </div>
         </div>
-      </div>
 
       {/* Bulk Action Bar */}
       {bulkMode && (
@@ -292,6 +291,6 @@ export default function ServicesHeader({
           isLoading={bulkLoading}
         />
       )}
-    </header>
+    </PageHeaderCard>
   );
 }

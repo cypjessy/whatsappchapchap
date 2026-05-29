@@ -600,7 +600,7 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-0 md:py-4 pb-2 bg-surface">
+    <div className="overflow-x-hidden px-3 md:px-6 py-0 md:py-4 pb-2 bg-surface-dim">
       {/* Header - Desktop only (TopBar handles mobile) */}
       <div className="hidden md:block">
         <ServicesHeader

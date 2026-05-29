@@ -16,6 +16,7 @@ import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import BookingCancellationRequests from "./components/BookingCancellationRequests";
 import { ListTab, GridTab } from "./components/tabs";
+import PageHeaderCard from "@/components/PageHeaderCard";
 import { collection, query, where, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
 import { app as firebaseApp } from "@/lib/firebase";
 import { getFirestore } from "firebase/firestore";
@@ -803,17 +804,12 @@ export default function BookingsPage() {
   const hasData = filteredBookings.length > 0;
 
   return (
-    <div ref={pageRef} className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface">
+    <div ref={pageRef} className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface-dim">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
       {/* Sticky Header - Desktop only (TopBar handles mobile) */}
-      <div
-        className={`
-          sticky top-0 z-[60] bg-white border-b transition-all duration-300 hidden md:block
-          ${headerScrolled ? "border-outline shadow-md" : "border-transparent"}
-        `}
-      >
-        <div className="px-4 md:px-6 py-3 md:py-4">
+      <div className="sticky top-0 z-[60] hidden md:block mb-6">
+        <PageHeaderCard className="w-full">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div>
               <div className="flex items-center gap-2 text-[10px] text-outline font-bold uppercase tracking-wider mb-1">
@@ -871,7 +867,7 @@ export default function BookingsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </PageHeaderCard>
       </div>
 
       {/* Main Content */}

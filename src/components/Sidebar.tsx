@@ -69,7 +69,6 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings" },
       { id: "paystack", label: "Paystack Settings", icon: "fa-credit-card", href: "/settings/paystack" },
-      { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help" },
     ],
   },
 ];

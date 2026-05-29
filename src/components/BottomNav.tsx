@@ -50,12 +50,6 @@ const FAB_MENU_SECTIONS = [
       { id: "paystack", label: "Paystack", icon: "fa-credit-card", href: "/settings/paystack" },
     ],
   },
-  {
-    title: "Support",
-    items: [
-      { id: "help", label: "Help Center", icon: "fa-question-circle", href: "/help" },
-    ],
-  },
 ];
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────

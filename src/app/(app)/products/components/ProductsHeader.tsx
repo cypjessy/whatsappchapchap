@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Package,
 } from "lucide-react";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -191,15 +192,13 @@ export default function ProductsHeader({
   }, []);
 
   return (
-    <header
+    <PageHeaderCard
       className={`
-        sticky top-0 z-30 bg-white border-b border-outline-variant
+        sticky top-0 z-30
         transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
       `}
     >
-      {/* FIXED: Removed mx-auto - now full width with proper padding */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-3 md:py-4">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 md:gap-4">
           {/* Left: Title + Stats - NOW LEFT ALIGNED */}
           <div className="flex items-center gap-3 md:gap-4 w-full lg:w-auto">
@@ -310,7 +309,6 @@ export default function ProductsHeader({
             </div>
           </div>
         </div>
-      </div>
-    </header>
+    </PageHeaderCard>
   );
 }

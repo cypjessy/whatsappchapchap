@@ -228,7 +228,7 @@ export default function AndroidTopBar({
       <div
         className="lg:hidden flex-shrink-0"
         style={{
-          height: '64px'
+          height: '48px'
         }}
       />
 
@@ -248,13 +248,13 @@ export default function AndroidTopBar({
         <div
           className="relative transition-all duration-300 flex-shrink-0 w-full"
           style={{
-            minHeight: '64px',
+            minHeight: '48px',
             backgroundColor: isScrolled ? '#ffffff' : '#667eea',
             boxShadow: isScrolled ? '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' : 'none',
           }}
         >
           {/* Content Container - Empty, just provides structure */}
-          <div className="flex items-center justify-between px-3 h-16 min-h-[64px] w-full">
+          <div className="flex items-center justify-between px-3 h-12 min-h-[48px] w-full">
           </div>
         </div>
       </header>

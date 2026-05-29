@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -148,9 +149,10 @@ export default function CustomersHeader({
   };
 
   return (
+    <PageHeaderCard className="mb-4 md:mb-6">
     <div className={`
-      flex flex-col md:flex-row justify-between items-start md:items-center 
-      mb-4 md:mb-6 gap-3 md:gap-4
+      flex flex-col md:flex-row justify-between items-start md:items-center
+      gap-3 md:gap-4
       transition-all duration-500 ease-out
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}
     `}>
@@ -214,5 +216,6 @@ export default function CustomersHeader({
         />
       </div>
     </div>
+    </PageHeaderCard>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { tenantService } from "@/lib/db";
+import PageHeaderCard from "@/components/PageHeaderCard";
 import "./dashboard-header-styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -243,11 +244,15 @@ export function DashboardHeader({ showBreadcrumb = true }: DashboardHeaderProps)
         tenantName={tenantName}
         currentTime={formatTime(new Date())}
       />
-      <DesktopHeader
-        greeting={greeting}
-        tenantName={tenantName}
-        showBreadcrumb={showBreadcrumb}
-      />
+      <div className="hidden md:block">
+        <PageHeaderCard>
+          <DesktopHeader
+            greeting={greeting}
+            tenantName={tenantName}
+            showBreadcrumb={showBreadcrumb}
+          />
+        </PageHeaderCard>
+      </div>
     </div>
   );
 }

@@ -711,7 +711,7 @@ export default function ProductsPage() {
   }, [productModalOpen]);
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-0 md:py-4 pb-2 bg-surface min-h-screen">
+    <div className="overflow-x-hidden px-3 md:px-6 py-0 md:py-4 pb-2 bg-surface-dim min-h-screen">
       {/* Products Header - Desktop */}
       <div className="hidden md:block">
         <ProductsHeader

@@ -9,7 +9,7 @@ export default function PaystackLayout({
 }) {
   return (
     <ModeProvider>
-      <div className="w-full min-h-screen bg-surface-container-lowest">
+      <div className="w-full min-h-screen bg-surface-dim">
         {children}
       </div>
     </ModeProvider>

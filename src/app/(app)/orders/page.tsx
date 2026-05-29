@@ -48,6 +48,7 @@ import EditOrderModal from "./components/EditOrderModal";
 import NewOrderModal from "./components/NewOrderModal";
 import CancellationRequests from "./components/CancellationRequests";
 import OrderTabSwitcher from "./components/OrderTabSwitcher";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1100,9 +1101,11 @@ export default function OrdersPage() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="overflow-x-hidden bg-surface w-full">
+    <div className="overflow-x-hidden bg-surface-dim w-full">
       {/* Desktop Header — hidden on mobile, TopBar handles mobile */}
-      <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-6 pt-4" style={{ animationDelay: '0.1s' }}>
+      <div className="hidden md:block mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+        <PageHeaderCard className="w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
@@ -1157,6 +1160,8 @@ export default function OrdersPage() {
             <span>New Order</span>
           </button>
         </div>
+      </div>
+      </PageHeaderCard>
       </div>
 
       {/* Mobile Tabs — MD3 compact chip switcher (all tabs visible at once) */}
