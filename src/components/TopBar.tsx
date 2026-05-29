@@ -97,7 +97,7 @@ function ActionIcon({
           min-w-[20px] h-[20px] px-1
           bg-red-500 text-white text-[11px] font-bold
           rounded-full flex items-center justify-center
-          border-2 ${isScrolled ? 'border-white' : 'border-[#667eea]'} shadow-md3-level1 animate-badgePop
+          border-2 ${isScrolled ? 'border-white' : 'border-[#667eea]'} shadow-sm animate-badgePop
           z-20
         `}>
           {action.badge > 99 ? "99+" : action.badge}

@@ -133,7 +133,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 
       {/* PWA Update Notification Banner */}
       {showUpdateBanner && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white px-4 py-3 shadow-md3-level3 animate-slideDown">
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white px-4 py-3 shadow-lg animate-slideDown">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
               <i className="fas fa-sync-alt fa-spin" />

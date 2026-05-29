@@ -69,7 +69,7 @@ export default function WhatsAppConnectionManager({
       try {
         const response = await fetch(buildApiUrl('/api/evolution-config'));
         const config = await response.json();
-        const apiKey = config?.apiKey || 'lhnGSMQrQmC54PyPUBqILuWWeau20gDn';
+        const apiKey = config?.apiKey || '';
         
         const stateResponse = await fetch(buildApiUrl(`/api/evolution/instance/connectionState/${instanceName}`), {
           headers: { 'x-api-key': apiKey },
@@ -98,7 +98,7 @@ export default function WhatsAppConnectionManager({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl p-5 shadow-md3-level1 border border-outline-variant">
+      <div className="bg-surface rounded-2xl p-5 shadow-md border-2 border-outline">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-surface-variant animate-pulse" />
@@ -114,10 +114,10 @@ export default function WhatsAppConnectionManager({
   }
 
   return (
-    <div className={`bg-white rounded-2xl p-5 shadow-md3-level1 border transition-all duration-300 ${
+    <div className={`bg-surface rounded-2xl p-5 shadow-md border-2 transition-all duration-300 ${
       connectionStatus === 'connected' 
-        ? 'border-green-200' 
-        : 'border-outline-variant'
+        ? 'border-green-500' 
+        : 'border-outline'
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -157,9 +157,8 @@ export default function WhatsAppConnectionManager({
       </div>
 
       {/* Connection Status Card */}
-      {connectionStatus === 'connected' ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+      {connectionStatus === 'connected' ? (          <div className="space-y-3">
+          <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border-2 border-green-500">
             <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shrink-0">
               <i className="fas fa-check text-white text-sm" />
             </div>
@@ -167,8 +166,7 @@ export default function WhatsAppConnectionManager({
               <p className="font-semibold text-green-900 text-sm">WhatsApp Connected</p>
               <p className="text-[11px] text-green-700 truncate">Instance: {instanceName}</p>
             </div>
-            <div className="flex gap-1">
-              <button
+            <div className="flex gap-1">                <button
                 onClick={async () => {
                   await impactLight();
                   const state = await getConnectionState(instanceName).catch(() => null);
@@ -176,7 +174,7 @@ export default function WhatsAppConnectionManager({
                     setConnectionStatus('disconnected');
                   }
                 }}
-                className="w-8 h-8 rounded-lg bg-green-100 hover:bg-green-200 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-green-100 hover:bg-green-200 flex items-center justify-center transition-colors border border-green-300"
                 title="Refresh status"
               >
                 <i className="fas fa-sync text-[11px] text-green-600" />
@@ -237,9 +235,8 @@ export default function WhatsAppConnectionManager({
           )}
         </div>
       ) : (
-        /* Disconnected state */
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-surface-variant rounded-xl border border-outline-variant">
+        /* Disconnected state */          <div className="space-y-3">
+          <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant">
             <div className="w-9 h-9 bg-gray-400 rounded-full flex items-center justify-center shrink-0">
               <i className="fas fa-plug text-white text-sm" />
             </div>
@@ -261,15 +258,15 @@ export default function WhatsAppConnectionManager({
           </button>
 
           <div className="flex gap-2 pt-1">
-            <div className="flex-1 p-2 bg-surface-variant rounded-lg text-center">
+            <div className="flex-1 p-2 bg-surface-container-low rounded-lg text-center border border-outline-variant">
               <i className="fas fa-qrcode text-green-500 text-sm" />
               <p className="text-[10px] text-on-surface-variant mt-1">Scan QR</p>
             </div>
-            <div className="flex-1 p-2 bg-surface-variant rounded-lg text-center">
+            <div className="flex-1 p-2 bg-surface-container-low rounded-lg text-center border border-outline-variant">
               <i className="fas fa-keyboard text-blue-500 text-sm" />
               <p className="text-[10px] text-on-surface-variant mt-1">Pairing Code</p>
             </div>
-            <div className="flex-1 p-2 bg-surface-variant rounded-lg text-center">
+            <div className="flex-1 p-2 bg-surface-container-low rounded-lg text-center border border-outline-variant">
               <i className="fas fa-bolt text-amber-500 text-sm" />
               <p className="text-[10px] text-on-surface-variant mt-1">Auto-reply</p>
             </div>

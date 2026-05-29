@@ -262,7 +262,7 @@ export default function BookingPageContent() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 -mt-4 relative z-10">
-          <div className="bg-white rounded-2xl shadow-md3-level3 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-8 bg-gradient-to-br from-[#10b981] to-[#059669] text-white">
               <div className="text-sm opacity-90 mb-2">Booking Number</div>
               <div className="text-3xl font-extrabold tracking-wide">{bookingNumber}</div>
@@ -372,7 +372,7 @@ export default function BookingPageContent() {
         
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
-            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center text-2xl md:text-3xl shadow-md3-level3 flex-shrink-0">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center text-2xl md:text-3xl shadow-lg flex-shrink-0">
               {service.emoji || "✨"}
             </div>
             <div className="flex-1 min-w-0">
@@ -411,7 +411,7 @@ export default function BookingPageContent() {
           <div className="lg:col-span-2 space-y-4">
         
         {/* Service Selection */}
-        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant animate-slideUp">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant animate-slideUp">
           <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-concierge-bell text-[#8b5cf6]"></i>
             Select Package
@@ -466,7 +466,7 @@ export default function BookingPageContent() {
 
         {/* Portfolio Images */}
         {service.portfolioImages && service.portfolioImages.length > 0 && (
-          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
             <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
               <i className="fas fa-images text-[#8b5cf6]"></i>
               Portfolio Photos
@@ -488,7 +488,7 @@ export default function BookingPageContent() {
 
         {/* Service Specifications */}
         {service.specifications && Object.keys(service.specifications).length > 0 && (
-          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
             <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
               <i className="fas fa-sliders-h text-[#8b5cf6]"></i>
               Service Details
@@ -513,7 +513,7 @@ export default function BookingPageContent() {
         )}
 
         {/* Date Selection */}
-        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
           <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-calendar-alt text-[#8b5cf6]"></i>
             Select Date
@@ -527,7 +527,7 @@ export default function BookingPageContent() {
                   key={idx}
                   className={`min-w-[60px] md:min-w-[70px] p-2 md:p-3 border-2 rounded-xl text-center cursor-pointer transition-all ${
                     isSelected
-                      ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level3"
+                      ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-lg"
                       : "border-outline-variant hover:border-[#8b5cf6] bg-white"
                   }`}
                   onClick={() => setSelectedDate(date)}
@@ -549,7 +549,7 @@ export default function BookingPageContent() {
 
         {/* Time Selection */}
         {selectedDate && (
-          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+          <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
             <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
               <i className="fas fa-clock text-[#8b5cf6]"></i>
               Select Time
@@ -561,7 +561,7 @@ export default function BookingPageContent() {
                   key={time}
                   className={`p-2 md:p-3 border-2 rounded-xl text-center cursor-pointer transition-all font-semibold text-xs md:text-sm ${
                     selectedTime === time
-                      ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level3"
+                      ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-lg"
                       : "border-outline-variant hover:border-[#8b5cf6] bg-white"
                   }`}
                   onClick={() => setSelectedTime(time)}
@@ -574,7 +574,7 @@ export default function BookingPageContent() {
         )}
 
         {/* Location Selection */}
-        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
           <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-map-marker-alt text-[#8b5cf6]"></i>
             Service Location
@@ -609,7 +609,7 @@ export default function BookingPageContent() {
           <div className="lg:sticky lg:top-4 space-y-4">
         
         {/* Customer Information */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+        <form onSubmit={handleSubmit} className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
           <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-user text-[#8b5cf6]"></i>
             Your Information
@@ -660,7 +660,7 @@ export default function BookingPageContent() {
         </form>
 
         {/* Payment Methods */}
-        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md3-level2 border border-outline-variant">
+        <div className="bg-white rounded-[16px] md:rounded-[20px] p-4 md:p-5 shadow-md border border-outline-variant">
           <h2 className="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
             <i className="fas fa-credit-card text-[#8b5cf6]"></i>
             Payment Method
@@ -747,7 +747,7 @@ export default function BookingPageContent() {
         <button
           onClick={handleSubmit}
           disabled={submitting || !selectedDate || !selectedTime || !customerName || !customerPhone}
-          className="w-full py-3 md:py-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-base md:text-lg shadow-md3-level3 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 md:py-4 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-base md:text-lg shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? (
             <>

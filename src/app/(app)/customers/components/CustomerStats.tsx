@@ -131,7 +131,7 @@ function getTrend(current: number, previous?: number): { value: number; isPositi
 
 function ShimmerCard() {
   return (
-    <div className="bg-surface rounded-xl md:rounded-2xl px-3 md:px-5 py-2.5 md:py-4 border border-outline-variant overflow-hidden relative shadow-md3-level1">
+    <div className="bg-surface rounded-xl md:rounded-2xl px-3 md:px-5 py-2.5 md:py-4 border border-outline-variant overflow-hidden relative shadow-sm">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-center justify-between mb-2 md:mb-3">
         <div className="w-9 h-9 md:w-11 md:h-11 bg-surface-variant rounded-xl" />
@@ -185,8 +185,8 @@ function StatCard({
         transition-all duration-300 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isHovered
-          ? "border-outline-variant shadow-md3-level3 shadow-[#e2e8f0]/40 -translate-y-1"
-          : "shadow-md3-level1 hover:shadow-md3-level2"
+          ? "border-outline-variant shadow-lg shadow-[#e2e8f0]/40 -translate-y-1"
+          : "shadow-sm hover:shadow-md"
         }
       `}
       style={{ transitionDelay: `${index * 100}ms` }}

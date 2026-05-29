@@ -76,8 +76,8 @@ export default function EmptyState({
   return (
     <div
       className={`
-        relative overflow-hidden md3-card-elevated
-        shadow-md3-level1 transition-all duration-500 ease-out
+        relative overflow-hidden bg-surface rounded-xl border border-outline-variant
+        shadow-sm transition-all duration-500 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
       `}
     >
@@ -141,7 +141,7 @@ export default function EmptyState({
                 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-medium text-sm
                 border-2 border-[var(--md-sys-color-primary-container)]
                 hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:border-[var(--md-sys-color-primary)]
-                hover:shadow-md3-level3 hover:shadow-[var(--md-sys-color-primary)]/20 hover:-translate-y-0.5
+                hover:shadow-lg hover:shadow-[var(--md-sys-color-primary)]/20 hover:-translate-y-0.5
                 transition-all duration-200 active:scale-95
               `}
             >

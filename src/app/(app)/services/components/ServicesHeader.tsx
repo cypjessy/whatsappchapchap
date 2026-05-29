@@ -93,7 +93,7 @@ function BulkActionBar({
               <button
                 onClick={onActivate}
                 disabled={isLoading || selectedCount === 0}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#10b981] text-white rounded-lg text-xs font-bold hover:bg-[#059669] transition-all active:scale-95 disabled:opacity-50 shadow-md3-level1"
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#10b981] text-white rounded-lg text-xs font-bold hover:bg-[#059669] transition-all active:scale-95 disabled:opacity-50 shadow-sm"
               >
                 {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
                 Activate
@@ -142,9 +142,9 @@ function IconButton({
 
   const variants = {
     default: isActive
-      ? "bg-[#8b5cf6] text-white shadow-md3-level3 shadow-[#8b5cf6]/25"
+      ? "bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/25"
       : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]",
-    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/40",
+    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/40",
     danger: "bg-[#ef4444] text-white hover:bg-[#dc2626]",
   };
 
@@ -227,7 +227,7 @@ export default function ServicesHeader({
           {/* Left: Title */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative shrink-0">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md3-level3 shadow-[#8b5cf6]/20">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/20">
                 <Layers className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               {/* Subtle pulse ring */}

@@ -170,7 +170,7 @@ function SearchField({
           transition-all duration-200 w-full lg:w-72
           focus:outline-none focus:ring-2 focus:ring-[#25D366]/20
           ${isFocused || value
-            ? "border-[#25D366] bg-surface shadow-md3-level1"
+            ? "border-[#25D366] bg-surface shadow-sm"
             : "border-transparent hover:border-outline-variant"
           }
         `}
@@ -258,7 +258,7 @@ function PriceRangeField({
       className={`
         flex items-center gap-1 bg-surface rounded-xl border-2 p-1.5
         transition-all duration-200
-        ${isFocused ? "border-[#25D366] bg-surface shadow-md3-level1 ring-2 ring-[#25D366]/20" : "border-outline-variant hover:border-outline-variant"}
+        ${isFocused ? "border-[#25D366] bg-surface shadow-sm ring-2 ring-[#25D366]/20" : "border-outline-variant hover:border-outline-variant"}
       `}
     >
       <Tag className="w-3.5 h-3.5 text-outline ml-1.5 shrink-0" />
@@ -303,7 +303,7 @@ function DateRangeField({
       className={`
         flex items-center gap-1 bg-surface rounded-xl border-2 p-1.5
         transition-all duration-200
-        ${isFocused ? "border-[#25D366] bg-surface shadow-md3-level1 ring-2 ring-[#25D366]/20" : "border-outline-variant hover:border-outline-variant"}
+        ${isFocused ? "border-[#25D366] bg-surface shadow-sm ring-2 ring-[#25D366]/20" : "border-outline-variant hover:border-outline-variant"}
       `}
     >
       <Calendar className="w-3.5 h-3.5 text-outline ml-1.5 shrink-0" />
@@ -344,7 +344,7 @@ function ViewToggle({
           className={`
             p-2 rounded-lg transition-all duration-200
             ${view === v
-              ? "bg-surface shadow-md3-level1 text-[#25D366] ring-1 ring-[#25D366]/20"
+              ? "bg-surface shadow-sm text-[#25D366] ring-1 ring-[#25D366]/20"
               : "text-outline hover:text-on-surface-variant"
             }
           `}
@@ -505,7 +505,7 @@ export default function ProductFilters({
   return (
     <div className="space-y-2 mb-3 md:mb-4 px-0">
       {/* Main toolbar — compact on mobile, full on desktop */}
-      <div className="bg-surface rounded-xl md:rounded-2xl p-2.5 md:p-4 border border-outline-variant shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl p-2.5 md:p-4 border border-outline-variant shadow-sm">
         {/* Mobile: compact toolbar */}
         <div className="flex items-center gap-2 lg:hidden">
           {/* Search */}
@@ -542,7 +542,7 @@ export default function ProductFilters({
             className={`
               flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-200 active:scale-95
               ${hasActiveFilters
-                ? "bg-[#25D366] text-white shadow-md3-level2"
+                ? "bg-[#25D366] text-white shadow-md"
                 : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366]"
               }
             `}

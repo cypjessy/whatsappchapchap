@@ -669,8 +669,8 @@ export default function SettingsPage() {
               onClick={async () => { await impactLight(); setActiveTab(tab.id as any); }}
               className={`relative p-3 md:p-4 rounded-xl font-semibold transition-all duration-300 flex flex-col items-center justify-center gap-1.5 select-none group ${
                 activeTab === tab.id
-                  ? `bg-gradient-to-br ${tab.color} text-white shadow-md3-level3 scale-105 border-2 border-white/30`
-                  : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#c4b5fd] hover:text-[#8b5cf6] hover:shadow-md3-level2"
+                  ? `bg-gradient-to-br ${tab.color} text-white shadow-lg scale-105 border-2 border-white/30`
+                  : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#c4b5fd] hover:text-[#8b5cf6] hover:shadow-md"
               }`}
             >
               <i className={`${tab.icon} text-lg md:text-xl transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-110'}`}></i>
@@ -688,7 +688,7 @@ export default function SettingsPage() {
 
       {/* Business Profile Tab */}
       {activeTab === "profile" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-purple-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-info-circle text-xl md:text-2xl text-purple-500"></i>
@@ -862,7 +862,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveProfile(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -882,7 +882,7 @@ export default function SettingsPage() {
 
       {/* Product Store Tab */}
       {activeTab === "products" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-store text-xl md:text-2xl text-blue-500"></i>
@@ -957,7 +957,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveProductSettings(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -977,7 +977,7 @@ export default function SettingsPage() {
 
       {/* Services Tab */}
       {activeTab === "services" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-concierge-bell text-xl md:text-2xl text-purple-500"></i>
@@ -1052,7 +1052,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveServiceSettings(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -1072,7 +1072,7 @@ export default function SettingsPage() {
 
       {/* Shipping Tab */}
       {activeTab === "shipping" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border-l-4 border-green-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-shipping-fast text-xl md:text-2xl text-green-500"></i>
@@ -1164,7 +1164,7 @@ export default function SettingsPage() {
             <button
               onClick={editingMethodId ? () => { setEditingMethodId(null); setNewShippingMethod({ name: "", price: 0, estimatedDays: "", description: "" }); setSelectedPreset(""); } : addShippingMethod}
               disabled={saving || !newShippingMethod.name}
-              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
+              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
                 editingMethodId 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
                   : "bg-gradient-to-r from-green-500 to-teal-500"
@@ -1199,7 +1199,7 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-3">
                 {shippingMethods.map((method) => (
-                  <div key={method.id} className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant hover:shadow-md3-level2 transition-all duration-300">
+                  <div key={method.id} className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant hover:shadow-md transition-all duration-300">
                     <div>
                       <h4 className="font-bold">{method.name}</h4>
                       <p className="text-sm text-on-surface-variant">
@@ -1231,7 +1231,7 @@ export default function SettingsPage() {
 
       {/* Pickup Stations Tab */}
       {activeTab === "pickup-stations" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-map-marker-alt text-xl md:text-2xl text-blue-500"></i>
@@ -1349,7 +1349,7 @@ export default function SettingsPage() {
             <button
               onClick={editingStationId ? updatePickupStation : addPickupStation}
               disabled={saving || !newPickupStation.county || !newPickupStation.town || !newPickupStation.stationName}
-              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
+              className={`mt-3 md:mt-4 px-5 md:px-6 py-2.5 md:py-3 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm md:text-base ${
                 editingStationId 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500" 
                   : "bg-gradient-to-r from-green-500 to-teal-500"
@@ -1392,7 +1392,7 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-3">
                 {pickupStations.map((station) => (
-                  <div key={station.id} className="flex items-start justify-between p-4 bg-surface rounded-xl border border-outline-variant hover:shadow-md3-level2 transition-all duration-300">
+                  <div key={station.id} className="flex items-start justify-between p-4 bg-surface rounded-xl border border-outline-variant hover:shadow-md transition-all duration-300">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-bold">{station.stationName}</h4>
@@ -1452,7 +1452,7 @@ export default function SettingsPage() {
       {activeTab === "whatsapp" && (
         <div className="space-y-6">
           {/* Business Name */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <h3 className="font-bold text-base md:text-lg flex items-center gap-2 mb-3 md:mb-4">
               <i className="fas fa-store text-[#8b5cf6]"></i>
               Business Name
@@ -1471,7 +1471,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Welcome Message */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
                 <i className="fas fa-hand-sparkles text-[#8b5cf6]"></i>
@@ -1511,7 +1511,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "👋 Hi there! Welcome to {{business_name}}!\n\nWe're excited to have you here. How can we help you today?\n\n📞 Contact us: {{phone}}\n🌐 Visit: {{website}}" }))}
-                  className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-left hover:border-blue-400 hover:shadow-md3-level2 transition-all group"
+                  className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-left hover:border-blue-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1526,7 +1526,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Hello! 👋\n\nThank you for contacting {{business_name}}.\n\nWe offer:\n✅ Quality products/services\n✅ Fast delivery\n✅ Excellent customer support\n\nHow can we assist you today?" }))}
-                  className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-left hover:border-green-400 hover:shadow-md3-level2 transition-all group"
+                  className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-left hover:border-green-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1541,7 +1541,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "🎉 Welcome to {{business_name}}!\n\nWe're here to serve you 24/7.\n\n⏰ Business Hours: Mon-Sat, 9AM-6PM\n📍 Location: {{address}}\n📱 WhatsApp: {{phone}}\n\nWhat would you like to know about?" }))}
-                  className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-left hover:border-purple-400 hover:shadow-md3-level2 transition-all group"
+                  className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-left hover:border-purple-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1556,7 +1556,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Hi! Thanks for reaching out to {{business_name}} 🙏\n\nI'm here to help you with:\n• Product inquiries\n• Order status\n• Booking appointments\n• General questions\n\nPlease let me know what you need!" }))}
-                  className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl text-left hover:border-orange-400 hover:shadow-md3-level2 transition-all group"
+                  className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl text-left hover:border-orange-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1571,7 +1571,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "Welcome to {{business_name}}! ✨\n\nWe specialize in providing top-quality products and exceptional service.\n\n💬 Chat with us anytime\n🚀 Fast response guaranteed\n⭐ Customer satisfaction is our priority\n\nHow can we help you today?" }))}
-                  className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-xl text-left hover:border-pink-400 hover:shadow-md3-level2 transition-all group"
+                  className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-xl text-left hover:border-pink-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1586,7 +1586,7 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setWhatsappSettings(prev => ({ ...prev, welcomeMessage: "👋 Hello!\n\nYou've reached {{business_name}}.\n\nFor quick assistance:\n1️⃣ Browse our catalog\n2️⃣ Check order status\n3️⃣ Book an appointment\n4️⃣ Speak with support\n\nReply with a number or ask away!" }))}
-                  className="p-4 bg-gradient-to-br from-cyan-50 to-sky-50 border-2 border-cyan-200 rounded-xl text-left hover:border-cyan-400 hover:shadow-md3-level2 transition-all group"
+                  className="p-4 bg-gradient-to-br from-cyan-50 to-sky-50 border-2 border-cyan-200 rounded-xl text-left hover:border-cyan-400 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1649,7 +1649,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Auto Reply */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-reply text-[#8b5cf6]"></i>
@@ -1681,7 +1681,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Away Message */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-moon text-[#8b5cf6]"></i>
@@ -1717,7 +1717,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveWhatsAppSettings(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -1737,7 +1737,7 @@ export default function SettingsPage() {
 
       {/* Payment Methods Tab */}
       {activeTab === "payments" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-credit-card text-xl md:text-2xl text-green-500"></i>
@@ -1789,7 +1789,7 @@ export default function SettingsPage() {
                         onClick={() => setMpesaActiveTab(tab.id as any)}
                         className={`flex-1 px-4 py-2.5 font-semibold text-sm rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                           mpesaActiveTab === tab.id
-                            ? 'bg-surface text-green-700 shadow-md3-level2 scale-100'
+                            ? 'bg-surface text-green-700 shadow-md scale-100'
                             : 'text-on-surface-variant hover:bg-surface/50 hover:text-green-600'
                         }`}
                       >
@@ -2068,7 +2068,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => { await impactLight(); saveProfile(); }}
               disabled={saving}
-              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-md3-level3 hover:shadow-md3-level4 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
+              className="px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2 text-sm md:text-base"
             >
               {saving ? (
                 <>
@@ -2088,7 +2088,7 @@ export default function SettingsPage() {
 
       {/* Security Tab - Biometric Authentication */}
       {activeTab === "security" && (
-        <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 mx-4 md:mx-6 mt-4 md:mt-6">
             <div className="flex items-start gap-3">
               <i className="fas fa-shield-alt text-xl md:text-2xl text-orange-500"></i>
@@ -2206,7 +2206,7 @@ export default function SettingsPage() {
                   } ${!biometricAvailable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-surface shadow-md3-level3 transition-transform duration-300 ${
+                    className={`inline-block h-6 w-6 transform rounded-full bg-surface shadow-lg transition-transform duration-300 ${
                       biometricEnabled && biometricAvailable ? 'translate-x-7' : 'translate-x-1'
                     }`}
                   />
@@ -2245,7 +2245,7 @@ export default function SettingsPage() {
                     }
                   }}
                   disabled={testingBiometric}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-md3-level3 hover:shadow-md3-level4 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {testingBiometric ? (
                     <>

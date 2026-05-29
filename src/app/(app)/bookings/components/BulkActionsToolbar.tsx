@@ -66,7 +66,7 @@ function DeleteConfirmDialog({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-[#ef4444] text-white font-semibold text-sm hover:bg-[#dc2626] transition-all active:scale-95 shadow-md3-level3 shadow-[#ef4444]/20"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#ef4444] text-white font-semibold text-sm hover:bg-[#dc2626] transition-all active:scale-95 shadow-md shadow-[#ef4444]/20"
           >
             Delete
           </button>
@@ -90,10 +90,10 @@ function ActionBtn({
 
   const variants = {
     default: isHovered
-      ? "bg-surface text-[#8b5cf6] shadow-md3-level3 shadow-white/20"
+      ? "bg-surface text-[#8b5cf6] shadow-md shadow-white/20"
       : "bg-surface/15 text-white hover:bg-surface/25",
     danger: isHovered
-      ? "bg-[#dc2626] text-white shadow-md3-level3 shadow-[#ef4444]/30"
+      ? "bg-[#dc2626] text-white shadow-md shadow-[#ef4444]/30"
       : "bg-[#ef4444]/80 text-white hover:bg-[#ef4444]",
     ghost: isHovered
       ? "bg-surface/30 text-white"
@@ -191,7 +191,7 @@ export default function BulkActionsToolbar({
         className={`
           relative overflow-hidden rounded-xl md:rounded-2xl p-3 md:p-4 mb-6
           bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed]
-          shadow-md3-level3 shadow-[#8b5cf6]/20
+          shadow-md shadow-[#8b5cf6]/20
           transition-all duration-500 ease-out
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}
         `}

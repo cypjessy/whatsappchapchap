@@ -87,7 +87,7 @@ function getSafeFirstLetter(booking: Booking): string {
 
 function ShimmerCard() {
   return (
-    <div className="md3-card-elevated p-4 md:p-5 overflow-hidden relative">
+    <div className="bg-surface border-2 border-outline shadow-md rounded-xl md:rounded-2xl p-4 md:p-5 overflow-hidden relative">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -149,11 +149,11 @@ function BookingCard({
   return (
     <div
       className={`
-        group relative md3-card-elevated 
-        p-4 md:p-5 cursor-pointer overflow-hidden
+        group relative bg-surface border-2 border-outline shadow-md
+        rounded-xl md:rounded-2xl p-4 md:p-5 cursor-pointer overflow-hidden
         transition-all duration-200 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-        ${isHovered ? "shadow-md3-level2 -translate-y-0.5" : "shadow-md3-level1 hover:shadow-md3-level2"}
+        ${isHovered ? "shadow-lg -translate-y-0.5" : "shadow-md hover:shadow-lg"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -274,7 +274,7 @@ function BookingCard({
               relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
               transition-all duration-200 active:scale-90
               bg-[var(--md-sys-color-success-container)] text-[var(--md-sys-color-on-success-container)]
-              hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md3-level2
+              hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md
             `}
             aria-label="Message on WhatsApp"
             title="Message on WhatsApp"
@@ -292,7 +292,7 @@ function BookingCard({
               relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
               transition-all duration-200 active:scale-90
               bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]
-              hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:shadow-md3-level2
+              hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] hover:shadow-md
             `}
             aria-label="View booking details"
             title="View details"
@@ -311,7 +311,7 @@ function BookingCard({
                 relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
                 transition-all duration-200 active:scale-90
                 bg-[var(--md-sys-color-success-container)] text-[var(--md-sys-color-on-success-container)]
-                hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md3-level2
+                hover:bg-[var(--md-sys-color-success)] hover:text-[var(--md-sys-color-on-success)] hover:shadow-md
               `}
               aria-label="Mark completed"
               title="Mark as completed"
@@ -331,7 +331,7 @@ function BookingCard({
                 relative w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
                 transition-all duration-200 active:scale-90
                 bg-[#FEE2E2] text-[#DC2626]
-                hover:bg-[#DC2626] hover:text-white hover:shadow-md3-level2
+                hover:bg-[#DC2626] hover:text-white hover:shadow-md
               `}
               aria-label="Cancel booking"
               title="Cancel booking"
@@ -403,9 +403,7 @@ export default function BookingGridView({
     /* MD3 Grid Container */
     .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 { gap: 12px !important; }
     
-    /* MD3 Grid Cards */
-    .md3-card-elevated { border-radius: 16px !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; background: var(--md-sys-color-surface, white) !important; padding: 16px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-    .md3-card-elevated:active { transform: scale(0.98) !important; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important; }
+    /* MD3 Grid Cards - replaced with Tailwind utility classes */
     
     /* MD3 Status Badges */
     .rounded-full.px-3.py-1.text-xs { border-radius: 16px !important; font-size: 11px !important; font-weight: 500 !important; letter-spacing: 0.3px !important; text-transform: uppercase !important; }

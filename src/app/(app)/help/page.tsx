@@ -50,7 +50,7 @@ export default function HelpPage() {
           
           <div className="relative max-w-xl mx-auto mb-8">
             <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl"></i>
-            <input type="text" placeholder="Search for answers..." className="w-full pl-12 pr-20 py-5 rounded-2xl text-lg shadow-md3-level3 focus:outline-none focus:translate-y-[-2px] focus:shadow-md3-level4" />
+            <input type="text" placeholder="Search for answers..." className="w-full pl-12 pr-20 py-5 rounded-2xl text-lg shadow-lg focus:outline-none focus:translate-y-[-2px] focus:shadow-xl" />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-surface px-3 py-1 rounded-lg text-sm font-semibold text-on-surface-variant">⌘K</span>
           </div>
 
@@ -79,7 +79,7 @@ export default function HelpPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {categories.map((cat, idx) => (
-            <div key={idx} className="md3-card-elevated p-6 hover:border-[#25D366] hover:translate-y-[-5px] hover:shadow-md3-level3 transition-all cursor-pointer group">
+            <div key={idx} className="bg-surface rounded-xl border border-outline-variant p-6 hover:border-[#25D366] hover:translate-y-[-5px] hover:shadow-lg transition-all cursor-pointer group">
               <div className={`w-14 h-14 rounded-xl ${cat.bg} flex items-center justify-center text-2xl mb-4 ${cat.color}`}>
                 <i className={`fas ${cat.icon}`}></i>
               </div>
@@ -100,7 +100,7 @@ export default function HelpPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {popularArticles.map((article, idx) => (
-              <div key={idx} className="md3-card-elevated p-5 flex items-start gap-4 hover:border-[#25D366] hover:shadow-md3-level2 transition-all cursor-pointer">
+              <div key={idx} className="bg-surface rounded-xl border border-outline-variant p-5 flex items-start gap-4 hover:border-[#25D366] hover:shadow-md transition-all cursor-pointer">
                 <div className="w-12 h-12 bg-[var(--md-sys-color-surface)] rounded-lg flex items-center justify-center text-xl text-[#25D366] shrink-0">
                   <i className={`fas ${article.icon}`}></i>
                 </div>
@@ -119,7 +119,7 @@ export default function HelpPage() {
 
         {/* Support Options */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="md3-card-elevated p-6 text-center hover:translate-y-[-5px] hover:shadow-md3-level3 transition-all">
+          <div className="bg-surface rounded-xl border border-outline-variant p-6 text-center hover:translate-y-[-5px] hover:shadow-lg transition-all">
             <div className="w-20 h-20 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center text-3xl mx-auto mb-4 text-[var(--md-sys-color-on-primary-container)]">
               <i className="fas fa-comments"></i>
             </div>
@@ -130,18 +130,18 @@ export default function HelpPage() {
             </button>
           </div>
 
-          <div className="bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-2xl p-6 text-center shadow-md3-level3 hover:translate-y-[-5px] transition-all">
+          <div className="bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-2xl p-6 text-center shadow-lg hover:translate-y-[-5px] transition-all">
             <div className="w-20 h-20 bg-surface/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
               <i className="fab fa-whatsapp"></i>
             </div>
             <h3 className="text-xl font-bold mb-2">WhatsApp Support</h3>
             <p className="opacity-90 mb-4">Get help directly on WhatsApp. Message us for quick assistance with your store.</p>
-            <button className="px-6 py-3 bg-surface text-[#25D366] rounded-xl font-semibold hover:translate-y-[-2px] hover:shadow-md3-level3 transition-all">
+            <button className="px-6 py-3 bg-surface text-[#25D366] rounded-xl font-semibold hover:translate-y-[-2px] hover:shadow-lg transition-all">
               <i className="fab fa-whatsapp mr-2"></i>Message Us
             </button>
           </div>
 
-          <div className="md3-card-elevated p-6 text-center hover:translate-y-[-5px] hover:shadow-md3-level3 transition-all">
+          <div className="bg-surface rounded-xl border border-outline-variant p-6 text-center hover:translate-y-[-5px] hover:shadow-lg transition-all">
             <div className="w-20 h-20 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center text-3xl mx-auto mb-4 text-[var(--md-sys-color-on-primary-container)]">
               <i className="fas fa-envelope"></i>
             </div>
@@ -160,7 +160,7 @@ export default function HelpPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {videos.map((video, idx) => (
-              <div key={idx} className="bg-surface rounded-2xl overflow-hidden shadow-md3-level2 border border-outline-variant hover:translate-y-[-5px] hover:shadow-md3-level3 transition-all">
+              <div key={idx} className="bg-surface rounded-2xl overflow-hidden shadow-md border border-outline-variant hover:translate-y-[-5px] hover:shadow-lg transition-all">
                 <div className={`h-40 bg-gradient-to-br ${video.color} flex items-center justify-center relative`}>
                   <i className="fas fa-play-circle text-white text-5xl opacity-80"></i>
                   <div className="absolute bottom-4 right-4 bg-black/80 text-white px-3 py-1 rounded-lg text-sm font-semibold">
@@ -203,7 +203,7 @@ export default function HelpPage() {
 
         {/* Community Section */}
         <section className="bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] rounded-2xl p-10 text-center mb-16">
-          <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center mx-auto mb-6 shadow-md3-level2 text-4xl">
+          <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center mx-auto mb-6 shadow-md text-4xl">
             👥
           </div>
           <h2 className="text-3xl font-extrabold mb-4">Join Our Seller Community</h2>
@@ -222,7 +222,7 @@ export default function HelpPage() {
               <div className="text-on-surface-variant">Expert Mentors</div>
             </div>
           </div>
-          <button className="px-8 py-4 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-lg hover:translate-y-[-2px] hover:shadow-md3-level3 transition-all">
+          <button className="px-8 py-4 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-lg hover:translate-y-[-2px] hover:shadow-lg transition-all">
             <i className="fas fa-users mr-2"></i>Join Community
           </button>
         </section>

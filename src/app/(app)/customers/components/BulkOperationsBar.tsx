@@ -64,7 +64,7 @@ function SelectionCheckbox({
           w-5 h-5 rounded-md border-2 flex items-center justify-center
           transition-all duration-200
           ${checked || indeterminate
-            ? "bg-[#25D366] border-[#25D366] shadow-md3-level1 shadow-[#25D366]/20"
+            ? "bg-[#25D366] border-[#25D366] shadow-sm shadow-[#25D366]/20"
             : "border-outline-variant bg-surface group-hover:border-outline-variant"
           }
         `}>
@@ -104,7 +104,7 @@ function ActionButton({
         border transition-all duration-200 active:scale-95
         ${disabled
           ? "opacity-40 cursor-not-allowed border-transparent"
-          : `${action.color} ${action.border} hover:shadow-md3-level2`
+          : `${action.color} ${action.border} hover:shadow-md`
         }
       `}
     >
@@ -151,7 +151,7 @@ function MobileActionMenu({
           flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold
           transition-all duration-200 active:scale-95
           ${isOpen
-            ? "bg-[#8b5cf6] text-white shadow-md3-level2"
+            ? "bg-[#8b5cf6] text-white shadow-md"
             : "bg-surface border-2 border-outline-variant text-on-surface-variant"
           }
         `}
@@ -164,7 +164,7 @@ function MobileActionMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-xl border border-outline-variant shadow-md3-level4 z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-xl border border-outline-variant shadow-xl z-50 overflow-hidden animate-fadeIn">
           {availableActions.map((action) => (
             <button
               key={action.id}
@@ -251,7 +251,7 @@ export default function BulkOperationsBar({
   }
 
   return (
-    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-md3-level1 animate-slideDown">
+    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-sm animate-slideDown">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Left: Selection */}
         <div className="flex items-center gap-3">

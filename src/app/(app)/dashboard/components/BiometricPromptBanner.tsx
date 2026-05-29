@@ -60,7 +60,7 @@ export function BiometricPromptBanner() {
       className={`
         relative overflow-hidden rounded-2xl
         bg-gradient-to-br from-[#667eea] to-[#764ba2]
-        shadow-md3-level3 shadow-purple-500/20
+        shadow-lg shadow-purple-500/20
         transition-all duration-500 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}
       `}
@@ -103,7 +103,7 @@ export function BiometricPromptBanner() {
               className="
                 inline-flex items-center gap-2 px-4 py-2
                 bg-white text-[#667eea] font-bold text-sm rounded-xl
-                shadow-md3-level1 hover:shadow-md3-level2
+                shadow-sm hover:shadow-md
                 hover:-translate-y-0.5 active:translate-y-0 active:scale-95
                 transition-all duration-200
               "

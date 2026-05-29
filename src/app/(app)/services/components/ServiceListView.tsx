@@ -91,14 +91,14 @@ function ActionButton({
           transition-all duration-200 active:scale-90
           ${bgColor} ${iconColor}
           ${hoverBg} ${hoverText}
-          hover:shadow-md3-level2
+          hover:shadow-md
         `}
         aria-label={label}
       >
         <Icon className="w-4 h-4" />
       </button>
       {showTooltip && (
-        <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1e293b] text-white text-[10px] font-bold rounded-md whitespace-nowrap shadow-md3-level3 animate-fadeIn">
+        <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1e293b] text-white text-[10px] font-bold rounded-md whitespace-nowrap shadow-lg animate-fadeIn">
           {label}
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e293b] rotate-45" />
         </div>
@@ -156,8 +156,8 @@ function ServiceRow({
         transition-all duration-200 cursor-pointer
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
         ${isSelected
-          ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10"
-          : "border-outline-variant hover:border-outline-variant hover:shadow-md3-level3 hover:-translate-y-0.5"
+          ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
+          : "border-outline-variant hover:border-outline-variant hover:shadow-lg hover:-translate-y-0.5"
         }
       `}
       style={{ transitionDelay: `${index * 60}ms` }}

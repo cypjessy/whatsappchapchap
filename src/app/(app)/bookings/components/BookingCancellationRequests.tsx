@@ -151,7 +151,7 @@ function RequestCard({
 
   return (
     <div
-      className={`group bg-surface border-2 ${statusStyle.border} ${statusStyle.borderHover} rounded-xl p-4 sm:p-5 transition-all duration-300 hover:shadow-md3-level4 hover:-translate-y-0.5 animate-fadeIn`}
+      className={`group bg-surface border-2 ${statusStyle.border} ${statusStyle.borderHover} rounded-xl p-4 sm:p-5    transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 animate-fadeIn`}
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="flex items-start justify-between mb-4 gap-3">
@@ -167,7 +167,7 @@ function RequestCard({
           </div>
         </div>
         <span
-          className={`flex-shrink-0 px-3 py-1.5 ${statusStyle.bg} ${statusStyle.text} rounded-full text-xs font-bold shadow-md3-level2 flex items-center gap-1.5`}
+          className={`flex-shrink-0 px-3 py-1.5 ${statusStyle.bg} ${statusStyle.text} rounded-full text-xs font-bold shadow-sm flex items-center gap-1.5`}
         >
           <i className={`fas ${statusStyle.icon}`} />
           <span className="hidden sm:inline">{statusStyle.label}</span>
@@ -176,14 +176,14 @@ function RequestCard({
 
       <div className="space-y-2.5 mb-4">
         <div className="flex items-center gap-2.5 text-on-surface-variant bg-surface p-2.5 rounded-lg text-sm">
-          <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center shadow-md3-level1 flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center shadow-sm flex-shrink-0">
             <i className="fas fa-phone-alt text-xs text-gray-400" />
           </div>
           <span className="font-medium truncate">{request.customerPhone || "N/A"}</span>
         </div>
 
         <div className="flex items-center gap-2.5 text-on-surface-variant bg-surface p-2.5 rounded-lg text-sm">
-          <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center shadow-md3-level1 flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center shadow-sm flex-shrink-0">
             <i className="fas fa-user text-xs text-gray-400" />
           </div>
           <span className="font-medium truncate">
@@ -192,7 +192,7 @@ function RequestCard({
         </div>
 
         <div className="font-bold text-on-surface text-xl sm:text-2xl bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center shadow-md3-level1 flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center shadow-sm flex-shrink-0">
             <i className="fas fa-coins text-sm text-green-600" />
           </div>
           <span>{formatCurrency(request.bookingData?.price || 0)}</span>
@@ -237,14 +237,14 @@ function RequestCard({
         <div className="flex gap-2">
           <button
             onClick={() => onAction(request.id, request.bookingId, "approve")}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-sm shadow-md3-level3 hover:from-green-600 hover:to-green-700 transition-all active:scale-95"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-sm shadow-md hover:from-green-600 hover:to-green-700 transition-all active:scale-95"
           >
             <i className="fas fa-check" />
             Approve
           </button>
           <button
             onClick={() => onAction(request.id, request.bookingId, "reject")}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold text-sm shadow-md3-level3 hover:from-red-600 hover:to-red-700 transition-all active:scale-95"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold text-sm shadow-md hover:from-red-600 hover:to-red-700 transition-all active:scale-95"
           >
             <i className="fas fa-times" />
             Reject
@@ -314,7 +314,7 @@ export default function BookingCancellationRequests({
     <div className="animate-fadeIn">
       <div className="mb-6 animate-fadeIn">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md3-level3 flex-shrink-0 animate-slideUp">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md flex-shrink-0 animate-slideUp">
             <i className="fas fa-exclamation-triangle text-lg sm:text-xl" />
           </div>
           <div className="min-w-0">
@@ -340,8 +340,8 @@ export default function BookingCancellationRequests({
               className={`
                 shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95
                 ${cancellationFilter === tab.id
-                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
-                  : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
+                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
+                  : "bg-surface border-2 border-outline text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
                 }
               `}
             >

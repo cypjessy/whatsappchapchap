@@ -136,7 +136,7 @@ function useAnimatedCounter(target: number, duration: number = 1200, delay: numb
 
 function ShimmerCard() {
   return (
-    <div className="flex-shrink-0 snap-start bg-surface px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 border-outline-variant shadow-md3-level1 min-w-[160px] md:min-w-0 md:flex-1 overflow-hidden relative">
+    <div className="flex-shrink-0 snap-start bg-surface px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 border-outline-variant shadow-sm min-w-[160px] md:min-w-0 md:flex-1 overflow-hidden relative">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="flex items-start justify-between mb-2">
         <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-surface-variant" />
@@ -189,7 +189,7 @@ function StatCard({
         border-2 transition-all duration-200 ease-out text-left
         min-w-[0] md:min-w-0
         ${config.borderColor} ${config.hoverBorder}
-        ${isHovered ? "shadow-md3-level3 -translate-y-0.5" : "shadow-md3-level1"}
+        ${isHovered ? "shadow-lg -translate-y-0.5" : "shadow-sm"}
         ${onClick ? "cursor-pointer active:scale-[0.98]" : "cursor-default"}
         bg-surface
       `}
@@ -202,7 +202,7 @@ function StatCard({
             w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center
             transition-all duration-300
             ${config.iconBg}
-            ${isHovered ? "scale-110 shadow-md3-level1" : "scale-100"}
+            ${isHovered ? "scale-110 shadow-sm" : "scale-100"}
           `}
         >
           <config.icon
@@ -373,7 +373,7 @@ export default function ProductStats({
         onClick={() => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
         className={`
           absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full
-          bg-white shadow-md3-level3 border border-outline-variant
+          bg-white shadow-lg border border-outline-variant
           flex items-center justify-center text-on-surface-variant hover:text-[#128C7E] hover:border-[#25D366]
           transition-all duration-300 active:scale-90 md:hidden
           ${canScrollRight ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}

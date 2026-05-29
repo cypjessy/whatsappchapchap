@@ -101,7 +101,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       className={`
         pointer-events-auto
         ${variantStyles[toast.variant || "default"]}
-        border rounded-xl shadow-md3-level3 p-4
+        border rounded-xl shadow-lg p-4
         transition-all duration-300 ease-out
         ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"}
       `}

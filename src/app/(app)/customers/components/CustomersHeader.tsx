@@ -68,12 +68,12 @@ function ActionButton({
     `,
     primary: `
       bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white border-0
-      shadow-md3-level3 shadow-[#25D366]/20 hover:shadow-md3-level4 hover:shadow-[#25D366]/30
+      shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:shadow-[#25D366]/30
       hover:-translate-y-0.5 active:translate-y-0
     `,
     danger: `
       bg-[#ef4444] text-white border-0
-      shadow-md3-level3 shadow-[#ef4444]/20 hover:shadow-md3-level4 hover:shadow-[#ef4444]/30
+      shadow-lg shadow-[#ef4444]/20 hover:shadow-xl hover:shadow-[#ef4444]/30
       hover:-translate-y-0.5 active:translate-y-0
     `,
     ghost: `

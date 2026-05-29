@@ -99,7 +99,7 @@ function MobileHeader({
         md:hidden relative overflow-hidden
         bg-[#25D366]
         rounded-2xl p-4 text-white
-        shadow-md3-level2 shadow-[#25D366]/20
+        shadow-md shadow-[#25D366]/20
         transition-all duration-500
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}

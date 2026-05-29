@@ -25,7 +25,7 @@ interface BookingAnalyticsProps {
 
 function ShimmerSkeleton() {
   return (
-    <div className="md3-card-elevated p-4 overflow-hidden relative">
+    <div className="bg-surface border-2 border-outline rounded-xl p-4 overflow-hidden relative">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/60 to-transparent z-10" />
       <div className="h-3.5 bg-[var(--md-sys-color-surface-variant)] rounded-full mb-3 w-20" />
       <div className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-28" />
@@ -48,7 +48,7 @@ function AnalyticsCard({ label, value, icon, color, trend, delay = 0 }: Analytic
         group relative bg-gradient-to-br from-white to-[#f8fafc] 
         p-3 sm:p-4 md:p-5 rounded-xl border border-outline-variant 
         transition-all duration-300 ease-out cursor-default
-        hover:shadow-md3-level3 hover:shadow-[#e2e8f0]/60 hover:border-outline-variant hover:-translate-y-0.5
+        hover:shadow-lg hover:shadow-[#e2e8f0]/60 hover:border-outline hover:-translate-y-0.5
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
       `}
       style={{ transitionDelay: `${delay}s` }}

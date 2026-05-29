@@ -122,7 +122,7 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
                   w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center
                   text-xs md:text-sm font-bold transition-all duration-300
                   ${isActive
-                    ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/25 scale-110"
+                    ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25 scale-110"
                     : isCompleted
                       ? "bg-[#10b981] text-white"
                       : "bg-surface-variant text-outline"
@@ -205,7 +205,7 @@ function ToggleSwitch({ label, checked, onChange }: {
       >
         <div
           className={`
-            absolute top-1 w-6 h-6 bg-surface rounded-full shadow-md3-level2
+            absolute top-1 w-6 h-6 bg-surface rounded-full shadow-md
             transition-transform duration-200
             ${checked ? "translate-x-7" : "translate-x-1"}
           `}
@@ -236,7 +236,7 @@ function SpecButton({
         px-3 py-1.5 md:px-4 md:py-2 rounded-full border-2 text-xs md:text-sm font-semibold transition-all duration-200
         active:scale-95 flex items-center gap-1.5
         ${selected
-          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level2"
+          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md"
           : isCustom
             ? "border-dashed border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
             : "border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-surface"
@@ -774,8 +774,8 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               className={`
                 relative p-3 md:p-4 rounded-xl border-2 transition-all duration-200 text-center
                 ${form.businessType === category.id
-                  ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md3-level2 shadow-[#8b5cf6]/10"
-                  : "border-outline-variant bg-surface hover:border-outline-variant hover:shadow-md3-level1"
+                  ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
+                  : "border-outline-variant bg-surface hover:border-outline-variant hover:shadow-sm"
                 }
               `}
             >
@@ -959,7 +959,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               className={`
                 relative p-4 md:p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
                 ${form.tier === tier.key
-                  ? "border-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/10"
+                  ? "border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/10"
                   : "border-outline-variant hover:border-outline-variant"
                 }
               `}
@@ -1034,7 +1034,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                       w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 flex flex-col items-center justify-center
                       transition-all duration-200 text-xs font-bold
                       ${form.days.has(day)
-                        ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6] shadow-md3-level1"
+                        ? "border-[#8b5cf6] bg-[#ede9fe] text-[#8b5cf6] shadow-sm"
                         : "border-outline-variant bg-surface text-outline hover:border-outline-variant"
                       }
                     `}
@@ -1215,7 +1215,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
                   />
                   <button
                     onClick={() => removeImage(i)}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#ef4444] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md3-level2"
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#ef4444] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                   >
                     <i className="fas fa-times text-xs" />
                   </button>
@@ -1257,7 +1257,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-md3-level4 hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+        className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
       >
         <i className="fas fa-plus mr-2" />
         Add Service
@@ -1273,7 +1273,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
             <div className="sticky top-0 z-10 bg-surface rounded-t-2xl border-b border-outline-variant">
               <div className="flex items-center justify-between px-6 py-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-md3-level3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg">
                     <i className="fas fa-plus text-lg" />
                   </div>
                   <div>
@@ -1358,7 +1358,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                 <button
                   onClick={capturePhoto}
-                  className="w-16 h-16 rounded-full bg-surface shadow-md3-level3 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                  className="w-16 h-16 rounded-full bg-surface shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 >
                   <div className="w-14 h-14 rounded-full border-4 border-[#8b5cf6]" />
                 </button>
@@ -1390,7 +1390,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
               </button>
               <button
                 onClick={confirmClose}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md3-level2 shadow-[#ef4444]/20 hover:shadow-md3-level3 active:scale-95 transition-all duration-200"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md shadow-[#ef4444]/20 hover:shadow-lg active:scale-95 transition-all duration-200"
               >
                 <i className="fas fa-times mr-2" />
                 Discard

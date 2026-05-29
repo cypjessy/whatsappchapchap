@@ -364,7 +364,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSave }: EditO
           <div className="flex-shrink-0 px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-md3-level3 flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
                   <i className="fas fa-edit" />
                 </div>
                 <div className="min-w-0">

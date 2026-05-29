@@ -172,7 +172,7 @@ function StatCard({
   return (
     <div
       className={`
-        bg-surface rounded-2xl p-3 md:p-4 border border-outline-variant
+        bg-surface rounded-2xl p-3 md:p-4 border-2 border-outline
         transition-all duration-200
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
       `}
@@ -193,7 +193,7 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="bg-surface rounded-xl border border-outline-variant shadow-md3-level2 shadow-black/5 p-3 min-w-[140px]">
+    <div className="bg-surface rounded-xl border border-outline-variant shadow-md shadow-black/5 p-3 min-w-[140px]">
       <div className="text-[11px] font-semibold text-outline uppercase tracking-wide mb-2">
         {label}
       </div>
@@ -299,14 +299,13 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
 
   return (
     <div
-      className={`
-        bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden
-        transition-all duration-300
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
-      `}
-    >
-      {/* Header - MD3 styling */}
-      <div className="p-4 md:p-5 border-b border-outline-variant bg-surface-container-lowest">
+      className={`        bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden
+      transition-all duration-300
+      ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+    `}
+  >
+      {/* Header - Physical card styling */}
+      <div className="p-4 md:p-5 border-b-2 border-outline bg-surface-container-low">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#E8F5E9] flex items-center justify-center">
@@ -330,7 +329,7 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
                   className={`
                     px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200
                     ${period === p
-                      ? "bg-surface text-on-surface shadow-md3-level1"
+                      ? "bg-surface text-on-surface shadow-sm"
                       : "text-on-surface-variant hover:text-on-surface"
                     }
                   `}
@@ -367,7 +366,7 @@ export function SalesChart({ refreshTrigger }: SalesChartProps) {
 
       {/* Stats Summary */}
       {!loading && salesData.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 md:gap-3 p-3 md:p-4 border-b border-outline-variant">
+        <div className="grid grid-cols-3 gap-2 md:gap-3 p-3 md:p-4 border-b-2 border-outline">
           <StatCard
             label="Total Sales"
             value={totalSales}

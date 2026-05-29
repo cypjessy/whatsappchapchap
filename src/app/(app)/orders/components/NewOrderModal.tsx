@@ -192,7 +192,7 @@ function ToggleSwitch({
         }`}
       >
         <div
-          className={`absolute top-0.5 w-6 h-6 bg-surface rounded-full shadow-md3-level2 transition-all duration-300 ${
+          className={`absolute top-0.5 w-6 h-6 bg-surface rounded-full shadow-md transition-all duration-300 ${
             checked ? "right-0.5" : "left-0.5"
           }`}
         />
@@ -468,7 +468,7 @@ export default function NewOrderModal({
           <div className="flex-shrink-0 p-4 sm:p-5 border-b border-outline-variant bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0 animate-slideUp">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-md3-level3 flex-shrink-0">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
                   <i className="fas fa-plus" />
                 </div>
                 <div className="min-w-0">
@@ -513,7 +513,7 @@ export default function NewOrderModal({
 
                     {/* Dropdown */}
                     {showCustomerDropdown && filteredCustomers.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-md3-level4 z-20 max-h-56 overflow-y-auto animate-fadeIn">
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-xl z-20 max-h-56 overflow-y-auto animate-fadeIn">
                         {filteredCustomers.map((customer) => (
                           <button
                             key={customer.id}
@@ -539,7 +539,7 @@ export default function NewOrderModal({
                     )}
 
                     {showCustomerDropdown && customerSearch && filteredCustomers.length === 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-md3-level4 z-20 p-4 text-center animate-fadeIn">
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-xl z-20 p-4 text-center animate-fadeIn">
                         <p className="text-sm text-on-surface-variant">No customers found</p>
                       </div>
                     )}
@@ -561,7 +561,7 @@ export default function NewOrderModal({
                         <div className="text-xs text-on-surface-variant">{form.customerPhone}</div>
                       </div>
                       <button
-                        className="w-7 h-7 rounded-full bg-surface text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors shadow-md3-level1"
+                        className="w-7 h-7 rounded-full bg-surface text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors shadow-sm"
                         onClick={() =>
                           setForm((prev) => ({
                             ...prev,
@@ -665,7 +665,7 @@ export default function NewOrderModal({
                                 isOutOfStock ? 'opacity-50 bg-red-50/30' : 'hover:bg-surface'
                               }`}
                             >
-                              <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                              <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm">
                                 {prodImg ? (
                                   <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
                                 ) : (
@@ -695,7 +695,7 @@ export default function NewOrderModal({
                               <button
                                 onClick={() => addProduct(product)}
                                 disabled={isOutOfStock}
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90 shadow-md3-level1 ${
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90 shadow-sm ${
                                   isOutOfStock
                                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     : 'bg-[#25D366] text-white hover:bg-[#22c55e] opacity-0 group-hover:opacity-100 sm:opacity-100'
@@ -732,7 +732,7 @@ export default function NewOrderModal({
                             key={item.productId}
                             className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all group"
                           >
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm">
                               {prodImg ? (
                                 <img src={prodImg} alt={item.name} className="w-full h-full object-cover" />
                               ) : (
@@ -829,14 +829,14 @@ export default function NewOrderModal({
                         }}
                         className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                           form.paymentMethod === method.id
-                            ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] shadow-md3-level1"
+                            ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] shadow-sm"
                             : "border-outline-variant hover:border-[#25D366]/50 hover:bg-surface"
                         }`}
                       >
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 transition-all ${
                             form.paymentMethod === method.id
-                              ? "bg-[#25D366] text-white shadow-md3-level2"
+                              ? "bg-[#25D366] text-white shadow-md"
                               : "bg-surface text-on-surface-variant"
                           }`}
                         >
@@ -872,7 +872,7 @@ export default function NewOrderModal({
                       onClick={() => setForm((prev) => ({ ...prev, deliveryType: 'delivery' }))}
                       className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
                         form.deliveryType === 'delivery'
-                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-md3-level1'
+                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-sm'
                           : 'border-outline-variant text-on-surface-variant hover:border-[#25D366]/50'
                       }`}
                     >
@@ -883,7 +883,7 @@ export default function NewOrderModal({
                       onClick={() => setForm((prev) => ({ ...prev, deliveryType: 'pickup' }))}
                       className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
                         form.deliveryType === 'pickup'
-                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-md3-level1'
+                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-sm'
                           : 'border-outline-variant text-on-surface-variant hover:border-[#25D366]/50'
                       }`}
                     >
@@ -1048,7 +1048,7 @@ export default function NewOrderModal({
                 <button
                   className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 min-w-[140px] ${
                     isFormValid
-                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:shadow-md3-level3 hover:from-[#22c55e] hover:to-[#0d9488]"
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:shadow-lg hover:from-[#22c55e] hover:to-[#0d9488]"
                       : "bg-surface-container-high text-gray-400 cursor-not-allowed"
                   }`}
                   onClick={handleSubmit}
@@ -1094,7 +1094,7 @@ export default function NewOrderModal({
                 Review
               </button>
               <button
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold hover:shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                 onClick={confirmCreate}
                 disabled={isSubmitting}
               >

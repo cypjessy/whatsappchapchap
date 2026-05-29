@@ -265,7 +265,7 @@ export default function RegisterPage() {
             <div className="animate-[fadeIn_0.4s_ease] flex-1 flex flex-col">
               {/* MD3 Header */}
               <div className="text-center mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md3-level1">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm">
                   <i className="fab fa-whatsapp text-2xl text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-on-surface mb-1">Connect WhatsApp</h3>
@@ -321,9 +321,9 @@ export default function RegisterPage() {
                 onClick={verifyAndComplete}
                 disabled={!validateStep(currentStep) || isLoading}
                 className="py-2.5 px-5 bg-[#25D366] text-white rounded-lg font-semibold transition-all 
-                  hover:shadow-md3-level2 active:scale-[0.98]
+                  hover:shadow-md active:scale-[0.98]
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  flex items-center gap-2 text-sm shadow-md3-level1"
+                  flex items-center gap-2 text-sm shadow-sm"
               >
                 {isLoading ? (
                   <>
@@ -346,9 +346,9 @@ export default function RegisterPage() {
                 onClick={handleSaveBusiness}
                 disabled={!validateStep(currentStep) || isLoading}
                 className="py-2.5 px-5 bg-[#25D366] text-white rounded-lg font-semibold transition-all 
-                  hover:shadow-md3-level2 active:scale-[0.98]
+                  hover:shadow-md active:scale-[0.98]
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  flex items-center gap-2 text-sm shadow-md3-level1"
+                  flex items-center gap-2 text-sm shadow-sm"
               >
                 {isLoading ? (
                   <>

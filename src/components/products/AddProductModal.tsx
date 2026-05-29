@@ -70,7 +70,7 @@ function StepIndicator({ currentStep, completedSteps }: { currentStep: number; c
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300
                 ${isActive
-                  ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/25"
+                  ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25"
                   : isCompleted
                     ? "bg-[#10b981] text-white"
                     : "bg-surface-variant text-outline"
@@ -177,15 +177,15 @@ function SelectableCard({
         relative p-4 border-2 rounded-xl text-center cursor-pointer transition-all duration-200
         active:scale-95
         ${selected
-          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md3-level2 shadow-[#8b5cf6]/10"
-          : "border-outline-variant bg-white hover:border-outline-variant hover:shadow-md3-level1"
+          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
+          : "border-outline-variant bg-white hover:border-outline-variant hover:shadow-sm"
         }
         ${isPressed ? "scale-95" : "scale-100"}
         ${className}
       `}
     >
       {selected && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-md3-level1">
+        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-sm">
           <i className="fas fa-check text-[9px]" />
         </div>
       )}
@@ -215,7 +215,7 @@ function SpecButton({
         px-3 py-1.5 md:px-4 md:py-2 rounded-full border-2 text-xs md:text-sm font-semibold transition-all duration-200
         active:scale-95 flex items-center gap-1.5
         ${selected
-          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level2"
+          ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md"
           : isCustom
             ? "border-dashed border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
             : "border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] bg-white"
@@ -274,7 +274,7 @@ function MultiSelectDropdown({
       </button>
       
       {isOpen && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-outline-variant rounded-lg shadow-md3-level3 max-h-64 overflow-hidden flex flex-col">
+        <div className="absolute z-20 mt-1 w-full bg-white border border-outline-variant rounded-lg shadow-lg max-h-64 overflow-hidden flex flex-col">
           <div className="p-2 border-b border-outline-variant">
             <input
               type="text"
@@ -384,7 +384,7 @@ function ImageCard({
     <div
       className={`
         relative rounded-xl overflow-hidden border-2 transition-all duration-200 group
-        ${image.isMain ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10" : "border-outline-variant"}
+        ${image.isMain ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10" : "border-outline-variant"}
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -424,7 +424,7 @@ function ImageCard({
       </div>
 
       {image.isMain && (
-        <div className="absolute top-2 left-2 bg-[#8b5cf6] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-md3-level1">
+        <div className="absolute top-2 left-2 bg-[#8b5cf6] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
           Main
         </div>
       )}
@@ -447,7 +447,7 @@ function ToastContainer({ toasts }: { toasts: { id: number; type: string; messag
         <div
           key={toast.id}
           className={`
-            pointer-events-auto px-4 py-3 rounded-xl shadow-md3-level4 flex items-center gap-2.5
+            pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5
             animate-[slideInRight_0.3s_ease] min-w-[280px]
             ${toast.type === "error" ? "bg-[#ef4444] text-white" : "bg-[#10b981] text-white"}
           `}
@@ -1417,7 +1417,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
               <div className="absolute bottom-8 left-0 right-0 flex justify-center">
                 <button
                   onClick={capturePhotoFromCamera}
-                  className="w-16 h-16 rounded-full bg-white shadow-md3-level3 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                  className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
                 >
                   <div className="w-14 h-14 rounded-full border-4 border-[#8b5cf6]" />
                 </button>

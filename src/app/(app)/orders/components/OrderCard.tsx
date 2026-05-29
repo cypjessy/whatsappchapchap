@@ -62,7 +62,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`flex-1 min-w-0 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${color} hover:shadow-md3-level1`}
+      className={`flex-1 min-w-0 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${color} hover:shadow-sm`}
       onClick={onClick}
       disabled={loading}
     >
@@ -104,7 +104,7 @@ function DropdownMenu({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-md3-level2 z-20 w-48 overflow-hidden animate-fadeIn"
+      className="absolute right-0 top-full mt-1 bg-surface border-2 border-outline rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn"
     >
       {children}
     </div>
@@ -263,7 +263,7 @@ export default function OrderCard({
   return (
     <div
       ref={cardRef}
-      className="group relative md3-card-elevated overflow-hidden animate-fadeIn"
+      className="group relative bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden animate-fadeIn"
       onClick={() => onOpenModal(order)}
     >
       {/* Left accent border - MD3 style */}
@@ -301,7 +301,7 @@ export default function OrderCard({
         {/* Product Image + Customer Section */}
         <div className="flex items-start gap-3 mb-3">
           {/* Product Thumbnail */}
-          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant relative shadow-md3-level1">
+          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant relative shadow-sm">
             {productImg ? (
               <img
                 src={productImg}
@@ -435,7 +435,7 @@ export default function OrderCard({
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 top-full mt-1 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-xl shadow-md3-level2 z-20 w-48 overflow-hidden animate-fadeIn">
+            <div className="absolute right-0 top-full mt-1 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-xl shadow-md z-20 w-48 overflow-hidden animate-fadeIn">
               {/* Edit - Only for non-finalized orders */}
               {onEditOrder && !["delivered", "cancelled", "refunded"].includes(order.status) && (
                 <button

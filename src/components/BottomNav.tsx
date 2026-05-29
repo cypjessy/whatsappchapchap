@@ -386,7 +386,7 @@ function MenuSheet({
                       w-14 h-14 rounded-2xl flex items-center justify-center
                       bg-[#E8F5E9]
                       text-[#25D366] text-lg
-                      shadow-md3-level1
+                      shadow-sm
                     `}>
                       <i className={`fas ${item.icon}`} />
                     </div>
@@ -414,7 +414,7 @@ function MenuSheet({
                 }}
                 className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-150"
               >
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-50 text-red-500 text-lg shadow-md3-level1">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-red-50 text-red-500 text-lg shadow-sm">
                   <i className="fas fa-sign-out-alt" />
                 </div>
                 <span className="text-[11px] font-medium text-red-600 text-center leading-tight">
@@ -608,11 +608,11 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
                 w-14 h-14 rounded-2xl
                 bg-[#25D366]
                 flex items-center justify-center text-white
-                shadow-md3-level2 shadow-[#25D366]/30
+                shadow-md shadow-[#25D366]/30
                 transition-all duration-200
                 relative z-10
                 ${fabPressed ? "scale-90" : "scale-100"}
-                ${fabOpen ? "rotate-45 shadow-md3-level3 shadow-[#25D366]/40" : "rotate-0"}
+                ${fabOpen ? "rotate-45 shadow-lg shadow-[#25D366]/40" : "rotate-0"}
               `}
             >
               <i className="fas fa-plus text-xl" />

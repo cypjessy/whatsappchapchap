@@ -62,7 +62,7 @@ function Checkbox({
       onClick={onChange}
       className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all active:scale-90 ${
         checked || indeterminate
-          ? "bg-[#25D366] border-[#25D366] shadow-md3-level1"
+          ? "bg-[#25D366] border-[#25D366] shadow-sm"
           : "border-outline-variant hover:border-[#25D366] bg-surface"
       }`}
     >
@@ -91,7 +91,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all active:scale-90 shadow-md3-level1 ${color} ${bgColor} ${hoverColor}`}
+      className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all active:scale-90 shadow-sm ${color} ${bgColor} ${hoverColor}`}
       onClick={onClick}
       title={title}
       disabled={loading}
@@ -103,7 +103,7 @@ function ActionButton({
 
 function SkeletonRow({ delay }: { delay?: number }) {
   return (
-    <tr className="border-t border-outline-variant animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.05}s` }}>
+    <tr className="border-t border-outline animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.05}s` }}>
       {[...Array(8)].map((_, i) => (
         <td key={i} className="p-4">
           <div className={`h-4 bg-surface-container-high rounded ${i === 0 ? "w-5" : i === 1 ? "w-20" : i === 2 ? "w-32" : i === 3 ? "w-28" : i === 4 ? "w-16" : i === 5 ? "w-20" : i === 6 ? "w-24" : "w-40"} ${i === 2 || i === 3 ? "flex items-center gap-3" : ""}`}>
@@ -160,7 +160,7 @@ function BulkActionBar({
   }, [showMenu]);
 
   return (
-    <div className="bg-[#1e293b] text-white px-4 py-3 rounded-xl mb-4 flex items-center justify-between animate-slideDown shadow-md3-level3">
+    <div className="bg-[#1e293b] text-white px-4 py-3 rounded-xl mb-4 flex items-center justify-between animate-slideDown shadow-lg">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-surface/10 flex items-center justify-center">
           <i className="fas fa-check-square text-sm" />
@@ -181,7 +181,7 @@ function BulkActionBar({
             <i className={`fas fa-chevron-${showMenu ? "up" : "down"} text-xs`} />
           </button>
           {showMenu && (
-            <div className="absolute top-full right-0 mt-1 bg-surface rounded-xl shadow-md3-level4 border border-outline-variant min-w-[180px] overflow-hidden z-50 animate-fadeIn">
+            <div className="absolute top-full right-0 mt-1 bg-surface rounded-xl shadow-xl border-2 border-outline min-w-[180px] overflow-hidden z-50 animate-fadeIn">
               {BULK_ACTIONS.map((action) => (
                 <button
                   key={action.status}
@@ -279,7 +279,7 @@ export default function OrderTable({
 
   if (isLoading) {
     return (
-      <div className="hidden md:block overflow-x-auto max-w-full rounded-xl border border-outline-variant animate-fadeIn">
+      <div className="hidden md:block overflow-x-auto max-w-full rounded-xl border-2 border-outline animate-fadeIn">
         <table className="w-full min-w-[800px]">
           <thead>
             <tr className="bg-surface">
@@ -319,7 +319,7 @@ export default function OrderTable({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto max-w-full rounded-xl border border-outline-variant shadow-md3-level1 animate-slideDown">
+      <div className="overflow-x-auto max-w-full rounded-xl border-2 border-outline shadow-md animate-slideDown">
         <table className="w-full min-w-[800px]">
           <thead>
             <tr className="bg-surface sticky top-0 z-10 animate-fadeIn">
@@ -393,7 +393,7 @@ export default function OrderTable({
                     {/* Customer */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center font-bold text-sm text-on-surface shadow-md3-level1">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center font-bold text-sm text-on-surface shadow-sm">
                           {order.customerName?.charAt(0)?.toUpperCase() || "C"}
                         </div>
                         <div className="min-w-0">
@@ -424,7 +424,7 @@ export default function OrderTable({
                               <img
                                 src={imgSrc}
                                 alt={order.products?.[0]?.name || order.productName || "Product"}
-                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface-variant shadow-md3-level1"
+                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface-variant shadow-sm"
                                 onError={(e) => {
                                   const img = e.target as HTMLImageElement;
                                   img.style.display = 'none';
@@ -435,7 +435,7 @@ export default function OrderTable({
                             );
                           }
                           return (
-                            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0 shadow-md3-level1">
+                            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0 shadow-sm">
                               📦
                             </div>
                           );
@@ -462,7 +462,7 @@ export default function OrderTable({
                     {/* Status */}
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusStyle.bg} ${statusStyle.color} shadow-md3-level1`}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusStyle.bg} ${statusStyle.color} shadow-sm`}
                       >
                         <i className={`fas ${statusIcon} text-[8px]`} />
                         {statusStyle.label}

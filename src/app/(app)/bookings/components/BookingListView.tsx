@@ -315,7 +315,7 @@ function DesktopRow({
           className={`
             w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
             ${isHovered
-              ? "bg-[#8B5CF6] text-white shadow-md3-level1"
+              ? "bg-[#8B5CF6] text-white shadow-md"
               : "bg-surface-variant text-on-surface-variant"
             }
             active:scale-90
@@ -336,7 +336,7 @@ function DesktopRow({
               className={`
                 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                 ${isHovered
-                  ? "bg-[#10B981] text-white shadow-md3-level1"
+                  ? "bg-[#10B981] text-white shadow-md"
                   : "bg-surface-variant text-[#10B981] opacity-50"
                 }
               `}
@@ -353,7 +353,7 @@ function DesktopRow({
               className={`
                 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                 ${isHovered
-                  ? "bg-[#EF4444] text-white shadow-md3-level1"
+                  ? "bg-[#EF4444] text-white shadow-md"
                   : "bg-surface-variant text-[#EF4444] opacity-50"
                 }
               `}
@@ -570,7 +570,7 @@ export default function BookingListView({
 
   if (isLoading) {
     return (
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl border-2 border-outline overflow-hidden shadow-md">
         <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-surface border-b border-outline-variant">
           {["Client & Service", "Date & Time", "Location", "Status", "Amount", ""].map((label) => (
             <div key={label} className="h-3 bg-surface-variant rounded-lg w-20" />
@@ -585,14 +585,14 @@ export default function BookingListView({
 
   if (bookings.length === 0) {
     return (
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl border-2 border-outline overflow-hidden shadow-md">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+    <div className="bg-surface rounded-xl md:rounded-2xl border-2 border-outline overflow-hidden shadow-md">
       {/* Desktop Header */}
       <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-surface border-b border-outline-variant sticky top-0 z-10">
         <SortHeader

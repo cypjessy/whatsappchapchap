@@ -104,7 +104,7 @@ function PaymentMethodSelector({
           className={`
             flex flex-col items-center gap-1.5 p-2.5 md:p-3 rounded-xl border-2 transition-all duration-200
             ${selected === method.value
-              ? `${method.bg} border-current ${method.color} shadow-md3-level1`
+              ? `${method.bg} border-current ${method.color} shadow-sm`
               : "border-outline-variant hover:border-outline-variant text-on-surface-variant"
             }
           `}
@@ -146,7 +146,7 @@ function AmountInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 overflow-hidden
         ${isFocused
-          ? "border-[#10b981] shadow-md3-level2 shadow-[#10b981]/10"
+          ? "border-[#10b981] shadow-md shadow-[#10b981]/10"
           : isPartial
             ? "border-[#f59e0b]"
             : isOver
@@ -364,7 +364,7 @@ export default function PaymentConfirmationModal({
         {/* Header */}
         <div className="shrink-0 px-5 md:px-6 py-4 md:py-5 border-b border-outline-variant bg-gradient-to-r from-[#f0fdf4] to-[#ecfdf5]">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] text-white flex items-center justify-center shadow-md3-level2 shadow-[#10b981]/20">
+            <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] text-white flex items-center justify-center shadow-md shadow-[#10b981]/20">
               <i className="fas fa-check-circle text-lg md:text-xl" />
             </div>
             <div>
@@ -438,7 +438,7 @@ export default function PaymentConfirmationModal({
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
                 placeholder="e.g., QKH123456789"
-                className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md3-level2 focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
+                className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
               />
             </div>
             <p className="text-[10px] md:text-xs text-outline mt-1.5">
@@ -459,7 +459,7 @@ export default function PaymentConfirmationModal({
                   value={proofImage}
                   onChange={(e) => setProofImage(e.target.value)}
                   placeholder="Paste image URL or screenshot link"
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md3-level2 focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md focus:shadow-[#10b981]/10 focus:outline-none text-sm transition-all"
                 />
               </div>
             ) : (
@@ -480,7 +480,7 @@ export default function PaymentConfirmationModal({
               onChange={(e) => setPaymentNotes(e.target.value)}
               placeholder="Any additional details..."
               rows={3}
-              className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md3-level2 focus:shadow-[#10b981]/10 focus:outline-none text-sm resize-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#10b981] focus:shadow-md focus:shadow-[#10b981]/10 focus:outline-none text-sm resize-none transition-all"
             />
           </div>
         </div>
@@ -502,7 +502,7 @@ export default function PaymentConfirmationModal({
                 flex-1 px-4 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2
                 transition-all active:scale-95
                 ${isValid && !confirming
-                  ? "bg-gradient-to-r from-[#10b981] to-[#059669] hover:opacity-90 shadow-md3-level3 shadow-[#10b981]/20"
+                  ? "bg-gradient-to-r from-[#10b981] to-[#059669] hover:opacity-90 shadow-md shadow-[#10b981]/20"
                   : "bg-surface-variant text-outline cursor-not-allowed"
                 }
               `}

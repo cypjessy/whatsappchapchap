@@ -91,7 +91,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md3-level3 text-sm font-semibold backdrop-blur-md ${
+          className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold backdrop-blur-md ${
             toast.type === "success" ? "bg-[#10B981]/95 text-white" : toast.type === "error" ? "bg-[#EF4444]/95 text-white" : "bg-[#8B5CF6]/95 text-white"
           }`}
         >
@@ -139,7 +139,7 @@ function StatCard({ icon, iconBg, iconColor, label, value, delay = 0 }: {
 
   return (
     <div
-      className={`bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant transition-all duration-500 ease-out cursor-default hover:shadow-md3-level2 hover:-translate-y-0.5 ${
+      className={`bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant transition-all duration-500 ease-out cursor-default hover:shadow-md hover:-translate-y-0.5 ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       }`}
       style={{ transitionDelay: `${delay}ms` }}
@@ -289,7 +289,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
       {/* Image Gallery */}
       {allImages.length > 0 && (
         <div className="space-y-3">
-          <div className="relative group rounded-2xl overflow-hidden bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] shadow-md3-level3">
+          <div className="relative group rounded-2xl overflow-hidden bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] shadow-lg">
             <div className="aspect-video cursor-pointer" onClick={() => setLightboxOpen(true)}>
               {!mainImageError && currentImage ? (
                 <img src={currentImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setMainImageError(true)} />
@@ -315,7 +315,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
               {allImages.map((img, idx) => (
                 <button key={idx} onClick={() => { setSelectedImage(idx); setMainImageError(false); }}
                   className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
-                    selectedImage === idx ? "border-[#8b5cf6] shadow-md3-level2 scale-105" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"
+                    selectedImage === idx ? "border-[#8b5cf6] shadow-md scale-105" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"
                   }`}
                 >
                   {!thumbnailErrors.has(idx) ? (
@@ -333,10 +333,10 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
       )}
 
       {/* Product Info Card */}
-      <div className="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+      <div className="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-2xl p-5 border border-outline-variant shadow-sm">
         {product.categoryName && (
           <div className="flex justify-center mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-outline-variant rounded-full text-xs font-bold text-on-surface-variant shadow-md3-level1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-outline-variant rounded-full text-xs font-bold text-on-surface-variant shadow-sm">
               <span className="text-lg">{getCategoryEmoji(product.category || "other")}</span>
               <span className="uppercase tracking-wider">{product.categoryName}</span>
             </span>
@@ -347,7 +347,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           <p className="text-sm text-on-surface-variant text-center leading-relaxed max-w-md mx-auto mb-4">{product.description}</p>
         )}
         <div className="text-center">
-          <span className="inline-flex items-baseline gap-1 px-5 py-2 bg-white rounded-xl border border-outline-variant shadow-md3-level1">                  <span className="text-xs text-outline font-bold">KES</span>
+          <span className="inline-flex items-baseline gap-1 px-5 py-2 bg-white rounded-xl border border-outline-variant shadow-sm">                  <span className="text-xs text-outline font-bold">KES</span>
             <span className="text-3xl font-black text-[#8b5cf6]">{formatCurrency(product.price)}</span>
           </span>
         </div>
@@ -355,7 +355,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
       {/* Stock & Status */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-outline-variant shadow-md3-level1">
+        <div className="bg-white rounded-xl p-4 border border-outline-variant shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-[#ede9fe] flex items-center justify-center">
               <i className="fas fa-box text-[#8b5cf6] text-xs" />
@@ -368,7 +368,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             {config.text}
           </span>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-outline-variant shadow-md3-level1">
+        <div className="bg-white rounded-xl p-4 border border-outline-variant shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <div className={`w-8 h-8 rounded-lg ${product.status === "active" ? "bg-[#10b981]" : "bg-[#ef4444]"} flex items-center justify-center`}>
               <i className={`fas ${product.status === "active" ? "fa-check-circle" : "fa-times-circle"} text-white text-xs`} />
@@ -395,7 +395,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           </div>
           <div className="space-y-2">
             {product.variants.map((variant, idx) => (
-              <div key={idx} className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant hover:border-[#8b5cf6]/30 hover:shadow-md3-level1 transition-all group">
+              <div key={idx} className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant hover:border-[#8b5cf6]/30 hover:shadow-sm transition-all group">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-[#ede9fe] flex items-center justify-center">
@@ -419,7 +419,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
   const renderDetails = () => (
     <div className="space-y-5">
-      <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
         <PremiumSectionHeader icon="fa-info" title="Product Information" color="#8B5CF6" />
         <div className="space-y-2">
           {[
@@ -441,7 +441,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
         <PremiumSectionHeader icon="fa-tag" title="Pricing" color="#10B981" />
         <div className="p-4 bg-[#f0fdf4] rounded-xl border border-[#10b981]/20 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -464,10 +464,10 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
 
   const renderInventory = () => (
     <div className="space-y-5">
-      <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className={`w-10 h-10 rounded-xl ${config.dot} flex items-center justify-center shadow-md3-level2`}>
+            <div className={`w-10 h-10 rounded-xl ${config.dot} flex items-center justify-center shadow-md`}>
               <i className="fas fa-boxes text-white text-sm" />
             </div>
             <div>
@@ -488,11 +488,11 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
       </div>
 
       {product.variants && product.variants.length > 0 && (
-        <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+        <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
           <PremiumSectionHeader icon="fa-layer-group" title="Variants" color="#8B5CF6" />
           <div className="space-y-2">
             {product.variants.map((variant, idx) => (
-              <div key={idx} className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant hover:border-[#8b5cf6]/30 hover:shadow-md3-level1 transition-all">
+              <div key={idx} className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant hover:border-[#8b5cf6]/30 hover:shadow-sm transition-all">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-[#ede9fe] flex items-center justify-center">
@@ -524,13 +524,13 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     return (
       <div className="space-y-5">
         {specs.length > 0 ? (
-          <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+          <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
             <PremiumSectionHeader icon="fa-cogs" title="Specifications" color="#3B82F6" />
             <div className="space-y-2">
               {specs.map((spec, idx) => {
                 const color = SPEC_COLORS[idx % SPEC_COLORS.length];
                 return (
-                  <div key={idx} className={`relative overflow-hidden bg-gradient-to-r ${color.from} ${color.to} rounded-xl p-4 border border-outline-variant/60 hover:shadow-md3-level1 transition-all`}>
+                  <div key={idx} className={`relative overflow-hidden bg-gradient-to-r ${color.from} ${color.to} rounded-xl p-4 border border-outline-variant/60 hover:shadow-sm transition-all`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-lg ${color.iconBg} flex items-center justify-center`}>

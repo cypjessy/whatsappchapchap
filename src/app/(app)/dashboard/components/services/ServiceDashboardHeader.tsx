@@ -46,7 +46,7 @@ export default function ServiceDashboardHeader() {
             <span className="md:hidden">Alert</span>
             <span className="ml-2 px-1.5 py-0.5 bg-[#ef4444] text-white text-xs rounded-full">5</span>
           </button>
-          <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-md3-level3 hover:shadow-md3-level4 transition-all">
+          <button className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all">
             <i className="fas fa-plus mr-2"></i>
             <span className="hidden md:inline">New Service</span>
             <span className="md:hidden">+ Add</span>

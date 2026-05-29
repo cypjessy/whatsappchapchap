@@ -64,7 +64,7 @@ function EmptyState({
 }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-16 md:py-24 text-on-surface-variant animate-fadeIn">
-      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] flex items-center justify-center mb-6 shadow-md3-level1">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] flex items-center justify-center mb-6 shadow-sm">
         <i className="fas fa-users text-3xl md:text-4xl text-[#8b5cf6]/40" />
       </div>
       <h3 className="text-xl md:text-2xl font-extrabold text-on-surface mb-2">No Customers Found</h3>
@@ -76,7 +76,7 @@ function EmptyState({
       {hasFilters && onClearFilters && (
         <button
           onClick={onClearFilters}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-md3-level4 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
         >
           <i className="fas fa-times-circle" />
           Clear Filters

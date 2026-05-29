@@ -110,7 +110,7 @@ function ShimmerBox({ className = "" }: { className?: string }) {
 
 function CalendarSkeleton() {
   return (
-    <div className="md3-card-elevated p-4 md:p-6 mb-6">
+    <div className="bg-surface border-2 border-outline shadow-md rounded-xl md:rounded-2xl p-4 md:p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <ShimmerBox className="h-8 bg-[var(--md-sys-color-surface-variant)] rounded-lg w-48" />
         <div className="flex gap-2">
@@ -220,9 +220,9 @@ function CalendarDay({
         text-sm md:text-base font-semibold transition-all duration-200 select-none
         active:scale-90 md:active:scale-95
         ${item.isToday
-          ? "bg-[#8B5CF6] text-white shadow-md3-level2 shadow-[#8B5CF6]/25"
+          ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/25"
           : isSelected
-            ? "bg-[#F3E8FF] text-[#8B5CF6] border-2 border-[#8B5CF6] shadow-md3-level1"
+            ? "bg-[#F3E8FF] text-[#8B5CF6] border-2 border-[#8B5CF6] shadow-sm"
             : "text-on-surface-variant hover:bg-[#F3E8FF] hover:text-[#8B5CF6]"
         }
         ${isPressed && !item.isToday ? "scale-90" : "scale-100"}
@@ -238,7 +238,7 @@ function CalendarDay({
           rounded-full flex items-center justify-center
           text-[9px] md:text-[10px] font-bold
           ${isSelected ? "bg-[#8B5CF6] text-white" : "bg-[#8B5CF6] text-white"}
-          shadow-md3-level1 z-20
+          shadow-sm z-20
         `}>
           {bookingCount > 9 ? "9+" : bookingCount}
         </div>
@@ -327,7 +327,7 @@ function BookingCard({ booking, index, onViewBooking }: {
     <div
       className={`
         group bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant 
-        hover:border-[#8B5CF6]/40 hover:shadow-md3-level2 hover:shadow-[#8B5CF6]/5 
+        hover:border-[#8B5CF6]/40 hover:shadow-md hover:shadow-[#8B5CF6]/5 
         hover:-translate-y-0.5 transition-all duration-200 cursor-pointer
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
@@ -399,7 +399,7 @@ function BookingCard({ booking, index, onViewBooking }: {
             w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center
             transition-all duration-200 active:scale-90
             ${isHovered
-              ? "bg-[#8B5CF6] text-white shadow-md3-level2 shadow-[#8B5CF6]/25"
+              ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/25"
               : "bg-[#F3E8FF] text-[#8B5CF6]"
             }
           `}

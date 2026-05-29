@@ -187,8 +187,8 @@ function ActionCard({
       <TouchRipple href={action.href} className="h-full">
         <div
           className={`
-            bg-surface rounded-2xl border border-outline-variant p-4 md:p-5 text-center h-full
-            shadow-md3-level1 hover:shadow-md3-level2 hover:border-outline-variant
+            bg-surface rounded-2xl border-2 border-outline p-4 md:p-5 text-center h-full
+            shadow-md hover:shadow-lg hover:border-primary/20
             hover:-translate-y-0.5 active:translate-y-0
             transition-all duration-200 ease-out
             flex flex-col items-center justify-center
@@ -201,8 +201,8 @@ function ActionCard({
                 w-12 h-12 md:w-14 md:h-14 mx-auto rounded-2xl
                 ${action.gradient}
                 flex items-center justify-center
-                shadow-md3-level2 ${action.shadowColor}
-                group-hover:scale-105 group-hover:shadow-md3-level3
+                shadow-lg ${action.shadowColor}
+                group-hover:scale-105 group-hover:shadow-xl
                 transition-all duration-200
               `}
             >
@@ -218,7 +218,7 @@ function ActionCard({
                   ${action.badgeColor || "bg-[#EF4444]"} text-white
                   text-[10px] font-bold rounded-full
                   flex items-center justify-center
-                  border-2 border-white shadow-md3-level1
+                  border-2 border-white shadow-md
                   animate-badgePop
                 `}
               >
@@ -248,7 +248,7 @@ function ShimmerCard({ index }: { index: number }) {
   return (
     <div
       className={`
-        md3-card-elevated p-4 md:p-5 overflow-hidden relative
+        bg-surface rounded-xl border border-outline-variant p-4 md:p-5 overflow-hidden relative
         animate-pulse
       `}
       style={{ animationDelay: `${index * 150}ms` }}

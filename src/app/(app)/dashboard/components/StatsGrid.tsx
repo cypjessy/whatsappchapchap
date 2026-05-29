@@ -142,7 +142,7 @@ function getTrendIcon(value: number): string {
 function ShimmerCard({ isMobile = false }: { isMobile?: boolean }) {
   return (
     <div className={`
-      relative overflow-hidden md3-card-elevated
+      relative overflow-hidden bg-surface rounded-xl border border-outline-variant
       ${isMobile ? "p-3 min-w-[140px] flex-shrink-0" : "p-4 md:p-6"}
     `}>
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
@@ -235,7 +235,7 @@ function StatCard({
     return (
       <div
         className={`
-          md3-card-elevated p-3
+          bg-surface rounded-xl border border-outline-variant shadow-sm p-3
           transition-all duration-300
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
         `}
@@ -270,13 +270,14 @@ function StatCard({
   return (
     <div
       className={`
-        group relative md3-card-elevated p-4 md:p-6 
+        group relative bg-surface rounded-2xl p-4 md:p-6 
         overflow-hidden cursor-default
+        border-2 border-outline
         transition-all duration-200 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isHovered
-          ? "shadow-md3-level2 -translate-y-0.5"
-          : "shadow-md3-level1 hover:shadow-md3-level2"
+          ? "shadow-lg -translate-y-0.5 border-primary/30"
+          : "shadow-md hover:shadow-lg hover:border-primary/20"
         }
       `}
       style={{ transitionDelay: `${index * 100}ms` }}
@@ -354,7 +355,7 @@ function StatCard({
               w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center
               ${config.iconBg} ${config.iconColor}
               transition-all duration-200
-              ${isHovered ? "scale-105 shadow-md3-level1" : "scale-100"}
+              ${isHovered ? "scale-105 shadow-sm" : "scale-100"}
             `}>
               <i className={`fas ${config.icon} text-sm md:text-xl`} />
             </div>

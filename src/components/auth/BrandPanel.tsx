@@ -3,7 +3,7 @@ export default function BrandPanel() {
     <div className="hidden lg:flex flex-1 flex-col justify-center items-center p-12 text-white relative">
       <div className="max-w-[500px] text-center">
         <div className="logo-container mb-8">
-          <div className="w-[120px] h-[120px] bg-white rounded-[30px] flex items-center justify-center mx-auto mb-6 shadow-md3-level4 relative overflow-hidden">
+          <div className="w-[120px] h-[120px] bg-white rounded-[30px] flex items-center justify-center mx-auto mb-6 shadow-xl relative overflow-hidden">
             <svg
               viewBox="0 0 24 24"
               className="w-[60px] h-[60px] fill-[#25D366]"

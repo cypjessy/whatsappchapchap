@@ -74,7 +74,7 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border-2 transition-all duration-200
           ${isFocused
-            ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+            ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-surface"
             : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
@@ -151,7 +151,7 @@ function CustomSelect({
           w-full flex items-center gap-2 px-3 py-2.5 md:py-3 rounded-xl border-2 text-sm font-medium
           transition-all duration-200 text-left
           ${isFocused || isOpen
-            ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+            ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-surface"
             : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
@@ -167,7 +167,7 @@ function CustomSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface rounded-xl border border-outline-variant shadow-md3-level4 z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface rounded-xl border border-outline-variant shadow-xl z-50 overflow-hidden animate-fadeIn">
           {options.map((option) => (
             <button
               key={option.value}
@@ -215,7 +215,7 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200
         ${startFocused
-          ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+          ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-surface"
           : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
@@ -240,7 +240,7 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200
         ${endFocused
-          ? "border-[#25D366] shadow-md3-level2 shadow-[#25D366]/10 bg-surface"
+          ? "border-[#25D366] shadow-md shadow-[#25D366]/10 bg-surface"
           : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
@@ -396,7 +396,7 @@ export default function CustomerFilters({
 
   return (
     <>
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden mb-3 md:mb-6 shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden mb-3 md:mb-6 shadow-sm">
         {/* Main bar */}
         <div className="p-3 md:p-4">
           {/* Mobile: Compact toolbar */}
@@ -436,7 +436,7 @@ export default function CustomerFilters({
             {/* Broadcast button */}
             <button
               onClick={onBroadcast}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2 shrink-0 active:scale-95 transition-all"
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shrink-0 active:scale-95 transition-all"
               aria-label="Broadcast message"
             >
               <i className="fas fa-broadcast-tower text-sm" />
@@ -480,7 +480,7 @@ export default function CustomerFilters({
               className={`
                 flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm
                 transition-all duration-200 active:scale-95 shrink-0
-                bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2 shadow-[#25D366]/20 hover:shadow-md3-level3
+                bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 hover:shadow-lg
               `}
             >
               <i className="fas fa-broadcast-tower" />

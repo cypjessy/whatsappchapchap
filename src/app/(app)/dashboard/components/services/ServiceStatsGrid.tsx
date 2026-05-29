@@ -91,7 +91,7 @@ export default function ServiceStatsGrid() {
       {statsData.map((stat) => (
         <div
           key={stat.id}
-          className="bg-surface p-4 md:p-5 rounded-xl md:rounded-2xl border border-outline-variant hover:shadow-md3-level3 transition-all"
+          className="bg-surface p-4 md:p-5 rounded-xl md:rounded-2xl border border-outline-variant hover:shadow-lg transition-all"
         >
           <div className="flex items-start justify-between mb-3">
             <div>

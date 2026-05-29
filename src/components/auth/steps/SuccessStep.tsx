@@ -17,7 +17,7 @@ export default function SuccessStep() {
         </button>
         <a
           href="/dashboard"
-          className="py-3 px-6 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold transition-all hover:translate-y-[-2px] hover:shadow-md3-level3 flex items-center gap-2"
+          className="py-3 px-6 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold transition-all hover:translate-y-[-2px] hover:shadow-lg flex items-center gap-2"
         >
           Go to Dashboard <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
         </a>

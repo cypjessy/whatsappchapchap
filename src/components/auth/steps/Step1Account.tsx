@@ -36,7 +36,7 @@ export default function Step1Account({
             onChange={onChange}
             className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
               focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
               bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
             placeholder="John"
           />
@@ -50,7 +50,7 @@ export default function Step1Account({
             onChange={onChange}
             className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
               focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
               bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
             placeholder="Doe"
           />
@@ -66,7 +66,7 @@ export default function Step1Account({
           onChange={onChange}
           className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           placeholder="john@example.com"
         />
@@ -81,7 +81,7 @@ export default function Step1Account({
           onChange={onChange}
           className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           placeholder="+254 712 345 678"
         />
@@ -96,7 +96,7 @@ export default function Step1Account({
           onChange={onChange}
           className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           placeholder="Create a strong password"
         />

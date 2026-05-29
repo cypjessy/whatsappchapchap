@@ -151,7 +151,7 @@ function useAnimatedCounter(target: number, duration: number = 1000, delay: numb
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
 const ShimmerCard = memo(() => (
-  <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+  <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
     <div className="relative h-36 sm:h-40 md:h-48 bg-surface-container-lowest overflow-hidden">
       <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
     </div>
@@ -182,7 +182,7 @@ const BulkHeader = memo(({
   const CheckboxIcon = isAllSelected ? CheckSquare : isPartialSelected ? MinusSquare : Square;
 
   return (
-    <div className="flex items-center justify-between bg-gradient-to-r from-[#f8fafc] to-white p-3.5 md:p-4 rounded-xl md:rounded-2xl border border-outline-variant shadow-md3-level1 animate-fadeIn">
+    <div className="flex items-center justify-between bg-gradient-to-r from-[#f8fafc] to-white p-3.5 md:p-4 rounded-xl md:rounded-2xl border border-outline-variant shadow-sm animate-fadeIn">
       <button
         onClick={onSelectAll}
         className="flex items-center gap-2.5 group transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#25D366] rounded-lg"
@@ -388,8 +388,8 @@ const ProductCard = memo(({
         group relative bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden
         transition-all duration-300 ease-out cursor-pointer
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
-        ${isSelected ? "ring-2 ring-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/10" : "shadow-md3-level1"}
-        ${isHovered && !bulkMode && !isSelected ? "border-outline-variant shadow-md3-level3 shadow-[#e2e8f0]/40 -translate-y-1" : ""}
+        ${isSelected ? "ring-2 ring-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/10" : "shadow-sm"}
+        ${isHovered && !bulkMode && !isSelected ? "border-outline-variant shadow-lg shadow-[#e2e8f0]/40 -translate-y-1" : ""}
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -416,8 +416,8 @@ const ProductCard = memo(({
             <div className={`
               w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all duration-200
               ${isSelected
-                ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-md3-level2"
-                : "bg-surface border-outline-variant hover:border-[#8b5cf6] hover:shadow-md3-level1"
+                ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-md"
+                : "bg-surface border-outline-variant hover:border-[#8b5cf6] hover:shadow-sm"
               }
             `}>
               {isSelected && <CheckSquare className="w-4 h-4" strokeWidth={2.5} />}
@@ -428,7 +428,7 @@ const ProductCard = memo(({
         {/* Stock badge */}
         {!bulkMode && badgeInfo.badge !== "new" && (
           <span className={`
-            absolute top-3 left-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-md3-level1
+            absolute top-3 left-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-sm
             ${badgeInfo.badge === "out"
               ? "bg-[#fee2e2] text-[#ef4444]"
               : "bg-[#fef3c7] text-[#f59e0b]"
@@ -441,7 +441,7 @@ const ProductCard = memo(({
         {/* Status badge */}
         {!bulkMode && product.status && product.status !== "active" && (
           <span className={`
-            absolute top-3 right-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-md3-level1
+            absolute top-3 right-3 z-10 px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium shadow-sm
             ${product.status === "paused" ? "bg-[#fef3c7] text-[#f59e0b]" : "bg-surface-variant text-on-surface-variant"}
           `}>
             {product.status === "paused" ? "Paused" : "Archived"}
@@ -450,7 +450,7 @@ const ProductCard = memo(({
 
         {/* Sale badge */}
         {isOnSale && !bulkMode && (
-          <span className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[#fee2e2] text-[#ef4444] shadow-md3-level1">
+          <span className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[#fee2e2] text-[#ef4444] shadow-sm">
             -{discountPercent}%
           </span>
         )}
@@ -697,7 +697,7 @@ export default function ProductGridView({
 
   if (isLoading) {
     return (
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1 p-4">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm p-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <ShimmerCard key={i} />
@@ -709,14 +709,14 @@ export default function ProductGridView({
 
   if (products.length === 0) {
     return (
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1 animate-fadeIn">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm animate-fadeIn">
       {/* Bulk selection header */}
       {bulkMode && (
         <div className="p-3 md:p-4 border-b border-outline-variant bg-surface">

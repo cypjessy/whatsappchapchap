@@ -54,7 +54,7 @@ export default function TopServices() {
 
   if (loading) {
     return (
-      <div className="md3-card-elevated p-6">
+      <div className="bg-surface rounded-xl border border-outline-variant p-6">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-12 bg-[var(--md-sys-color-surface-variant)] rounded-lg"></div>

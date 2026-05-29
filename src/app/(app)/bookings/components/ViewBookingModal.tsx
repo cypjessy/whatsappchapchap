@@ -114,8 +114,8 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
         <div
           key={toast.id}
           className={`
-            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md3-level3
-            text-sm font-semibold animate-slideInRight backdrop-blur-md
+            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md
+            text-sm font-semibold animate-slideInRight
             ${toast.type === "success" ? "bg-[#10B981]/95 text-white" : ""}
             ${toast.type === "error" ? "bg-[#EF4444]/95 text-white" : ""}
             ${toast.type === "info" ? "bg-[#8B5CF6]/95 text-white" : ""}
@@ -158,7 +158,7 @@ function StatCard({
       className={`
         bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant
         transition-all duration-500 ease-out cursor-default
-        hover:shadow-md3-level2 hover:-translate-y-0.5
+        hover:shadow-md hover:-translate-y-0.5
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
       `}
       style={{ transitionDelay: `${delay}ms` }}
@@ -522,15 +522,15 @@ export default function ViewBookingModal({
             {/* ─── Client Profile Card ─── */}
             <div className="p-4 md:p-5">
               <PremiumSectionHeader icon="fa-user" title="Client" color="#8B5CF6" />
-              <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1 hover:shadow-md3-level2 transition-shadow duration-300">
+              <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] rounded-2xl p-4 md:p-5 border border-outline shadow-md hover:shadow-lg transition-shadow duration-300">
                 <div className="flex items-center gap-4 md:gap-5 mb-5">
                   {/* Premium Avatar */}
                   <div className="relative">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white flex items-center justify-center font-bold text-2xl md:text-3xl shadow-md3-level3 shadow-[#8B5CF6]/30">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white flex items-center justify-center font-bold text-2xl md:text-3xl shadow-md shadow-[#8B5CF6]/30">
                       {safeFirstLetter}
                     </div>
                     {booking.verified && (
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-[#10B981] to-[#059669] text-white rounded-full flex items-center justify-center text-[10px] border-[3px] border-white shadow-md3-level2">
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-[#10B981] to-[#059669] text-white rounded-full flex items-center justify-center text-[10px] border-[3px] border-white shadow-sm">
                         <i className="fas fa-check" />
                       </div>
                     )}
@@ -572,7 +572,7 @@ export default function ViewBookingModal({
                     href={`https://wa.me/${booking.phone.replace(/\D/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-md3-level2 shadow-[#25D366]/20 hover:shadow-md3-level3 hover:-translate-y-0.5 transition-all active:scale-[0.97]"
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-sm shadow-[#25D366]/20 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.97]"
                   >
                     <i className="fab fa-whatsapp text-base" />
                     WhatsApp
@@ -591,7 +591,7 @@ export default function ViewBookingModal({
             {/* ─── Payment Section ─── */}
             <div className="px-4 md:px-5 pb-2">
               <PremiumSectionHeader icon="fa-credit-card" title="Payment" color="#10B981" />
-              <div className="bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] rounded-2xl p-4 md:p-5 border border-[#10B981]/20 shadow-md3-level1 space-y-3">
+              <div className="bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] rounded-2xl p-4 md:p-5  border border-[#10B981]/20 shadow-sm space-y-3">
                 {/* Total */}
                 <div className="flex justify-between items-center pb-3 border-b border-[#10B981]/10">
                   <span className="text-sm text-on-surface-variant font-medium">Total Price</span>
@@ -652,7 +652,7 @@ export default function ViewBookingModal({
             {booking.paymentProof && (
               <div className="px-4 md:px-5 pb-2">
                 <PremiumSectionHeader icon="fa-check-circle" title="Payment Confirmed" color="#10B981" />
-                <div className="bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] rounded-2xl p-4 md:p-5 border border-[#10B981]/20 shadow-md3-level1 space-y-3">
+                <div className="bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] rounded-2xl p-4 md:p-5  border border-[#10B981]/20 shadow-sm space-y-3">
                   {booking.paymentProof.transactionId && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-on-surface-variant">Transaction ID</span>
@@ -673,7 +673,7 @@ export default function ViewBookingModal({
                     <div className="pt-2 border-t border-[#10B981]/10">
                       <div className="text-sm text-on-surface-variant mb-2">Proof</div>
                       <div
-                        className="rounded-xl overflow-hidden border-2 border-[#10B981]/20 cursor-pointer hover:opacity-90 transition-all hover:shadow-md3-level2"
+                        className="rounded-xl overflow-hidden border-2 border-[#10B981]/20 cursor-pointer hover:opacity-90 transition-all hover:shadow-md"
                         onClick={() => booking.paymentProof?.proofImage && setLightboxImage(booking.paymentProof.proofImage)}
                       >
                         <img src={booking.paymentProof.proofImage} alt="Payment proof" className="w-full h-36 object-cover" />
@@ -734,7 +734,7 @@ export default function ViewBookingModal({
             {booking.notes && (
               <div className="px-4 md:px-5 pb-2">
                 <PremiumSectionHeader icon="fa-sticky-note" title="Notes" color="#F59E0B" />
-                <div className="bg-[#FFFBEB] rounded-2xl p-4 border border-[#FDE68A]/40 shadow-md3-level1">
+                <div className="bg-[#FFFBEB] rounded-2xl p-4 border border-[#FDE68A]/40 shadow-sm">
                   <p className="text-sm text-[#92400E] leading-relaxed">{booking.notes}</p>
                 </div>
               </div>
@@ -744,7 +744,7 @@ export default function ViewBookingModal({
             {isCancelled && booking.cancellationReason && (
               <div className="px-4 md:px-5 pb-2">
                 <PremiumSectionHeader icon="fa-exclamation-triangle" title="Cancellation Reason" color="#EF4444" />
-                <div className="bg-[#FEF2F2] rounded-2xl p-4 border border-[#FCA5A5]/40 shadow-md3-level1">
+                <div className="bg-[#FEF2F2] rounded-2xl p-4 border border-[#FCA5A5]/40 shadow-sm">
                   <p className="text-sm text-[#991B1B] leading-relaxed">{booking.cancellationReason}</p>
                 </div>
               </div>
@@ -753,7 +753,7 @@ export default function ViewBookingModal({
             {/* ─── Reference ─── */}
             <div className="px-4 md:px-5 pb-2">
               <PremiumSectionHeader icon="fa-fingerprint" title="Reference" color="#64748B" />
-              <div className="bg-surface rounded-2xl p-4 border border-outline-variant shadow-md3-level1 space-y-3">
+              <div className="bg-surface rounded-2xl p-4 border border-outline shadow-sm space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <code className="text-sm font-mono text-[#8B5CF6] font-bold truncate">{booking.id}</code>
                   <button

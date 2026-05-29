@@ -131,7 +131,7 @@ function MessagePreview({ message }: { message: string }) {
 
       {showPreview && (
         <div className="animate-fadeIn">
-          <div className="bg-[#DCF8C6] rounded-2xl rounded-tl-sm p-3 md:p-4 max-w-[85%] ml-auto shadow-md3-level1">
+          <div className="bg-[#DCF8C6] rounded-2xl rounded-tl-sm p-3 md:p-4 max-w-[85%] ml-auto shadow-sm">
             <div className="flex items-start gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white text-xs font-bold shrink-0">
                 <i className="fas fa-broadcast-tower" />
@@ -198,7 +198,7 @@ export default function BroadcastModal({
         {/* Header - MD3 Dialog Header */}
         <div className="px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md3-level2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md">
               <i className="fas fa-broadcast-tower" />
             </div>
             <div>

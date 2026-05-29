@@ -1105,7 +1105,7 @@ export default function OrdersPage() {
       <div className="hidden md:flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 animate-fadeIn px-6 pt-4" style={{ animationDelay: '0.1s' }}>
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md3-level3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
               <i className="fas fa-shopping-bag" />
             </div>
             Orders
@@ -1127,14 +1127,14 @@ export default function OrdersPage() {
           {selectedOrders.size > 0 && (
             <>
               <button
-                className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center gap-2"
+                className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
                 onClick={() => handleBulkUpdateStatus("delivered")}
               >
                 <i className="fas fa-check" />
                 <span>Complete ({selectedOrders.size})</span>
               </button>
               <button
-                className="px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center gap-2"
+                className="px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
                 onClick={() => handleBulkUpdateStatus("cancelled")}
               >
                 <i className="fas fa-times" />
@@ -1150,7 +1150,7 @@ export default function OrdersPage() {
             <span>Export</span>
           </button>
           <button
-            className="px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-md3-level3 hover:shadow-md3-level4 transition-all active:scale-95 flex items-center gap-2"
+            className="px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
             onClick={() => setNewOrderModalOpen(true)}
           >
             <i className="fas fa-plus" />
@@ -1178,7 +1178,7 @@ export default function OrdersPage() {
             className={`px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all active:scale-95 flex-shrink-0 ${
               (tab.id === "cancellation_requests" && viewMode === "cancellations") ||
               (tab.id !== "cancellation_requests" && activeStatus === tab.id)
-                ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level3"
+                ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg"
                 : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
             }`}
           >
@@ -1213,7 +1213,7 @@ export default function OrdersPage() {
           <div className="md:hidden px-3 mb-3">
             <button
               onClick={() => setNewOrderModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
             >
               <i className="fas fa-plus" />
               <span>New Order</span>
@@ -1232,7 +1232,7 @@ export default function OrdersPage() {
           </div>
 
           {/* Filters & Table - FIXED: changed overflow-hidden to overflow-x-hidden */}
-          <div className="bg-surface md:rounded-2xl md:border border-outline-variant md:shadow-md3-level1 overflow-x-hidden">
+          <div className="bg-surface md:rounded-2xl md:border-2 border-outline md:shadow-md overflow-x-hidden">
             <OrderFilters
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -1356,7 +1356,7 @@ export default function OrdersPage() {
                   <button
                     onClick={loadMoreOrders}
                     disabled={!hasMoreOrders || isLoadingMoreOrders}
-                    className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-lg font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {isLoadingMoreOrders ? (
                       <>

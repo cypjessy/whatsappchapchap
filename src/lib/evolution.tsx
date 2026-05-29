@@ -16,16 +16,13 @@ async function getEvolutionConfig() {
     cachedApiConfig = await res.json();
     return cachedApiConfig;
   } catch {
-    return { 
-      apiUrl: "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
-      apiKey: "lhnGSMQrQmC54PyPUBqILuWWeau20gDn" 
-    };
+    return { apiUrl: '', apiKey: '' };
   }
 }
 
 async function callEvolutionApi(endpoint: string, method: string = "GET", body?: any) {
   const config = await getEvolutionConfig();
-  const apiKey = config?.apiKey || "lhnGSMQrQmC54PyPUBqILuWWeau20gDn";
+  const apiKey = config?.apiKey || '';
   const response = await fetch(buildApiUrl(`/api/evolution/${endpoint}`), {
     method,
     headers: { 

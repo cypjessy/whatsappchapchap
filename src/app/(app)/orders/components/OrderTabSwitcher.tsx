@@ -35,7 +35,7 @@ export default function OrderTabSwitcher({
                 transition-all duration-200 active:scale-95 select-none
                 ${
                   isActive
-                    ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                    ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md"
                     : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                 }
               `}

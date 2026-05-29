@@ -121,7 +121,7 @@ function StepIndicator({ currentStep, data }: { currentStep: number; data: NewCu
                   w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center
                   text-[10px] md:text-xs font-bold transition-all duration-300
                   ${isActive
-                    ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/25 scale-110"
+                    ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/25 scale-110"
                     : isCompleted
                       ? isValid
                         ? "bg-[#10b981] text-white"
@@ -246,7 +246,7 @@ function ToggleSwitch({ label, description, checked, onChange }: {
       >
         <div
           className={`
-            absolute top-1 w-6 h-6 bg-surface rounded-full shadow-md3-level2
+            absolute top-1 w-6 h-6 bg-surface rounded-full shadow-md
             transition-transform duration-200
             ${checked ? "translate-x-7" : "translate-x-1"}
           `}
@@ -473,13 +473,13 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
             className={`
               relative p-5 rounded-xl border-2 text-center transition-all duration-200
               ${data.customerType === type.id
-                ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] shadow-md3-level2"
+                ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] shadow-md"
                 : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
               }
             `}
           >
             {data.customerType === type.id && (
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--md-sys-color-primary)] rounded-full flex items-center justify-center shadow-md3-level1">
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--md-sys-color-primary)] rounded-full flex items-center justify-center shadow-sm">
                 <i className="fas fa-check text-white text-xs" />
               </div>
             )}
@@ -642,7 +642,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
           {data.tags.map((tag, i) => (
             <span
               key={`${tag}-${i}`}
-              className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-medium shadow-md3-level1 hover:shadow-md3-level2 transition-all"
+              className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-full text-xs font-medium shadow-sm hover:shadow-md transition-all"
             >
               {tag}
               <button
@@ -736,7 +736,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
         <div className="sticky top-0 z-10 bg-[var(--md-sys-color-surface)]">
           <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)]">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-md3-level3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
                 <i className="fas fa-user-plus text-lg" />
               </div>
               <div>

@@ -81,7 +81,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
   return (
     <div className="fixed top-4 right-4 z-[3000] space-y-2 pointer-events-none">
       {toasts.map((toast) => (
-        <div key={toast.id} className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md3-level3 text-sm font-semibold backdrop-blur-md ${
+        <div key={toast.id} className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold backdrop-blur-md ${
           toast.type === "success" ? "bg-[#10B981]/95 text-white" : toast.type === "error" ? "bg-[#EF4444]/95 text-white" : "bg-[#8B5CF6]/95 text-white"
         }`}>
           <i className={`fas ${toast.type === "success" ? "fa-check-circle" : toast.type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}`} />
@@ -176,7 +176,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Price & Stock Hero */}
-      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-md3-level1 relative overflow-hidden">
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#f0fdf4] to-transparent rounded-bl-full opacity-50" />
         <div className="relative">
           <div className="flex items-start justify-between mb-4">
@@ -209,7 +209,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+        <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-[#ede9fe] flex items-center justify-center">
               <i className="fas fa-box text-[#8b5cf6] text-sm" />
@@ -223,7 +223,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
             <div className="h-full rounded-full transition-all duration-700" style={{ width: (product.stock ?? 0) === 0 ? "0%" : (product.stock ?? 0) <= 5 ? "25%" : (product.stock ?? 0) <= 20 ? "50%" : "100%", backgroundColor: stockConfig.color }} />
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-md3-level1">
+        <div className="bg-white rounded-2xl p-5 border border-outline-variant shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-[#fef3c7] flex items-center justify-center">
               <i className="fas fa-eye text-[#f59e0b] text-sm" />
@@ -239,7 +239,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
 
       {/* Description */}
       {product.description && (
-        <div className="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-2xl p-6 border border-outline-variant shadow-md3-level1">
+        <div className="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] rounded-2xl p-6 border border-outline-variant shadow-sm">
           <PremiumSectionHeader icon="fa-align-left" title="Description" color="#8B5CF6" />
           <p className="text-on-surface leading-relaxed whitespace-pre-wrap text-sm">{product.description}</p>
         </div>
@@ -249,7 +249,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
 
   const renderDetails = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-sm">
         <PremiumSectionHeader icon="fa-info" title="Product Details" color="#8B5CF6" />
         <div className="grid grid-cols-2 gap-4">
           {[
@@ -271,7 +271,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-sm">
         <PremiumSectionHeader icon="fa-tag" title="Pricing" color="#10B981" />
         <div className="space-y-3">
           <div className="flex justify-between items-center py-3 px-4 bg-[#f0fdf4] rounded-xl border border-[#10b981]/20">
@@ -301,7 +301,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
 
   const renderInventory = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-sm">
         <PremiumSectionHeader icon="fa-boxes" title="Inventory Overview" color="#3B82F6" />
         <div className="space-y-4">
           <div className="p-5 rounded-xl border-2" style={{ backgroundColor: stockConfig.bgLight, borderColor: `${stockConfig.color}30` }}>
@@ -340,7 +340,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-md3-level1">
+      <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-sm">
         <PremiumSectionHeader icon="fa-chart-line" title="Sales Performance" color="#10B981" />
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-[#f0fdf4] rounded-xl border border-[#10b981]/20">
@@ -366,11 +366,11 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
     return (
       <div className="space-y-6">
         {specs.length > 0 ? (
-          <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-md3-level1">
+          <div className="bg-white rounded-2xl p-6 border border-outline-variant shadow-sm">
             <PremiumSectionHeader icon="fa-cogs" title="Specifications" color="#3B82F6" />
             <div className="grid grid-cols-2 gap-4">
               {specs.map((spec, idx) => (
-                <div key={idx} className="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/60 hover:shadow-md3-level1 transition-all">
+                <div key={idx} className="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/60 hover:shadow-sm transition-all">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 h-7 rounded-lg bg-[#ede9fe] flex items-center justify-center">
                       <i className={`fas ${spec.icon} text-[#8b5cf6] text-xs`} />
@@ -422,7 +422,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
             <div className="p-6 space-y-4 sticky top-0">
               {/* Main Image */}
               <div className="relative group">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-white shadow-md3-level3 cursor-pointer" onClick={() => setLightboxOpen(true)}>
+                <div className="aspect-square rounded-2xl overflow-hidden bg-white shadow-lg cursor-pointer" onClick={() => setLightboxOpen(true)}>
                   {!mainImageError && currentImage ? (
                     <img src={currentImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setMainImageError(true)} />
                   ) : (
@@ -431,7 +431,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                    <i className="fas fa-expand text-white text-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md3-level3" />
+                    <i className="fas fa-expand text-white text-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
                   </div>
                 </div>
                 {allImages.length > 1 && (
@@ -447,7 +447,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
                   {allImages.map((img, idx) => (
                     <button key={idx} onClick={() => { setSelectedImage(idx); setMainImageError(false); }}
                       className={`aspect-square rounded-xl overflow-hidden border-2 transition-all hover:scale-105 ${
-                        selectedImage === idx ? "border-[#8b5cf6] shadow-md3-level3 scale-105" : "border-outline-variant opacity-60 hover:opacity-100"
+                        selectedImage === idx ? "border-[#8b5cf6] shadow-lg scale-105" : "border-outline-variant opacity-60 hover:opacity-100"
                       }`}
                     >
                       {!thumbnailErrors.has(idx) ? (

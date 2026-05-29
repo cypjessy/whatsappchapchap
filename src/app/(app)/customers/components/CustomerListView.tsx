@@ -128,10 +128,10 @@ function CustomerCard({
         relative overflow-hidden rounded-xl border transition-all duration-300
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${isSelected
-          ? "border-[#8b5cf6] bg-[#ede9fe]/30 shadow-md3-level2 shadow-[#8b5cf6]/10"
+          ? "border-[#8b5cf6] bg-[#ede9fe]/30 shadow-md shadow-[#8b5cf6]/10"
           : "border-outline-variant bg-surface hover:border-outline-variant"
         }
-        ${isHovered && !bulkMode ? "shadow-md3-level3 shadow-[#e2e8f0]/40 -translate-y-0.5" : "shadow-md3-level1"}
+        ${isHovered && !bulkMode ? "shadow-lg shadow-[#e2e8f0]/40 -translate-y-0.5" : "shadow-sm"}
       `}
       style={{ transitionDelay: `${index * 60}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -148,7 +148,7 @@ function CustomerCard({
             onShareWhatsApp(customer);
             setSwipeOffset(0);
           }}
-          className="w-12 h-12 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-md3-level3 active:scale-90 transition-transform"
+          className="w-12 h-12 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
         >
           <i className="fab fa-whatsapp text-lg" />
         </button>
@@ -158,7 +158,7 @@ function CustomerCard({
             onPrintProfile(customer);
             setSwipeOffset(0);
           }}
-          className="w-12 h-12 rounded-xl bg-[#3b82f6] text-white flex items-center justify-center shadow-md3-level3 active:scale-90 transition-transform"
+          className="w-12 h-12 rounded-xl bg-[#3b82f6] text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"
         >
           <i className="fas fa-print text-lg" />
         </button>
@@ -250,7 +250,7 @@ function CustomerCard({
                   className={`
                     w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                     text-[#25D366] bg-[rgba(37,211,102,0.1)]
-                    hover:bg-[#25D366] hover:text-white hover:shadow-md3-level2 hover:shadow-[#25D366]/20
+                    hover:bg-[#25D366] hover:text-white hover:shadow-md hover:shadow-[#25D366]/20
                   `}
                   title="Share via WhatsApp"
                   aria-label="Share via WhatsApp"
@@ -265,7 +265,7 @@ function CustomerCard({
                   className={`
                     w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
                     text-[#3b82f6] bg-[#eff6ff]
-                    hover:bg-[#3b82f6] hover:text-white hover:shadow-md3-level2 hover:shadow-[#3b82f6]/20
+                    hover:bg-[#3b82f6] hover:text-white hover:shadow-md hover:shadow-[#3b82f6]/20
                   `}
                   title="Print Profile"
                   aria-label="Print Profile"

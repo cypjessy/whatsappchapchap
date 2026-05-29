@@ -490,7 +490,7 @@ export default function FilterBottomSheet({
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl text-sm font-semibold shadow-md3-level3 hover:shadow-md3-level4 transition-all active:scale-95"
+            className="flex-1 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95"
           >
             Apply Filters
           </button>

@@ -95,7 +95,7 @@ function EmptyState({
 }) {
   return (
     <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-8 md:p-16 text-center animate-fadeIn">
-      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] flex items-center justify-center mx-auto mb-6 shadow-md3-level1">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] flex items-center justify-center mx-auto mb-6 shadow-sm">
         <i className="fas fa-concierge-bell text-3xl md:text-4xl text-[#25D366]/40" />
       </div>
       <h3 className="text-xl md:text-2xl font-extrabold text-on-surface mb-2">No Services Found</h3>
@@ -107,7 +107,7 @@ function EmptyState({
       {hasFilters ? (
         <button
           onClick={onClearFilters}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#8b5cf6]/25 hover:shadow-md3-level4 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold shadow-lg shadow-[#8b5cf6]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
         >
           <i className="fas fa-times-circle" />
           Clear Filters
@@ -115,7 +115,7 @@ function EmptyState({
       ) : (
         <button
           onClick={onAddService}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-md3-level4 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
         >
           <i className="fas fa-plus mr-2" />
           Add Service
@@ -157,7 +157,7 @@ function DeleteConfirmModal({
           </button>
           <button
             onClick={() => onConfirm(serviceId)}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md3-level2 shadow-[#ef4444]/20 hover:shadow-md3-level3 active:scale-95 transition-all duration-200"
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md shadow-[#ef4444]/20 hover:shadow-lg active:scale-95 transition-all duration-200"
           >
             <i className="fas fa-trash-alt mr-2" />
             Delete
@@ -188,7 +188,7 @@ function BulkActionBar({
   const allSelected = selectedCount === totalCount && totalCount > 0;
 
   return (
-    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-md3-level1 animate-slideDown">
+    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-sm animate-slideDown">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <label className="flex items-center gap-2.5 cursor-pointer">
           <div className="relative">
@@ -653,7 +653,7 @@ export default function ServicesPage() {
         <div className="md:hidden mb-3">
           <button
             onClick={() => addServiceRef.current?.open()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
           >
             <i className="fas fa-plus" />
             <span>Add Service</span>
@@ -684,7 +684,7 @@ export default function ServicesPage() {
                   relative inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[11px] leading-none
                   transition-all duration-200 active:scale-95 select-none
                   ${isActive
-                    ? `bg-gradient-to-r ${chip.color} text-white shadow-md3-level2`
+                    ? `bg-gradient-to-r ${chip.color} text-white shadow-md`
                     : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                   }
                 `}
@@ -714,7 +714,7 @@ export default function ServicesPage() {
                   inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-[11px] leading-none
                   transition-all duration-200 active:scale-95 select-none
                   ${!selectedBusinessType
-                    ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                    ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md"
                     : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                   }
                 `}
@@ -732,7 +732,7 @@ export default function ServicesPage() {
                     inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-[11px] leading-none capitalize
                     transition-all duration-200 active:scale-95 select-none
                     ${selectedBusinessType === type
-                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md"
                       : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                     }
                   `}

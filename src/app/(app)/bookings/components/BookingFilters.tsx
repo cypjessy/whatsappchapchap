@@ -90,7 +90,7 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border transition-all duration-200
           ${isFocused
-            ? "border-[#8B5CF6] shadow-md3-level2 shadow-[#8B5CF6]/10 bg-surface"
+            ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-surface"
             : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
@@ -151,7 +151,7 @@ function SelectDropdown({
         className={`
           relative flex items-center rounded-xl border transition-all duration-200
           ${isFocused
-            ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+            ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
             : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
           }
         `}
@@ -206,7 +206,7 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border transition-all duration-200
         ${isStartFocused
-          ? "border-[#8B5CF6] shadow-md3-level2 shadow-[#8B5CF6]/10 bg-surface"
+          ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-surface"
           : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
@@ -231,7 +231,7 @@ function DateRangePicker({
       <div className={`
         relative flex items-center rounded-xl border transition-all duration-200
         ${isEndFocused
-          ? "border-[#8B5CF6] shadow-md3-level2 shadow-[#8B5CF6]/10 bg-surface"
+          ? "border-[#8B5CF6] shadow-md shadow-[#8B5CF6]/10 bg-surface"
           : "border-outline-variant bg-surface hover:border-outline-variant"
         }
       `}>
@@ -384,7 +384,7 @@ export default function BookingFilters({
   const activeFilters = getActiveFilters();
 
   return (
-    <div className="bg-surface rounded-2xl border border-outline-variant overflow-hidden mb-6 shadow-md3-level1">
+    <div className="bg-surface rounded-2xl border-2 border-outline overflow-hidden mb-6 shadow-md">
       {/* Header with search + expand toggle on mobile */}
       <div className="p-3 md:p-4">
         <div className="flex items-center gap-2 md:gap-3">

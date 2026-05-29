@@ -222,7 +222,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
           {/* Header */}
           <div className="p-4 md:p-7 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-gradient-to-r from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)]">
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] rounded-lg md:rounded-[12px] flex items-center justify-center text-white text-lg md:text-2xl shadow-md3-level3">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] rounded-lg md:rounded-[12px] flex items-center justify-center text-white text-lg md:text-2xl shadow-lg">
                 <i className="fas fa-layer-group"></i>
               </div>
               <div>
@@ -269,7 +269,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
               </div>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
-              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-md3-level3 flex items-center justify-center gap-2 hover:shadow-md3-level4 transition-all min-h-[44px]" onClick={openAddModal}>
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[44px]" onClick={openAddModal}>
                 <i className="fas fa-plus"></i>
                 <span className="md:hidden">Add</span>
                 <span className="hidden md:inline">Add Category</span>
@@ -306,7 +306,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
                 {filteredCategories.map(category => (
                   <div 
                     key={category.id} 
-                    className={`bg-white border-2 border-outline-variant rounded-[12px] p-6 cursor-pointer transition-all hover:border-[#8b5cf6] hover:-translate-y-1 hover:shadow-md3-level3 relative overflow-hidden ${selectedCategory?.id === category.id ? "border-[#8b5cf6] bg-gradient-to-br from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)] shadow-md3-level2" : ""}`}
+                    className={`bg-white border-2 border-outline-variant rounded-[12px] p-6 cursor-pointer transition-all hover:border-[#8b5cf6] hover:-translate-y-1 hover:shadow-lg relative overflow-hidden ${selectedCategory?.id === category.id ? "border-[#8b5cf6] bg-gradient-to-br from-[rgba(139,92,246,0.05)] to-[rgba(236,72,153,0.05)] shadow-md" : ""}`}
                     onClick={() => setSelectedCategory(category)}
                   >
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] opacity-0 transition-opacity"></div>
@@ -411,7 +411,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
               <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-white border-2 border-outline-variant rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[44px]" onClick={onClose}>
                 Cancel
               </button>
-              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-md3-level3 flex items-center justify-center gap-2 hover:shadow-md3-level4 transition-all min-h-[44px]" onClick={saveChanges}>
+              <button className="flex-1 md:flex-none px-3 md:px-4 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[44px]" onClick={saveChanges}>
                 <i className="fas fa-save"></i>
                 <span className="md:hidden">Save</span>
                 <span className="hidden md:inline">Save Changes</span>
@@ -487,7 +487,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
               <button className="flex-1 px-3 md:px-4 py-3 bg-white border-2 border-outline-variant rounded-lg md:rounded-[8px] font-semibold text-sm hover:border-[#8b5cf6] transition-all min-h-[48px]" onClick={() => setFormModalOpen(false)}>
                 Cancel
               </button>
-              <button className="flex-1 px-3 md:px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-md3-level3 flex items-center justify-center gap-2 hover:shadow-md3-level4 transition-all min-h-[48px]" onClick={saveCategory}>
+              <button className="flex-1 px-3 md:px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] text-white rounded-lg md:rounded-[8px] font-semibold text-sm shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all min-h-[48px]" onClick={saveCategory}>
                 <i className="fas fa-save"></i>
                 <span className="hidden md:inline">{editingCategory ? "Update Category" : "Save Category"}</span>
                 <span className="md:hidden">{editingCategory ? "Update" : "Save"}</span>
@@ -502,7 +502,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
         {toasts.map(toast => (
           <div 
             key={toast.id}
-            className="bg-[#0f172a] text-white px-6 py-4 rounded-[8px] shadow-md3-level3 flex items-center gap-4 min-w-[300px] animate-[slideInRight_0.3s_ease]"
+            className="bg-[#0f172a] text-white px-6 py-4 rounded-[8px] shadow-lg flex items-center gap-4 min-w-[300px] animate-[slideInRight_0.3s_ease]"
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${toast.type === "success" ? "bg-[#10b981]/20 text-[#10b981]" : toast.type === "error" ? "bg-[#ef4444]/20 text-[#ef4444]" : "bg-[#3b82f6]/20 text-[#3b82f6]"}`}>
               <i className={`fas fa-${toast.type === "success" ? "check-circle" : toast.type === "error" ? "exclamation-circle" : "info-circle"}`}></i>

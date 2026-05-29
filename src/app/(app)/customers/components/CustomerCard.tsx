@@ -117,7 +117,7 @@ function ActionMenu({
         className={`
           w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200
           ${isOpen
-            ? "bg-[#8b5cf6] text-white shadow-md3-level2"
+            ? "bg-[#8b5cf6] text-white shadow-md"
             : "text-on-surface-variant hover:bg-surface-variant"
           }
         `}
@@ -126,7 +126,7 @@ function ActionMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-44 bg-surface rounded-xl border border-outline-variant shadow-md3-level4 z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute right-0 top-full mt-2 w-44 bg-surface rounded-xl border border-outline-variant shadow-xl z-50 overflow-hidden animate-fadeIn">
           {ACTIONS.map((action) => (
             <button
               key={action.id}
@@ -192,10 +192,10 @@ export default function CustomerCard({
   return (
     <div
       className={`
-        group relative md3-card-elevated p-4 md:p-5
+        group relative bg-surface rounded-xl border border-outline-variant p-4 md:p-5
         transition-all duration-300 ease-out cursor-pointer overflow-hidden
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}
-        ${!bulkMode && isHovered ? "shadow-md3-level4 -translate-y-1" : "shadow-md3-level1 hover:shadow-md3-level2"}
+        ${!bulkMode && isHovered ? "shadow-xl -translate-y-1" : "shadow-sm hover:shadow-md"}
       `}
       style={{ transitionDelay: `${index * 80}ms` }}
       onMouseEnter={() => setIsHovered(true)}
@@ -229,7 +229,7 @@ export default function CustomerCard({
                   w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer
                   transition-all duration-200
                   ${isSelected
-                    ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] shadow-md3-level1 text-[var(--md-sys-color-on-primary)]"
+                    ? "bg-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)] shadow-sm text-[var(--md-sys-color-on-primary)]"
                     : "border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-primary)]"
                   }
                 `}
@@ -251,7 +251,7 @@ export default function CustomerCard({
             {/* Status dot */}
             <div className={`
               absolute -bottom-0.5 -right-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-white
-              ${statusConfig.dot} shadow-md3-level1
+              ${statusConfig.dot} shadow-sm
             `}>
               <i className={`fas ${statusConfig.icon} text-white text-[6px] md:text-[7px] absolute inset-0 flex items-center justify-center`} />
             </div>

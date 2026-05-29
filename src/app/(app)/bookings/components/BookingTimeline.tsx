@@ -151,7 +151,7 @@ function ShimmerTimelineItem() {
       <div className="absolute -left-14 md:-left-16 w-12 text-right">
         <div className="h-3 bg-[var(--md-sys-color-surface-variant)] rounded w-10 ml-auto" />
       </div>
-      <div className="md3-card-elevated p-4 relative overflow-hidden">
+      <div className="bg-surface border-2 border-outline shadow-md rounded-xl md:rounded-2xl p-4 relative overflow-hidden">
         <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[var(--md-sys-color-surface)]/70 to-transparent" />
         <div className="flex justify-between items-start mb-3">
           <div className="space-y-2">
@@ -182,7 +182,7 @@ function DateHeader({ group, index }: { group: GroupedBookings; index: number })
       <div className={`
         inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold
         ${group.isToday
-          ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/20"
+          ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/20"
           : group.isTomorrow
             ? "bg-[#ede9fe] text-[#8b5cf6] border border-[#8b5cf6]/20"
             : "bg-surface text-on-surface-variant border border-outline-variant"
@@ -237,7 +237,7 @@ function TimelineItem({
       {/* Timeline dot */}
       <div className="absolute -left-10 md:-left-12 top-3 md:top-4 flex flex-col items-center">
         <div className={`
-          w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border-[2.5px] border-white shadow-md3-level1
+          w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border-[2.5px] border-white shadow-sm
           transition-all duration-300 z-10
           ${statusConfig.dot}
           ${isHovered ? "scale-125 ring-4 " + statusConfig.ring : "scale-100 ring-0"}
@@ -261,8 +261,8 @@ function TimelineItem({
           bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-3.5 md:p-4 cursor-pointer
           transition-all duration-300 ease-out
           ${isHovered
-            ? "border-[#8b5cf6]/30 shadow-md3-level3 shadow-[#8b5cf6]/5 -translate-y-0.5"
-            : "shadow-md3-level1 hover:shadow-md3-level2"
+            ? "border-[#8b5cf6]/30 shadow-lg shadow-[#8b5cf6]/5 -translate-y-0.5"
+            : "shadow-sm hover:shadow-md"
           }
         `}
         onMouseEnter={() => setIsHovered(true)}
@@ -369,9 +369,8 @@ function TimelineItem({
               }}
               className={`
                 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-90
-                ${isHovered
-                  ? "bg-[#8b5cf6] text-white shadow-md3-level1"
-                  : "bg-surface-variant text-on-surface-variant"
+                ${isHovered? "bg-[#8b5cf6] text-white shadow-sm"
+                    : "bg-surface-variant text-on-surface-variant"
                 }
               `}
               aria-label="View"

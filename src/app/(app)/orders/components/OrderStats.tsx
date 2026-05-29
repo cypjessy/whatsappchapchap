@@ -142,7 +142,7 @@ function TrendBadge({ value, label }: { value: number; label?: string }) {
 
 function SkeletonCard({ delay }: { delay?: number }) {
   return (
-    <div className="flex-shrink-0 bg-surface px-4 py-4 rounded-xl border border-outline-variant flex items-center gap-3 min-w-[160px] animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.1}s` }}>
+    <div className="flex-shrink-0 bg-surface px-4 py-4 rounded-xl border-2 border-outline flex items-center gap-3 min-w-[160px] animate-fadeIn" style={{ animationDelay: `${(delay || 0) * 0.1}s` }}>
       <div className="w-10 h-10 rounded-full bg-surface-container-high" />
       <div className="space-y-2">
         <div className="h-5 w-16 bg-surface-container-high rounded" />
@@ -172,7 +172,7 @@ function StatCard({
 
   return (
     <div
-      className="group relative bg-surface p-3 md:px-4 md:py-4 rounded-xl border border-outline-variant flex items-center gap-2.5 md:gap-3 animate-fadeIn md:flex-shrink-0 md:min-w-[160px] md:transition-all md:duration-300 md:hover:shadow-md3-level3 md:hover:border-[#25D366]/20 md:hover:-translate-y-0.5 md:cursor-default"
+      className="group relative bg-surface p-3 md:px-4 md:py-4 rounded-xl border-2 border-outline flex items-center gap-2.5 md:gap-3 animate-fadeIn md:flex-shrink-0 md:min-w-[160px] md:transition-all md:duration-300 md:hover:shadow-lg md:hover:border-[#25D366]/20 md:hover:-translate-y-0.5 md:cursor-default"
       style={{ animationDelay: `${delay * 0.1}s` }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -180,7 +180,7 @@ function StatCard({
       {/* Icon */}
       <div
         className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 md:transition-all md:duration-300 ${
-          isHovered ? "scale-110 shadow-md3-level2" : ""
+          isHovered ? "scale-110 shadow-md" : ""
         }`}
         style={{ backgroundColor: iconBg, color: iconColor }}
       >

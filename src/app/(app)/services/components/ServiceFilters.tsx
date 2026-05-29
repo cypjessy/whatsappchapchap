@@ -95,7 +95,7 @@ function SearchInput({
         className={`
           relative flex items-center rounded-xl border-2 transition-all duration-200
           ${isFocused
-            ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+            ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
             : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
           }
         `}
@@ -151,7 +151,7 @@ function PriceRangeInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 flex-1
         ${minFocused
-          ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+          ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
           : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
         }
       `}>
@@ -177,7 +177,7 @@ function PriceRangeInput({
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200 flex-1
         ${maxFocused
-          ? "border-[var(--md-sys-color-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
+          ? "border-[var(--md-sys-color-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/10 bg-[var(--md-sys-color-surface)]"
           : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline)]"
         }
       `}>
@@ -231,7 +231,7 @@ function SortDropdown({
           w-full flex items-center justify-between px-3 py-2.5 rounded-xl border-2 text-sm font-medium
           transition-all duration-200
           ${isOpen || isFocused
-            ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10 bg-surface"
+            ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10 bg-surface"
             : "border-outline-variant bg-surface hover:border-outline-variant"
           }
         `}
@@ -249,7 +249,7 @@ function SortDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-1 w-full bg-surface rounded-xl border-2 border-outline-variant shadow-md3-level4 shadow-black/5 overflow-hidden animate-fadeIn">
+        <div className="absolute z-20 mt-1 w-full bg-surface rounded-xl border-2 border-outline-variant shadow-xl shadow-black/5 overflow-hidden animate-fadeIn">
           {SORT_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -395,7 +395,7 @@ export default function ServiceFilters({
             md:hidden flex items-center gap-2 px-3 py-3 rounded-xl font-semibold text-sm shrink-0
             transition-all duration-200 active:scale-95
             ${hasActiveFilters
-              ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/25"
+              ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/25"
               : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366]"
             }
           `}
@@ -418,7 +418,7 @@ export default function ServiceFilters({
             hidden md:flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm shrink-0
             transition-all duration-200 active:scale-95
             ${showAdvanced || hasActiveFilters
-              ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/25"
+              ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/25"
               : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
             }
           `}
@@ -460,7 +460,7 @@ export default function ServiceFilters({
         overflow-hidden transition-all duration-300 ease-out
         ${showAdvanced ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}
       `}>
-        <div className="bg-surface p-3 md:p-4 rounded-xl md:rounded-2xl border border-outline-variant shadow-md3-level1 space-y-3 md:space-y-4">
+        <div className="bg-surface p-3 md:p-4 rounded-xl md:rounded-2xl border border-outline-variant shadow-sm space-y-3 md:space-y-4">
           {/* Top row: Business Type + Sort */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>

@@ -144,7 +144,7 @@ export default function ServiceFilterBottomSheet({
                   className={`
                     px-3 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95
                     ${sortBy === option.value
-                      ? "bg-[#25D366] text-white shadow-md3-level2 shadow-[#25D366]/20"
+                      ? "bg-[#25D366] text-white shadow-md shadow-[#25D366]/20"
                       : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366]/50"
                     }
                   `}
@@ -195,7 +195,7 @@ export default function ServiceFilterBottomSheet({
         <div className="sticky bottom-0 bg-surface border-t border-outline-variant p-4">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-md3-level3 shadow-[#25D366]/25 hover:shadow-md3-level4 active:scale-95 transition-all"
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold shadow-lg shadow-[#25D366]/25 hover:shadow-xl active:scale-95 transition-all"
           >
             Apply Filters
           </button>

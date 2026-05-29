@@ -81,7 +81,7 @@ function StepIndicator({ currentStep, steps }: { currentStep: Step; steps: typeo
             <div
               className={`
                 flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 rounded-lg transition-all duration-300
-                ${isActive ? "bg-[#8b5cf6] text-white shadow-md3-level2" : ""}
+                ${isActive ? "bg-[#8b5cf6] text-white shadow-md" : ""}
                 ${isCompleted ? "text-[#8b5cf6]" : ""}
                 ${isPending ? "text-outline" : ""}
               `}
@@ -171,8 +171,8 @@ function Input({
           ${error
             ? "border-[#ef4444] bg-[#ef4444]/5"
             : isFocused
-              ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10"
-              : "border-outline-variant hover:border-outline-variant"
+              ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
+              : "border-outline hover:border-outline"
           }
         `}
         {...props}
@@ -212,8 +212,8 @@ function Select({
           ${error
             ? "border-[#ef4444] bg-[#ef4444]/5"
             : isFocused
-              ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10"
-              : "border-outline-variant hover:border-outline-variant"
+              ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10"
+              : "border-outline hover:border-outline"
           }
           ${value ? "text-on-surface" : "text-outline"}
         `}
@@ -252,14 +252,14 @@ function PackageCard({
       className={`
         relative p-4 md:p-5 border-2 rounded-xl md:rounded-2xl cursor-pointer transition-all duration-300
         ${selected
-          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md3-level2 shadow-[#8b5cf6]/10"
-          : "border-outline-variant hover:border-[#8b5cf6]/50 hover:shadow-md3-level1"
+          ? "border-[#8b5cf6] bg-gradient-to-br from-[#ede9fe] to-[#f5f3ff] shadow-md shadow-[#8b5cf6]/10"
+          : "border-outline hover:border-[#8b5cf6]/50 hover:shadow-sm"
         }
         ${isHovered && !selected ? "-translate-y-0.5" : "translate-y-0"}
       `}
     >
       {selected && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-md3-level2">
+        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#8b5cf6] text-white flex items-center justify-center shadow-sm">
           <i className="fas fa-check text-[10px]" />
         </div>
       )}
@@ -307,7 +307,7 @@ function DateChip({
       className={`
         min-w-[68px] md:min-w-[76px] p-2.5 md:p-3 border-2 rounded-xl text-center transition-all duration-200 shrink-0
         ${selected
-          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/20"
+          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/20"
           : isHovered
             ? "border-[#8b5cf6] bg-[#f5f3ff]"
             : "border-outline-variant bg-surface hover:border-outline-variant"
@@ -343,7 +343,7 @@ function TimeChip({
       className={`
         py-2.5 md:py-3 px-3 md:px-4 border-2 rounded-xl text-center transition-all duration-200 text-xs md:text-sm font-semibold
         ${selected
-          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md3-level3 shadow-[#8b5cf6]/20"
+          ? "bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/20"
           : "border-outline-variant bg-surface hover:border-[#8b5cf6] text-on-surface-variant"
         }
       `}
@@ -369,8 +369,8 @@ function LocationCard({
       className={`
         flex items-center gap-3 p-3.5 md:p-4 border-2 rounded-xl transition-all duration-200 w-full text-left
         ${selected
-          ? "border-[#8b5cf6] bg-[#ede9fe] shadow-md3-level1"
-          : "border-outline-variant hover:border-[#8b5cf6]/50"
+          ? "border-[#8b5cf6] bg-[#ede9fe] shadow-sm"
+          : "border-outline hover:border-[#8b5cf6]/50"
         }
       `}
     >
@@ -400,7 +400,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-surface rounded-xl md:rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+    <div className="bg-surface rounded-xl md:rounded-2xl p-4 md:p-5 border border-outline shadow-md">
       <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
         <div className="w-8 h-8 rounded-lg bg-[#ede9fe] flex items-center justify-center">
           <i className={`fas ${icon} text-[#8b5cf6] text-xs`} />
@@ -775,7 +775,7 @@ export default function ManualBookingModal({
                     <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-outline text-sm" />
                   </div>
                   {showCustomerDropdown && (
-                    <div className="mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-md3-level3 max-h-48 overflow-y-auto z-50">
+                    <div className="mt-1.5 bg-surface border border-outline rounded-xl shadow-md max-h-48 overflow-y-auto z-50">
                       {loadingCustomers ? (
                         <div className="p-3 text-sm text-on-surface-variant flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-outline-variant border-t-[#8b5cf6] rounded-full animate-spin" />
@@ -857,7 +857,7 @@ export default function ManualBookingModal({
                 >
                   <div
                     className={`
-                      absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md3-level2 transition-all duration-200
+                      absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200
                       ${saveCustomer ? "left-[26px]" : "left-0.5"}
                     `}
                   />
@@ -1011,8 +1011,8 @@ export default function ManualBookingModal({
                     className={`
                       flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all
                       ${status === "confirmed"
-                        ? "bg-[#8b5cf6] text-white shadow-md3-level2 shadow-[#8b5cf6]/20"
-                        : "bg-surface text-on-surface-variant border-2 border-outline-variant hover:border-[#8b5cf6]"
+                        ? "bg-[#8b5cf6] text-white shadow-md shadow-[#8b5cf6]/20"
+                        : "bg-surface text-on-surface-variant border-2 border-outline hover:border-[#8b5cf6]"
                       }
                     `}
                   >
@@ -1025,8 +1025,8 @@ export default function ManualBookingModal({
                     className={`
                       flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all
                       ${status === "pending"
-                        ? "bg-[#f59e0b] text-white shadow-md3-level2 shadow-[#f59e0b]/20"
-                        : "bg-surface text-on-surface-variant border-2 border-outline-variant hover:border-[#f59e0b]"
+                        ? "bg-[#f59e0b] text-white shadow-md shadow-[#f59e0b]/20"
+                        : "bg-surface text-on-surface-variant border-2 border-outline hover:border-[#f59e0b]"
                       }
                     `}
                   >
@@ -1043,7 +1043,7 @@ export default function ManualBookingModal({
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Any special requests or notes..."
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none text-sm resize-none transition-all focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-outline focus:border-[#8b5cf6] focus:outline-none text-sm resize-none transition-all focus:shadow-md focus:shadow-[#8b5cf6]/10"
                   />
                 </FormField>
               </div>
@@ -1158,7 +1158,7 @@ export default function ManualBookingModal({
         <div className="shrink-0 bg-surface border-b border-outline-variant">
           <div className="p-4 md:p-5 flex justify-between items-center">
             <h2 className="text-lg md:text-xl font-bold flex items-center gap-2.5 text-on-surface">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md3-level2 shadow-[#8b5cf6]/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md shadow-[#8b5cf6]/20">
                 <i className="fas fa-calendar-plus text-white text-sm" />
               </div>
               Create Booking
@@ -1223,7 +1223,7 @@ export default function ManualBookingModal({
                 className={`
                   flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm text-white
                   bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed]
-                  hover:opacity-90 active:scale-95 transition-all shadow-md3-level3 shadow-[#8b5cf6]/20
+                  hover:opacity-90 active:scale-95 transition-all shadow-md shadow-[#8b5cf6]/20
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
@@ -1246,7 +1246,7 @@ export default function ManualBookingModal({
                 className={`
                   flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm text-white
                   bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed]
-                  hover:opacity-90 active:scale-95 transition-all shadow-md3-level3 shadow-[#8b5cf6]/20
+                  hover:opacity-90 active:scale-95 transition-all shadow-md shadow-[#8b5cf6]/20
                 `}
               >
                 Next

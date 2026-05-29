@@ -200,7 +200,7 @@ function ConfirmModal({
             Cancel
           </button>
           <button
-            className={`flex-1 px-4 py-3 ${confirmColor} text-white rounded-xl font-semibold transition-all active:scale-95 shadow-md3-level3 flex items-center justify-center gap-2`}
+            className={`flex-1 px-4 py-3 ${confirmColor} text-white rounded-xl font-semibold transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2`}
             onClick={onConfirm}
           >
             {confirmText}
@@ -236,7 +236,7 @@ function OrderTimeline({ order, formatDate, formatTime }: { order: Order; format
         return (
           <div key={event.status} className="relative pb-6 last:pb-0">
             <div
-              className={`absolute left-[-21px] w-3 h-3 rounded-full border-2 border-white shadow-md3-level1 transition-all ${
+              className={`absolute left-[-21px] w-3 h-3 rounded-full border-2 border-white shadow-sm transition-all ${
                 isCompleted
                   ? "bg-[#10b981] shadow-[0_0_0_2px_#10b981]"
                   : isCurrent
@@ -246,7 +246,7 @@ function OrderTimeline({ order, formatDate, formatTime }: { order: Order; format
             />
             <div
               className={`bg-surface border rounded-lg p-4 transition-all ${
-                isCurrent ? "border-[#f59e0b] shadow-md3-level1" : "border-outline-variant"
+                isCurrent ? "border-[#f59e0b] shadow-sm" : "border-outline-variant"
               }`}
             >
               <div className="flex justify-between items-start mb-1">
@@ -298,7 +298,7 @@ function StatusDropdown({
   return (
     <div
       ref={ref}
-      className="absolute bottom-full right-0 mb-2 bg-surface rounded-xl shadow-md3-level4 border border-outline-variant min-w-[220px] z-50 overflow-hidden animate-fadeIn"
+      className="absolute bottom-full right-0 mb-2 bg-surface rounded-xl shadow-xl border border-outline-variant min-w-[220px] z-50 overflow-hidden animate-fadeIn"
     >
       <div className="py-1">
         {ALL_STATUSES.map((s) => (              <button
@@ -481,7 +481,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Confirm Order",
         icon: "fa-check-circle",
-        color: "bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-md3-level3",
+        color: "bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg",
         status: "confirmed" as OrderStatus,
       });
     }
@@ -489,7 +489,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Start Processing",
         icon: "fa-cog",
-        color: "bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-md3-level3",
+        color: "bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg",
         status: "processing" as OrderStatus,
       });
     }
@@ -497,7 +497,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Mark Shipped",
         icon: "fa-shipping-fast",
-        color: "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:shadow-md3-level3",
+        color: "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:shadow-lg",
         status: "shipped" as OrderStatus,
       });
     }
@@ -505,7 +505,7 @@ export default function OrderDetailModal({
       actions.push({
         label: "Mark Delivered",
         icon: "fa-check-double",
-        color: "bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:shadow-md3-level3",
+        color: "bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:shadow-lg",
         status: "delivered" as OrderStatus,
       });
     }
@@ -537,7 +537,7 @@ export default function OrderDetailModal({
                   <i className="fas fa-arrow-left" />
                 </button>
 
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg md:text-2xl shadow-md3-level3 flex-shrink-0">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg md:text-2xl shadow-lg flex-shrink-0">
                   <i className="fas fa-shopping-bag" />
                 </div>
 
@@ -548,7 +548,7 @@ export default function OrderDetailModal({
                     </h2>
                     {/* Status Badge - Desktop inline, Mobile below */}
                     <span
-                      className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md3-level1 ${statusStyle.bg} ${statusStyle.color}`}
+                      className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm ${statusStyle.bg} ${statusStyle.color}`}
                     >
                       <i className={`fas ${statusConfig?.icon || "fa-circle"} text-[10px]`} />
                       {statusStyle.label}
@@ -633,7 +633,7 @@ export default function OrderDetailModal({
             {/* Mobile Status Bar */}
             <div className="md:hidden mt-2 flex items-center gap-2">
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md3-level1 ${statusStyle.bg} ${statusStyle.color}`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm ${statusStyle.bg} ${statusStyle.color}`}
               >
                 <i className={`fas ${statusConfig?.icon || "fa-circle"} text-[10px]`} />
                 {statusStyle.label}
@@ -666,7 +666,7 @@ export default function OrderDetailModal({
             {/* Quick Status Update */}
             <div className="relative">
               <button
-                className="px-4 py-2 bg-surface border border-outline-variant rounded-xl text-sm font-semibold hover:border-[#25D366] transition-all flex items-center gap-2 shadow-md3-level1"
+                className="px-4 py-2 bg-surface border border-outline-variant rounded-xl text-sm font-semibold hover:border-[#25D366] transition-all flex items-center gap-2 shadow-sm"
                 onClick={() => setShowStatusMenu(!showStatusMenu)}
               >
                 <i className="fas fa-tag text-xs" />
@@ -703,7 +703,7 @@ export default function OrderDetailModal({
                           className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all"
                         >
                           <div
-                            className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1 cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
+                            className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
                             onClick={() => prodImg && setImageViewer({ src: prodImg, alt: product.name })}
                           >
                             {prodImg ? (
@@ -727,7 +727,7 @@ export default function OrderDetailModal({
                   ) : order.productName ? (
                     <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
                       <div
-                        className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1 cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
+                        className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
                         onClick={() => order.productImage && setImageViewer({ src: order.productImage, alt: order.productName || 'Product' })}
                       >
                         {order.productImage ? (
@@ -768,7 +768,7 @@ export default function OrderDetailModal({
                                 <td className="py-4 px-4">
                                   <div className="flex items-center gap-3">
                                     <div
-                                      className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1 cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
+                                      className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm cursor-pointer hover:ring-2 hover:ring-[#25D366]/50 transition-all"
                                       onClick={() => prodImg && setImageViewer({ src: prodImg, alt: product.name })}
                                     >
                                       {prodImg ? (
@@ -794,7 +794,7 @@ export default function OrderDetailModal({
                           <tr className="border-t border-outline-variant">
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-md3-level1">
+                                <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm">
                                   {order.productImage ? (
                                     <img src={order.productImage} alt={order.productName} className="w-full h-full object-cover" />
                                   ) : (
@@ -832,7 +832,7 @@ export default function OrderDetailModal({
                         .map(([key, value]) => (
                           <span
                             key={key}
-                            className="bg-surface px-3 py-1.5 rounded-full text-sm font-semibold border border-outline-variant shadow-md3-level1 flex items-center gap-1.5"
+                            className="bg-surface px-3 py-1.5 rounded-full text-sm font-semibold border border-outline-variant shadow-sm flex items-center gap-1.5"
                           >
                             <i className="fas fa-check text-[#10b981] text-[10px]" />
                             <span className="text-on-surface-variant text-xs">{key.replace(/_/g, " ")}:</span>
@@ -877,9 +877,9 @@ export default function OrderDetailModal({
               {/* ─── Right Column ─── */}
               <div className="p-4 md:p-6 bg-surface lg:bg-transparent animate-fadeIn" style={{ animationDelay: '0.2s' }}>
                 {/* Customer Info */}
-                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.25s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-sm animate-fadeIn" style={{ animationDelay: '0.25s' }}>
                   <div className="flex items-center gap-3 mb-5 pb-5 border-b border-outline-variant">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center font-bold text-lg text-white shadow-md3-level2">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center font-bold text-lg text-white shadow-md">
                       {order.customerName?.charAt(0)?.toUpperCase() || "C"}
                     </div>
                     <div className="min-w-0">
@@ -956,7 +956,7 @@ export default function OrderDetailModal({
                 </div>
 
                 {/* Order Info */}
-                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-sm animate-fadeIn" style={{ animationDelay: '0.3s' }}>
                   <SectionHeader icon="fa-info-circle" title="Order Information" color="#64748b" />
                   <div className="space-y-1">
                     <InfoRow label="Order Number">
@@ -987,7 +987,7 @@ export default function OrderDetailModal({
                 </div>
 
                 {/* Payment Info */}
-                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.35s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant mb-5 shadow-sm animate-fadeIn" style={{ animationDelay: '0.35s' }}>
                   <SectionHeader icon="fa-credit-card" title="Payment Information" color="#10b981" />
                   <div className="space-y-1">
                     <InfoRow label="Method">
@@ -1087,7 +1087,7 @@ export default function OrderDetailModal({
                   {/* Mark as Paid Button - Only for manual payments not yet paid */}
                   {order.paymentStatus !== "paid" && order.paymentMethod !== "paystack" && !isCancelled && (
                     <button
-                      className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] text-white rounded-xl font-bold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
+                      className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-[#10b981] to-[#059669] text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                       onClick={() => {
                         setConfirmModal({
                           isOpen: true,
@@ -1113,7 +1113,7 @@ export default function OrderDetailModal({
                 </div>
 
                 {/* Internal Notes */}
-                <div className="bg-surface rounded-xl p-5 border border-outline-variant shadow-md3-level1 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+                <div className="bg-surface rounded-xl p-5 border border-outline-variant shadow-sm animate-fadeIn" style={{ animationDelay: '0.4s' }}>
                   <SectionHeader icon="fa-sticky-note" title="Internal Notes" color="#8b5cf6" />
                   {order.notes && (
                     <div className="flex gap-3 py-3 border-b border-outline-variant mb-3">
@@ -1138,7 +1138,7 @@ export default function OrderDetailModal({
                     />
                     {orderNotes.trim() && (
                       <button
-                        className="mt-2 w-full px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="mt-2 w-full px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                         onClick={handleAddNoteClick}
                         disabled={loadingAction === "add-note"}
                       >
@@ -1217,7 +1217,7 @@ export default function OrderDetailModal({
                 {/* Mark Delivered Quick Button */}
                 {!isDelivered && !isCancelled && (
                   <button
-                    className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-md3-level3 transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
+                    className="flex-1 md:flex-none px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
                     onClick={() => handleStatusUpdate("delivered")}
                     disabled={loadingAction === "update-status"}
                   >

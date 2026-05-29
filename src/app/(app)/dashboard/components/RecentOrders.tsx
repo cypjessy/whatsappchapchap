@@ -185,8 +185,8 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
 
   if (loading) {
     return (
-      <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
-        <div className="p-4 md:p-5 border-b border-outline-variant">
+      <div className="bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden">
+        <div className="p-4 md:p-5 border-b-2 border-outline bg-surface-container-low">
           <div className="h-6 bg-surface-variant rounded w-32 animate-pulse" />
         </div>
         <div className="divide-y divide-outline-variant">
@@ -206,8 +206,8 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
 
   if (orders.length === 0) {
     return (
-      <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
-        <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between">
+      <div className="bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden">
+        <div className="p-4 md:p-5 border-b-2 border-outline flex items-center justify-between bg-surface-container-low">
           <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Orders</h3>
         </div>
         <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
@@ -224,9 +224,9 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
   }
 
   return (
-    <div className="bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden">
+    <div className="bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden">
       {/* Header */}
-      <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+      <div className="p-4 md:p-5 border-b-2 border-outline flex items-center justify-between bg-surface-container-low">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
             <i className="fas fa-list text-[#3B82F6] text-sm" />
@@ -240,7 +240,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
         {showViewAll && (
           <Link
             href="/orders"
-            className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-semibold bg-surface-variant text-on-surface-variant border border-outline-variant hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6] transition-all duration-200"
+            className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-semibold bg-surface-variant text-on-surface-variant border-2 border-outline-variant hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6] transition-all duration-200"
           >
             View All
           </Link>
@@ -248,7 +248,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
       </div>
 
       {/* Mobile List */}
-      <div className="md:hidden divide-y divide-outline-variant">
+      <div className="md:hidden divide-y-2 divide-outline-variant">
         {orders.map((order, index) => {
           const status = getStatusConfig(order.status);
           return (
@@ -288,7 +288,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full min-w-[700px]">
           <thead>
-            <tr className="bg-surface border-b border-outline-variant">
+            <tr className="bg-surface-container-low border-b-2 border-outline">
               {["Order ID", "Product", "Customer", "Amount", "Status", "Date"].map((h) => (
                 <th key={h} className="text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
                   {h}
@@ -300,7 +300,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
             {orders.map((order) => {
               const status = getStatusConfig(order.status);
               return (
-                <tr key={order.id} className="border-t border-outline-variant hover:bg-surface-container-lowest transition-colors">
+                <tr key={order.id} className="border-b border-outline hover:bg-surface-container-low transition-colors last:border-b-0">
                   <td className="p-4">
                     <span className="font-semibold text-sm text-primary">#{order.id}</span>
                   </td>

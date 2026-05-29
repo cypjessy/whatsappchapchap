@@ -201,7 +201,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
         <div className="shrink-0 border-b border-outline-variant">
           <div className="p-4 md:p-5 flex justify-between items-center">
             <h2 className="text-lg md:text-xl font-bold flex items-center gap-2.5 text-on-surface">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-md3-level2 shadow-[#8b5cf6]/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-sm shadow-[#8b5cf6]/20">
                 <i className="fas fa-edit text-white text-sm" />
               </div>
               Edit Booking
@@ -230,7 +230,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
         <div className="flex-1 overflow-y-auto p-4 md:p-5">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Client Section */}
-            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-sm">
               <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
                 <div className="w-7 h-7 rounded-lg bg-[#EDE9FE] flex items-center justify-center">
                   <i className="fas fa-user text-[#8b5cf6] text-xs" />
@@ -249,7 +249,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                       w-full px-4 py-2.5 rounded-xl border-2 text-sm transition-all outline-none
                       ${errors.client
                         ? "border-[#ef4444] bg-[#ef4444]/5"
-                        : "border-outline-variant focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10"
+                        : "border-outline focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10"
                       }
                     `}
                     placeholder="John Doe"
@@ -267,7 +267,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                       w-full px-4 py-2.5 rounded-xl border-2 text-sm transition-all outline-none
                       ${errors.phone
                         ? "border-[#ef4444] bg-[#ef4444]/5"
-                        : "border-outline-variant focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10"
+                        : "border-outline focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10"
                       }
                     `}
                     placeholder="+254 700 000 000"
@@ -280,7 +280,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10 transition-all"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -288,7 +288,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
             </div>
 
             {/* Schedule Section */}
-            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-sm">
               <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
                 <div className="w-7 h-7 rounded-lg bg-[#D1FAE5] flex items-center justify-center">
                   <i className="fas fa-calendar-alt text-[#10b981] text-xs" />
@@ -308,7 +308,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                       w-full px-4 py-2.5 rounded-xl border-2 text-sm transition-all outline-none
                       ${errors.date
                         ? "border-[#ef4444] bg-[#ef4444]/5"
-                        : "border-outline-variant focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10"
+                        : "border-outline focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10"
                       }
                     `}
                   />
@@ -326,7 +326,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                       w-full px-4 py-2.5 rounded-xl border-2 text-sm transition-all outline-none
                       ${errors.time
                         ? "border-[#ef4444] bg-[#ef4444]/5"
-                        : "border-outline-variant focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10"
+                        : "border-outline focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10"
                       }
                     `}
                   />
@@ -337,7 +337,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                   <input
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10 transition-all"
                     placeholder="60 min"
                   />
                 </div>
@@ -346,7 +346,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                   <input
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 focus:shadow-[#8b5cf6]/10 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10 transition-all"
                     placeholder="Client's Place"
                   />
                 </div>
@@ -354,7 +354,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
             </div>
 
             {/* Service Section */}
-            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-sm">
               <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
                 <div className="w-7 h-7 rounded-lg bg-[#EDE9FE] flex items-center justify-center">
                   <i className="fas fa-concierge-bell text-[#8b5cf6] text-xs" />
@@ -367,7 +367,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                   <select
                     value={selectedServiceId}
                     onChange={(e) => setSelectedServiceId(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md transition-all appearance-none cursor-pointer"
                   >
                     <option value="">{booking.service} (current)</option>
                     {services.map((s) => (
@@ -386,8 +386,8 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                         className={`
                           flex-1 px-3 py-2 rounded-xl text-xs font-bold capitalize transition-all
                           ${selectedPackage === pkg
-                            ? "bg-[#8b5cf6] text-white shadow-md3-level2"
-                            : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6]/50"
+                            ? "bg-[#8b5cf6] text-white shadow-sm"
+                            : "bg-surface border-2 border-outline text-on-surface-variant hover:border-[#8b5cf6]/50"
                           }
                         `}
                       >
@@ -400,7 +400,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
             </div>
 
             {/* Payment Section */}
-            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-sm">
               <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
                 <div className="w-7 h-7 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
                   <i className="fas fa-credit-card text-[#f59e0b] text-xs" />
@@ -415,7 +415,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                     onChange={(e) => setPrice(Number(e.target.value))}
                     type="number"
                     min={0}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md transition-all"
                   />
                 </div>
                 <div>
@@ -425,7 +425,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                     onChange={(e) => setDeposit(Number(e.target.value))}
                     type="number"
                     min={0}
-                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md transition-all"
                   />
                 </div>
                 <div>
@@ -465,7 +465,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
             </div>
 
             {/* Status Section */}
-            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-sm">
               <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
                 <div className="w-7 h-7 rounded-lg bg-[#DBEAFE] flex items-center justify-center">
                   <i className="fas fa-tag text-[#3b82f6] text-xs" />
@@ -517,7 +517,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
             </div>
 
             {/* Notes */}
-            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-md3-level1">
+            <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant shadow-sm">
               <h3 className="text-sm md:text-base font-bold mb-4 flex items-center gap-2 text-on-surface">
                 <div className="w-7 h-7 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
                   <i className="fas fa-sticky-note text-[#f59e0b] text-xs" />
@@ -528,7 +528,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border-2 border-outline-variant text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md3-level2 transition-all resize-none"
+                className="w-full px-4 py-3 rounded-xl border-2 border-outline text-sm outline-none focus:border-[#8b5cf6] focus:shadow-md transition-all resize-none"
                 placeholder="Any additional notes..."
               />
             </div>
@@ -549,7 +549,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
               type="button"
               onClick={handleSubmit}
               disabled={saving}
-              className="flex-1 px-4 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md3-level3 shadow-[#8b5cf6]/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md shadow-[#8b5cf6]/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>

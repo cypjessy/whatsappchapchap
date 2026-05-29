@@ -121,8 +121,8 @@ function ActivityRow({
     <div
       className={`
         group flex items-start gap-3 p-3 rounded-xl cursor-pointer
-        transition-all duration-200 hover:bg-surface-container-lowest
-        ${activity.isUnread ? "border-l-2 " + config.borderColor : ""}
+        transition-all duration-200 hover:bg-surface-container-low border-b border-outline-variant last:border-b-0
+        ${activity.isUnread ? "border-l-4 " + config.borderColor.replace("border-", "border-").replace("/20", "/40") : ""}
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -240,12 +240,12 @@ export function RecentActivity({
 
   return (
     <div className={`
-      bg-surface rounded-2xl border border-outline-variant shadow-md3-level1 overflow-hidden
+      bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden
       transition-all duration-300
       ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
     `}>
-      {/* Header - MD3 styling */}
-      <div className="p-4 md:p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+      {/* Header - Physical card styling */}
+      <div className="p-4 md:p-5 border-b-2 border-outline flex items-center justify-between bg-surface-container-low">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#FEF3C7] flex items-center justify-center">
             <i className="fas fa-bell text-[#F59E0B] text-sm" />
@@ -298,9 +298,9 @@ export function RecentActivity({
         )}
       </div>
 
-      {/* Footer - MD3 styling */}
+      {/* Footer */}
       {!loading && activities.length > 0 && showViewAll && onViewAll && (
-        <div className="p-3 border-t border-outline-variant text-center">
+        <div className="p-3 border-t-2 border-outline text-center">
           <button
             onClick={onViewAll}
             className="text-xs font-semibold text-on-surface-variant hover:text-[#8B5CF6] transition-colors flex items-center justify-center gap-1.5 w-full py-1"

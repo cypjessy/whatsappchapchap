@@ -77,7 +77,7 @@ const STATUS_OPTIONS: StatusOption[] = [
 
 function SelectionBadge({ count }: { count: number }) {
   return (
-    <span className="inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-[#10b981] text-white text-[10px] font-bold shadow-md3-level1 shadow-[#10b981]/20 animate-scaleIn">
+    <span className="inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-[#10b981] text-white text-[10px] font-bold shadow-sm shadow-[#10b981]/20 animate-scaleIn">
       {count}
     </span>
   );
@@ -125,7 +125,7 @@ function StatusDropdown({
   return (
     <div
       ref={menuRef}
-      className="absolute right-0 top-full mt-2 w-56 bg-surface rounded-xl shadow-md3-level4 shadow-black/10 border border-outline-variant overflow-hidden z-50 animate-scaleIn origin-top-right"
+      className="absolute right-0 top-full mt-2 w-56 bg-surface rounded-xl shadow-xl shadow-black/10 border border-outline-variant overflow-hidden z-50 animate-scaleIn origin-top-right"
     >
       <div className="p-1.5 space-y-0.5">
         {STATUS_OPTIONS.map((option) => (
@@ -208,8 +208,8 @@ function ConfirmationBanner({
               className={`
                 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all active:scale-95
                 ${status === "paused"
-                  ? "bg-[#f59e0b] hover:bg-[#d97706] shadow-md3-level2 shadow-[#f59e0b]/20"
-                  : "bg-[#64748b] hover:bg-[#475569] shadow-md3-level2 shadow-[#64748b]/20"
+                  ? "bg-[#f59e0b] hover:bg-[#d97706] shadow-md shadow-[#f59e0b]/20"
+                  : "bg-[#64748b] hover:bg-[#475569] shadow-md shadow-[#64748b]/20"
                 }
               `}
             >
@@ -293,10 +293,10 @@ export default function ProductBulkActionsToolbar({
           gap-3 sm:gap-0 p-3 sm:p-4 rounded-xl md:rounded-2xl 
           border-2 transition-all duration-300
           ${hasSelection
-            ? "bg-gradient-to-r from-[#f0fdf4] to-white border-[#10b981]/20 shadow-md3-level3 shadow-[#10b981]/5"
+            ? "bg-gradient-to-r from-[#f0fdf4] to-white border-[#10b981]/20 shadow-lg shadow-[#10b981]/5"
             : "bg-surface border-outline-variant"
           }
-          ${isHovered && hasSelection ? "shadow-md3-level4 shadow-[#10b981]/10" : ""}
+          ${isHovered && hasSelection ? "shadow-xl shadow-[#10b981]/10" : ""}
         `}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -360,7 +360,7 @@ export default function ProductBulkActionsToolbar({
                 flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-xs md:text-sm 
                 transition-all active:scale-95 whitespace-nowrap
                 ${hasSelection && !isLoading
-                  ? "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#10b981] hover:text-[#059669] hover:shadow-md3-level1"
+                  ? "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#10b981] hover:text-[#059669] hover:shadow-sm"
                   : "bg-surface-variant border-2 border-transparent text-[#cbd5e1] cursor-not-allowed"
                 }
               `}
@@ -388,7 +388,7 @@ export default function ProductBulkActionsToolbar({
               flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-xs md:text-sm 
               transition-all active:scale-95 whitespace-nowrap
               ${hasSelection && !isLoading
-                ? "bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white hover:opacity-90 shadow-md3-level3 shadow-[#ef4444]/25 hover:shadow-[#ef4444]/40"
+                ? "bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white hover:opacity-90 shadow-lg shadow-[#ef4444]/25 hover:shadow-[#ef4444]/40"
                 : "bg-surface-variant text-[#cbd5e1] cursor-not-allowed"
               }
             `}

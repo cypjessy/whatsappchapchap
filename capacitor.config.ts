@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.whatsappchapchap.app',
   appName: 'WhatsApp Chap Chap',
-  webDir: 'out',
+  webDir: process.env.CAPACITOR_WEB_DIR || 'out',
   android: {
     allowMixedContent: true,
     captureInput: true,

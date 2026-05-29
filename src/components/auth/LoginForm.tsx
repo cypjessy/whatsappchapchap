@@ -51,7 +51,7 @@ export default function LoginForm({
               onChange={(e) => onEmailChange(e.target.value)}
               className="w-full px-4 py-3.5 pl-14 border-2 border-[#e5e7eb] rounded-xl text-base bg-[#fafafa] text-[#1a1a2e] 
                 focus:outline-none focus:border-[#25D366] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)] 
-                transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1"
+                transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm"
               placeholder="Enter your email"
               required
             />
@@ -85,7 +85,7 @@ export default function LoginForm({
               onChange={(e) => onPasswordChange(e.target.value)}
               className="password-input-with-toggle w-full px-5 py-3.5 pl-12 border-2 border-[#e5e7eb] rounded-xl text-base bg-[#fafafa] text-[#1a1a2e] 
                 focus:outline-none focus:border-[#25D366] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)] 
-                transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1"
+                transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm"
               placeholder="Enter your password"
               required
             />
@@ -126,8 +126,8 @@ export default function LoginForm({
           disabled={isLoading}
           className="w-full py-3.5 lg:py-4 px-6 bg-gradient-to-r from-[#25D366] to-[#128C7E]
             text-white border-none rounded-xl text-base lg:text-lg font-bold cursor-pointer
-            transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md3-level3
-            active:translate-y-0 active:shadow-md3-level2 active:scale-[0.98]
+            transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg
+            active:translate-y-0 active:shadow-md active:scale-[0.98]
             disabled:opacity-70 disabled:hover:translate-y-0 disabled:cursor-not-allowed
             relative overflow-hidden"
         >

@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  output: process.env.BUILD_TARGET === 'android' ? 'export' : undefined,
   reactStrictMode: true,
   poweredByHeader: false,
   trailingSlash: true,

@@ -758,7 +758,7 @@ You're now part of our community.
       <div className="md:hidden mb-3">
         <button
           onClick={() => setShowAddModal(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
         >
           <i className="fas fa-plus" />
           <span>Add Customer</span>

@@ -183,7 +183,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
         transition-all duration-200 active:scale-95
         ${copied
           ? "bg-[#10b981] text-white"
-          : "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md3-level2 shadow-[#8b5cf6]/25"
+          : "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md shadow-[#8b5cf6]/25"
         }
       `}
     >
@@ -490,7 +490,7 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
             <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={Store} title="Business / Provider" />
               <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white flex items-center justify-center text-xl shadow-md3-level1">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white flex items-center justify-center text-xl shadow-sm">
                   {service.emoji || "✨"}
                 </div>
                 <div>
@@ -532,14 +532,14 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                     className={`
                       relative rounded-xl p-4 border-2 transition-all duration-300
                       ${isFeatured
-                        ? `${config.bgColor} ${config.borderColor} shadow-md3-level2`
+                        ? `${config.bgColor} ${config.borderColor} shadow-md`
                         : "bg-surface border-outline-variant hover:border-outline-variant"
                       }
-                      hover:-translate-y-0.5 hover:shadow-md3-level3
+                      hover:-translate-y-0.5 hover:shadow-lg
                     `}
                   >
                     {isFeatured && (
-                      <div className="absolute -top-2 left-4 px-2.5 py-0.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white text-[9px] font-bold uppercase rounded-full shadow-md3-level1">
+                      <div className="absolute -top-2 left-4 px-2.5 py-0.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white text-[9px] font-bold uppercase rounded-full shadow-sm">
                         Popular
                       </div>
                     )}

@@ -236,7 +236,7 @@ const DeleteConfirmDialog = memo(({
           <button onClick={onCancel} className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95">
             Cancel
           </button>
-          <button onClick={onConfirm} className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md3-level2 hover:shadow-md3-level3 active:scale-95 transition-all">
+          <button onClick={onConfirm} className="flex-1 px-4 py-3 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">
             Delete
           </button>
         </div>
@@ -339,10 +339,10 @@ const ProductRow = memo(({
 
         {/* Swipe reveal actions (mobile) */}
         <div className="md:hidden absolute inset-y-0 right-0 flex items-center gap-1 pr-2 z-0">
-          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("shareProductWhatsApp", e); }} className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-md3-level3 active:scale-90">
+          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("shareProductWhatsApp", e); }} className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-lg active:scale-90">
             <MessageCircle className="w-5 h-5" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("handleToggleStatus", e); }} className="w-11 h-11 rounded-xl bg-[#f59e0b] text-white flex items-center justify-center shadow-md3-level3 active:scale-90">
+          <button onClick={(e) => { e.stopPropagation(); handleActionWrapper("handleToggleStatus", e); }} className="w-11 h-11 rounded-xl bg-[#f59e0b] text-white flex items-center justify-center shadow-lg active:scale-90">
             {status === "active" ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
         </div>
@@ -366,7 +366,7 @@ const ProductRow = memo(({
               <div className="flex items-center justify-center" onClick={handleToggleSelectWrapper}>
                 <div className={`
                   w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200
-                  ${isSelected ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-md3-level1" : "border-outline-variant hover:border-[#8b5cf6] bg-surface"}
+                  ${isSelected ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-sm" : "border-outline-variant hover:border-[#8b5cf6] bg-surface"}
                 `}>
                   {isSelected && <CheckSquare className="w-4 h-4" strokeWidth={2.5} />}
                 </div>
@@ -484,7 +484,7 @@ const ProductRow = memo(({
                       onClick={(e) => { e.stopPropagation(); setExpandedMobile(!expandedMobile); }}
                       className={`
                         w-8 h-8 flex items-center justify-center rounded-lg transition-all
-                        ${expandedMobile ? "bg-[#8b5cf6] text-white shadow-md3-level2" : "text-outline hover:bg-surface-variant"}
+                        ${expandedMobile ? "bg-[#8b5cf6] text-white shadow-md" : "text-outline hover:bg-surface-variant"}
                       `}
                     >
                       {expandedMobile ? <ChevronDown className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
@@ -608,7 +608,7 @@ export default function ProductListView({
 
   if (isLoading) {
     return (
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
         <ListHeader bulkMode={bulkMode} bulkSelected={bulkSelected} totalProducts={0} onSelectAll={() => {}} />
         {Array.from({ length: 8 }).map((_, i) => <ShimmerRow key={i} />)}
       </div>
@@ -617,14 +617,14 @@ export default function ProductListView({
 
   if (products.length === 0) {
     return (
-      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1">
+      <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-md3-level1 animate-fadeIn">
+    <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant overflow-hidden shadow-sm animate-fadeIn">
       <ListHeader bulkMode={bulkMode} bulkSelected={bulkSelected} totalProducts={products.length} onSelectAll={selectAllProducts} />
       <div className="divide-y divide-[#f1f5f9]">
         {products.map((product, index) => (

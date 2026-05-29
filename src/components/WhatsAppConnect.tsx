@@ -203,7 +203,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         onClick={() => { setConnectMode('qr'); setError(null); setStatus('idle'); }}
         className={`flex-1 py-2.5 px-3 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-200 ${
           connectMode === 'qr'
-            ? 'bg-[#25D366] text-white shadow-md3-level1'
+            ? 'bg-[#25D366] text-white shadow-sm'
             : 'text-on-surface-variant hover:bg-surface-container-high'
         }`}
       >
@@ -215,7 +215,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         onClick={() => { setConnectMode('pairing'); setError(null); setStatus('idle'); }}
         className={`flex-1 py-2.5 px-3 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-200 ${
           connectMode === 'pairing'
-            ? 'bg-[#25D366] text-white shadow-md3-level1'
+            ? 'bg-[#25D366] text-white shadow-sm'
             : 'text-on-surface-variant hover:bg-surface-container-high'
         }`}
       >
@@ -347,7 +347,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
 
       return (
         <div className="flex flex-col items-center px-2 py-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-full flex items-center justify-center mb-2 shadow-md3-level1">
+          <div className="w-12 h-12 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-full flex items-center justify-center mb-2 shadow-sm">
             <i className="fas fa-key text-white text-lg" />
           </div>
           <h4 className="font-bold text-base text-on-surface mb-1">Pairing Code</h4>
@@ -474,7 +474,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
           <button
             onClick={setupPairingCode}
             disabled={!phoneNumber.trim()}
-            className="w-full py-3 bg-[#25D366] text-white rounded-xl font-semibold text-sm hover:bg-[#128C7E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md3-level1"
+            className="w-full py-3 bg-[#25D366] text-white rounded-xl font-semibold text-sm hover:bg-[#128C7E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
           >
             <i className="fas fa-key" />
             Get Pairing Code
@@ -492,7 +492,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
       </div>
       <h3 className="text-lg font-bold text-[#128C7E]">Connected!</h3>
       <p className="text-[11px] text-on-surface-variant mt-1">WhatsApp is ready</p>
-      <button onClick={handleContinue} className="mt-4 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-semibold text-sm hover:bg-[#128C7E] transition-colors shadow-md3-level1">
+      <button onClick={handleContinue} className="mt-4 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-semibold text-sm hover:bg-[#128C7E] transition-colors shadow-sm">
         Continue
       </button>
     </div>
@@ -511,7 +511,7 @@ export default function WhatsAppConnect({ instanceName, onConnected, autoStart =
         </p>
         {showModeSelector && renderModeSelector()}
         {connectMode === 'qr' ? (
-          <button onClick={setupQRCode} className="px-5 py-2.5 bg-[#25D366] text-white rounded-xl font-semibold text-sm hover:bg-[#128C7E] transition-colors shadow-md3-level1 flex items-center gap-2">
+          <button onClick={setupQRCode} className="px-5 py-2.5 bg-[#25D366] text-white rounded-xl font-semibold text-sm hover:bg-[#128C7E] transition-colors shadow-sm flex items-center gap-2">
             <i className="fas fa-qrcode" />
             Start QR Scan
           </button>

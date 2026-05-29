@@ -142,7 +142,7 @@ function KeyInput({
       </div>
       <div className={`
         relative flex items-center rounded-xl border-2 transition-all duration-200
-        ${isFocused ? "border-[#8b5cf6] shadow-md3-level2 shadow-[#8b5cf6]/10" : "border-outline-variant"}
+        ${isFocused ? "border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/10" : "border-outline-variant"}
         ${!status.valid && value ? "bg-[#fef2f2]" : "bg-surface"}
       `}>
         <div className={`
@@ -374,7 +374,7 @@ export default function PaystackSettingsPage() {
     `}>
       {/* Error Message */}
       {error && (
-        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-xl p-4 shadow-md3-level3">
+        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
           <div className="flex items-center gap-2">
             <i className="fas fa-exclamation-circle text-red-500"></i>
             <span className="text-sm text-red-800 font-medium">{error}</span>
@@ -409,7 +409,7 @@ export default function PaystackSettingsPage() {
       <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 space-y-6">
         {/* Mode Toggle */}
         <div className={`
-          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-md3-level1
+          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-sm
           transition-all duration-500 delay-100
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}>
@@ -418,7 +418,7 @@ export default function PaystackSettingsPage() {
 
         {/* API Keys */}
         <div className={`
-          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-md3-level1
+          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-sm
           transition-all duration-500 delay-200
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}>
@@ -489,7 +489,7 @@ export default function PaystackSettingsPage() {
                 transition-all duration-200 active:scale-95
                 ${!currentModeKeysValid
                   ? "bg-surface-variant text-outline cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md3-level3 shadow-[#8b5cf6]/20 hover:shadow-md3-level4 hover:-translate-y-0.5"
+                  : "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/20 hover:shadow-xl hover:-translate-y-0.5"
                 }
               `}
             >
@@ -501,7 +501,7 @@ export default function PaystackSettingsPage() {
 
         {/* Webhook URL */}
         <div className={`
-          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-md3-level1
+          bg-surface rounded-2xl p-4 md:p-6 border border-outline-variant shadow-sm
           transition-all duration-500 delay-300
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}>
@@ -512,7 +512,7 @@ export default function PaystackSettingsPage() {
 
           <div className={`
             flex items-center rounded-xl border-2 border-outline-variant bg-surface overflow-hidden
-            focus-within:border-[#8b5cf6] focus-within:shadow-md3-level2 focus-within:shadow-[#8b5cf6]/10
+            focus-within:border-[#8b5cf6] focus-within:shadow-md focus-within:shadow-[#8b5cf6]/10
           `}>
             <div className="w-10 h-10 flex items-center justify-center border-r-2 border-outline-variant bg-surface-container-lowest shrink-0">
               <i className="fas fa-link text-outline text-xs" />
@@ -570,7 +570,7 @@ export default function PaystackSettingsPage() {
                 transition-all duration-200 active:scale-95
                 ${isSaving || !currentModeKeysValid
                   ? "bg-surface-variant text-outline cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-md3-level3 shadow-[#10b981]/20 hover:shadow-md3-level4 hover:-translate-y-0.5"
+                  : "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-lg shadow-[#10b981]/20 hover:shadow-xl hover:-translate-y-0.5"
                 }
               `}
             >

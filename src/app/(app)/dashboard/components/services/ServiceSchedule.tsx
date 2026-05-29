@@ -86,7 +86,7 @@ export default function ServiceSchedule() {
 
   if (loading) {
     return (
-      <div className="md3-card-elevated p-6">
+      <div className="bg-surface rounded-xl border border-outline-variant p-6">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-16 bg-[var(--md-sys-color-surface-variant)] rounded-lg"></div>
@@ -167,7 +167,7 @@ export default function ServiceSchedule() {
             <p className="text-sm mt-1">Use the calendar to view other dates or add new bookings</p>
             <a 
               href="/bookings?new=true" 
-              className="inline-block mt-3 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:shadow-md3-level3 transition-all"
+              className="inline-block mt-3 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
             >
               <i className="fas fa-plus mr-2"></i>Add Booking
             </a>

@@ -62,8 +62,8 @@ export default function Step3Plan({
             className={`p-4 md:p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 
               active:scale-[0.98] select-none ${
               selectedPlan === plan.id
-                ? "border-[#25D366] bg-[#f0fdf4] shadow-md3-level3"
-                : "border-outline-variant hover:border-[#25D366] hover:shadow-md3-level2"
+                ? "border-[#25D366] bg-[#f0fdf4] shadow-lg"
+                : "border-outline-variant hover:border-[#25D366] hover:shadow-md"
             }`}
           >
             <div className="font-bold text-base md:text-lg mb-1 md:mb-2">{plan.name}</div>

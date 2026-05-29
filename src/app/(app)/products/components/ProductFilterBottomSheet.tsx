@@ -329,7 +329,7 @@ export default function ProductFilterBottomSheet({
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 py-3 rounded-xl bg-[#25D366] text-white text-sm font-semibold shadow-md3-level3 shadow-[#25D366]/25 hover:opacity-90 transition-all active:scale-95"
+            className="flex-1 py-3 rounded-xl bg-[#25D366] text-white text-sm font-semibold shadow-lg shadow-[#25D366]/25 hover:opacity-90 transition-all active:scale-95"
           >
             Apply Filters
           </button>

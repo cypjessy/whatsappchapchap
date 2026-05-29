@@ -216,7 +216,7 @@ export default function DeleteConfirmModal({
               {isLoading && (
                 <div className="absolute -inset-1 rounded-full border-2 border-red-200 border-t-red-500 animate-spin" />
               )}
-              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center border-2 border-red-200 shadow-md3-level1">
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center border-2 border-red-200 shadow-sm">
                 {isLoading ? (
                   <Loader2 className="w-7 h-7 text-red-500 animate-spin" strokeWidth={2.5} />
                 ) : (
@@ -275,7 +275,7 @@ export default function DeleteConfirmModal({
                     focus:outline-none focus:ring-4 focus:ring-red-500/10
                     disabled:opacity-50
                     ${typedConfirm === confirmText
-                      ? "border-red-500 bg-red-50/50 text-red-700 shadow-md3-level1 shadow-red-500/10"
+                      ? "border-red-500 bg-red-50/50 text-red-700 shadow-sm shadow-red-500/10"
                       : typedConfirm.length > 0
                         ? "border-red-300 bg-surface text-on-surface"
                         : "border-outline-variant bg-surface text-on-surface focus:border-red-300"
@@ -340,7 +340,7 @@ export default function DeleteConfirmModal({
                 flex items-center justify-center gap-2
                 active:scale-95
                 ${canConfirm && !isLoading
-                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-md3-level3 shadow-red-500/25 hover:shadow-red-500/40"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
                   : "bg-red-300 cursor-not-allowed"
                 }
               `}

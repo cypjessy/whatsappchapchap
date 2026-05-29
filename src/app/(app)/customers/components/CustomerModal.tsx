@@ -119,7 +119,7 @@ function OrderCard({ order, index, formatCurrency }: {
   return (
     <div className={`
       flex justify-between items-center p-3.5 md:p-4 bg-surface rounded-xl border border-transparent
-      hover:border-outline-variant hover:shadow-md3-level1 transition-all duration-200 cursor-pointer
+      hover:border-outline-variant hover:shadow-sm transition-all duration-200 cursor-pointer
       ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
     `} style={{ transitionDelay: `${index * 80}ms` }}>
       <div className="flex items-center gap-3 min-w-0">
@@ -298,7 +298,7 @@ export default function CustomerModal({
             <div className={`
               w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} 
               flex items-center justify-center text-xl md:text-3xl font-medium text-white shrink-0
-              shadow-md3-level3 shadow-current/20
+              shadow-lg shadow-current/20
             `}>
               {getInitials(customer.name)}
             </div>
@@ -376,7 +376,7 @@ export default function CustomerModal({
                   className={`
                     w-full py-2.5 md:py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
                     text-white rounded-xl font-bold flex items-center justify-center gap-2 
-                    shadow-md3-level3 shadow-[#25D366]/20 hover:shadow-md3-level4 hover:shadow-[#25D366]/30 
+                    shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:shadow-[#25D366]/30 
                     hover:-translate-y-0.5 transition-all duration-200 active:scale-95
                   `}
                 >
@@ -551,7 +551,7 @@ export default function CustomerModal({
                       className={`
                         px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
                         text-white rounded-xl font-bold inline-flex items-center gap-2
-                        shadow-md3-level3 shadow-[#25D366]/20 hover:shadow-md3-level4 hover:-translate-y-0.5
+                        shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:-translate-y-0.5
                         transition-all duration-200 active:scale-95
                       `}
                     >
@@ -612,7 +612,7 @@ export default function CustomerModal({
                                 px-3 py-1.5 rounded-full text-xs font-semibold 
                                 border flex items-center gap-1.5 transition-all duration-200
                                 ${colors.bg} ${colors.text} ${colors.border}
-                                hover:shadow-md3-level1
+                                hover:shadow-sm
                               `}
                             >
                               {tag}
@@ -649,7 +649,7 @@ export default function CustomerModal({
                           className={`
                             px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95
                             ${newTag.trim()
-                              ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md3-level2 shadow-[#8b5cf6]/20"
+                              ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md shadow-[#8b5cf6]/20"
                               : "bg-surface-variant text-outline cursor-not-allowed"
                             }
                           `}

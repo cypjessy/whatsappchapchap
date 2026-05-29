@@ -137,7 +137,7 @@ export default function CustomerFilterBottomSheet({
                   className={`
                     px-3 py-2.5 rounded-xl text-xs font-semibold transition-all
                     ${localStatus === option.value
-                      ? "bg-[#25D366] text-white shadow-md3-level2"
+                      ? "bg-[#25D366] text-white shadow-md"
                       : "bg-surface-container-lowest text-on-surface-variant border-2 border-outline-variant hover:border-[#25D366]"
                     }
                   `}
@@ -222,7 +222,7 @@ export default function CustomerFilterBottomSheet({
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold text-sm shadow-md3-level2 hover:shadow-md3-level3 active:scale-95 transition-all"
+            className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all"
           >
             Apply Filters
           </button>

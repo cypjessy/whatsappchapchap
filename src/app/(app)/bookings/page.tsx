@@ -11,7 +11,6 @@ import ManualBookingModal from "./components/ManualBookingModal";
 import ViewBookingModal from "./components/ViewBookingModal";
 import EditBookingDialog from "./components/EditBookingDialog";
 import PaymentConfirmationModal from "./components/PaymentConfirmationModal";
-import BookingStats from "./components/BookingStats";
 import BookingAnalytics from "./components/BookingAnalytics";
 import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
@@ -72,7 +71,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
         <div
           key={toast.id}
           className={`
-            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md3-level3
+            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md shadow-black/10
             text-sm font-semibold animate-slideInRight
             ${toast.type === "success" ? "bg-[#10b981] text-white" : ""}
             ${toast.type === "error" ? "bg-[#ef4444] text-white" : ""}
@@ -105,8 +104,8 @@ function DeleteConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative md3-card-elevated w-full max-w-md p-6 animate-scaleIn">
+      <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
+      <div className="relative bg-surface border-2 border-outline shadow-md rounded-2xl w-full max-w-md p-6 animate-scaleIn">
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-[var(--md-sys-color-error-container)] rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-exclamation-triangle text-2xl text-[var(--md-sys-color-on-error-container)]" />
@@ -127,7 +126,7 @@ function DeleteConfirmDialog({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-3 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-xl font-medium text-sm hover:bg-[var(--md-sys-color-error)]/90 transition-all active:scale-95 shadow-md3-level3 shadow-[var(--md-sys-color-error)]/20"
+            className="flex-1 px-4 py-3 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-xl font-medium text-sm hover:bg-[var(--md-sys-color-error)]/90 transition-all active:scale-95 shadow-md shadow-[var(--md-sys-color-error)]/20"
           >
             Delete
           </button>
@@ -811,7 +810,7 @@ export default function BookingsPage() {
       <div
         className={`
           sticky top-0 z-[60] bg-white border-b transition-all duration-300 hidden md:block
-          ${headerScrolled ? "border-outline-variant shadow-md3-level1" : "border-transparent"}
+          ${headerScrolled ? "border-outline shadow-md" : "border-transparent"}
         `}
       >
         <div className="px-4 md:px-6 py-3 md:py-4">
@@ -837,7 +836,7 @@ export default function BookingsPage() {
                 className={`
                   flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
                   ${bulkMode
-                    ? "bg-[#1e293b] text-white shadow-md3-level2"
+                    ? "bg-[#1e293b] text-white shadow-md"
                     : "border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
                   }
                 `}
@@ -865,7 +864,7 @@ export default function BookingsPage() {
 
               <button
                 onClick={() => setModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-semibold text-xs md:text-sm shadow-md3-level3 hover:opacity-90 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-semibold text-xs md:text-sm shadow-md hover:opacity-90 transition-all active:scale-95"
               >
                 <i className="fas fa-plus text-xs" />
                 <span className="hidden sm:inline">New Booking</span>
@@ -881,20 +880,12 @@ export default function BookingsPage() {
         <div className="md:hidden mb-3">
           <button
             onClick={() => setModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm shadow-md3-level3 active:scale-95 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"
           >
             <i className="fas fa-plus" />
             <span>New Booking</span>
           </button>
         </div>
-
-        {/* Stats */}
-        <BookingStats
-          bookings={bookings}
-          filterStatus={filterStatus}
-          onStatusClick={(status) => setFilterStatus(filterStatus === status ? "all" : status)}
-          isLoading={loading}
-        />
 
         {/* Analytics */}
         <BookingAnalytics
@@ -939,7 +930,7 @@ export default function BookingsPage() {
         />
 
         {/* View Tabs - flex-wrap chip layout */}
-        <div className="bg-surface rounded-xl md:rounded-2xl border border-outline-variant p-2 shadow-md3-level1">
+        <div className="bg-surface rounded-xl md:rounded-2xl border-2 border-outline p-2 shadow-sm">
           <div className="flex flex-wrap gap-1.5">
             {VIEW_TABS.map((tab) => (
               <button
@@ -952,8 +943,8 @@ export default function BookingsPage() {
                   inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-[11px] leading-none
                   transition-all duration-200 active:scale-95 select-none
                   ${viewMode === tab.id
-                    ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
-                    : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
+                    ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
+                    : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
                   }
                 `}
               >
@@ -974,8 +965,8 @@ export default function BookingsPage() {
                 inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[11px] leading-none
                 transition-all duration-200 active:scale-95 select-none
                 ${filterStatus === chip.id
-                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md3-level2"
-                  : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
+                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
+                  : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
                 }
               `}
             >
@@ -1035,7 +1026,7 @@ export default function BookingsPage() {
                   <button
                     onClick={loadMoreBookings}
                     disabled={loadingMore}
-                    className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95 disabled:opacity-40"
+                    className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#1e293b] hover:text-[#1e293b] transition-all active:scale-95 disabled:opacity-40"
                   >
                     {loadingMore ? (
                       <>

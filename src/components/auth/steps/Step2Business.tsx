@@ -40,8 +40,8 @@ export default function Step2Business({
                 active:scale-95 select-none
                 ${
                 selectedBusinessType === type.id
-                  ? "border-[#25D366] bg-[#f0fdf4] text-[#25D366] shadow-md3-level2"
-                  : "border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:shadow-md3-level1"
+                  ? "border-[#25D366] bg-[#f0fdf4] text-[#25D366] shadow-md"
+                  : "border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:shadow-sm"
               }`}
             >
               <i className={`fas ${type.icon} text-lg md:text-xl transition-transform duration-300 ${
@@ -62,7 +62,7 @@ export default function Step2Business({
           onChange={onChange}
           className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           placeholder="Your Business Name"
         />
@@ -76,7 +76,7 @@ export default function Step2Business({
           onChange={onChange}
           className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
             focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+            transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
             bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
         >
           <option value="">Select a category</option>
@@ -99,7 +99,7 @@ export default function Step2Business({
             onChange={onChange}
             className="w-full px-3 md:px-4 py-3 md:py-3.5 border-2 border-outline-variant rounded-xl 
               focus:border-[#25D366] focus:outline-none text-sm md:text-base 
-              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-md3-level1
+              transition-all duration-300 hover:border-[#c4b5fd] hover:shadow-sm
               bg-[#fafafa] focus:bg-white focus:shadow-[0_0_0_4px_rgba(37,211,102,0.1)]"
           >
             <option value="KE">Kenya</option>

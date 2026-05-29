@@ -40,9 +40,9 @@ function ScrollButton({
       onClick={onClick}
       className={`
         absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-10 md:h-10
-        rounded-full bg-white shadow-md3-level3 border border-[var(--md-sys-color-outline-variant)]/80
+        rounded-full bg-white shadow-lg border border-[var(--md-sys-color-outline-variant)]/80
         flex items-center justify-center transition-all duration-300
-        hover:shadow-md3-level4 hover:border-[var(--md-sys-color-primary)]/30 hover:text-[var(--md-sys-color-primary)]
+        hover:shadow-xl hover:border-[var(--md-sys-color-primary)]/30 hover:text-[var(--md-sys-color-primary)]
         active:scale-90
         ${direction === "left" ? "left-0" : "right-0"}
         ${visible ? "opacity-100 translate-x-0" : "opacity-0 pointer-events-none"}
@@ -112,11 +112,11 @@ function CategoryTab({
         transition-all duration-300 ease-out select-none
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]/40 focus-visible:ring-offset-2
         ${isActive
-          ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md3-level2 shadow-[var(--md-sys-color-primary)]/20 z-10"
+          ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/20 z-10"
           : "bg-[var(--md-sys-color-surface)] border-2 border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] z-0"
         }
         ${!isActive && isHovered
-          ? "border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)] shadow-md3-level1 -translate-y-0.5"
+          ? "border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)] shadow-sm -translate-y-0.5"
           : ""
         }
         ${isPressed ? "scale-95" : "scale-100"}
@@ -363,7 +363,7 @@ export default function ProductCategoryTabs({
                   transition-all duration-200 active:scale-95 select-none
                   ${
                     isActive
-                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md3-level2"
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md"
                       : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
                   }
                 `}
