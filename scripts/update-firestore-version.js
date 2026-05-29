@@ -27,8 +27,30 @@ const ROOT = path.resolve(__dirname, "..");
 // ─── Parse Arguments ──────────────────────────────────────────────────
 const args = process.argv.slice(2);
 const shouldForce = args.includes("--force") || args.includes("-f");
-const urlArg = args.find((a) => a.startsWith("--url="));
-const manualUrl = urlArg ? urlArg.split("=")[1] : args.find((a) => a.startsWith("-u="))?.split("=")[1];
+
+// Improved URL parsing to handle both --url=VALUE and --url VALUE
+let manualUrl = null;
+const urlEqIdx = args.findIndex(a => a.startsWith("--url="));
+if (urlEqIdx !== -1) {
+  manualUrl = args[urlEqIdx].split("=")[1];
+} else {
+  const urlIdx = args.indexOf("--url");
+  if (urlIdx !== -1 && urlIdx + 1 < args.length) {
+    manualUrl = args[urlIdx + 1];
+  }
+}
+
+if (!manualUrl) {
+  const uEqIdx = args.findIndex(a => a.startsWith("-u="));
+  if (uEqIdx !== -1) {
+    manualUrl = args[uEqIdx].split("=")[1];
+  } else {
+    const uIdx = args.indexOf("-u");
+    if (uIdx !== -1 && uIdx + 1 < args.length) {
+      manualUrl = args[uIdx + 1];
+    }
+  }
+}
 
 // ─── Read Current Version ────────────────────────────────────────────
 const appVersionPath = path.join(ROOT, "src/lib/app-version.ts");

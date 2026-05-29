@@ -7,14 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:android": "BUILD_TARGET=android npm run build && npx cap sync android",
+    "build:android": "mv src/app/api src/app/_api && (BUILD_TARGET=android npm run build; status=$?; mv src/app/_api src/app/api; exit $status) && npx cap sync android",
     "open:android": "npx cap open android",
     "run:android": "npx cap run android",
     "run:android:live": "npx cap run android --livereload --external",
     "bump-version": "node scripts/bump-version.js",
     "update-firestore": "node scripts/update-firestore-version.js",
-    "release:android": "node scripts/bump-version.js && BUILD_TARGET=android npm run build && npx cap sync android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleDebug && cd ..",
-    "release:full": "node scripts/bump-version.js --firestore --force && BUILD_TARGET=android npm run build && npx cap sync android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleDebug && cd .. && mkdir -p public && cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk && echo '' && echo '==============================================' && echo ' ✅ RELEASE COMPLETE!' && echo ' 📱 APK ready at public/whatsappchapchap.apk' && echo ' 🌐 Deploy to Vercel: git push (or npx vercel)' && echo '=============================================='"
+    "release:android": "node scripts/bump-version.js && npm run build:android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleDebug && cd ..",
+    "release:full": "node scripts/bump-version.js --firestore --force && npm run build:android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleDebug && cd .. && mkdir -p public && cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk && echo '' && echo '==============================================' && echo ' ✅ RELEASE COMPLETE!' && echo ' 📱 APK ready at public/whatsappchapchap.apk' && echo ' 🌐 Deploy to Vercel: git push (or npx vercel)' && echo '=============================================='"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",

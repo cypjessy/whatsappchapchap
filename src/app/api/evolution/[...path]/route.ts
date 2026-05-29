@@ -45,28 +45,48 @@ async function proxyRequest(
     );
   }
 
-  // Build the target URL: EVOLUTION_API_URL/api/[...path]
   const pathStr = path.join('/');
   const queryString = request.nextUrl.search;
-  const targetUrl = `${evolutionApiUrl.replace(/\/$/, '')}/api/${pathStr}${queryString}`;
+  
+  const baseUrl = evolutionApiUrl.endsWith('/') ? evolutionApiUrl.slice(0, -1) : evolutionApiUrl;
+
+  const targetUrl = baseUrl + '/' + pathStr + queryString;
+
+  console.log('[Evolution Proxy] Request:', method, pathStr, '->', targetUrl);
 
   try {
-    // Forward the request body for methods that support it
     let body: BodyInit | undefined = undefined;
     if (method === 'POST' || method === 'PUT') {
       body = await request.text();
     }
 
-    const response = await fetch(targetUrl, {
+    let response = await fetch(targetUrl, {
       method,
       headers: {
         'Content-Type': 'application/json',
-        apikey: xApiKey,
+        'apikey': xApiKey,
       },
       body,
     });
 
-    // Try to parse as JSON, fall back to text
+    if (response.status === 404) {
+      const fallbackUrl = baseUrl + '/api/' + pathStr + queryString;
+      console.log('[Evolution Proxy] 404 received, trying fallback ->', fallbackUrl);
+      
+      const fallbackResponse = await fetch(fallbackUrl, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': xApiKey,
+        },
+        body,
+      });
+      
+      if (fallbackResponse.status !== 404) {
+        response = fallbackResponse;
+      }
+    }
+
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const data = await response.json();
