@@ -22,14 +22,51 @@ function getClientEmail(): string | undefined {
 }
 
 /**
- * Get the Firebase private key with proper newline handling.
- * Vercel may store the key with literal \n characters instead of actual newlines.
+ * Get the Firebase private key with robust formatting.
+ *
+ * Handles these common Vercel/env scenarios:
+ * 1. Key with actual newlines (pasted as multi-line in Vercel UI) → no change needed
+ * 2. Key with literal \n characters ("\n" as two chars) → replace with real newlines
+ * 3. Key with escaped \\n (double backslash + n) → replace with real newlines
+ * 4. Key wrapped in double quotes from JSON copy-paste → strip quotes
+ * 5. Key with leading/trailing whitespace → trim
  */
 function getPrivateKey(): string | undefined {
   const key = process.env.FIREBASE_PRIVATE_KEY || process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY;
   if (!key) return undefined;
-  // Replace literal \n (backslash + n) with actual newlines
-  return key.replace(/\\n/g, '\n');
+
+  // Trim whitespace
+  let clean = key.trim();
+
+  // Strip surrounding double quotes if present (common from JSON copy-paste)
+  if (clean.startsWith('"') && clean.endsWith('"')) {
+    clean = clean.slice(1, -1);
+  }
+
+  // Replace literal \n (backslash + n, two characters) with actual newlines
+  // Also handles \\n (double backslash + n) — the regex matches \n
+  clean = clean.replace(/\\n/g, '\n');
+
+  // Final trim again in case there were trailing quotes after quote removal
+  clean = clean.trim();
+
+  return clean;
+}
+
+/**
+ * Normalize private key further by removing any \r characters (Windows line endings).
+ * Also ensures the key starts and ends with the proper PEM markers.
+ */
+function normalizePrivateKey(key: string): string {
+  // Remove carriage returns
+  let normalized = key.replace(/\r/g, '');
+
+  // Ensure there's a trailing newline after the END line (Firebase expects it)
+  if (!normalized.endsWith('\n')) {
+    normalized += '\n';
+  }
+
+  return normalized;
 }
 
 /**
@@ -39,13 +76,28 @@ function hasValidCredentials(): boolean {
   const projectId = getProjectId();
   const clientEmail = getClientEmail();
   const privateKey = getPrivateKey();
-  
-  return !!(
-    projectId &&
-    clientEmail &&
-    privateKey &&
-    !privateKey.includes('Your-Private-Key-Here')
-  );
+
+  // Check that all three values exist and the private key isn't the placeholder
+  if (!projectId || !clientEmail || !privateKey) {
+    return false;
+  }
+
+  if (privateKey.includes('Your-Private-Key-Here') || privateKey.includes('your_private_key')) {
+    return false;
+  }
+
+  // Quick PEM format validation
+  if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    console.warn('Firebase private key appears to be missing the PEM header');
+    return false;
+  }
+
+  if (!privateKey.includes('-----END PRIVATE KEY-----')) {
+    console.warn('Firebase private key appears to be missing the PEM footer');
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -55,29 +107,35 @@ function hasValidCredentials(): boolean {
 function initFirebaseAdmin(): void {
   if (initAttempted) return;
   initAttempted = true;
-  
+
   if (!hasValidCredentials()) {
     console.warn('Firebase Admin SDK credentials not configured or invalid');
     console.warn('Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in Vercel env vars');
+    console.warn('Also set GOOGLE_CLOUD_FIRESTORE_PREFER_REST=1 in Vercel to avoid gRPC native binding issues');
     return;
   }
-  
+
   try {
     adminApp = getApps().length === 0
       ? initializeApp({
           credential: cert({
             projectId: getProjectId()!,
             clientEmail: getClientEmail()!,
-            privateKey: getPrivateKey()!
+            privateKey: normalizePrivateKey(getPrivateKey()!)
           })
         })
       : getApps()[0];
-    
+
     adminDb = getFirestore(adminApp);
     console.log('Firebase Admin SDK initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Firebase Admin SDK:', error);
-    // Reset so next call can retry
+    console.error('Check that FIREBASE_PRIVATE_KEY in Vercel env vars:');
+    console.error('  1. Does NOT have surrounding quotes');
+    console.error('  2. Has \\n representing newlines (one backslash + n)');
+    console.error('  3. Starts with "-----BEGIN PRIVATE KEY-----"');
+    console.error('  4. Ends with "-----END PRIVATE KEY-----"');
+    // Reset so next call can retry in case it was a transient error
     initAttempted = false;
   }
 }
