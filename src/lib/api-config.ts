@@ -14,7 +14,14 @@
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     // Check if running in Capacitor native platform
-    const isCapacitor = (window as any).Capacitor?.isNativePlatform?.() || false;
+    // 1. Check for Capacitor object
+    // 2. Check if hostname is localhost (typical for Capacitor)
+    // 3. Check for nativePlatform flag
+    const isCapacitor = 
+      (window as any).Capacitor?.isNativePlatform?.() || 
+      (window as any).CapacitorPlatforms?.currentPlatform === 'android' ||
+      window.location.hostname === 'localhost' ||
+      window.location.protocol === 'capacitor:';
     
     if (isCapacitor) {
       return process.env.NEXT_PUBLIC_API_URL || '';
