@@ -6,12 +6,13 @@ import { businessProfileService, whatsappSettingsService, shippingService, produ
 import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { PreferenceService, PREF_KEYS } from "@/lib/preference-service";
+import IntegrationsTab from "@/components/IntegrationsTab";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
   const { show: showToastNative } = useToast();
-  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments" | "security">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "products" | "services" | "shipping" | "pickup-stations" | "whatsapp" | "payments" | "security" | "integrations">("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -663,6 +664,7 @@ export default function SettingsPage() {
             { id: "whatsapp", label: "WhatsApp", sublabel: "", icon: "fab fa-whatsapp", color: "from-[#25D366] to-[#128C7E]" },
             { id: "payments", label: "Payment", sublabel: "Methods", icon: "fa-credit-card", color: "from-green-500 to-emerald-500" },
             { id: "security", label: "Security", sublabel: "Biometrics", icon: "fa-fingerprint", color: "from-orange-500 to-red-500" },
+            { id: "integrations", label: "Integrations", sublabel: "Firebase, Evolution, Bunny", icon: "fa-plug", color: "from-purple-500 to-[#8b5cf6]" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -2279,6 +2281,11 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Integrations Tab */}
+      {activeTab === "integrations" && (
+        <IntegrationsTab />
       )}
     </div>
   );
