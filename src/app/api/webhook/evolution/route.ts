@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
+import { getAdminDb as getCentralAdminDb } from "@/lib/firebase-admin";
 import { generateAIResponse, AIContext } from "@/lib/ai-service";
 import { logWebhookError, logWebhookSuccess } from "@/lib/webhook-logger";
 import { 
@@ -40,10 +40,6 @@ import {
   handleServiceSearch as handleServiceSearchHandler,
   type Deps as ServiceSearchDeps
 } from "./handlers/service-search";
-// Initialize Firebase Admin SDK
-let adminDb: ReturnType<typeof getFirestore> | null = null;
-let adminApp: App | null = null;
-
 const DEBUG = process.env.DEBUG_MODE === 'true';
 const FLOW_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -54,21 +50,11 @@ function debugLog(...args: any[]) {
 }
 
 function getAdminDb() {
-  if (!adminDb) {
-    if (getApps().length === 0) {
-      adminApp = initializeApp({
-        credential: cert({
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        }),
-      });
-    } else {
-      adminApp = getApps()[0];
-    }
-    adminDb = getFirestore();
+  const db = getCentralAdminDb();
+  if (!db) {
+    throw new Error('Firebase Admin SDK not initialized - check FIREBASE_PRIVATE_KEY and FIREBASE_CLIENT_EMAIL in Vercel env vars');
   }
-  return adminDb;
+  return db;
 }
 
 async function getTenantSettings(tenantId: string): Promise<{ businessName: string; welcomeMessage: string; welcomeMessageEnabled: boolean }> {
