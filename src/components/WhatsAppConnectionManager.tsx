@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useHaptics } from '@/hooks/useNativeAndroid';
 import { logoutInstance, getConnectionState } from '@/lib/evolution';
+import { buildApiUrl } from '@/lib/api-config';
 import WhatsAppDialog from './WhatsAppDialog';
 
 interface WhatsAppConnectionManagerProps {
@@ -66,11 +67,11 @@ export default function WhatsAppConnectionManager({
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const response = await fetch('/api/evolution-config');
+        const response = await fetch(buildApiUrl('/api/evolution-config'));
         const config = await response.json();
         const apiKey = config?.apiKey || 'lhnGSMQrQmC54PyPUBqILuWWeau20gDn';
         
-        const stateResponse = await fetch(`/api/evolution/instance/connectionState/${instanceName}`, {
+        const stateResponse = await fetch(buildApiUrl(`/api/evolution/instance/connectionState/${instanceName}`), {
           headers: { 'x-api-key': apiKey },
         });
         

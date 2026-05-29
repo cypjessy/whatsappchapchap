@@ -1,4 +1,5 @@
 import { User } from "firebase/auth";
+import { buildApiUrl } from '@/lib/api-config';
 
 const BUNNY_CDN_URL = process.env.NEXT_PUBLIC_BUNNY_CDN_URL || "https://histoview.b-cdn.net";
 
@@ -93,7 +94,7 @@ export const bunnyStorage = {
       
       console.log("Uploading via API route with Sharp compression...");
       
-      const response = await fetch('/api/upload', {
+      const response = await fetch(buildApiUrl('/api/upload'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -122,7 +123,7 @@ export const bunnyStorage = {
       // Force token refresh to prevent stale token issues on Android
       const token = await user.getIdToken(true);
 
-      const response = await fetch(`/api/upload?url=${encodeURIComponent(fileUrl)}`, {
+      const response = await fetch(buildApiUrl(`/api/upload?url=${encodeURIComponent(fileUrl)}`), {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });

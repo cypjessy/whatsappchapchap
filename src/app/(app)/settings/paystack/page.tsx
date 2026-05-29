@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { buildApiUrl } from "@/lib/api-config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -207,7 +208,7 @@ export default function PaystackSettingsPage() {
           return;
         }
 
-        const res = await fetch("/api/settings/paystack", {
+        const res = await fetch(buildApiUrl("/api/settings/paystack"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -261,7 +262,7 @@ export default function PaystackSettingsPage() {
         return;
       }
 
-      const res = await fetch("/api/settings/paystack", {
+      const res = await fetch(buildApiUrl("/api/settings/paystack"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

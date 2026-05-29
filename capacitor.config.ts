@@ -4,11 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.whatsappchapchap.app',
   appName: 'WhatsApp Chap Chap',
   webDir: 'out',
-  server: {
-    url: 'https://whatsappchapchap.vercel.app',
-    cleartext: false,
-    androidScheme: 'https'
-  },
   android: {
     allowMixedContent: true,
     captureInput: true,

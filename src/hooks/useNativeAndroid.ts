@@ -26,6 +26,9 @@ export { useAppLifecycle } from './useAppLifecycle';
 // Mobile Optimizations
 export { useMobileOptimizations } from './useMobileOptimizations';
 
+// Push & Local Notifications
+export { useNotifications } from './useNotifications';
+
 // Re-export types for convenience
 export type { ImpactStyle, NotificationType } from '@capacitor/haptics';
 export type { Style as StatusBarStyle } from '@capacitor/status-bar';

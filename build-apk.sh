@@ -5,6 +5,20 @@
 
 set -e  # Exit on error
 
+# ─── Optional: Bump version ──────────────────────────────────────────
+BUMP_VERSION=false
+for arg in "$@"; do
+  if [ "$arg" = "--bump" ] || [ "$arg" = "-b" ]; then
+    BUMP_VERSION=true
+  fi
+done
+
+if [ "$BUMP_VERSION" = true ]; then
+  echo "🔢 Bumping version before build..."
+  node scripts/bump-version.js
+  echo ""
+fi
+
 echo "🚀 Building WhatsApp Chap Chap APK..."
 echo ""
 
@@ -117,7 +131,16 @@ cd ..
 
 print_success "APK build complete!"
 
-# Step 7: Locate the APK
+# Step 7: Copy APK to public/ for Vercel hosting
+print_status "Copying APK to public/ for Vercel deployment..."
+cp "$APK_PATH" "public/whatsappchapchap.apk"
+if [ -f "public/whatsappchapchap.apk" ]; then
+    print_success "APK copied to public/whatsappchapchap.apk — deploy to Vercel to make it downloadable"
+else
+    print_warning "Could not copy APK to public/"
+fi
+
+# Step 8: Locate the APK
 APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
 
 if [ -f "$APK_PATH" ]; then

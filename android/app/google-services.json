@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "494644001973",
+    "project_id": "studio-7840625174-96287",
+    "storage_bucket": "studio-7840625174-96287.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494644001973:android:081d22068fc117673292fc",
+        "android_client_info": {
+          "package_name": "com.whatsappchapchap.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "494644001973-9tsa6suhdou5030gbnne6ujsqivo5lvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjywDMRi6gF3PXaVBUnMdOqM_RZYvJOIE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "494644001973-9tsa6suhdou5030gbnne6ujsqivo5lvl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

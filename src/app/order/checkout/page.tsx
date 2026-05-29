@@ -9,6 +9,7 @@ import { generateOrderNumber } from "@/utils/orderNumber";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
 import { getWhatsAppPhone, isValidWhatsAppPhone } from "@/utils/phoneUtils";
+import { buildApiUrl } from "@/lib/api-config";
 
 interface CartItem {
   productId: string;
@@ -206,7 +207,7 @@ function CheckoutPage() {
     
     try {
       // ✅ Step 1: Fetch tenant's Paystack public key from server (multi-tenant safe)
-      const keyRes = await fetch('/api/payments/public-key', {
+      const keyRes = await fetch(buildApiUrl('/api/payments/public-key'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tenantId: checkoutData!.tenantId }),

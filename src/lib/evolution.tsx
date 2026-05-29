@@ -1,3 +1,5 @@
+import { buildApiUrl } from '@/lib/api-config';
+
 interface EvolutionQRCode {
   code?: string;
   base64?: string;
@@ -10,7 +12,7 @@ let cachedApiConfig: { apiUrl: string; apiKey: string } | null = null;
 async function getEvolutionConfig() {
   if (cachedApiConfig) return cachedApiConfig;
   try {
-    const res = await fetch('/api/evolution-config');
+    const res = await fetch(buildApiUrl('/api/evolution-config'));
     cachedApiConfig = await res.json();
     return cachedApiConfig;
   } catch {
@@ -24,7 +26,7 @@ async function getEvolutionConfig() {
 async function callEvolutionApi(endpoint: string, method: string = "GET", body?: any) {
   const config = await getEvolutionConfig();
   const apiKey = config?.apiKey || "lhnGSMQrQmC54PyPUBqILuWWeau20gDn";
-  const response = await fetch(`/api/evolution/${endpoint}`, {
+  const response = await fetch(buildApiUrl(`/api/evolution/${endpoint}`), {
     method,
     headers: { 
       "Content-Type": "application/json",

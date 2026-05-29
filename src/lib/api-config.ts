@@ -3,31 +3,48 @@
  * 
  * This utility helps manage API endpoints for both web and mobile (Capacitor) builds.
  * In mobile builds, API calls need to point to a deployed backend server.
+ * In web builds, relative paths work fine since frontend and API are on the same domain.
  */
 
-// Get the API base URL from environment or use relative path for web
-const getApiBaseUrl = (): string => {
-  // For Capacitor mobile builds, use the configured API URL
+/**
+ * Get the API base URL for the current environment.
+ * - In Capacitor (Android/iOS): uses NEXT_PUBLIC_API_URL to reach the deployed backend
+ * - In web: returns empty string (relative paths work)
+ */
+export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
-    // Check if running in Capacitor
+    // Check if running in Capacitor native platform
     const isCapacitor = (window as any).Capacitor?.isNativePlatform?.() || false;
     
     if (isCapacitor) {
-      // Use production API URL for mobile
       return process.env.NEXT_PUBLIC_API_URL || '';
     }
   }
   
   // For web development/production, use relative paths
   return '';
-};
+}
+
+/**
+ * Build a full API URL by prepending the base URL if needed.
+ * Handles leading slash consistently.
+ * 
+ * Example: buildApiUrl('/api/ping') => 'https://api.example.com/api/ping' (Capacitor)
+ *          buildApiUrl('/api/ping') => '/api/ping' (web)
+ */
+export function buildApiUrl(path: string): string {
+  const base = getApiBaseUrl();
+  if (!base) return path;
+  // Remove leading slash from path if base already has it
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base.replace(/\/$/, '')}${cleanPath}`;
+}
 
 /**
  * Make an API request with proper base URL handling
  */
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl}${endpoint}`;
+  const url = buildApiUrl(endpoint);
   
   // Add default headers
   const headers = {

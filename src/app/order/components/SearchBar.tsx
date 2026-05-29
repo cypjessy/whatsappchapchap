@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/api-config";
 import './SearchBar.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -191,7 +192,7 @@ export default function SearchBar({
       setIsSearching(true);
 
       try {
-        const response = await fetch("/api/ai-search", {
+        const response = await fetch(buildApiUrl("/api/ai-search"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

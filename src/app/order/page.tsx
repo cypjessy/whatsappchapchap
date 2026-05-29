@@ -9,6 +9,7 @@ import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getOrderStatusMessage } from "@/utils/orderMessages";
 import { normalizePhone, createWhatsAppJid, isValidWhatsAppPhone } from "@/utils/phoneUtils";
 import { getFirebaseApp } from "@/lib/firebase";
+import { buildApiUrl } from "@/lib/api-config";
 import {
   SearchBar,
   ProductGallery,
@@ -146,7 +147,7 @@ function OrderPageContent() {
       
       try {
         // Use AI-enhanced search API
-        const response = await fetch('/api/ai-search', {
+        const response = await fetch(buildApiUrl('/api/ai-search'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -543,7 +544,7 @@ function OrderPageContent() {
         const cartMessage = `✅ *Added to Cart!*\n\n*${product.name}*\n💰 KES ${getBasePrice().toLocaleString()} x ${quantity}\n${specDetails ? `📝 ${specDetails}\n` : ''}\n🛒 You now have ${newCart.length} item(s) in your cart\n\nReply *VIEW CART* to see your cart or continue shopping!`;
         
         // Call server-side API to protect Evolution API key
-        await fetch('/api/notify-cart', {
+        await fetch(buildApiUrl('/api/notify-cart'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,3 +1,5 @@
+import { buildApiUrl } from '@/lib/api-config';
+
 /**
  * Universal Database Query Helper
  * 
@@ -45,7 +47,7 @@ export interface QueryResponse {
  */
 export async function queryDatabase(options: QueryOptions): Promise<QueryResponse> {
   try {
-    const response = await fetch('/api/query-database', {
+    const response = await fetch(buildApiUrl('/api/query-database'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

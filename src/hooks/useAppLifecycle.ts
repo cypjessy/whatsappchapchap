@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { getAuth } from 'firebase/auth';
+import { buildApiUrl } from '@/lib/api-config';
 
 /**
  * Hook to handle app lifecycle events in Capacitor
@@ -117,7 +118,7 @@ export function useAppLifecycle() {
     // ========================================
     const keepAliveInterval = setInterval(() => {
       // Ping a lightweight endpoint to keep JS context alive
-      fetch('/api/ping', { method: 'GET', cache: 'no-cache' })
+      fetch(buildApiUrl('/api/ping'), { method: 'GET', cache: 'no-cache' })
         .then(() => {
           console.debug('[AppLifecycle] Keep-alive ping successful');
           sessionStorage.setItem('lastKeepAlive', Date.now().toString());

@@ -1,3 +1,5 @@
+import { buildApiUrl } from '@/lib/api-config';
+
 /**
  * Send WhatsApp message via server-side API route
  * Server uses global ENV credentials (same as webhook)
@@ -12,7 +14,7 @@ export const sendEvolutionWhatsAppMessage = async (
     // The server route now uses global ENV credentials like the webhook
     const requestBody: any = { phone, message, tenantId };
     
-    const response = await fetch('/api/send-whatsapp', {
+    const response = await fetch(buildApiUrl('/api/send-whatsapp'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
