@@ -7,8 +7,15 @@
  */
 
 /**
+ * Default deployed backend URL used as fallback when running on Android (Capacitor)
+ * but NEXT_PUBLIC_API_URL is not set. This matches the default Vercel deployment.
+ */
+const DEFAULT_DEPLOYED_URL = 'https://whatsappchapchap.vercel.app';
+
+/**
  * Get the API base URL for the current environment.
  * - In Capacitor (Android/iOS): uses NEXT_PUBLIC_API_URL to reach the deployed backend
+ *   Falls back to DEFAULT_DEPLOYED_URL if NEXT_PUBLIC_API_URL is not set
  * - In web: returns empty string (relative paths work)
  */
 export function getApiBaseUrl(): string {
@@ -24,7 +31,17 @@ export function getApiBaseUrl(): string {
       window.location.protocol === 'capacitor:';
     
     if (isCapacitor) {
-      return process.env.NEXT_PUBLIC_API_URL || '';
+      const configuredUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (configuredUrl) {
+        return configuredUrl;
+      }
+      // NEXT_PUBLIC_API_URL not set at build time - use default fallback
+      console.warn(
+        '[API Config] NEXT_PUBLIC_API_URL not set for Capacitor build. ' +
+        `Falling back to default: ${DEFAULT_DEPLOYED_URL}. ` +
+        'Set NEXT_PUBLIC_API_URL in .env.local for production builds.'
+      );
+      return DEFAULT_DEPLOYED_URL;
     }
   }
   

@@ -90,7 +90,26 @@ done
 
 print_success "Android SDK ready"
 
-# Step 4: Build Next.js app
+# Step 4: Clean build artifacts (prevents APK bloat from stale caches)
+print_status "Cleaning old build artifacts..."
+rm -rf .next out
+if [ -d "android/app/build" ]; then
+    rm -rf android/app/build
+    print_success "Android build artifacts cleaned"
+fi
+print_success "Clean complete"
+
+# Step 5: Ensure NEXT_PUBLIC_API_URL is set (required for Android)
+if [ -z "${NEXT_PUBLIC_API_URL:-}" ] && [ -f ".env.local" ]; then
+    export NEXT_PUBLIC_API_URL=$(grep "^NEXT_PUBLIC_API_URL=" .env.local | cut -d '=' -f2)
+fi
+if [ -z "${NEXT_PUBLIC_API_URL:-}" ]; then
+    print_warning "NEXT_PUBLIC_API_URL not set! Defaulting to https://whatsappchapchap.vercel.app"
+    export NEXT_PUBLIC_API_URL="https://whatsappchapchap.vercel.app"
+fi
+print_success "NEXT_PUBLIC_API_URL = $NEXT_PUBLIC_API_URL"
+
+# Step 6: Build Next.js app
 print_status "Building Next.js app..."
 npm run build
 
@@ -101,7 +120,7 @@ fi
 
 print_success "Next.js build complete"
 
-# Step 5: Sync with Capacitor
+# Step 7: Sync with Capacitor
 print_status "Syncing with Capacitor..."
 npx cap sync android
 
@@ -112,7 +131,7 @@ fi
 
 print_success "Capacitor sync complete"
 
-# Step 6: Build APK using Gradle
+# Step 8: Build APK using Gradle
 print_status "Building APK with Gradle..."
 cd android
 
@@ -131,7 +150,10 @@ cd ..
 
 print_success "APK build complete!"
 
-# Step 7: Copy APK to public/ for Vercel hosting
+# Locate the APK (defined here before being used below)
+APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+
+# Step 9: Copy APK to public/ for Vercel hosting
 print_status "Copying APK to public/ for Vercel deployment..."
 cp "$APK_PATH" "public/whatsappchapchap.apk"
 if [ -f "public/whatsappchapchap.apk" ]; then
@@ -140,9 +162,7 @@ else
     print_warning "Could not copy APK to public/"
 fi
 
-# Step 8: Locate the APK
-APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-
+# Step 10: Show success
 if [ -f "$APK_PATH" ]; then
     echo ""
     echo "=========================================="

@@ -67,11 +67,22 @@ export default function WhatsAppConnectionManager({
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const response = await fetch(buildApiUrl('/api/evolution-config'));
+        const apiUrl = buildApiUrl('/api/evolution-config');
+        console.log('[WhatsAppConnectionManager] Fetching config from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          console.warn('[WhatsAppConnectionManager] Config endpoint returned', response.status);
+          throw new Error(`Config endpoint returned ${response.status}`);
+        }
+        
         const config = await response.json();
         const apiKey = config?.apiKey || '';
         
-        const stateResponse = await fetch(buildApiUrl(`/api/evolution/instance/connectionState/${instanceName}`), {
+        const stateUrl = buildApiUrl(`/api/evolution/instance/connectionState/${instanceName}`);
+        console.log('[WhatsAppConnectionManager] Checking connection state at:', stateUrl);
+        
+        const stateResponse = await fetch(stateUrl, {
           headers: { 'x-api-key': apiKey },
         });
         
@@ -80,13 +91,23 @@ export default function WhatsAppConnectionManager({
           if (state?.instance?.state === 'open') {
             setConnectionStatus('connected');
           } else {
+            console.log('[WhatsAppConnectionManager] Instance state is not open:', state?.instance?.state);
             setConnectionStatus('disconnected');
           }
         } else {
+          console.warn('[WhatsAppConnectionManager] Connection state endpoint returned', stateResponse.status);
           setConnectionStatus('disconnected');
         }
       } catch (err) {
-        console.error('Error checking connection:', err);
+        console.error('[WhatsAppConnectionManager] Error checking connection:', err);
+        // Check if the issue is that we can't reach the server at all
+        // This could mean NEXT_PUBLIC_API_URL is misconfigured on Android
+        if (err instanceof TypeError || (err as Error)?.name === 'TypeError') {
+          console.warn(
+            '[WhatsAppConnectionManager] ⚠️ Cannot reach API server. ' +
+            'If running on Android, ensure NEXT_PUBLIC_API_URL is set correctly in .env.local'
+          );
+        }
         setConnectionStatus('disconnected');
       } finally {
         setIsLoading(false);

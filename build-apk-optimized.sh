@@ -24,7 +24,16 @@ export ANDROID_HOME=$HOME/Android/Sdk
 export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/36.1.0
 print_success "Java: $(java -version 2>&1 | head -n 1)"
 
-# Step 2: Temporarily exclude API routes for static export
+# Step 2: Clean all build artifacts (prevents APK bloat from stale caches)
+print_status "Cleaning old build artifacts..."
+rm -rf .next out
+if [ -d "android/app/build" ]; then
+    rm -rf android/app/build
+    print_success "Android build artifacts cleaned"
+fi
+print_success "Clean complete"
+
+# Step 3: Temporarily exclude API routes for static export
 print_status "Excluding API routes from static export (they run on Vercel)..."
 API_DIR="src/app/api"
 API_BAK_DIR="../api-temp-backup"
@@ -36,9 +45,18 @@ if [ -d "$API_DIR" ] && [ ! -d "$API_BAK_DIR" ]; then
     print_success "API routes moved to $API_BAK_DIR (outside src)"
 fi
 
-# Step 3: Build Next.js static export
-print_status "Building Next.js static export..."
-rm -rf .next out
+# Step 4: Ensure NEXT_PUBLIC_API_URL is set (required for Android)
+if [ -z "${NEXT_PUBLIC_API_URL:-}" ] && [ -f ".env.local" ]; then
+    export NEXT_PUBLIC_API_URL=$(grep "^NEXT_PUBLIC_API_URL=" .env.local | cut -d '=' -f2)
+fi
+if [ -z "${NEXT_PUBLIC_API_URL:-}" ]; then
+    print_warning "NEXT_PUBLIC_API_URL not set! Defaulting to https://whatsappchapchap.vercel.app"
+    export NEXT_PUBLIC_API_URL="https://whatsappchapchap.vercel.app"
+fi
+print_success "NEXT_PUBLIC_API_URL = $NEXT_PUBLIC_API_URL"
+
+# Step 5: Build Next.js static export
+print_status "Building Next.js static export ($NEXT_PUBLIC_API_URL)..."
 npm run build
 BUILD_EXIT=$?
 
