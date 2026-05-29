@@ -253,10 +253,12 @@ function MenuSheet({
   isOpen,
   onClose,
   onLogout,
+  isAdmin,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onLogout: () => void;
+  isAdmin?: boolean;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -399,6 +401,31 @@ function MenuSheet({
             </div>
           ))}
 
+          {/* Admin Section - only visible to admin users */}
+          {isAdmin && (
+            <div className="mt-6">
+              <div className="px-2 mb-3">
+                <span className="text-[11px] font-semibold text-primary uppercase tracking-wide">
+                  <i className="fas fa-shield-alt mr-1"></i> Admin
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-3">
+                <Link
+                  href="/all-tenants"
+                  onClick={onClose}
+                  className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-primary-container active:bg-primary-container active:scale-95 transition-all duration-150"
+                >
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-primary-container text-primary text-lg shadow-sm">
+                    <i className="fas fa-building" />
+                  </div>
+                  <span className="text-[11px] font-medium text-on-surface text-center leading-tight">
+                    All Tenants
+                  </span>
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Logout Section */}
           <div className="mt-6 pt-6 border-t border-outline-variant">
             <div className="px-2 mb-3">
@@ -434,7 +461,7 @@ function MenuSheet({
 export default function BottomNav({ onFABClick }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const [fabOpen, setFabOpen] = useState(false);
   const [fabPressed, setFabPressed] = useState(false);
   const [navHealth, setNavHealth] = useState(0);
@@ -560,7 +587,7 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
   return (
     <>
       {/* Menu Sheet */}
-      <MenuSheet isOpen={fabOpen} onClose={() => setFabOpen(false)} onLogout={handleLogout} />
+      <MenuSheet isOpen={fabOpen} onClose={() => setFabOpen(false)} onLogout={handleLogout} isAdmin={isAdmin} />
 
       {/* Bottom Navigation Bar - Material Design 3 */}
       <nav
