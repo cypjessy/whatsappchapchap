@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/api-config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,12 +81,7 @@ export default function ConnectionTestTab() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch("/api/diagnostics/evolution", { headers });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
+      const res = await apiFetch("/api/diagnostics/evolution", { headers });
       const data: ConnectionTestResult = await res.json();
       setResult(data);
       setStatus(data.connection?.success ? "success" : "error");
@@ -148,11 +144,11 @@ export default function ConnectionTestTab() {
               <p className="text-sm font-bold text-[#991b1b]">Connection Test Failed</p>
               <p className="text-xs text-[#b91c1c] mt-1 font-mono break-all">{error}</p>
               <p className="text-xs text-[#b91c1c] mt-2">
-                Make sure you are logged in and the Vercel deployment is running. Check that
+                This could be because the API is unreachable from a mobile app or the environment variables
                 <code className="mx-1 px-1.5 py-0.5 bg-[#fecaca] rounded text-[11px]">EVOLUTION_API_URL</code>
                 and
                 <code className="mx-1 px-1.5 py-0.5 bg-[#fecaca] rounded text-[11px]">EVOLUTION_API_KEY</code>
-                are set in your environment variables.
+                are not set in your Vercel project environment variables.
               </p>
             </div>
           </div>

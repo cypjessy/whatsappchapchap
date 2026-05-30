@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/api-config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,10 +78,6 @@ const SERVICE_CONFIG: Record<ServiceName, {
 function maskValue(value: string): string {
   if (!value || value.length < 8) return value;
   return `${value.slice(0, 4)}••••••••${value.slice(-4)}`;
-}
-
-function formatKey(key: string, value: boolean): string {
-  return value ? key : key;
 }
 
 // ─── StatusBadge Component ───────────────────────────────────────────────────
@@ -374,12 +371,7 @@ export default function IntegrationsTab() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch(SERVICE_CONFIG[service].endpoint, { headers });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
+      const res = await apiFetch(SERVICE_CONFIG[service].endpoint, { headers });
       const data = await res.json();
 
       setStatuses(prev => ({

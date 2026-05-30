@@ -222,7 +222,7 @@ body {
 
 /* Material Design 3 Surface Background for App Pages */
 .app-layout-surface {
-  background: var(--app-bg-image) center/cover fixed no-repeat, var(--md-sys-color-surface-dim);
+  background: var(--app-bg-image) center/cover no-repeat, var(--md-sys-color-surface-dim);
   min-height: 100vh;
   position: relative;
 }
@@ -233,7 +233,6 @@ body {
   position: fixed;
   inset: 0;
   background: var(--app-bg-overlay);
-  backdrop-filter: blur(2px);
   pointer-events: none;
   z-index: 0;
 }
@@ -242,6 +241,13 @@ body {
 .app-layout-surface > * {
   position: relative;
   z-index: 1;
+}
+
+/* On mobile/Android WebView, disable background image and blur for performance */
+@media (max-width: 767px) {
+  .app-layout-surface {
+    background: var(--md-sys-color-surface-dim);
+  }
 }
 
 /* ============================================
@@ -278,7 +284,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--app-bg-image) center/cover fixed no-repeat, var(--md-sys-color-background);
+  background: var(--md-sys-color-background);
   z-index: -1;
   pointer-events: none;
 }
