@@ -67,16 +67,20 @@ export function getApiBaseUrl(): string {
 
 /**
  * Build a full API URL by prepending the base URL if needed.
- * Handles leading slash consistently.
+ * Handles leading slash and trailing slash consistently.
  * 
- * Example: buildApiUrl('/api/ping') => 'https://api.example.com/api/ping' (Capacitor)
- *          buildApiUrl('/api/ping') => '/api/ping' (web)
+ * Trailing slashes are required because the Vercel deployment has `trailingSlash: true`.
+ * Without them, Vercel issues a 308 redirect that lacks CORS headers, breaking
+ * cross-origin requests from the Capacitor Android WebView.
+ * 
+ * Example: buildApiUrl('/api/ping') => 'https://api.example.com/api/ping/' (Capacitor)
+ *          buildApiUrl('/api/ping') => '/api/ping/' (web)
  */
 export function buildApiUrl(path: string): string {
   const base = getApiBaseUrl();
-  if (!base) return path;
-  // Remove leading slash from path if base already has it
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  // Ensure trailing slash to avoid CORS-breaking 308 redirect from Vercel
+  const cleanPath = (path.startsWith('/') ? path : `/${path}`).replace(/\/?$/, '/');
+  if (!base) return cleanPath;
   return `${base.replace(/\/$/, '')}${cleanPath}`;
 }
 

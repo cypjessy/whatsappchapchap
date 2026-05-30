@@ -45,7 +45,8 @@ async function proxyRequest(
     );
   }
 
-  const pathStr = path.join('/');
+  // Join path segments and strip trailing slash (from trailingSlash: true config)
+  const pathStr = path.join('/').replace(/\/+$/, '');
   const queryString = request.nextUrl.search;
   
   const baseUrl = evolutionApiUrl.endsWith('/') ? evolutionApiUrl.slice(0, -1) : evolutionApiUrl;
