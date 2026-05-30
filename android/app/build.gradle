@@ -7,8 +7,8 @@ android {
         applicationId "com.whatsappchapchap.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 21
-        versionName "1.0.20"
+        versionCode 23
+        versionName "1.0.22"
         // IMPORTANT: When incrementing, also update src/lib/app-version.ts APP_VERSION_CODE
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
