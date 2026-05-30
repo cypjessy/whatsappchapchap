@@ -14,8 +14,9 @@
     "bump-version": "node scripts/bump-version.js",
     "update-firestore": "node scripts/update-firestore-version.js",
     "release:android": "node scripts/bump-version.js && npm run build:android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew clean assembleDebug && cd ..",
-    "release:full": "node scripts/bump-version.js --firestore --force && npm run build:android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew clean assembleDebug && cd .. && mkdir -p public && cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk && echo '' && echo '==============================================' && echo ' ✅ RELEASE COMPLETE!' && echo ' 📱 APK ready at public/whatsappchapchap.apk' && echo ' 🌐 Run npm run release:publish to push to GitHub' && echo '=============================================='",
-    "release:publish": "bash scripts/release-publish.sh"
+    "release:full": "node scripts/bump-version.js && npm run build:android && cd android && ANDROID_HOME=$HOME/Android/Sdk ./gradlew clean assembleDebug && cd .. && mkdir -p public && cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk && echo '' && echo '==============================================' && echo ' ✅ RELEASE COMPLETE!' && echo ' 📱 APK ready at public/whatsappchapchap.apk' && echo ' 🌐 Run npm run release:publish to push to GitHub' && echo ' ⚠️  Run npm run release:firestore AFTER deployment is confirmed' && echo '=============================================='",
+    "release:publish": "bash scripts/release-publish.sh",
+    "release:firestore": "node scripts/update-firestore-version.js --force"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",

@@ -83,10 +83,10 @@ rm -f public/whatsappchapchap.apk
 
 print_success "Clean complete!"
 
-# ─── Step 2: Bump version ─────────────────────────────────────────────────
+# ─── Step 2: Bump version (local files only — Firestore update runs AFTER deploy) ─
 print_step "Step 2: Bumping version"
 
-node scripts/bump-version.js --firestore --force
+node scripts/bump-version.js
 
 # Get the new version for the commit message
 VERSION_NAME=$(node -p "require('fs').readFileSync('src/lib/app-version.ts','utf-8').match(/APP_VERSION_NAME\s*=\s*\"([^\"]+)\"/)[1]")
@@ -97,7 +97,14 @@ print_success "Version bumped to $VERSION_NAME (code $VERSION_CODE)"
 print_step "Step 3: Building Android APK"
 
 print_status "Building Next.js + Capacitor + Gradle..."
-npm run release:full
+
+# Build without bumping version again (step 2 already bumped)
+npm run build:android
+cd android
+ANDROID_HOME=$HOME/Android/Sdk ./gradlew clean assembleDebug
+cd "$PROJECT_ROOT"
+mkdir -p public
+cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk
 
 print_success "APK build complete!"
 
@@ -132,14 +139,49 @@ else
     exit 1
 fi
 
+# ─── Step 5: Update Firestore (post-deploy) ────────────────────────────────
+print_step "Step 5: Update Firestore minimum version"
+
+echo ""
+echo "  ⚠️  IMPORTANT: Do NOT update Firestore until the deployment is complete!"
+echo "  The APK at the download URL must be the NEW version first."
+echo ""
+echo "  1. Wait for GitHub Actions deployment to finish"
+echo "  2. Verify the new APK is available at the download URL"
+echo "  3. Then run this command to force-update all users:"
+echo ""
+
+# Auto-detect the APK download URL from .env.local
+APK_URL=$(node -e "
+try {
+  const fs = require('fs');
+  const envPath = '.env.local';
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, 'utf-8');
+    const match = content.match(/^NEXT_PUBLIC_API_URL\s*=\s*(\S+)$/m);
+    if (match) {
+      const base = match[1].replace(/[\"']/g, '').replace(/\/+$/, '');
+      console.log(base + '/whatsappchapchap.apk');
+    }
+  }
+} catch {}
+" 2>/dev/null || echo "https://whatsappchapchap.vercel.app/whatsappchapchap.apk")
+
+echo "  npm run release:firestore -- --url $APK_URL"
+echo ""
+echo "  This will set minimumVersionCode = $VERSION_CODE in Firestore"
+echo "  and trigger the force update dialog for users on older versions."
+echo ""
+
 # ─── Done ──────────────────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
 echo "║        🚀 RELEASE PUBLISHED SUCCESSFULLY!        ║"
 echo "╠══════════════════════════════════════════════════╣"
-echo "║  Version:  $VERSION_NAME (code $VERSION_CODE)              ║"
+echo "║  Version:  $(echo $VERSION_NAME | head -c 20) (code $VERSION_CODE)              ║"
 echo "║  Branch:   main                                          ║"
 echo "║  GitHub:   Pushed ✅                                     ║"
 echo "║  Actions:  Running... (check the Actions tab)            ║"
+echo "║  ⚠️  Run 'npm run release:firestore' AFTER deploy!       ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
