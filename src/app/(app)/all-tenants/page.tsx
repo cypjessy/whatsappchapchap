@@ -9,6 +9,7 @@ import { adminService, Tenant, pricingPlanService, PricingPlan } from "@/lib/db"
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import IntegrationsTab from "@/components/IntegrationsTab";
+import ConnectionTestTab from "@/components/ConnectionTestTab";
 
 // Toast type
 interface Toast {
@@ -84,7 +85,7 @@ export default function AllTenantsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [activeModalTab, setActiveModalTab] = useState("overview");
-  const [activeMainTab, setActiveMainTab] = useState<"tenants" | "plans" | "diagnostics">("tenants");
+  const [activeMainTab, setActiveMainTab] = useState<"tenants" | "plans" | "diagnostics" | "connection-test">("tenants");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
@@ -1560,6 +1561,13 @@ export default function AllTenantsPage() {
         >
           <i className="fas fa-stethoscope"></i> Diagnostics
         </button>
+        <button
+          className={`btn ${activeMainTab === "connection-test" ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setActiveMainTab("connection-test")}
+          style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
+        >
+          <i className="fas fa-plug"></i> Connection Test
+        </button>
       </div>
 
       {/* Tenants Tab Content */}
@@ -2023,6 +2031,13 @@ export default function AllTenantsPage() {
             </>
           )}
         </>
+      )}
+
+      {/* Connection Test Tab Content */}
+      {activeMainTab === "connection-test" && (
+        <div className="section-wrap" style={{ marginTop: 0 }}>
+          <ConnectionTestTab />
+        </div>
       )}
 
       {/* Plans Tab Content */}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useHaptics } from '@/hooks/useNativeAndroid';
 import { logoutInstance, getConnectionState } from '@/lib/evolution';
-import { buildApiUrl } from '@/lib/api-config';
+import { apiFetch, getApiBaseUrl } from '@/lib/api-config';
 import WhatsAppDialog from './WhatsAppDialog';
 
 interface WhatsAppConnectionManagerProps {
@@ -11,7 +11,7 @@ interface WhatsAppConnectionManagerProps {
   onConnectionChange?: (connected: boolean) => void;
 }
 
-type ConnectionStatus = 'checking' | 'connected' | 'disconnected';
+type ConnectionStatus = 'checking' | 'connected' | 'disconnected' | 'error';
 
 export default function WhatsAppConnectionManager({ 
   instanceName,
@@ -22,6 +22,7 @@ export default function WhatsAppConnectionManager({
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState(false);
 
   const disconnectInstance = useCallback(async () => {
@@ -66,50 +67,64 @@ export default function WhatsAppConnectionManager({
   // Check initial connection state
   useEffect(() => {
     const checkConnection = async () => {
+      console.log('[WhatsAppConnectionManager] === CONNECTION CHECK START ===');
+      console.log('[WhatsAppConnectionManager] instanceName:', instanceName);
       try {
-        const apiUrl = buildApiUrl('/api/evolution-config');
-        console.log('[WhatsAppConnectionManager] Fetching config from:', apiUrl);
+        setErrorMessage(null);
         
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          console.warn('[WhatsAppConnectionManager] Config endpoint returned', response.status);
-          throw new Error(`Config endpoint returned ${response.status}`);
-        }
-        
-        const config = await response.json();
+        // Step 1: Get Evolution config from Vercel
+        console.log('[WhatsAppConnectionManager] Step 1: Fetching evolution config...');
+        const configResponse = await apiFetch('/api/evolution-config');
+        console.log('[WhatsAppConnectionManager] Config response status:', configResponse.status);
+        console.log('[WhatsAppConnectionManager] Config response URL:', configResponse.url);
+        const config = await configResponse.json();
+        console.log('[WhatsAppConnectionManager] Config received:', { 
+          hasUrl: !!config?.apiUrl, 
+          hasKey: !!config?.apiKey 
+        });
         const apiKey = config?.apiKey || '';
         
-        const stateUrl = buildApiUrl(`/api/evolution/instance/connectionState/${instanceName}`);
-        console.log('[WhatsAppConnectionManager] Checking connection state at:', stateUrl);
+        // Step 2: Check connection state via Vercel proxy
+        const stateEndpoint = `/api/evolution/instance/connectionState/${instanceName}`;
+        console.log('[WhatsAppConnectionManager] Step 2: Checking connection state...');
+        console.log('[WhatsAppConnectionManager] State endpoint:', stateEndpoint);
+        console.log('[WhatsAppConnectionManager] Has API key:', !!apiKey);
         
-        const stateResponse = await fetch(stateUrl, {
+        const stateResponse = await apiFetch(stateEndpoint, {
           headers: { 'x-api-key': apiKey },
         });
+        console.log('[WhatsAppConnectionManager] State response status:', stateResponse.status);
+        console.log('[WhatsAppConnectionManager] State response URL:', stateResponse.url);
         
-        if (stateResponse.ok) {
-          const state = await stateResponse.json();
-          if (state?.instance?.state === 'open') {
-            setConnectionStatus('connected');
-          } else {
-            console.log('[WhatsAppConnectionManager] Instance state is not open:', state?.instance?.state);
-            setConnectionStatus('disconnected');
-          }
+        const state = await stateResponse.json();
+        console.log('[WhatsAppConnectionManager] State response data:', JSON.stringify(state).substring(0, 300));
+        
+        if (state?.instance?.state === 'open') {
+          console.log('[WhatsAppConnectionManager] ✅ Instance is CONNECTED (open)');
+          setConnectionStatus('connected');
         } else {
-          console.warn('[WhatsAppConnectionManager] Connection state endpoint returned', stateResponse.status);
+          console.log('[WhatsAppConnectionManager] ❌ Instance state is not open:', state?.instance?.state);
           setConnectionStatus('disconnected');
         }
       } catch (err) {
-        console.error('[WhatsAppConnectionManager] Error checking connection:', err);
-        // Check if the issue is that we can't reach the server at all
-        // This could mean NEXT_PUBLIC_API_URL is misconfigured on Android
-        if (err instanceof TypeError || (err as Error)?.name === 'TypeError') {
-          console.warn(
-            '[WhatsAppConnectionManager] ⚠️ Cannot reach API server. ' +
-            'If running on Android, ensure NEXT_PUBLIC_API_URL is set correctly in .env.local'
-          );
+        console.error('[WhatsAppConnectionManager] ❌ Error checking connection:', err);
+        console.log('[WhatsAppConnectionManager] Error name:', (err as Error)?.name);
+        console.log('[WhatsAppConnectionManager] Error message:', (err as Error)?.message);
+        console.log('[WhatsAppConnectionManager] Error stack:', (err as Error)?.stack?.substring(0, 300));
+        
+        setConnectionStatus('error');
+        
+        const baseUrl = getApiBaseUrl();
+        console.log('[WhatsAppConnectionManager] getApiBaseUrl() returned:', baseUrl);
+        console.log('[WhatsAppConnectionManager] Capacitor global available:', !!(window as any).Capacitor);
+        
+        if (!baseUrl && typeof window !== 'undefined' && (window as any).Capacitor) {
+          setErrorMessage('API URL not configured for mobile. Check .env.local');
+        } else {
+          setErrorMessage('Could not reach API server. Check your connection.');
         }
-        setConnectionStatus('disconnected');
       } finally {
+        console.log('[WhatsAppConnectionManager] === CONNECTION CHECK END ===');
         setIsLoading(false);
       }
     };
@@ -178,7 +193,8 @@ export default function WhatsAppConnectionManager({
       </div>
 
       {/* Connection Status Card */}
-      {connectionStatus === 'connected' ? (          <div className="space-y-3">
+      {connectionStatus === 'connected' ? (
+        <div className="space-y-3">
           <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border-2 border-green-500">
             <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shrink-0">
               <i className="fas fa-check text-white text-sm" />
@@ -187,7 +203,8 @@ export default function WhatsAppConnectionManager({
               <p className="font-semibold text-green-900 text-sm">WhatsApp Connected</p>
               <p className="text-[11px] text-green-700 truncate">Instance: {instanceName}</p>
             </div>
-            <div className="flex gap-1">                <button
+            <div className="flex gap-1">
+              <button
                 onClick={async () => {
                   await impactLight();
                   const state = await getConnectionState(instanceName).catch(() => null);
@@ -255,8 +272,31 @@ export default function WhatsAppConnectionManager({
             </div>
           )}
         </div>
+      ) : connectionStatus === 'error' ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 p-3 bg-red-50 rounded-xl border-2 border-red-200">
+            <div className="w-9 h-9 bg-red-500 rounded-full flex items-center justify-center shrink-0">
+              <i className="fas fa-exclamation-triangle text-white text-sm" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-red-900 text-sm">Server Unreachable</p>
+              <p className="text-[11px] text-red-700">{errorMessage}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setIsLoading(true);
+              setConnectionStatus('checking');
+            }}
+            className="w-full px-4 py-2.5 bg-surface-variant text-on-surface rounded-xl hover:bg-surface-container-high transition-all font-semibold text-xs flex items-center justify-center gap-2"
+          >
+            <i className="fas fa-sync" />
+            Retry Connection
+          </button>
+        </div>
       ) : (
-        /* Disconnected state */          <div className="space-y-3">
+        /* Disconnected state */
+        <div className="space-y-3">
           <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant">
             <div className="w-9 h-9 bg-gray-400 rounded-full flex items-center justify-center shrink-0">
               <i className="fas fa-plug text-white text-sm" />

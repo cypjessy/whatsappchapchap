@@ -20,19 +20,32 @@ const DEFAULT_DEPLOYED_URL = 'https://whatsappchapchap.vercel.app';
  */
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
+    // ─── Diagnostic: Log environment info ───────────────────────────────────────
+    console.log('[API Config] === DIAGNOSTIC START ===');
+    console.log('[API Config] Location:', window.location.href);
+    console.log('[API Config] Protocol:', window.location.protocol);
+    console.log('[API Config] User Agent:', navigator.userAgent?.substring(0, 150));
+    console.log('[API Config] Capacitor global:', !!(window as any).Capacitor);
+    console.log('[API Config] Capacitor.isNativePlatform:', typeof (window as any).Capacitor?.isNativePlatform);
+    console.log('[API Config] CapacitorPlatforms:', !!(window as any).CapacitorPlatforms);
+    console.log('[API Config] NEXT_PUBLIC_API_URL (build-time):', process.env.NEXT_PUBLIC_API_URL || '(not set)');
+
     // Check if running in Capacitor native platform
-    // 1. Check for Capacitor object
-    // 2. Check if hostname is localhost (typical for Capacitor)
-    // 3. Check for nativePlatform flag
-    const isCapacitor = 
-      (window as any).Capacitor?.isNativePlatform?.() || 
-      (window as any).CapacitorPlatforms?.currentPlatform === 'android' ||
-      window.location.hostname === 'localhost' ||
-      window.location.protocol === 'capacitor:';
+    const check1 = !!(window as any).Capacitor?.isNativePlatform?.();
+    const check2 = (window as any).CapacitorPlatforms?.currentPlatform === 'android';
+    const check3 = (window as any).CapacitorPlatforms?.currentPlatform === 'ios';
+    const check4 = window.location.protocol === 'capacitor:';
+    const check5 = window.location.protocol === 'http-extension:';
+    const isCapacitor = check1 || check2 || check3 || check4 || check5;
+
+    console.log('[API Config] Capacitor checks:', { check1, check2, check3, check4, check5, isCapacitor });
     
     if (isCapacitor) {
       const configuredUrl = process.env.NEXT_PUBLIC_API_URL;
+      console.log('[API Config] isCapacitor=true, configuredUrl:', configuredUrl || '(not set)');
+      
       if (configuredUrl) {
+        console.log('[API Config] Using configured URL:', configuredUrl);
         return configuredUrl;
       }
       // NEXT_PUBLIC_API_URL not set at build time - use default fallback
@@ -41,11 +54,14 @@ export function getApiBaseUrl(): string {
         `Falling back to default: ${DEFAULT_DEPLOYED_URL}. ` +
         'Set NEXT_PUBLIC_API_URL in .env.local for production builds.'
       );
+      console.log('[API Config] Using fallback URL:', DEFAULT_DEPLOYED_URL);
       return DEFAULT_DEPLOYED_URL;
     }
   }
   
   // For web development/production, use relative paths
+  console.log('[API Config] Not Capacitor, using relative paths (empty base URL)');
+  console.log('[API Config] === DIAGNOSTIC END ===');
   return '';
 }
 
