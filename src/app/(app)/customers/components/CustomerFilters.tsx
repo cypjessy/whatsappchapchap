@@ -20,7 +20,7 @@ interface CustomerFiltersProps {
   onDateRangeEndChange: (value: string) => void;
   sortBy: string;
   onSortByChange: (value: string) => void;
-  onBroadcast: () => void;
+
   totalCustomers?: number;
   filteredCount?: number;
 }
@@ -354,7 +354,6 @@ export default function CustomerFilters({
   onDateRangeEndChange,
   sortBy,
   onSortByChange,
-  onBroadcast,
   totalCustomers = 0,
   filteredCount,
 }: CustomerFiltersProps) {
@@ -433,14 +432,7 @@ export default function CustomerFilters({
               )}
             </button>
 
-            {/* Broadcast button */}
-            <button
-              onClick={onBroadcast}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shrink-0 active:scale-95 transition-all"
-              aria-label="Broadcast message"
-            >
-              <i className="fas fa-broadcast-tower text-sm" />
-            </button>
+
           </div>
 
           {/* Desktop: Full inline filters */}
@@ -474,23 +466,7 @@ export default function CustomerFilters({
               placeholder="Sort"
             />
 
-            {/* Broadcast button */}
-            <button
-              onClick={onBroadcast}
-              className={`
-                flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm
-                transition-all duration-200 active:scale-95 shrink-0
-                bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 hover:shadow-lg
-              `}
-            >
-              <i className="fas fa-broadcast-tower" />
-              <span>Broadcast</span>
-              {filteredCount !== undefined && (
-                <span className="ml-1 px-1.5 py-0.5 bg-surface/20 rounded-full text-[10px]">
-                  {filteredCount}
-                </span>
-              )}
-            </button>
+
           </div>
         </div>
 

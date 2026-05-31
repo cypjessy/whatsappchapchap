@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { DocumentSnapshot } from "firebase/firestore";
-import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
+import { useHaptics, useToast } from "@/hooks/useNativeAndroid";
 import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import {
@@ -14,6 +14,7 @@ import {
   Product,
   customerService,
   Customer,
+  inventoryService,
 } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 import { app as firebaseApp } from "@/lib/firebase";
@@ -41,7 +42,6 @@ import {
 
 import OrderStats from "./components/OrderStats";
 import OrderFilters from "./components/OrderFilters";
-import OrderTable from "./components/OrderTable";
 import OrderCard from "./components/OrderCard";
 import OrderDetailModal from "./components/OrderDetailModal";
 import EditOrderModal from "./components/EditOrderModal";
@@ -149,7 +149,7 @@ function formatDate(createdAt: any): string {
 }
 
 function formatTime(createdAt: any): string {
-  if (!createdAt) return "";
+  if (!createdAt) return "N/A";
   try {
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     return date.toLocaleTimeString("en-US", {
@@ -157,7 +157,7 @@ function formatTime(createdAt: any): string {
       minute: "2-digit",
     });
   } catch {
-    return "";
+    return "N/A";
   }
 }
 
@@ -177,8 +177,6 @@ function getStatusBadge(status?: string) {
 export default function OrdersPage() {
   const { user } = useAuth();
   const { impactLight, impactMedium, notificationSuccess, notificationError } = useHaptics();
-  const { copy } = useClipboard();
-  const { share } = useShare();
   const { show: showToast } = useToast();
 
   // Status bar: green when at top, white when scrolled
@@ -232,9 +230,6 @@ export default function OrdersPage() {
   const [dateRangeEnd, setDateRangeEnd] = useState("");
   const [amountMin, setAmountMin] = useState<number | "">("");
   const [amountMax, setAmountMax] = useState<number | "">("");
-
-  // Selection
-  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
 
   // Modals
   const [modalOpen, setModalOpen] = useState(false);
@@ -518,24 +513,6 @@ export default function OrdersPage() {
     return { totalRevenue, pendingOrdersCount, completedOrdersCount, completionRate };
   }, [orders]);
 
-  // ─── Selection Handlers ─────────────────────────────────────────────────────
-
-  const toggleSelect = useCallback((orderId: string) => {
-    setSelectedOrders((prev) => {
-      const next = new Set(prev);
-      if (next.has(orderId)) next.delete(orderId);
-      else next.add(orderId);
-      return next;
-    });
-  }, []);
-
-  const toggleSelectAll = useCallback(() => {
-    setSelectedOrders((prev) => {
-      if (prev.size === filteredOrders.length) return new Set();
-      return new Set(filteredOrders.map((o) => o.id));
-    });
-  }, [filteredOrders]);
-
   // ─── Modal Handlers ─────────────────────────────────────────────────────────
 
   const openOrderModal = useCallback((order: Order) => {
@@ -796,34 +773,6 @@ export default function OrdersPage() {
     [user]
   );
 
-  const handleBulkUpdateStatus = useCallback(
-    async (status: Order["status"]) => {
-      if (!user || selectedOrders.size === 0) return;
-      
-      await impactMedium();
-      
-      try {
-        for (const orderId of selectedOrders) {
-          await orderService.updateOrder(user, orderId, { status });
-        }
-        setSelectedOrders(new Set());
-        
-        await notificationSuccess();
-        await showToast({ 
-          text: `${selectedOrders.size} orders updated`, 
-          duration: 'short' 
-        });
-        
-        loadOrders();
-        loadCounts();
-      } catch (error) {
-        console.error("Error bulk updating:", error);
-        await notificationError();
-      }
-    },
-    [user, selectedOrders, loadOrders, loadCounts, impactMedium, notificationSuccess, notificationError, showToast]
-  );
-
   const handleExportCSV = useCallback(async () => {
     await impactLight();
     
@@ -963,37 +912,82 @@ export default function OrdersPage() {
         const normalizedPhone = normalizePhone(formData.customerPhone);
         const whatsappJid = createWhatsAppJid(normalizedPhone);
 
+        const subtotal = (formData.selectedProducts || []).reduce(
+          (sum: number, p: any) => sum + (p.price || 0) * (p.quantity || 1), 0
+        );
+        const discount = formData.discount || 0;
+        const total = Math.max(0, subtotal - discount);
+
+        const deliveryAddress = formData.deliveryMethod === "delivery"
+          ? (formData.deliveryAddress || formData.customerAddress || "")
+          : "";
+
         const createdOrder = await orderService.createOrder(user, {
           customerId: "",
           customerName: formData.customerName,
           customerPhone: normalizedPhone,
           whatsappJid,
-          customerEmail: formData.customerEmail,
-          customerAddress: formData.customerAddress,
-          products: formData.selectedProducts,
-          subtotal: formData.subtotal,
-          shipping: formData.shipping,
-          tax: formData.tax,
-          discount: formData.discount,
-          total: formData.total,
-          paymentMethod: formData.paymentMethod,
-          status: formData.markAsPaid ? "confirmed" : "pending",
-          paymentStatus: formData.markAsPaid ? "paid" : "unpaid",
-          notes: formData.notes,
+          customerEmail: formData.customerEmail || "",
+          customerAddress: formData.customerAddress || "",
+          deliveryAddress,
+          deliveryMethod: formData.deliveryMethod === "delivery" ? "Delivery" : "Pickup",
+          products: formData.selectedProducts || [],
+          subtotal,
+          shipping: 0,
+          tax: 0,
+          discount,
+          total,
+          paymentMethod: formData.paymentMethod || "Cash",
+          paymentDetails: formData.paymentRef || "",
+          // Manual order = tenant already collected payment
+          status: "processing",
+          paymentStatus: "paid",
+          notes: formData.notes || "",
+          orderNotes: formData.expectedDate
+            ? `Expected ${formData.deliveryMethod === "pickup" ? "pickup" : "delivery"}: ${formData.expectedDate}`
+            : undefined,
         });
 
-        // Send WhatsApp confirmation to customer if requested
+        // Deduct stock for each product
+        if (formData.selectedProducts && formData.selectedProducts.length > 0) {
+          for (const item of formData.selectedProducts) {
+            try {
+              const productDoc = await getDoc(doc(getFirestore(firebaseApp), "products", item.productId));
+              if (productDoc.exists()) {
+                const productData = productDoc.data();
+                const currentStock = productData.stock || 0;
+                if (currentStock > 0) {
+                  await productService.updateProduct(user, item.productId, {
+                    stock: Math.max(0, currentStock - item.quantity),
+                  });
+                  // Log inventory change
+                  await inventoryService.logInventoryChange(user, {
+                    productId: item.productId,
+                    productName: item.name,
+                    change: -item.quantity,
+                    reason: `Manual order: ${createdOrder.orderNumber || createdOrder.id}`,
+                    previousStock: currentStock,
+                    newStock: Math.max(0, currentStock - item.quantity),
+                  });
+                }
+              }
+            } catch (stockErr) {
+              console.error(`Failed to deduct stock for ${item.productId}:`, stockErr);
+            }
+          }
+        }
+
+        // Send WhatsApp notification that order is confirmed & waiting to ship
         if (formData.sendWhatsApp && createdOrder.orderNumber) {
           try {
             const productName =
               formData.selectedProducts?.[0]?.name || "Order";
-            // Manually created orders = payment already settled, send confirmed message
             const message = getOrderStatusMessage(
-              "confirmed",
+              "manual_order",
               formData.customerName,
               createdOrder.orderNumber,
               productName,
-              formData.customerAddress
+              deliveryAddress || formData.customerAddress
             );
 
             const phone = getWhatsAppPhone({
@@ -1003,27 +997,27 @@ export default function OrdersPage() {
 
             if (isValidWhatsAppPhone(phone)) {
               await sendEvolutionWhatsAppMessage(phone, message, user.uid);
-              console.log("✅ Order confirmation WhatsApp sent to:", phone);
+              console.log("✅ Manual order WhatsApp sent to:", phone);
             }
           } catch (whatsappError) {
-            console.error("Failed to send order WhatsApp:", whatsappError);
-            // Don't block the flow - order was still created
+            console.error("Failed to send manual order WhatsApp:", whatsappError);
           }
         }
 
         await notificationSuccess();
-        await showToast({ text: 'Order created successfully', duration: 'short' });
+        await showToast({ text: 'Manual order created — payment confirmed', duration: 'short' });
         
         loadOrders();
         loadCounts();
+        loadProducts();
         setNewOrderModalOpen(false);
       } catch (error) {
-        console.error("Error creating order:", error);
+        console.error("Error creating manual order:", error);
         await notificationError();
         throw error;
       }
     },
-    [user, loadOrders, loadCounts, notificationSuccess, notificationError, showToast]
+    [user, loadOrders, loadCounts, loadProducts, notificationSuccess, notificationError, showToast]
   );
 
   // ─── Edit Order ─────────────────────────────────────────────────────────────
@@ -1095,7 +1089,6 @@ export default function OrdersPage() {
       setViewMode("orders");
       setActiveStatus(tabId);
     }
-    setSelectedOrders(new Set());
   }, [impactLight]);
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -1127,24 +1120,6 @@ export default function OrdersPage() {
             <i className="fas fa-store" />
             <span>View Store</span>
           </a>
-          {selectedOrders.size > 0 && (
-            <>
-              <button
-                className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
-                onClick={() => handleBulkUpdateStatus("delivered")}
-              >
-                <i className="fas fa-check" />
-                <span>Complete ({selectedOrders.size})</span>
-              </button>
-              <button
-                className="px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
-                onClick={() => handleBulkUpdateStatus("cancelled")}
-              >
-                <i className="fas fa-times" />
-                <span>Cancel ({selectedOrders.size})</span>
-              </button>
-            </>
-          )}
           <button
             className="px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
             onClick={handleExportCSV}
@@ -1162,16 +1137,6 @@ export default function OrdersPage() {
         </div>
       </div>
       </PageHeaderCard>
-      </div>
-
-      {/* Mobile Tabs — MD3 compact chip switcher (all tabs visible at once) */}
-      <div className="md:hidden">
-        <OrderTabSwitcher
-          tabs={tabs}
-          activeTab={activeStatus}
-          viewMode={viewMode}
-          onTabClick={handleTabClick}
-        />
       </div>
 
       {/* Desktop Tabs */}
@@ -1214,6 +1179,17 @@ export default function OrdersPage() {
         />
       ) : (
         <>
+          {/* Stats */}
+          <div className="px-3">
+          <OrderStats
+            totalOrders={counts.all}
+            totalRevenue={analytics.totalRevenue}
+            pendingOrders={analytics.pendingOrdersCount}
+            completionRate={analytics.completionRate}
+            isLoading={loading}
+          />
+          </div>
+
           {/* Mobile Add Button - Visible at top of page */}
           <div className="md:hidden px-3 mb-3">
             <button
@@ -1225,15 +1201,14 @@ export default function OrdersPage() {
             </button>
           </div>
 
-          {/* Stats */}
-          <div className="px-3">
-          <OrderStats
-            totalOrders={counts.all}
-            totalRevenue={analytics.totalRevenue}
-            pendingOrders={analytics.pendingOrdersCount}
-            completionRate={analytics.completionRate}
-            isLoading={loading}
-          />
+          {/* Mobile Tabs — MD3 compact chip switcher */}
+          <div className="md:hidden mb-2">
+            <OrderTabSwitcher
+              tabs={tabs}
+              activeTab={activeStatus}
+              viewMode={viewMode}
+              onTabClick={handleTabClick}
+            />
           </div>
 
           {/* Filters & Table - FIXED: changed overflow-hidden to overflow-x-hidden */}
@@ -1315,69 +1290,72 @@ export default function OrdersPage() {
               )}
             </div>
 
-            {/* Desktop Table - FIXED: added max-w-full overflow-x-auto */}
-            <div className="hidden md:block px-3 max-w-full overflow-x-auto">
-            <OrderTable
-              orders={filteredOrders}
-              selectedOrders={selectedOrders}
-              toggleSelect={toggleSelect}
-              toggleSelectAll={toggleSelectAll}
-              getStatusBadge={getStatusBadge}
-              formatDate={formatDate}
-              formatTime={formatTime}
-              onOpenModal={openOrderModal}
-              onOpenEditModal={openEditModal}
-              onPrintInvoice={handlePrintInvoice}
-              onDuplicateOrder={handleDuplicateOrder}
-              onSendWhatsApp={sendWhatsAppNotification}
-              productImages={productImagesMap}
-              onBulkDelete={async (ids: string[]) => {
-                // Implement bulk delete if needed
-                console.log("Delete orders:", ids);
-              }}
-              onBulkStatusUpdate={async (orderIds, status) => {
-                if (!user || orderIds.length === 0) return;
-                try {
-                  for (const orderId of orderIds) {
-                    await orderService.updateOrder(user, orderId, { status });
-                  }
-                  setSelectedOrders(new Set());
-                  loadOrders();
-                  loadCounts();
-                } catch (error) {
-                  console.error("Error bulk updating:", error);
-                }
-              }}
-              isLoading={loading}
-            />
+            {/* Desktop: Premium Card Grid — replaces old table */}
+            <div className="hidden md:block px-3 py-4">
+              {loading ? (
+                <div className="p-8 text-center">
+                  <div className="w-12 h-12 border-4 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin mx-auto" />
+                  <p className="mt-4 text-on-surface-variant">Loading orders...</p>
+                </div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#f0fdf4] to-[#dcfce7] flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i className="fas fa-shopping-bag text-3xl text-[#25D366]" />
+                  </div>
+                  <h4 className="font-bold text-lg text-on-surface mb-2">No orders found</h4>
+                  <p className="text-sm text-on-surface-variant max-w-sm mx-auto">
+                    Try adjusting your filters or create a new order to get started.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {filteredOrders.map((order) => (
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        getStatusBadge={getStatusBadge}
+                        formatDate={formatDate}
+                        onOpenModal={openOrderModal}
+                        onPrintInvoice={handlePrintInvoice}
+                        onDuplicateOrder={handleDuplicateOrder}
+                        onSendWhatsApp={sendWhatsAppNotification}
+                        onEditOrder={openEditModal}
+                        productImages={productImagesMap}
+                      />
+                    ))}
+                  </div>
 
-            {/* Pagination Footer */}
-            {!loading && filteredOrders.length > 0 && (
-              <div className="p-4 border-t border-outline-variant flex justify-between items-center text-sm text-on-surface-variant">
-                <div>
-                  Showing <span className="font-semibold text-on-surface">{filteredOrders.length}</span> orders (fetched {totalOrdersFetched})
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={loadMoreOrders}
-                    disabled={!hasMoreOrders || isLoadingMoreOrders}
-                    className="px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {isLoadingMoreOrders ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Load More
-                        <i className="fas fa-chevron-down text-xs" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
+                  {/* Pagination Footer */}
+                  {!loading && filteredOrders.length > 0 && (
+                    <div className="mt-6 p-4 border border-outline-variant rounded-2xl flex justify-between items-center text-sm text-on-surface-variant">
+                      <div className="flex items-center gap-4">
+                        <span>
+                          Showing <span className="font-semibold text-on-surface">{filteredOrders.length}</span> orders (fetched {totalOrdersFetched})
+                        </span>
+                        <span className="w-2 h-2 rounded-full bg-[#25D366]" />
+                      </div>
+                      <button
+                        onClick={loadMoreOrders}
+                        disabled={!hasMoreOrders || isLoadingMoreOrders}
+                        className="px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
+                      >
+                        {isLoadingMoreOrders ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-chevron-down text-xs" />
+                            Load More
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </>

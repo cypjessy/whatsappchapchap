@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useNativeAndroid";
 import { useStatusBar } from "@/hooks/useStatusBar";
@@ -431,59 +430,9 @@ export default function LoginPage() {
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
             `}
           >
-            {/* Material Design 3 Register Button - Instant Response */}
-            <button
-              onClick={() => {
-                impactLight().catch(() => {});
-                router.push("/register");
-              }}
-              disabled={isLoading}
-              className={`
-                w-full py-3.5 px-6 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
-                text-white border-none rounded-xl text-base lg:text-lg font-bold 
-                cursor-pointer transition-all duration-300 
-                hover:translate-y-[-2px] hover:shadow-lg 
-                active:translate-y-0 active:shadow-md
-                active:scale-[0.98]
-                disabled:opacity-70 disabled:hover:translate-y-0 disabled:cursor-not-allowed
-                mb-4 relative overflow-hidden
-              `}
-            >
-              <span className="relative z-10">Create Free Account</span>
-            </button>
-
-            {/* Divider */}
-            <div className="flex items-center my-4 text-[#6b7280] text-xs font-medium">
-              <div className="flex-1 h-px bg-[#e5e7eb]" />
-              <span className="px-4">or</span>
-              <div className="flex-1 h-px bg-[#e5e7eb]" />
-            </div>
-
-            {/* Sign In Link */}
-            <p className="text-center text-sm text-[#6b7280]">
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                className="text-[#25D366] font-bold hover:underline inline-flex items-center gap-1"
-              >
-                Sign in here
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-            </p>
-
-            {/* Back to Home Link */}
-            <p className="mt-4 text-center">
-              <Link
-                href="/"
-                className="text-[#6b7280] hover:text-[#25D366] transition-colors inline-flex items-center gap-2 text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Home
-              </Link>
+            {/* Admin note — registration is done via All Tenants page */}
+            <p className="text-center text-xs text-[#9ca3af] mt-6">
+              Need to register a new user? Use the <strong>All Tenants</strong> page.
             </p>
           </div>
         </div>

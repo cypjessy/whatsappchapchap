@@ -48,6 +48,10 @@ interface ProductFiltersProps {
   activeFiltersCount?: number;
   onClearAll?: () => void;
   totalResults?: number;
+  // Category filter props
+  productCategories?: { id: string; name: string; icon: string }[];
+  selectedCategories?: string[];
+  onToggleCategory?: (catId: string) => void;
 }
 
 interface FilterChip {
@@ -382,6 +386,9 @@ export default function ProductFilters({
   isLoading = false,
   onClearAll,
   totalResults,
+  productCategories,
+  selectedCategories,
+  onToggleCategory,
 }: ProductFiltersProps) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [mobileAnimating, setMobileAnimating] = useState(false);
@@ -683,6 +690,9 @@ export default function ProductFilters({
             setSortBy={setSortBy}
             activeFilterCount={filterChips.length}
             onClearAll={handleClearAll}
+            productCategories={productCategories}
+            selectedCategories={selectedCategories}
+            onToggleCategory={onToggleCategory}
           />
     </div>
   );

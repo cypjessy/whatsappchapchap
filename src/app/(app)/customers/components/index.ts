@@ -8,5 +8,4 @@ export { default as CustomerCard } from './CustomerCard';
 export { default as EmptyState } from './EmptyState';
 export { default as CustomerModal } from './CustomerModal';
 export { default as AddCustomerModal } from './AddCustomerModal';
-export { default as BroadcastModal } from './BroadcastModal';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';

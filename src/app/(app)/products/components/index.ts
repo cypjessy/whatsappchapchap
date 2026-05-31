@@ -6,3 +6,4 @@ export { default as ProductListView } from './ProductListView';
 export { default as ProductBulkActionsToolbar } from './ProductBulkActionsToolbar';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as ProductsHeader } from './ProductsHeader';
+export { default as ProductCardMobile } from './ProductCardMobile';

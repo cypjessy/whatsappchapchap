@@ -194,6 +194,30 @@ We're here to help if you need any assistance!
 
 ━━━━━━━━━━━━━━━━━━━━
 ✨ *Thank you for your patience!* ✨
+━━━━━━━━━━━━━━━━━━━━`,
+
+    manual_order: `━━━━━━━━━━━━━━━━━━━━
+✅ *ORDER CONFIRMED – WAITING TO SHIP*
+━━━━━━━━━━━━━━━━━━━━
+
+Dear *${customerName}*,
+
+Great news! 🎉 Your order has been received and your payment has been confirmed! 🙌
+
+📋 *ORDER DETAILS*
+━━━━━━━━━━━━━━━━━━
+🏷️  *Product:* ${productName}
+🔖 *Order ID:* ${orderId}
+💰 *Payment:* Confirmed ✅
+━━━━━━━━━━━━━━━━━━
+
+🔜 *What's Next?*
+Your order is being carefully prepared and will be shipped soon. We'll notify you once it's on its way!
+
+💬 *Questions?* Just reply to this message and we'll help!
+
+━━━━━━━━━━━━━━━━━━━━
+✨ *Thank you for choosing us!* ✨
 ━━━━━━━━━━━━━━━━━━━━`
   };
 

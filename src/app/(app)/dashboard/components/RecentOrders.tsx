@@ -27,12 +27,47 @@ interface OrderWithImage {
 
 // ─── Status Config ────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; dot: string; label: string }> = {
-  pending: { bg: "bg-[#FEF3C7]", text: "text-[#F59E0B]", border: "border-[#F59E0B]/20", dot: "bg-[#F59E0B]", label: "Pending" },
-  processing: { bg: "bg-[#EFF6FF]", text: "text-[#3B82F6]", border: "border-[#3B82F6]/20", dot: "bg-[#3B82F6]", label: "Processing" },
-  shipped: { bg: "bg-[#F3E8FF]", text: "text-[#8B5CF6]", border: "border-[#8B5CF6]/20", dot: "bg-[#8B5CF6]", label: "Shipped" },
-  delivered: { bg: "bg-[#E8F5E9]", text: "text-[#25D366]", border: "border-[#25D366]/20", dot: "bg-[#25D366]", label: "Delivered" },
-  cancelled: { bg: "bg-[#FEE2E2]", text: "text-[#EF4444]", border: "border-[#EF4444]/20", dot: "bg-[#EF4444]", label: "Cancelled" },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; label: string; accent: string; icon: string }> = {
+  pending: {
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    dot: "bg-amber-400",
+    label: "Pending",
+    accent: "border-l-amber-400",
+    icon: "fa-clock",
+  },
+  processing: {
+    bg: "bg-blue-50",
+    text: "text-blue-600",
+    dot: "bg-blue-400",
+    label: "Processing",
+    accent: "border-l-blue-400",
+    icon: "fa-cog",
+  },
+  shipped: {
+    bg: "bg-purple-50",
+    text: "text-purple-600",
+    dot: "bg-purple-400",
+    label: "Shipped",
+    accent: "border-l-purple-400",
+    icon: "fa-shipping-fast",
+  },
+  delivered: {
+    bg: "bg-green-50",
+    text: "text-green-600",
+    dot: "bg-green-400",
+    label: "Delivered",
+    accent: "border-l-green-400",
+    icon: "fa-check-circle",
+  },
+  cancelled: {
+    bg: "bg-red-50",
+    text: "text-red-600",
+    dot: "bg-red-400",
+    label: "Cancelled",
+    accent: "border-l-red-400",
+    icon: "fa-times-circle",
+  },
 };
 
 function getStatusConfig(status: string) {
@@ -67,14 +102,14 @@ function ProductImage({ src, name }: { src?: string; name: string }) {
 
   if (!src || error) {
     return (
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-surface-variant shrink-0">
+      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-2xl bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] shrink-0 border border-white/50 shadow-sm">
         📦
       </div>
     );
   }
 
   return (
-    <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-variant shrink-0">
+    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
       <img
         src={src}
         alt={name}
@@ -83,6 +118,19 @@ function ProductImage({ src, name }: { src?: string; name: string }) {
         loading="lazy"
       />
     </div>
+  );
+}
+
+// ─── Status Badge ─────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: string }) {
+  const config = getStatusConfig(status);
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide ${config.bg} ${config.text} border border-white/40 shadow-sm`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot} shadow-sm`} />
+      <i className={`fas ${config.icon} text-[9px] opacity-70`} />
+      {config.label}
+    </span>
   );
 }
 
@@ -101,7 +149,6 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
       try {
         const tenantId = `tenant_${user.uid}`;
 
-        // Fetch recent orders
         const ordersQuery = query(
           collection(db, "orders"),
           where("tenantId", "==", tenantId),
@@ -114,52 +161,40 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
 
         for (const orderDoc of ordersSnap.docs) {
           const orderData = orderDoc.data();
-          console.log("[RecentOrders] Order data:", orderDoc.id, orderData);
 
-          // Get product image - try multiple sources
           let productImage: string | undefined;
           let productName = "Product";
 
-          // 1. Try to get from order's product data (products array)
           if (orderData.products?.[0]) {
             const product = orderData.products[0];
-            console.log("[RecentOrders] Product from products[0]:", product);
             productName = product.name || product.productName || productName;
-            // Check imageUrl first (new field), then fall back to other fields
             productImage = product.imageUrl || product.image || product.photoUrl || product.picture;
 
-            // 2. If no image, fetch from products collection
             if (!productImage && product.productId) {
               try {
                 const productRef = doc(db, "products", product.productId);
                 const productSnap = await getDoc(productRef);
-                console.log("[RecentOrders] Fetched product:", productSnap.exists(), productSnap.data());
                 if (productSnap.exists()) {
                   const pData = productSnap.data();
                   productImage = pData.imageUrl || pData.image || pData.images?.[0] || pData.photoUrl || pData.picture;
                   productName = pData.name || pData.productName || productName;
                 }
-              } catch (e) {
-                console.log("[RecentOrders] Failed to fetch product:", e);
+              } catch {
+                // fallback
               }
             }
           }
 
-          // 3. Try items array if products not available
           if (!productImage && orderData.items?.[0]) {
             const item = orderData.items[0];
-            console.log("[RecentOrders] Product from items[0]:", item);
             productName = item.name || item.productName || productName;
             productImage = item.imageUrl || item.image || item.photoUrl || item.picture;
           }
 
-          // 4. Try direct order fields
           if (!productImage) {
             productName = orderData.productName || orderData.name || productName;
             productImage = orderData.productImage || orderData.image || orderData.photoUrl;
           }
-
-          console.log("[RecentOrders] Final product:", { productName, productImage });
 
           ordersData.push({
             id: orderDoc.id.substring(0, 8),
@@ -183,19 +218,36 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
     loadOrders();
   }, [user, refreshTrigger, maxItems]);
 
+  // ─── Loading State ──────────────────────────────────────────────────────────
+
   if (loading) {
     return (
-      <div className="bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden">
-        <div className="p-4 md:p-5 border-b-2 border-outline bg-surface-container-low">
-          <div className="h-6 bg-surface-variant rounded w-32 animate-pulse" />
+      <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden">
+        {/* Header shimmer */}
+        <div className="p-4 md:p-5 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-100 rounded w-28 animate-pulse" />
+                <div className="h-3 bg-gray-100 rounded w-20 animate-pulse" />
+              </div>
+            </div>
+            <div className="h-8 bg-gray-100 rounded-xl w-20 animate-pulse" />
+          </div>
         </div>
-        <div className="divide-y divide-outline-variant">
+        {/* Rows shimmer */}
+        <div className="divide-y divide-gray-50">
           {[1, 2, 3].map((i) => (
             <div key={i} className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 bg-surface-variant rounded-xl animate-pulse shrink-0" />
+              <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-surface-variant rounded w-3/4 animate-pulse" />
-                <div className="h-3 bg-surface-variant rounded w-1/2 animate-pulse" />
+                <div className="h-3.5 bg-gray-100 rounded w-3/4 animate-pulse" />
+                <div className="h-3 bg-gray-100 rounded w-1/2 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-100 rounded w-16 animate-pulse" />
+                <div className="h-3 bg-gray-100 rounded w-12 animate-pulse ml-auto" />
               </div>
             </div>
           ))}
@@ -204,78 +256,128 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
     );
   }
 
+  // ─── Empty State ────────────────────────────────────────────────────────────
+
   if (orders.length === 0) {
     return (
-      <div className="bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden">
-        <div className="p-4 md:p-5 border-b-2 border-outline flex items-center justify-between bg-surface-container-low">
-          <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Orders</h3>
-        </div>
-        <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
-          <div className="w-16 h-16 rounded-2xl bg-surface-variant flex items-center justify-center mb-4 text-3xl">
-            📦
+      <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden">
+        {/* Header */}
+        <div className="p-4 md:p-5 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] flex items-center justify-center shadow-sm">
+                <i className="fas fa-list text-[#3B82F6] text-sm" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm md:text-base text-gray-900">Recent Orders</h3>
+                <p className="text-[10px] text-gray-400 font-medium">Track incoming orders</p>
+              </div>
+            </div>
           </div>
-          <h4 className="font-semibold text-base mb-1">No orders yet</h4>
-          <p className="text-sm text-outline text-center max-w-xs">
-            When customers order from you, they will appear here automatically.
+        </div>
+        <div className="flex flex-col items-center justify-center py-14 px-6">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-5 shadow-inner">
+            <span className="text-4xl">📦</span>
+          </div>
+          <h4 className="font-bold text-base text-gray-800 mb-1.5">No orders yet</h4>
+          <p className="text-sm text-gray-400 text-center max-w-xs leading-relaxed">
+            When customers place orders, they will appear here with all the details.
           </p>
+          <div className="mt-5 flex items-center gap-2 text-xs text-gray-300">
+            <i className="fas fa-arrow-down text-[#25D366]" />
+            <span>Orders appear automatically</span>
+          </div>
         </div>
       </div>
     );
   }
 
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
   return (
-    <div className="bg-surface rounded-2xl border-2 border-outline shadow-md overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden transition-all duration-300">
       {/* Header */}
-      <div className="p-4 md:p-5 border-b-2 border-outline flex items-center justify-between bg-surface-container-low">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
-            <i className="fas fa-list text-[#3B82F6] text-sm" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm md:text-base text-on-surface">Recent Orders</h3>
-            <span className="text-[10px] text-outline font-medium">Last {orders.length} orders</span>
+      <div className="relative">
+        {/* Gradient accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#25D366] via-[#3B82F6] to-[#8B5CF6]" />
+
+        <div className="p-4 md:p-5 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-md shadow-[#25D366]/20">
+                <i className="fas fa-shopping-bag text-white text-sm" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm md:text-base text-gray-900">Recent Orders</h3>
+                <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse" />
+                  Last {orders.length} order{orders.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+
+            {showViewAll && (
+              <Link
+                href="/orders"
+                className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gradient-to-r hover:from-[#25D366] hover:to-[#128C7E] hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-[#25D366]/25 transition-all duration-300 active:scale-95"
+              >
+                <span>View All</span>
+                <i className="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            )}
           </div>
         </div>
-
-        {showViewAll && (
-          <Link
-            href="/orders"
-            className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-semibold bg-surface-variant text-on-surface-variant border-2 border-outline-variant hover:bg-[#8B5CF6] hover:text-white hover:border-[#8B5CF6] transition-all duration-200"
-          >
-            View All
-          </Link>
-        )}
       </div>
 
-      {/* Mobile List */}
-      <div className="md:hidden divide-y-2 divide-outline-variant">
+      {/* ===== Mobile Cards ===== */}
+      <div className="md:hidden divide-y divide-gray-50">
         {orders.map((order, index) => {
           const status = getStatusConfig(order.status);
           return (
             <Link
               key={order.id}
               href="/orders"
-              className="block p-4 hover:bg-surface-container-lowest transition-colors"
-              style={{ animationDelay: `${index * 50}ms` }}
+              className="relative block hover:bg-gray-50/70 transition-all duration-200 active:bg-gray-100"
+              style={{
+                animation: `slideInUp 0.35s ease-out ${index * 60}ms both`,
+              }}
             >
-              <div className="flex items-center gap-3">
-                <ProductImage src={order.productImage} name={order.productName} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-sm text-primary">#{order.id}</span>
-                    <span className="font-bold text-sm">{formatCurrency(order.amount)}</span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm text-on-surface truncate">{order.productName}</span>
-                    <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${status.bg} ${status.text} ${status.border}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                      {status.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-[11px] text-outline">
-                    <span className="truncate">{order.customerName}</span>
-                    <span>•</span>
-                    <span>{formatRelativeTime(order.createdAt)}</span>
+              {/* Left status accent bar */}
+              <div className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full ${status.dot}`} />
+
+              <div className="p-4 pl-5">
+                <div className="flex items-start gap-3">
+                  <ProductImage src={order.productImage} name={order.productName} />
+                  <div className="flex-1 min-w-0">
+                    {/* Top row: Order ID + Status */}
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-mono font-bold text-xs text-gray-400 tracking-wider">
+                        #{order.id}
+                      </span>
+                      <StatusBadge status={order.status} />
+                    </div>
+
+                    {/* Product name */}
+                    <p className="text-sm font-semibold text-gray-800 truncate leading-snug">
+                      {order.productName}
+                    </p>
+
+                    {/* Bottom row: Customer + Amount + Time */}
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <i className="fas fa-user text-[9px] text-gray-300" />
+                        <span className="text-xs text-gray-500 truncate">{order.customerName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-bold text-sm text-gray-800 tabular-nums">
+                          {formatCurrency(order.amount)}
+                        </span>
+                        <span className="text-[10px] text-gray-400">•</span>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {formatRelativeTime(order.createdAt)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -284,55 +386,112 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
         })}
       </div>
 
-      {/* Desktop Table */}
+      {/* ===== Desktop Table ===== */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full min-w-[700px]">
           <thead>
-            <tr className="bg-surface-container-low border-b-2 border-outline">
+            <tr>
               {["Order ID", "Product", "Customer", "Amount", "Status", "Date"].map((h) => (
-                <th key={h} className="text-left p-4 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                <th
+                  key={h}
+                  className="text-left px-4 py-3.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-400 bg-gray-50/50 border-b border-gray-100"
+                >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => {
+            {orders.map((order, index) => {
               const status = getStatusConfig(order.status);
               return (
-                <tr key={order.id} className="border-b border-outline hover:bg-surface-container-low transition-colors last:border-b-0">
-                  <td className="p-4">
-                    <span className="font-semibold text-sm text-primary">#{order.id}</span>
+                <tr
+                  key={order.id}
+                  className="group border-b border-gray-50 hover:bg-gradient-to-r hover:from-blue-50/40 hover:to-indigo-50/20 transition-all duration-200 last:border-b-0 cursor-pointer"
+                  style={{
+                    animation: `slideInUp 0.3s ease-out ${index * 50}ms both`,
+                  }}
+                  onClick={() => window.location.href = "/orders"}
+                >
+                  {/* Status accent indicator */}
+                  <td className="relative w-1 p-0">
+                    <div className={`absolute inset-y-2 left-0 w-[3px] rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${status.dot}`} />
                   </td>
-                  <td className="p-4">
+
+                  {/* Order ID */}
+                  <td className="px-4 py-4">
+                    <span className="font-mono font-bold text-xs text-gray-400 tracking-wider group-hover:text-gray-600 transition-colors">
+                      #{order.id}
+                    </span>
+                  </td>
+
+                  {/* Product */}
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <ProductImage src={order.productImage} name={order.productName} />
                       <div>
-                        <div className="font-medium text-sm">{order.productName}</div>
+                        <p className="font-semibold text-sm text-gray-800 group-hover:text-gray-900 transition-colors">
+                          {order.productName}
+                        </p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="text-sm">{order.customerName}</span>
+
+                  {/* Customer */}
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                        {order.customerName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
+                        {order.customerName}
+                      </span>
+                    </div>
                   </td>
-                  <td className="p-4">
-                    <span className="font-bold text-sm">{formatCurrency(order.amount)}</span>
-                  </td>
-                  <td className="p-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase border ${status.bg} ${status.text} ${status.border}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                      {status.label}
+
+                  {/* Amount */}
+                  <td className="px-4 py-4">
+                    <span className="font-bold text-sm text-gray-800 tabular-nums">
+                      {formatCurrency(order.amount)}
                     </span>
                   </td>
-                  <td className="p-4 text-sm text-on-surface-variant">
-                    {formatRelativeTime(order.createdAt)}
+
+                  {/* Status */}
+                  <td className="px-4 py-4">
+                    <StatusBadge status={order.status} />
+                  </td>
+
+                  {/* Date */}
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                      <i className="far fa-clock text-[10px]" />
+                      <span className="font-medium">{formatRelativeTime(order.createdAt)}</span>
+                    </div>
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+
+        {/* Footer */}
+        {orders.length > 0 && (
+          <div className="px-4 py-3 border-t border-gray-50 bg-gray-50/30 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[11px] text-gray-400">
+              <i className="fas fa-sync-alt text-[9px]" />
+              <span>Orders update in real-time</span>
+            </div>
+            <Link
+              href="/orders"
+              className="text-[11px] font-semibold text-[#25D366] hover:text-[#128C7E] transition-colors flex items-center gap-1"
+            >
+              View all orders
+              <i className="fas fa-chevron-right text-[8px]" />
+            </Link>
+          </div>
+        )}
       </div>
+
     </div>
   );
 }

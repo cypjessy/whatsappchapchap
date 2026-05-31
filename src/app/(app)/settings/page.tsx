@@ -1453,28 +1453,41 @@ export default function SettingsPage() {
         </div>
       )}
       {activeTab === "whatsapp" && (
-        <div className="space-y-6">
-          {/* Business Name */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
-            <h3 className="font-bold text-base md:text-lg flex items-center gap-2 mb-3 md:mb-4">
-              <i className="fas fa-store text-[#8b5cf6]"></i>
-              Business Name
-            </h3>
-            <div>
-              <label className="block text-sm font-semibold text-on-surface-variant mb-2">Your Business Name</label>
-              <input
-                type="text"
-                value={whatsappSettings.businessName || ""}
-                onChange={(e) => handleWhatsAppChange("businessName", e.target.value)}
-                className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-[#8b5cf6] focus:outline-none text-sm"
-                placeholder="e.g., Campus Hub Store"
-              />
-              <p className="text-xs text-on-surface-variant mt-2">This will be used in automated messages and greetings</p>
+        <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 rounded-xl bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 border-l-4 border-[#25D366] mx-4 md:mx-6 mt-4 md:mt-6">
+            <div className="flex items-start gap-3">
+              <i className="fab fa-whatsapp text-xl md:text-2xl text-[#25D366]"></i>
+              <div>
+                <h3 className="font-bold text-base md:text-lg mb-1">WhatsApp Automation</h3>
+                <p className="text-sm text-on-surface-variant">
+                  Configure automated messages, welcome greetings, and away replies for your WhatsApp Business.
+                </p>
+              </div>
             </div>
           </div>
 
+          <div className="px-4 md:px-6 pb-6 space-y-6">
+            {/* Business Name */}
+            <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
+              <h3 className="font-bold text-base md:text-lg flex items-center gap-2 mb-3 md:mb-4">
+                <i className="fas fa-store text-[#25D366]"></i>
+                Business Name
+              </h3>
+              <div>
+                <label className="block text-sm font-semibold text-on-surface-variant mb-2">Your Business Name</label>
+                <input
+                  type="text"
+                  value={whatsappSettings.businessName || ""}
+                  onChange={(e) => handleWhatsAppChange("businessName", e.target.value)}
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border-2 border-outline-variant focus:border-[#25D366] focus:outline-none text-sm"
+                  placeholder="e.g., Campus Hub Store"
+                />
+                <p className="text-xs text-on-surface-variant mt-2">This will be used in automated messages and greetings</p>
+              </div>
+            </div>
+
           {/* Welcome Message */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
                 <i className="fas fa-hand-sparkles text-[#8b5cf6]"></i>
@@ -1652,7 +1665,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Auto Reply */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-reply text-[#8b5cf6]"></i>
@@ -1684,7 +1697,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Away Message */}
-          <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm overflow-hidden p-4 md:p-6 mx-3 md:mx-0">
+          <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <i className="fas fa-moon text-[#8b5cf6]"></i>
@@ -1716,7 +1729,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Save Button */}
-          <div className="flex justify-end px-3 md:px-0 pb-3 md:pb-0">
+          <div className="flex justify-end">
             <button
               onClick={async () => { await impactLight(); saveWhatsAppSettings(); }}
               disabled={saving}
@@ -1736,6 +1749,7 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+      </div>
       )}
 
       {/* Payment Methods Tab */}
@@ -1898,6 +1912,16 @@ export default function SettingsPage() {
               )}
             </div>
 
+            {/* Divider */}
+            <div className="relative flex items-center gap-4 py-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
+                <i className="fas fa-arrow-down text-blue-500 text-xs"></i>
+                <span className="text-xs font-semibold text-blue-700">Next Method</span>
+              </div>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
+            </div>
+
             {/* Bank Transfer Section */}
             <div className="border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-blue-500 transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
@@ -1977,6 +2001,16 @@ export default function SettingsPage() {
               )}
             </div>
 
+            {/* Divider */}
+            <div className="relative flex items-center gap-4 py-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 rounded-full border border-purple-200">
+                <i className="fas fa-credit-card text-purple-500 text-xs"></i>
+                <span className="text-xs font-semibold text-purple-700">Card Payments</span>
+              </div>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
+            </div>
+
             {/* Card Payment Section */}
             <div className="border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-purple-500 transition-all">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 md:mb-4">
@@ -2026,6 +2060,16 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Divider */}
+            <div className="relative flex items-center gap-4 py-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-orange-300 to-transparent"></div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-full border border-orange-200">
+                <i className="fas fa-money-bill-wave text-orange-500 text-xs"></i>
+                <span className="text-xs font-semibold text-orange-700">Cash</span>
+              </div>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-orange-300 to-transparent"></div>
             </div>
 
             {/* Cash Payment Section */}
@@ -2104,17 +2148,22 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="px-4 md:px-6 pb-6">
+          <div className="px-4 md:px-6 pb-6 space-y-4 md:space-y-5">
             {/* Biometric Status Card */}
-            <div className="bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] rounded-xl p-4 md:p-6 mb-6">
-              <div className="flex items-center justify-between">
+            <div className="relative overflow-hidden rounded-xl p-4 md:p-6 bg-gradient-to-br from-orange-50 via-red-50 to-rose-50 border border-orange-200/60">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.08),transparent_70%)]"></div>
+              <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                    biometricAvailable ? 'bg-green-100' : 'bg-surface-container-high'
-                  }`}>
-                    <i className={`fas ${biometricAvailable ? getBiometricIcon() : 'fa-times-circle'} text-2xl ${
-                      biometricAvailable ? 'text-green-600' : 'text-gray-400'
-                    }`}></i>
+                  <div className="relative">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-inner ${                      biometricAvailable ? 'bg-gradient-to-br from-green-400 to-emerald-500' : 'bg-surface-container-high'                    }`}>
+                      {biometricAvailable && (
+                        <span className="absolute -top-0.5 -right-0.5 w-3 h-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                      )}
+                      <i className={`fas ${biometricAvailable ? getBiometricIcon() : 'fa-times-circle'} text-xl ${                        biometricAvailable ? 'text-white' : 'text-gray-400'                      }`}></i>
+                    </div>
                   </div>
                   <div>
                     <h4 className="font-bold text-base md:text-lg text-on-surface">
@@ -2127,14 +2176,21 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
+                {biometricAvailable && (
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-green-100 rounded-full">
+                    <i className="fas fa-check-circle text-green-600 text-xs"></i>
+                    <span className="text-xs font-semibold text-green-700">Ready</span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Toggle Biometric Login */}
-            <div className="bg-surface border-2 border-outline-variant rounded-xl p-4 md:p-6 mb-6">
+            <div className="relative overflow-hidden bg-surface border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-orange-300 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h4 className="font-bold text-base md:text-lg text-on-surface mb-1">
+                  <h4 className="font-bold text-base md:text-lg text-on-surface mb-1 flex items-center gap-2">
+                    <i className="fas fa-fingerprint text-orange-500"></i>
                     Enable Biometric Login
                   </h4>
                   <p className="text-sm text-on-surface-variant">
@@ -2202,25 +2258,27 @@ export default function SettingsPage() {
                     }
                   }}
                   disabled={!biometricAvailable}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 ${
-                    biometricEnabled && biometricAvailable
-                      ? 'bg-gradient-to-r from-orange-500 to-red-500'
-                      : 'bg-gray-300'
-                  } ${!biometricAvailable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 shadow-inner ${                    biometricEnabled && biometricAvailable
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-orange-200'                      : 'bg-gray-300'                  } ${!biometricAvailable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-surface shadow-lg transition-transform duration-300 ${
-                      biometricEnabled && biometricAvailable ? 'translate-x-7' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-all duration-300 ${                      biometricEnabled && biometricAvailable ? 'translate-x-7 shadow-orange-300' : 'translate-x-1'                    }`}
                   />
                 </button>
               </div>
+              {biometricEnabled && biometricAvailable && (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600">
+                  <i className="fas fa-check-circle"></i>
+                  <span>Biometric login is active</span>
+                </div>
+              )}
             </div>
 
             {/* Test Biometric Button */}
             {biometricAvailable && (
-              <div className="bg-surface border-2 border-outline-variant rounded-xl p-4 md:p-6">
-                <h4 className="font-bold text-base md:text-lg text-on-surface mb-3">
+              <div className="bg-surface border-2 border-outline-variant rounded-xl p-4 md:p-6 hover:border-orange-300 transition-all">
+                <h4 className="font-bold text-base md:text-lg text-on-surface mb-3 flex items-center gap-2">
+                  <i className="fas fa-vial text-orange-500"></i>
                   Test Authentication
                 </h4>
                 <p className="text-sm text-on-surface-variant mb-4">
@@ -2248,7 +2306,7 @@ export default function SettingsPage() {
                     }
                   }}
                   disabled={testingBiometric}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
                 >
                   {testingBiometric ? (
                     <>
@@ -2266,16 +2324,26 @@ export default function SettingsPage() {
             )}
 
             {/* Info Box */}
-            <div className="mt-6 p-4 rounded-xl bg-blue-50 border border-blue-200">
-              <div className="flex items-start gap-3">
-                <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/60 p-4 md:p-5">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.06),transparent_60%)]"></div>
+              <div className="relative flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                  <i className="fas fa-info-circle text-blue-500"></i>
+                </div>
                 <div className="text-sm text-on-surface-variant">
-                  <p className="font-semibold text-on-surface mb-1">How it works:</p>
-                  <ul className="space-y-1 list-disc list-inside">
-                    <li>Your biometric data never leaves your device</li>
-                    <li>Authentication is handled by Android's secure system</li>
-                    <li>You can disable this feature anytime</li>
-                    <li>Fallback to password if biometric fails</li>
+                  <p className="font-semibold text-blue-800 mb-2">How it works:</p>
+                  <ul className="space-y-1.5">
+                    {[
+                      'Your biometric data never leaves your device',
+                      'Authentication is handled by Android\'s secure system',
+                      'You can disable this feature anytime',
+                      'Fallback to password if biometric fails',
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <i className="fas fa-check-circle text-blue-400 mt-0.5 text-xs"></i>
+                        <span>{item}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>

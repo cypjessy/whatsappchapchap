@@ -25,6 +25,10 @@ interface ProductFilterBottomSheetProps {
   setSortBy: (value: string) => void;
   activeFilterCount: number;
   onClearAll: () => void;
+  // Category filter props
+  productCategories?: { id: string; name: string; icon: string }[];
+  selectedCategories?: string[];
+  onToggleCategory?: (catId: string) => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -108,6 +112,9 @@ export default function ProductFilterBottomSheet({
   setSortBy,
   activeFilterCount,
   onClearAll,
+  productCategories,
+  selectedCategories,
+  onToggleCategory,
 }: ProductFilterBottomSheetProps) {
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [localStock, setLocalStock] = useState(stockFilter);
@@ -292,6 +299,47 @@ export default function ProductFilterBottomSheet({
               </div>
             </div>
           </div>
+
+          {/* Category Filter */}
+          {productCategories && productCategories.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-2">Categories</label>
+              <div className="flex flex-wrap gap-1.5">
+                {productCategories.map((cat) => {
+                  const isChecked = selectedCategories?.includes(cat.id) || false;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => onToggleCategory?.(cat.id)}
+                      className={`
+                        inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold
+                        transition-all duration-200 active:scale-95
+                        ${isChecked
+                          ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md"
+                          : "bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
+                        }
+                      `}
+                    >
+                      <span
+                        className={`
+                          w-3.5 h-3.5 rounded border flex items-center justify-center transition-all
+                          ${isChecked ? "bg-white/20 border-white/40" : "bg-transparent border-outline"}
+                        `}
+                      >
+                        {isChecked && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                      <span>{cat.icon}</span>
+                      <span>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Quick Date Presets */}
           <div>

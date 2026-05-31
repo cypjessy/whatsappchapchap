@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import AddTenantDialog from "@/components/AddTenantDialog";
-import PageHeaderCard from "@/components/PageHeaderCard";
 import { adminService, Tenant, pricingPlanService, PricingPlan } from "@/lib/db";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -70,6 +69,39 @@ function formatRelativeTime(timestamp: any): string {
   return `${Math.floor(diffDays / 365)}y ago`;
 }
 
+// ─── Trial Badge Component ───────────────────────────────────────────────────
+function TrialBadge({ trialEndsAt, trialDays }: { trialEndsAt: any; trialDays?: number }) {
+  if (!trialEndsAt) return null;
+  try {
+    const endDate = trialEndsAt.toDate ? trialEndsAt.toDate() : new Date(trialEndsAt);
+    const now = new Date();
+    const diffMs = endDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 0) {
+      return (
+        <span className="badge badge-status-expired" style={{ fontSize: "10px", padding: "1px 6px" }}>
+          <i className="fas fa-clock" style={{ marginRight: "2px" }}></i>Trial ended
+        </span>
+      );
+    }
+    if (diffDays <= 3) {
+      return (
+        <span className="badge" style={{ fontSize: "10px", padding: "1px 6px", background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
+          <i className="fas fa-hourglass-half" style={{ marginRight: "2px" }}></i>{diffDays}d left
+        </span>
+      );
+    }
+    return (
+      <span className="badge" style={{ fontSize: "10px", padding: "1px 6px", background: "#d1fae5", color: "#065f46", border: "1px solid #a7f3d0" }}>
+        <i className="fas fa-seedling" style={{ marginRight: "2px" }}></i>{diffDays}d trial
+      </span>
+    );
+  } catch {
+    return null;
+  }
+}
+
 export default function AllTenantsPage() {
   const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -85,7 +117,7 @@ export default function AllTenantsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [activeModalTab, setActiveModalTab] = useState("overview");
-  const [activeMainTab, setActiveMainTab] = useState<"tenants" | "plans" | "diagnostics" | "connection-test">("tenants");
+  const [activeMainTab, setActiveMainTab] = useState<"tenants" | "plans" | "diagnostics" | "connection-test" | "settings">("tenants");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
@@ -98,6 +130,7 @@ export default function AllTenantsPage() {
     status: "pending" as "active" | "suspended" | "pending",
     category: "products" as "products" | "services" | "both",
     country: "",
+    trialDays: 14,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -140,8 +173,6 @@ export default function AllTenantsPage() {
     ],
   });
 
-  // Platform Settings State
-  const [platformSettingsOpen, setPlatformSettingsOpen] = useState(false);
   const [platformSettings, setPlatformSettings] = useState({
     maintenanceMode: false,
     allowRegistration: true,
@@ -282,6 +313,12 @@ export default function AllTenantsPage() {
     try {
       const newStatus = tenant.status === "active" ? "suspended" : "active";
       await adminService.updateTenantStatus(tenant.id, newStatus);
+      // Log activity for audit trail — ensures lockout/activation is fully effective
+      await adminService.addActivityLog(tenant.id, {
+        action: newStatus === "suspended" ? "Account Locked" : "Account Activated",
+        details: `Admin ${newStatus === "suspended" ? "locked out" : "activated"} this account`,
+        metadata: { previousStatus: tenant.status, newStatus, adminAction: "toggle_status" },
+      });
       showToast("success", "Status Updated", `${tenant.name} is now ${newStatus}.`);
     } catch (error) {
       showToast("error", "Error", "Failed to update tenant status.");
@@ -340,6 +377,7 @@ export default function AllTenantsPage() {
       status: (tenant.status || "pending") as "active" | "suspended" | "pending",
       category: (tenant.category || tenant.businessType || "products") as "products" | "services" | "both",
       country: tenant.country || "",
+      trialDays: tenant.trialDays || 14,
     });
     setEditModalOpen(true);
   };
@@ -354,17 +392,40 @@ export default function AllTenantsPage() {
   const saveTenantEdit = async () => {
     if (!editingTenant) return;
     try {
-      await adminService.updateTenant(editingTenant.id, {
+      const planChanged = editForm.plan !== editingTenant.plan;
+
+      const updateData: any = {
         businessName: editForm.businessName,
         name: editForm.name,
         email: editForm.email,
         phone: editForm.phone,
-        plan: editForm.plan,
         status: editForm.status,
         category: editForm.category,
         businessType: editForm.category,
         country: editForm.country,
-      });
+      };
+
+      // Only include plan when it actually changed — prevents planStartedAt from resetting on unrelated edits
+      if (planChanged) {
+        updateData.plan = editForm.plan;
+      }
+
+      // If plan is free and trialDays is set, set up the free trial
+      if (editForm.plan === "free" && editForm.trialDays > 0) {
+        await adminService.setTenantFreeTrial(editingTenant.id, editForm.trialDays);
+        // Override status update since setTenantFreeTrial sets status to active
+        if (editForm.status !== "active") {
+          await adminService.updateTenantStatus(editingTenant.id, editForm.status);
+        }
+      } else {
+        // Clear trial data if switching away from free plan
+        if (editingTenant.plan === "free" && editForm.plan !== "free") {
+          updateData.trialDays = null;
+          updateData.trialEndsAt = null;
+        }
+        await adminService.updateTenant(editingTenant.id, updateData);
+      }
+
       await adminService.addActivityLog(editingTenant.id, {
         action: "Tenant Updated",
         details: `Admin updated tenant information`,
@@ -706,6 +767,7 @@ export default function AllTenantsPage() {
           --info: #3b82f6;
           --success: #10b981;
           --purple: #8b5cf6;
+          --amber: #f59e0b;
           --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
           --shadow: 0 4px 16px rgba(0,0,0,0.08);
           --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
@@ -727,6 +789,38 @@ export default function AllTenantsPage() {
           margin: 0;
         }
 
+        /* Premium Card Base */
+        .premium-card {
+          background: var(--card);
+          border-radius: var(--radius);
+          border: 1px solid var(--border-light);
+          box-shadow: var(--shadow-sm);
+          overflow: hidden;
+          transition: var(--transition);
+        }
+        .premium-card:hover {
+          box-shadow: var(--shadow);
+        }
+
+        /* Gradient Section Headers */
+        .section-header-premium {
+          background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+          border-bottom: 1px solid #bbf7d0;
+          padding: 16px 22px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          cursor: pointer;
+          transition: var(--transition);
+          user-select: none;
+        }
+        .section-header-premium:hover {
+          background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        }
+        .section-header-premium.open {
+          border-bottom: 1px solid var(--border-light);
+        }
+
         /* Stats Row */
         .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
         .stat-card {
@@ -735,7 +829,7 @@ export default function AllTenantsPage() {
           display: flex; align-items: center; justify-content: space-between;
           transition: var(--transition); cursor: default;
         }
-        .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+        .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
         .stat-info .stat-label { font-size: 12.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
         .stat-info .stat-val { font-size: 28px; font-weight: 800; color: var(--text); margin-top: 4px; line-height: 1; }
         .stat-info .stat-trend { font-size: 12px; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
@@ -825,11 +919,27 @@ export default function AllTenantsPage() {
         .dot-orange { background: var(--warning); }
         .dot-red { background: var(--danger); }
 
-        /* Table Card */
+        /* Table Card - Premium */
         .table-card {
           background: var(--card); border-radius: var(--radius);
           border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
           overflow: hidden; margin-bottom: 16px;
+        }
+        .table-header {
+          background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+          border-bottom: 1px solid #bbf7d0;
+          padding: 14px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .table-header h3 {
+          font-size: 14px;
+          font-weight: 700;
+          color: #065f46;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
@@ -966,20 +1076,7 @@ export default function AllTenantsPage() {
         .pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .per-page-wrap { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-3); }
 
-        /* Section Collapsible */
-        .section-header {
-          display: flex; align-items: center; justify-content: space-between;
-          background: var(--card); border-radius: var(--radius);
-          padding: 16px 22px; border: 1px solid var(--border-light);
-          box-shadow: var(--shadow-sm); cursor: pointer; margin-bottom: 0;
-          transition: var(--transition); user-select: none;
-        }
-        .section-header:hover { border-color: var(--primary); }
-        .section-header.open { border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid var(--border-light); }
-        .section-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
-        .section-title i { color: var(--primary-dark); }
-        .chevron-icon { color: var(--text-3); transition: transform 0.25s ease; }
-        .chevron-icon.open { transform: rotate(180deg); }
+        /* Premium Section Body */
         .section-body {
           background: var(--card); border: 1px solid var(--border-light);
           border-top: none; border-radius: 0 0 var(--radius) var(--radius);
@@ -991,14 +1088,15 @@ export default function AllTenantsPage() {
         .section-body.open { max-height: 2000px; opacity: 1; padding: 24px; }
         .section-wrap { margin-bottom: 20px; }
 
-        /* Pricing Cards */
+        /* Pricing Cards - Premium */
         .pricing-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
         .plan-card {
           border: 2px solid var(--border); border-radius: var(--radius);
           padding: 22px; transition: var(--transition); position: relative; overflow: hidden;
+          background: var(--card);
         }
-        .plan-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
-        .plan-card.popular { border-color: var(--primary); }
+        .plan-card:hover { border-color: var(--primary); box-shadow: var(--shadow); transform: translateY(-2px); }
+        .plan-card.popular { border-color: var(--primary); background: linear-gradient(180deg, #f0fdf4, white); }
         .plan-card.popular::before {
           content: "POPULAR"; position: absolute; top: 14px; right: -28px;
           background: var(--primary); color: white; font-size: 9px; font-weight: 800;
@@ -1050,7 +1148,7 @@ export default function AllTenantsPage() {
           display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: #92400e;
         }
 
-        /* Modal */
+        /* Premium Modals */
         .modal-overlay {
           display: none; position: fixed; inset: 0; z-index: 300;
           background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
@@ -1064,12 +1162,26 @@ export default function AllTenantsPage() {
           animation: modalIn 0.25s ease;
         }
         @keyframes modalIn { from { opacity:0; transform: translateY(-20px) scale(0.97); } to { opacity:1; transform: none; } }
-        .modal-header {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 20px 24px; border-bottom: 1px solid var(--border-light);
+        .modal-header-premium {
+          background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+          border-bottom: 1px solid #bbf7d0;
+          padding: 20px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
         }
-        .modal-header h3 { font-size: 17px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 9px; }
-        .modal-close { width: 34px; height: 34px; border-radius: 9px; border: none; cursor: pointer; background: var(--bg); color: var(--text-2); font-size: 15px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .modal-header-premium h3 {
+          font-size: 17px;
+          font-weight: 800;
+          color: #065f46;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+        }
+        .modal-header-premium h3 i {
+          color: var(--primary-dark);
+        }
+        .modal-close { width: 34px; height: 34px; border-radius: 9px; border: none; cursor: pointer; background: rgba(255,255,255,0.8); color: var(--text-2); font-size: 15px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
         .modal-close:hover { background: #fee2e2; color: var(--danger); }
         .modal-body { padding: 24px; }
         .modal-2col { display: grid; grid-template-columns: 200px 1fr; gap: 24px; }
@@ -1122,7 +1234,7 @@ export default function AllTenantsPage() {
         .tl-text { font-size: 12.5px; color: var(--text); font-weight: 500; }
         .tl-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
-        /* Toast */
+        /* Premium Toast */
         .toast-container { position: fixed; top: 80px; right: 20px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
         .toast {
           display: flex; align-items: center; gap: 12px;
@@ -1195,7 +1307,7 @@ export default function AllTenantsPage() {
         .inv-table tr:last-child td { border-bottom: none; }
         .inv-table tr:hover td { background: var(--bg); }
 
-        /* ===== MATERIAL DESIGN 3 MOBILE STYLES ===== */
+        /* ===== MOBILE STYLES ===== */
         @media (max-width: 899px) {
           .desktop-only { display: none !important; }
         }
@@ -1203,14 +1315,6 @@ export default function AllTenantsPage() {
           .mobile-only { display: none !important; }
         }
 
-        /* M3 Tonal Surface */
-        .m3-surface {
-          background: var(--card);
-          border-radius: 16px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-        }
-
-        /* M3 Top App Bar for Mobile */
         .m3-appbar {
           display: flex; align-items: center; gap: 12px;
           padding: 12px 4px; margin-bottom: 12px;
@@ -1228,7 +1332,6 @@ export default function AllTenantsPage() {
         }
         .m3-appbar-icon:active { background: var(--bg2); }
 
-        /* M3 Search Bar */
         .m3-search-wrap {
           position: relative; margin-bottom: 12px;
         }
@@ -1246,7 +1349,6 @@ export default function AllTenantsPage() {
         .m3-search-input::placeholder { color: var(--text-3); }
         .m3-search-input:focus { box-shadow: 0 0 0 2px var(--primary); }
 
-        /* M3 Stats Chips (horizontal scroll) */
         .m3-stats-scroll {
           display: flex; gap: 10px; overflow-x: auto;
           padding: 0 0 12px; margin-bottom: 4px;
@@ -1268,7 +1370,6 @@ export default function AllTenantsPage() {
         .m3-stat-chip-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; }
         .m3-stat-chip-val { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.2; margin-top: 1px; }
 
-        /* Filter Chips Row */
         .m3-chips-row {
           display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px;
           -webkit-overflow-scrolling: touch;
@@ -1302,81 +1403,17 @@ export default function AllTenantsPage() {
         .m3-filter-btn:active { background: var(--bg2); }
         .m3-filter-btn.has-filters { border-color: var(--primary); color: var(--primary); background: var(--primary-xlight); }
 
-        /* M3 Tenant List Cards */
-        .m3-tenant-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
-        .m3-tenant-card {
-          background: var(--card); border-radius: 16px;
-          padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-          border: 1px solid var(--border-light);
-          transition: all 0.15s ease; cursor: pointer;
-          position: relative; overflow: hidden;
-        }
-        .m3-tenant-card:active { transform: scale(0.98); background: #fafcff; }
-        .m3-tenant-card.selected {
-          border-color: var(--primary);
-          background: var(--primary-xlight);
-        }
-        .m3-tenant-card-top { display: flex; align-items: flex-start; gap: 14px; }
-        .m3-tenant-card-check { margin-top: 2px; }
-        .m3-tenant-card-check .cb { width: 20px; height: 20px; }
-        .m3-tenant-card-avatar {
-          width: 48px; height: 48px; border-radius: 16px; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 16px; font-weight: 800; color: white;
-        }
-        .m3-tenant-card-body { flex: 1; min-width: 0; }
-        .m3-tenant-card-name {
-          font-size: 15px; font-weight: 700; color: var(--text);
-          display: flex; align-items: center; gap: 6px;
-        }
-        .m3-tenant-card-owner { font-size: 13px; color: var(--text-3); margin-top: 1px; }
-        .m3-tenant-card-phone {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 13px; color: var(--text-2); margin-top: 3px;
-        }
-        .m3-tenant-card-phone i { color: var(--primary); font-size: 12px; }
-        .m3-tenant-card-badges {
-          display: flex; gap: 6px; flex-wrap: wrap;
-          padding-top: 10px; margin-top: 10px;
-          border-top: 1px solid var(--border-light);
-        }
-        .m3-tenant-card-badge {
-          display: inline-flex; align-items: center; gap: 4px;
-          padding: 3px 10px; border-radius: 20px;
-          font-size: 11.5px; font-weight: 600;
-        }
-        .m3-tenant-card-footer {
-          display: flex; align-items: center; justify-content: space-between;
-          margin-top: 10px; padding-top: 10px;
-          border-top: 1px solid var(--border-light);
-        }
-        .m3-tenant-card-status { display: flex; align-items: center; gap: 6px; }
-        .m3-tenant-card-rev { font-weight: 600; font-size: 13.5px; color: var(--text); }
-        .m3-tenant-card-actions {
-          display: flex; gap: 4px;
-        }
-        .m3-tenant-card-action {
-          width: 36px; height: 36px; border-radius: 10px; border: none;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px; cursor: pointer; transition: all 0.15s ease;
-          background: transparent; color: var(--text-3);
-        }
-        .m3-tenant-card-action:active { transform: scale(0.9); }
-        .m3-tenant-card-action.ab-view:active { background: #dbeafe; color: var(--info); }
-        .m3-tenant-card-action.ab-edit:active { background: var(--primary-xlight); color: var(--primary-dark); }
-        .m3-tenant-card-action.ab-wa:active { background: #d1fae5; color: var(--primary-dark); }
-        .m3-tenant-card-action.ab-suspend:active { background: #fef3c7; color: var(--warning); }
-        .m3-tenant-card-action.ab-delete:active { background: #fee2e2; color: var(--danger); }
 
-        /* M3 Pulse dots for status pills */
-        .m3-pulse {
-          width: 8px; height: 8px; border-radius: 50%;
-        }
+
+
+
+
+
+        .m3-pulse { width: 8px; height: 8px; border-radius: 50%; }
         .m3-pulse-green { background: var(--success); box-shadow: 0 0 0 0 rgba(16,185,129,0.5); animation: pulse-anim 2s infinite; }
         .m3-pulse-orange { background: var(--warning); }
         .m3-pulse-red { background: var(--danger); }
 
-        /* M3 FAB */
         .m3-fab {
           position: fixed; bottom: 24px; right: 20px; z-index: 150;
           width: 56px; height: 56px; border-radius: 16px;
@@ -1388,7 +1425,6 @@ export default function AllTenantsPage() {
         }
         .m3-fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(37,211,102,0.3); }
 
-        /* M3 Selection Bar (bottom) */
         .m3-sel-bar {
           position: fixed; bottom: 0; left: 0; right: 0; z-index: 180;
           background: #1e293b; border-radius: 20px 20px 0 0;
@@ -1402,15 +1438,8 @@ export default function AllTenantsPage() {
           border-right: none; padding-right: 0; padding-bottom: 8px;
           margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-        .m3-sel-bar .bulk-btn {
-          flex: 1; min-width: 0; text-align: center; font-size: 11px;
-          padding: 8px 4px; border-radius: 10px; white-space: nowrap;
-        }
-        .m3-sel-bar .bulk-close {
-          position: absolute; top: 10px; right: 12px;
-        }
+        .m3-sel-bar .bulk-btn { flex: 1; min-width: 0; text-align: center; font-size: 11px; padding: 8px 4px; border-radius: 10px; }
 
-        /* M3 Filter Bottom Sheet */
         .m3-bottom-sheet-overlay {
           position: fixed; inset: 0; z-index: 250;
           background: rgba(0,0,0,0.4); opacity: 0;
@@ -1422,85 +1451,29 @@ export default function AllTenantsPage() {
           background: white; border-radius: 28px 28px 0 0;
           padding: 16px 20px 32px; max-height: 80vh; overflow-y: auto;
           transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-          box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
         }
         .m3-bottom-sheet.open { transform: translateY(0); }
-        .m3-bs-handle {
-          width: 40px; height: 4px; border-radius: 2px;
-          background: var(--border); margin: 0 auto 16px;
-        }
+        .m3-bs-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 16px; }
         .m3-bs-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
         .m3-bs-section { margin-bottom: 16px; }
-        .m3-bs-label {
-          font-size: 12px; font-weight: 700; color: var(--text-3);
-          text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
-        }
+        .m3-bs-label { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
         .m3-bs-options { display: flex; flex-wrap: wrap; gap: 8px; }
         .m3-bs-option {
-          padding: 9px 16px; border-radius: 20px;
-          font-size: 13px; font-weight: 500;
+          padding: 9px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
           border: 1.5px solid var(--border); background: white;
           color: var(--text-2); cursor: pointer; transition: all 0.15s ease;
         }
         .m3-bs-option:active { transform: scale(0.96); }
-        .m3-bs-option.active {
-          background: var(--primary-light); border-color: var(--primary);
-          color: var(--primary-dark); font-weight: 600;
-        }
-        .m3-bs-btn {
-          width: 100%; height: 48px; border-radius: 14px;
-          border: none; font-family: inherit; font-size: 15px; font-weight: 700;
-          cursor: pointer; transition: all 0.15s ease;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .m3-bs-btn:active { transform: scale(0.97); }
-        .m3-bs-btn-primary {
-          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-          color: white; box-shadow: 0 4px 12px rgba(37,211,102,0.3);
-        }
-        .m3-bs-btn-secondary {
-          background: var(--bg); color: var(--text-2); margin-top: 8px;
-        }
+        .m3-bs-option.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); font-weight: 600; }
 
-        /* M3 Empty State */
-        .m3-empty-state {
-          text-align: center; padding: 60px 20px;
-        }
-        .m3-empty-state i {
-          font-size: 48px; color: var(--border); margin-bottom: 16px;
-        }
+        .m3-empty-state { text-align: center; padding: 60px 20px; }
+        .m3-empty-state i { font-size: 48px; color: var(--border); margin-bottom: 16px; }
         .m3-empty-state p { font-size: 15px; color: var(--text-3); font-weight: 500; }
-
-        /* M3 Loading */
-        .m3-loader {
-          display: flex; flex-direction: column; align-items: center;
-          padding: 60px 0;
-        }
-        .m3-loader-spinner {
-          width: 40px; height: 40px; border-radius: 50%;
-          border: 3px solid var(--border); border-top-color: var(--primary);
-          animation: m3-spin 0.8s linear infinite; margin-bottom: 12px;
-        }
-        @keyframes m3-spin { to { transform: rotate(360deg); } }
-        .m3-loader p { color: var(--text-3); font-size: 14px; }
-
-        /* Mobile responsive overrides at smaller breakpoints */
-        @media (max-width: 480px) {
-          .m3-tenant-card { padding: 14px; }
-          .m3-tenant-card-avatar { width: 42px; height: 42px; font-size: 14px; border-radius: 14px; }
-          .m3-tenant-card-name { font-size: 14px; }
-          .m3-appbar h1 { font-size: 20px; }
-          .m3-fab { width: 52px; height: 52px; border-radius: 14px; font-size: 20px; bottom: 20px; right: 16px; }
-          .m3-sel-bar { padding: 12px 14px 16px; }
-          .m3-sel-bar .bulk-btn { font-size: 10px; padding: 6px 2px; }
-          .m3-search-input { height: 44px; font-size: 14px; border-radius: 24px; }
-        }
 
         @media (max-width: 899px) {
           .all-tenants-page { padding: 8px 12px 80px; }
         }
 
-        /* Responsive for toast on mobile */
         @media (max-width: 480px) {
           .toast-container { right: 12px; left: 12px; top: 60px; }
           .toast { min-width: unset; max-width: unset; }
@@ -1527,47 +1500,81 @@ export default function AllTenantsPage() {
       </div>
 
       {/* Page Header */}
-      <PageHeaderCard className="mb-4">
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
-          <div>
-            <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text)", display: "flex", alignItems: "center", gap: "10px" }}>
-              <i className="fas fa-shield-alt" style={{ color: "var(--primary-dark)", fontSize: "22px" }}></i> Tenant Management
-            </h1>
-            <p style={{ color: "var(--text-2)", marginTop: "4px", fontSize: "14px" }}>Manage all sellers, service providers, subscriptions and platform settings</p>
+      {/* Premium Info Banner */}
+      <div className="relative overflow-hidden rounded-2xl mb-4 md:mb-5 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border border-emerald-200/60">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_70%)]"></div>
+        <div className="relative p-4 md:p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-200 flex-shrink-0">
+              <i className="fas fa-shield-alt text-white text-xl md:text-2xl"></i>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Tenant Management</h2>
+              <p className="text-sm md:text-base text-gray-600 mt-1">Manage all sellers, service providers, subscriptions and platform settings</p>
+            </div>
           </div>
         </div>
-      </PageHeaderCard>
+      </div>
 
-      {/* Main Tabs - Moved to top */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-        <button
-          className={`btn ${activeMainTab === "tenants" ? "btn-primary" : "btn-secondary"}`}
-          onClick={() => setActiveMainTab("tenants")}
-          style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
-        >
-          <i className="fas fa-users"></i> All Tenants
-        </button>
-        <button
-          className={`btn ${activeMainTab === "plans" ? "btn-primary" : "btn-secondary"}`}
-          onClick={() => setActiveMainTab("plans")}
-          style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
-        >
-          <i className="fas fa-tags"></i> Pricing Plans
-        </button>
-        <button
-          className={`btn ${activeMainTab === "diagnostics" ? "btn-primary" : "btn-secondary"}`}
-          onClick={() => setActiveMainTab("diagnostics")}
-          style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
-        >
-          <i className="fas fa-stethoscope"></i> Diagnostics
-        </button>
-        <button
-          className={`btn ${activeMainTab === "connection-test" ? "btn-primary" : "btn-secondary"}`}
-          onClick={() => setActiveMainTab("connection-test")}
-          style={{ height: "44px", padding: "0 24px", fontSize: "14px" }}
-        >
-          <i className="fas fa-plug"></i> Connection Test
-        </button>
+      {/* Main Navigation Tabs */}
+      <div className="bg-surface rounded-xl border border-outline-variant shadow-sm p-1 mb-4 md:mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-1">
+          <button
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              activeMainTab === "tenants"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200"
+                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveMainTab("tenants")}
+          >
+            <i className="fas fa-users text-[11px]"></i>
+            <span>Tenants</span>
+          </button>
+          <button
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              activeMainTab === "plans"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200"
+                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveMainTab("plans")}
+          >
+            <i className="fas fa-tags text-[11px]"></i>
+            <span>Plans</span>
+          </button>
+          <button
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              activeMainTab === "diagnostics"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200"
+                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveMainTab("diagnostics")}
+          >
+            <i className="fas fa-stethoscope text-[11px]"></i>
+            <span>Diagnostics</span>
+          </button>
+          <button
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              activeMainTab === "connection-test"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200"
+                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveMainTab("connection-test")}
+          >
+            <i className="fas fa-plug text-[11px]"></i>
+            <span>Connect</span>
+          </button>
+          <button
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              activeMainTab === "settings"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200"
+                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveMainTab("settings")}
+          >
+            <i className="fas fa-cog text-[11px]"></i>
+            <span>Settings</span>
+          </button>
+        </div>
       </div>
 
       {/* Tenants Tab Content */}
@@ -1634,34 +1641,50 @@ export default function AllTenantsPage() {
               <input type="text" className="m3-search-input" placeholder="Search tenants..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
 
-            {/* M3 Stats Chips (horizontal scroll) */}
-            <div className="m3-stats-scroll">
-              <div className="m3-stat-chip">
-                <div className="m3-stat-chip-icon si-green"><i className="fas fa-store"></i></div>
-                <div className="m3-stat-chip-info">
-                  <div className="m3-stat-chip-label">Total</div>
-                  <div className="m3-stat-chip-val">{totalTenants}</div>
+            {/* Stats Cards Grid */}
+            <div className="grid grid-cols-2 gap-2.5 mb-3">
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-store text-green-700 text-sm"></i>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</div>
+                    <div className="text-lg font-bold text-gray-900 leading-tight mt-px">{totalTenants}</div>
+                  </div>
                 </div>
               </div>
-              <div className="m3-stat-chip">
-                <div className="m3-stat-chip-icon si-emerald"><i className="fas fa-check-circle"></i></div>
-                <div className="m3-stat-chip-info">
-                  <div className="m3-stat-chip-label">Active</div>
-                  <div className="m3-stat-chip-val">{activeTenants}</div>
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-check-circle text-emerald-700 text-sm"></i>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Active</div>
+                    <div className="text-lg font-bold text-gray-900 leading-tight mt-px">{activeTenants}</div>
+                  </div>
                 </div>
               </div>
-              <div className="m3-stat-chip">
-                <div className="m3-stat-chip-icon si-purple"><i className="fas fa-coins"></i></div>
-                <div className="m3-stat-chip-info">
-                  <div className="m3-stat-chip-label">Revenue</div>
-                  <div className="m3-stat-chip-val">KSh {totalRevenue.toLocaleString()}</div>
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-coins text-purple-700 text-sm"></i>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Revenue</div>
+                    <div className="text-lg font-bold text-gray-900 leading-tight mt-px">KSh {totalRevenue.toLocaleString()}</div>
+                  </div>
                 </div>
               </div>
-              <div className="m3-stat-chip">
-                <div className="m3-stat-chip-icon si-orange"><i className="fas fa-clock"></i></div>
-                <div className="m3-stat-chip-info">
-                  <div className="m3-stat-chip-label">Pending</div>
-                  <div className="m3-stat-chip-val">{pendingApprovals}</div>
+              <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-clock text-amber-700 text-sm"></i>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pending</div>
+                    <div className="text-lg font-bold text-gray-900 leading-tight mt-px">{pendingApprovals}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1702,30 +1725,107 @@ export default function AllTenantsPage() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="filter-tabs desktop-only">
-            <div className={`ftab ${activeTab === "" ? "active" : ""}`} onClick={() => setTab("", "status")}>
-              <span className="dot dot-green"></span> All Tenants <span className="count">{tenants.length}</span>
+          <div className="desktop-only mb-3">
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Quick Filters</span>
+              {activeTab && (
+                <button
+                  onClick={() => setTab("", "status")}
+                  className="text-[11px] text-emerald-600 hover:text-emerald-700 font-semibold ml-auto"
+                >
+                  Clear all
+                </button>
+              )}
             </div>
-            <div className={`ftab ${activeTab === "active" ? "active" : ""}`} onClick={() => setTab("active", "status")}>
-              <span className="dot dot-green"></span> Active <span className="count">{tenants.filter((t) => t.status === "active").length}</span>
-            </div>
-            <div className={`ftab ${activeTab === "pending" ? "active" : ""}`} onClick={() => setTab("pending", "status")}>
-              <span className="dot dot-orange"></span> Pending <span className="count">{tenants.filter((t) => t.status === "pending").length}</span>
-            </div>
-            <div className={`ftab ${activeTab === "suspended" ? "active" : ""}`} onClick={() => setTab("suspended", "status")}>
-              <span className="dot dot-red"></span> Suspended <span className="count">{tenants.filter((t) => t.status === "suspended").length}</span>
-            </div>
-            <div className={`ftab ${activeTab === "expired" ? "active" : ""}`} onClick={() => setTab("expired", "status")}>
-              <span className="dot dot-gray"></span> Expired Soon <span className="count">0</span>
-            </div>
-            <div className={`ftab ${activeTab === "free" ? "active" : ""}`} onClick={() => setTab("free", "plan")}>
-              Free Plan <span className="count">{tenants.filter((t) => t.plan === "free").length}</span>
-            </div>
-            <div className={`ftab ${activeTab === "pro" ? "active" : ""}`} onClick={() => setTab("pro", "plan")}>
-              Pro Plan <span className="count">{tenants.filter((t) => t.plan === "pro").length}</span>
-            </div>
-            <div className={`ftab ${activeTab === "enterprise" ? "active" : ""}`} onClick={() => setTab("enterprise", "plan")}>
-              Enterprise <span className="count">{tenants.filter((t) => t.plan === "enterprise").length}</span>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === ""
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("", "status")}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === "" ? "bg-emerald-500" : "bg-green-400"}`}></span>
+                All&nbsp;<span className="opacity-60">({tenants.length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "active"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("active", "status")}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === "active" ? "bg-emerald-500" : "bg-green-400"}`}></span>
+                Active&nbsp;<span className="opacity-60">({tenants.filter((t) => t.status === "active").length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "pending"
+                    ? "bg-amber-50 border-amber-200 text-amber-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("pending", "status")}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === "pending" ? "bg-amber-500" : "bg-amber-400"}`}></span>
+                Pending&nbsp;<span className="opacity-60">({tenants.filter((t) => t.status === "pending").length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "suspended"
+                    ? "bg-red-50 border-red-200 text-red-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("suspended", "status")}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === "suspended" ? "bg-red-500" : "bg-red-400"}`}></span>
+                Suspended&nbsp;<span className="opacity-60">({tenants.filter((t) => t.status === "suspended").length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "free"
+                    ? "bg-gray-100 border-gray-300 text-gray-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("free", "plan")}
+              >
+                <i className="fas fa-seedling text-[10px]"></i>
+                Free&nbsp;<span className="opacity-60">({tenants.filter((t) => t.plan === "free").length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "starter"
+                    ? "bg-amber-50 border-amber-200 text-amber-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("starter", "plan")}
+              >
+                <i className="fas fa-rocket text-[10px]"></i>
+                Starter&nbsp;<span className="opacity-60">({tenants.filter((t) => t.plan === "starter").length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "pro"
+                    ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("pro", "plan")}
+              >
+                <i className="fas fa-star text-[10px]"></i>
+                Pro&nbsp;<span className="opacity-60">({tenants.filter((t) => t.plan === "pro").length})</span>
+              </button>
+              <button
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 border ${
+                  activeTab === "enterprise"
+                    ? "bg-purple-50 border-purple-200 text-purple-700 shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+                onClick={() => setTab("enterprise", "plan")}
+              >
+                <i className="fas fa-crown text-[10px]"></i>
+                Enterprise&nbsp;<span className="opacity-60">({tenants.filter((t) => t.plan === "enterprise").length})</span>
+              </button>
             </div>
           </div>
 
@@ -1760,6 +1860,10 @@ export default function AllTenantsPage() {
 
           {/* Table */}
           <div className="table-card desktop-only">
+            <div className="table-header">
+              <h3><i className="fas fa-building text-emerald-600"></i> All Tenants <span className="text-sm font-normal text-gray-500">({tenants.length} total)</span></h3>
+              <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">{filteredTenants.length} filtered</span>
+            </div>
             <div className="table-wrap">
               <table>
                 <thead>
@@ -1786,7 +1890,7 @@ export default function AllTenantsPage() {
                     paginatedTenants.map((t) => (
                       <tr
                         key={t.id}
-                        className={selectedRows.includes(t.id) ? "selected" : ""}
+                        className={`${selectedRows.includes(t.id) ? "selected" : ""} transition-all duration-150`}
                         onClick={(e) => {
                           if ((e.target as HTMLElement).tagName !== "INPUT") {
                             toggleRow(t.id);
@@ -1798,17 +1902,31 @@ export default function AllTenantsPage() {
                           <div className="tenant-info">
                             <div className={`t-avatar ${t.grad}`}>{t.initials}</div>
                             <div>
-                              <div className="t-name">{t.name} {t.plan !== "free" ? <i className="fas fa-circle-check verified"></i> : null}</div>
+                              <div className="t-name">{t.name} {t.plan !== "free" ? <i className="fas fa-circle-check verified"></i> : null} {(t.role === "admin" || t.role === "superadmin") && <span className="badge" style={{ fontSize: "10px", padding: "1px 6px", background: "#ede9fe", color: "#5b21b6", border: "1px solid #c4b5fd", marginLeft: "4px" }}><i className="fas fa-shield-halved" style={{ marginRight: "2px" }}></i>Admin</span>}</div>
                               <div className="t-owner">{t.owner}</div>
                               <div className="t-phone"><i className="fab fa-whatsapp"></i>{t.phone}</div>
+                              {t.email && <div className="text-[11px] text-gray-400 mt-0.5"><i className="fas fa-envelope mr-1"></i>{t.email}</div>}
                             </div>
                           </div>
                         </td>
                     <td>{catBadges[t.cat || "both"]}</td>
-                    <td>{planBadges[t.plan || "free"]}</td>
-                    <td>{(t.rev || 0) > 0 ? <span className="revenue-val">KSh {(t.rev || 0).toLocaleString()}</span> : <span className="revenue-zero">KSh 0</span>}</td>
+                    <td>
+                      <div>{planBadges[t.plan || "free"]}</div>
+                      {t.plan === "free" && t.trialEndsAt && t.role !== "admin" && t.role !== "superadmin" && (
+                        <div style={{ marginTop: "4px" }}>
+                          <TrialBadge trialEndsAt={t.trialEndsAt} trialDays={t.trialDays} />
+                        </div>
+                      )}
+                    </td>
+                    <td>{(t.rev || 0) > 0 ? <span className="revenue-val">KSh {(t.rev || 0).toLocaleString()}</span> : <span className="revenue-zero">—</span>}</td>
                     <td>{statusPills[t.status || "pending"]}</td>
-                        <td><div className="last-active">{t.online ? <span className="online-dot"></span> : null}{t.last}</div></td>
+                        <td>
+                          <div className="last-active">
+                            {t.online ? <span className="online-dot"></span> : null}
+                            {t.last}
+                          </div>
+                          {t.country && <div className="text-[11px] text-gray-400 mt-0.5"><i className="fas fa-location-dot mr-1"></i>{t.country}</div>}
+                        </td>
                         <td onClick={(e) => e.stopPropagation()}>
                           <div className="actions-cell">
                             <button className="action-btn ab-view" onClick={() => openModal(t)} title="View"><i className="fas fa-eye"></i></button>
@@ -1870,7 +1988,7 @@ export default function AllTenantsPage() {
             </div>
           </div>
 
-          {/* MOBILE: Tenant Cards */}
+          {/* MOBILE: Premium Tenant Cards */}
           <div className="mobile-only">
             {filteredTenants.length === 0 ? (
               <div className="m3-empty-state">
@@ -1878,47 +1996,95 @@ export default function AllTenantsPage() {
                 <p>No tenants match your filters.</p>
               </div>
             ) : (
-              <div className="m3-tenant-list">
+              <div className="flex flex-col gap-3 pb-4">
                 {paginatedTenants.map((t) => (
                   <div
                     key={t.id}
-                    className={`m3-tenant-card ${selectedRows.includes(t.id) ? "selected" : ""}`}
+                    className={`relative overflow-hidden bg-white rounded-2xl border transition-all duration-200 shadow-sm ${
+                      selectedRows.includes(t.id)
+                        ? "border-emerald-400 ring-2 ring-emerald-100 shadow-md"
+                        : "border-gray-100 hover:border-gray-200 hover:shadow-md"
+                    }`}
                     onClick={() => toggleRow(t.id)}
                   >
-                    <div className="m3-tenant-card-top">
-                      <div className="m3-tenant-card-check" onClick={(e) => e.stopPropagation()}>
-                        <input type="checkbox" className="cb" checked={selectedRows.includes(t.id)} onChange={() => toggleRow(t.id)} />
-                      </div>
-                      <div className={`m3-tenant-card-avatar ${t.grad}`}>{t.initials}</div>
-                      <div className="m3-tenant-card-body">
-                        <div className="m3-tenant-card-name">
-                          {t.name}
-                          {t.plan !== "free" && <i className="fas fa-circle-check verified"></i>}
+                    {/* Gradient accent bar at top */}
+                    <div className={`h-1 w-full ${t.grad}`}></div>
+                    
+                    <div className="p-4">
+                      {/* Top row: Checkbox + Avatar + Info */}
+                      <div className="flex items-start gap-3">
+                        <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                          <input type="checkbox" className="cb" checked={selectedRows.includes(t.id)} onChange={() => toggleRow(t.id)} />
                         </div>
-                        <div className="m3-tenant-card-owner">{t.owner}</div>
-                        <div className="m3-tenant-card-phone"><i className="fab fa-whatsapp"></i>{t.phone}</div>
+                        <div className={`w-11 h-11 rounded-xl ${t.grad} flex items-center justify-center text-sm font-bold text-white shadow-sm flex-shrink-0`}>
+                          {t.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-gray-900 truncate">{t.name}</span>
+                            {t.plan !== "free" && <i className="fas fa-circle-check text-blue-500 text-[10px]"></i>}
+                            {(t.role === "admin" || t.role === "superadmin") && <span className="badge" style={{ fontSize: "9px", padding: "1px 5px", background: "#ede9fe", color: "#5b21b6", border: "1px solid #c4b5fd" }}><i className="fas fa-shield-halved" style={{ marginRight: "2px" }}></i>Admin</span>}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5 truncate">{t.owner}</div>
+                          <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                            <i className="fab fa-whatsapp text-emerald-500 text-[10px]"></i>
+                            <span className="truncate">{t.phone || "—"}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="m3-tenant-card-badges">
-                      {planBadges[t.plan || "free"]}
-                      {catBadges[t.cat || "both"]}
-                    </div>
-                    <div className="m3-tenant-card-footer">
-                      <div className="m3-tenant-card-status">
-                        {t.status === "active" && <span className="m3-pulse m3-pulse-green"></span>}
-                        {t.status === "pending" && <span className="m3-pulse m3-pulse-orange"></span>}
-                        {t.status === "suspended" && <span className="m3-pulse m3-pulse-red"></span>}
-                        <span style={{fontSize:"13px",fontWeight:600,color:"var(--text-2)",textTransform:"capitalize"}}>{t.status}</span>
-                        <span style={{fontSize:"12px",color:"var(--text-3)",marginLeft:"8px"}}>{t.last}</span>
+
+                      {/* Badges row */}
+                      <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                        {planBadges[t.plan || "free"]}
+                        {t.plan === "free" && t.trialEndsAt && t.role !== "admin" && t.role !== "superadmin" && (
+                          <TrialBadge trialEndsAt={t.trialEndsAt} trialDays={t.trialDays} />
+                        )}
+                        {catBadges[t.cat || "both"]}
                       </div>
-                      <div className="m3-tenant-card-rev">KSh {(t.rev || 0).toLocaleString()}</div>
-                    </div>
-                    <div className="m3-tenant-card-actions" onClick={(e) => e.stopPropagation()} style={{display:"flex",justifyContent:"flex-end",gap:"4px",paddingTop:"8px",borderTop:"1px solid var(--border-light)"}}>
-                      <button className="m3-tenant-card-action ab-view" onClick={() => openModal(t)} title="View"><i className="fas fa-eye"></i></button>
-                      <button className="m3-tenant-card-action ab-edit" onClick={() => openEditModal(t)} title="Edit"><i className="fas fa-pen"></i></button>
-                      <button className="m3-tenant-card-action ab-wa" onClick={() => showToast("success","WhatsApp","Opening WhatsApp chat...")} title="WhatsApp"><i className="fab fa-whatsapp"></i></button>
-                      <button className="m3-tenant-card-action ab-suspend" onClick={() => toggleTenantStatus(t)} title={t.status === "active" ? "Suspend" : "Activate"}><i className={t.status === "active" ? "fas fa-pause" : "fas fa-play"}></i></button>
-                      <button className="m3-tenant-card-action ab-delete" onClick={() => confirmDelete(t.name,t.id)} title="Delete"><i className="fas fa-trash"></i></button>
+
+                      {/* Dynamic info row: country + email */}
+                      {(t.country || t.email) && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 text-[11px] text-gray-400">
+                          {t.country && (
+                            <span className="flex items-center gap-1">
+                              <i className="fas fa-location-dot text-gray-300"></i>
+                              {t.country}
+                            </span>
+                          )}
+                          {t.email && (
+                            <span className="flex items-center gap-1 truncate max-w-[180px]">
+                              <i className="fas fa-envelope text-gray-300"></i>
+                              {t.email}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Footer: status + last active + revenue */}
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          {t.status === "active" && <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></span>}
+                          {t.status === "pending" && <span className="w-2 h-2 rounded-full bg-amber-400"></span>}
+                          {t.status === "suspended" && <span className="w-2 h-2 rounded-full bg-red-400"></span>}
+                          <span className="text-xs font-semibold text-gray-700 capitalize">{t.status}</span>
+                          <span className="text-[11px] text-gray-400">{t.last}</span>
+                        </div>
+                        <span className="text-xs font-bold text-gray-800">
+                          {(t.rev || 0) > 0
+                            ? <><span className="text-emerald-600">KSh</span> {(t.rev || 0).toLocaleString()}</>
+                            : <span className="text-gray-300">—</span>
+                          }
+                        </span>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex justify-end gap-1 mt-3 pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" onClick={() => openModal(t)} title="View"><i className="fas fa-eye"></i></button>
+                        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" onClick={() => openEditModal(t)} title="Edit"><i className="fas fa-pen"></i></button>
+                        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors" onClick={() => showToast("success","WhatsApp","Opening WhatsApp chat...")} title="WhatsApp"><i className="fab fa-whatsapp"></i></button>
+                        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors" onClick={() => toggleTenantStatus(t)} title={t.status === "active" ? "Suspend" : "Activate"}><i className={t.status === "active" ? "fas fa-pause" : "fas fa-play"}></i></button>
+                        <button className="w-8 h-8 rounded-lg flex items-center justify-center text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" onClick={() => confirmDelete(t.name,t.id)} title="Delete"><i className="fas fa-trash"></i></button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2040,11 +2206,146 @@ export default function AllTenantsPage() {
         </div>
       )}
 
+      {/* Settings Tab Content */}
+      {activeMainTab === "settings" && (
+        <div className="section-wrap" style={{ marginTop: 0 }}>
+          <div className="section-header open" style={{ cursor: "default" }}>
+            <div className="flex items-center gap-2.5 font-bold text-sm text-emerald-800"><i className="fas fa-cog text-emerald-600"></i> Platform Settings</div>
+          </div>
+          <div className="section-body open" style={{ maxHeight: "2000px", opacity: 1, padding: "24px" }}>
+            <div className="settings-grid">
+              <div className="settings-group">
+                <h4><i className="fas fa-toggle-on" style={{ color: "var(--primary-dark)", marginRight: "6px" }}></i> General Settings</h4>
+
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">Maintenance Mode</div>
+                    <div className="settings-desc">Disable all tenant stores and booking pages</div>
+                  </div>
+                  <div
+                    className={`toggle ${platformSettings.maintenanceMode ? "on" : ""}`}
+                    onClick={() => setPlatformSettings({ ...platformSettings, maintenanceMode: !platformSettings.maintenanceMode })}
+                  ></div>
+                </div>
+                {platformSettings.maintenanceMode && (
+                  <div className="maint-banner">
+                    <i className="fas fa-triangle-exclamation"></i>
+                    Maintenance mode is active. All tenant storefronts and booking pages will show a maintenance notice.
+                  </div>
+                )}
+
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">Allow Registration</div>
+                    <div className="settings-desc">Allow new users to sign up as tenants</div>
+                  </div>
+                  <div
+                    className={`toggle ${platformSettings.allowRegistration ? "on" : ""}`}
+                    onClick={() => setPlatformSettings({ ...platformSettings, allowRegistration: !platformSettings.allowRegistration })}
+                  ></div>
+                </div>
+
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">Default Plan for New Tenants</div>
+                    <div className="settings-desc">The plan assigned to newly registered tenants</div>
+                  </div>
+                  <select
+                    className="settings-input"
+                    style={{ width: "140px" }}
+                    value={platformSettings.defaultPlan}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, defaultPlan: e.target.value as any })}
+                  >
+                    <option value="free">Free</option>
+                    <option value="starter">Starter</option>
+                    <option value="pro">Pro</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </div>
+
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">New Tenant Status</div>
+                    <div className="settings-desc">Default status for newly registered tenants</div>
+                  </div>
+                  <select
+                    className="settings-input"
+                    style={{ width: "140px" }}
+                    value={platformSettings.newTenantStatus}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, newTenantStatus: e.target.value as "active" | "pending" | "suspended" })}
+                  >
+                    <option value="active">Auto-Active</option>
+                    <option value="pending">Pending Approval</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="settings-group">
+                <h4><i className="fas fa-chart-simple" style={{ color: "var(--primary-dark)", marginRight: "6px" }}></i> Platform Economics</h4>
+
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">Platform Fee (%)</div>
+                    <div className="settings-desc">Commission charged on each transaction</div>
+                  </div>
+                  <div className="range-wrap">
+                    <span className="range-val">{platformSettings.platformFeePercent}%</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={20}
+                      value={platformSettings.platformFeePercent}
+                      onChange={(e) => setPlatformSettings({ ...platformSettings, platformFeePercent: Number(e.target.value) })}
+                      style={{ width: "120px" }}
+                    />
+                  </div>
+                </div>
+
+                <div className="settings-row">
+                  <div>
+                    <div className="settings-label">Default Currency</div>
+                    <div className="settings-desc">Currency for platform-wide pricing</div>
+                  </div>
+                  <select
+                    className="settings-input"
+                    style={{ width: "120px" }}
+                    value={platformSettings.defaultCurrency}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, defaultCurrency: e.target.value })}
+                  >
+                    <option value="KSh">KSh (KES)</option>
+                    <option value="USD">$ (USD)</option>
+                    <option value="EUR">€ (EUR)</option>
+                    <option value="GBP">£ (GBP)</option>
+                    <option value="NGN">₦ (NGN)</option>
+                    <option value="TZS">TSh (TZS)</option>
+                    <option value="UGX">USh (UGX)</option>
+                    <option value="RWF">FRw (RWF)</option>
+                    <option value="ZAR">R (ZAR)</option>
+                  </select>
+                </div>
+
+                <div className="divider"></div>
+
+                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "8px" }}>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={savePlatformSettings}
+                  >
+                    <i className="fas fa-save"></i> Save Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Plans Tab Content */}
       {activeMainTab === "plans" && (
         <div className="section-wrap" style={{ marginTop: 0 }}>
           <div className="section-header open">
-            <div className="section-title"><i className="fas fa-tags"></i> Pricing Plan Management</div>
+            <div className="flex items-center gap-2.5 font-bold text-sm text-emerald-800"><i className="fas fa-tags text-emerald-600"></i> Pricing Plan Management</div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               {pricingPlans.length === 0 ? (
                 <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); initializeDefaultPlans(); }}><i className="fas fa-magic"></i> Initialize Default Plans</button>
@@ -2105,148 +2406,11 @@ export default function AllTenantsPage() {
         </div>
       )}
 
-      {/* Platform Settings Section */}
-      <div className="section-wrap">
-        <div
-          className={`section-header ${platformSettingsOpen ? 'open' : ''}`}
-          onClick={() => setPlatformSettingsOpen(!platformSettingsOpen)}
-        >
-          <div className="section-title"><i className="fas fa-cog"></i> Platform Settings</div>
-          <i className={`fas fa-chevron-down chevron-icon ${platformSettingsOpen ? 'open' : ''}`}></i>
-        </div>
-        <div className={`section-body ${platformSettingsOpen ? 'open' : ''}`}>
-          <div className="settings-grid">
-            <div className="settings-group">
-              <h4><i className="fas fa-toggle-on" style={{ color: 'var(--primary-dark)', marginRight: '6px' }}></i> General Settings</h4>
-
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">Maintenance Mode</div>
-                  <div className="settings-desc">Disable all tenant stores and booking pages</div>
-                </div>
-                <div
-                  className={`toggle ${platformSettings.maintenanceMode ? 'on' : ''}`}
-                  onClick={() => setPlatformSettings({ ...platformSettings, maintenanceMode: !platformSettings.maintenanceMode })}
-                ></div>
-              </div>
-              {platformSettings.maintenanceMode && (
-                <div className="maint-banner">
-                  <i className="fas fa-triangle-exclamation"></i>
-                  Maintenance mode is active. All tenant storefronts and booking pages will show a maintenance notice.
-                </div>
-              )}
-
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">Allow Registration</div>
-                  <div className="settings-desc">Allow new users to sign up as tenants</div>
-                </div>
-                <div
-                  className={`toggle ${platformSettings.allowRegistration ? 'on' : ''}`}
-                  onClick={() => setPlatformSettings({ ...platformSettings, allowRegistration: !platformSettings.allowRegistration })}
-                ></div>
-              </div>
-
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">Default Plan for New Tenants</div>
-                  <div className="settings-desc">The plan assigned to newly registered tenants</div>
-                </div>
-                <select
-                  className="settings-input"
-                  style={{ width: '140px' }}
-                  value={platformSettings.defaultPlan}
-                  onChange={(e) => setPlatformSettings({ ...platformSettings, defaultPlan: e.target.value as any })}
-                >
-                  <option value="free">Free</option>
-                  <option value="starter">Starter</option>
-                  <option value="pro">Pro</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-              </div>
-
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">New Tenant Status</div>
-                  <div className="settings-desc">Default status for newly registered tenants</div>
-                </div>
-                <select
-                  className="settings-input"
-                  style={{ width: '140px' }}
-                  value={platformSettings.newTenantStatus}
-                  onChange={(e) => setPlatformSettings({ ...platformSettings, newTenantStatus: e.target.value as 'active' | 'pending' | 'suspended' })}
-                >
-                  <option value="active">Auto-Active</option>
-                  <option value="pending">Pending Approval</option>
-                  <option value="suspended">Suspended</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="settings-group">
-              <h4><i className="fas fa-chart-simple" style={{ color: 'var(--primary-dark)', marginRight: '6px' }}></i> Platform Economics</h4>
-
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">Platform Fee (%)</div>
-                  <div className="settings-desc">Commission charged on each transaction</div>
-                </div>
-                <div className="range-wrap">
-                  <span className="range-val">{platformSettings.platformFeePercent}%</span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={20}
-                    value={platformSettings.platformFeePercent}
-                    onChange={(e) => setPlatformSettings({ ...platformSettings, platformFeePercent: Number(e.target.value) })}
-                    style={{ width: '120px' }}
-                  />
-                </div>
-              </div>
-
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">Default Currency</div>
-                  <div className="settings-desc">Currency for platform-wide pricing</div>
-                </div>
-                <select
-                  className="settings-input"
-                  style={{ width: '120px' }}
-                  value={platformSettings.defaultCurrency}
-                  onChange={(e) => setPlatformSettings({ ...platformSettings, defaultCurrency: e.target.value })}
-                >
-                  <option value="KSh">KSh (KES)</option>
-                  <option value="USD">$ (USD)</option>
-                  <option value="EUR">€ (EUR)</option>
-                  <option value="GBP">£ (GBP)</option>
-                  <option value="NGN">₦ (NGN)</option>
-                  <option value="TZS">TSh (TZS)</option>
-                  <option value="UGX">USh (UGX)</option>
-                  <option value="RWF">FRw (RWF)</option>
-                  <option value="ZAR">R (ZAR)</option>
-                </select>
-              </div>
-
-              <div className="divider"></div>
-
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={savePlatformSettings}
-                >
-                  <i className="fas fa-save"></i> Save Settings
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Bulk Plan Change Modal */}
       {bulkPlanModalOpen && (
         <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) { setBulkPlanModalOpen(false); } }}>
           <div className="modal" style={{ maxWidth: "460px" }}>
-            <div className="modal-header">
+            <div className="modal-header-premium">
               <h3><i className="fas fa-tags"></i> Change Plan for {selectedRows.length} Tenants</h3>
               <button className="modal-close" onClick={() => setBulkPlanModalOpen(false)}><i className="fas fa-times"></i></button>
             </div>
@@ -2335,7 +2499,7 @@ export default function AllTenantsPage() {
       {createPlanModalOpen && (
         <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) closeCreatePlanModal(); }}>
           <div className="modal" style={{ maxWidth: "600px", maxHeight: "90vh", overflow: "auto" }}>
-            <div className="modal-header">
+            <div className="modal-header-premium">
               <h3><i className="fas fa-plus"></i> Create New Plan</h3>
               <button className="modal-close" onClick={closeCreatePlanModal}><i className="fas fa-times"></i></button>
             </div>
@@ -2458,7 +2622,7 @@ export default function AllTenantsPage() {
       {planEditModalOpen && editingPlan && (
         <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) closePlanEditModal(); }}>
           <div className="modal" style={{ maxWidth: "500px" }}>
-            <div className="modal-header">
+            <div className="modal-header-premium">
               <h3><i className="fas fa-pen"></i> Edit Pricing Plan</h3>
               <button className="modal-close" onClick={closePlanEditModal}><i className="fas fa-times"></i></button>
             </div>
@@ -2537,7 +2701,7 @@ export default function AllTenantsPage() {
       {editModalOpen && editingTenant && (
         <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) closeEditModal(); }}>
           <div className="modal" style={{ maxWidth: "600px" }}>
-            <div className="modal-header">
+            <div className="modal-header-premium">
               <h3><i className="fas fa-pen"></i> Edit Tenant</h3>
               <button className="modal-close" onClick={closeEditModal}><i className="fas fa-times"></i></button>
             </div>
@@ -2639,6 +2803,34 @@ export default function AllTenantsPage() {
                     </select>
                   </div>
                 </div>
+                {editForm.plan === "free" && (
+                  <div style={{ marginTop: "16px", padding: "12px", background: "var(--bg)", borderRadius: "10px", border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                      <i className="fas fa-seedling" style={{ color: "var(--primary-dark)", fontSize: "14px" }}></i>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>Free Trial Setup</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-3)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Trial Duration (Days)</label>
+                        <input
+                          type="number"
+                          className="settings-input"
+                          style={{ width: "100%", height: "40px" }}
+                          min={1}
+                          max={365}
+                          value={editForm.trialDays}
+                          onChange={(e) => setEditForm({ ...editForm, trialDays: Math.max(1, Math.min(365, parseInt(e.target.value) || 14)) })}
+                        />
+                      </div>
+                      <div style={{ flex: 1, paddingTop: "22px" }}>
+                        <div style={{ fontSize: "12px", color: "var(--text-3)" }}>
+                          <i className="fas fa-info-circle" style={{ marginRight: "4px" }}></i>
+                          Account will auto-suspend after trial period
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
                   <button className="btn btn-secondary" onClick={closeEditModal}>Cancel</button>
                   <button className="btn btn-primary" onClick={saveTenantEdit}><i className="fas fa-save"></i> Save Changes</button>
@@ -2653,7 +2845,7 @@ export default function AllTenantsPage() {
       {modalOpen && selectedTenant && (
         <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
           <div className="modal">
-            <div className="modal-header">
+            <div className="modal-header-premium">
               <h3><i className="fas fa-store"></i> Tenant Details</h3>
               <button className="modal-close" onClick={closeModal}><i className="fas fa-times"></i></button>
             </div>

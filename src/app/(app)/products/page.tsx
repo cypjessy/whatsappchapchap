@@ -34,6 +34,7 @@ import {
   ProductBulkActionsToolbar,
   DeleteConfirmModal,
   ProductsHeader,
+  ProductCardMobile,
 } from "./components";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -274,6 +275,7 @@ export default function ProductsPage() {
   // UI state
   const [view, setView] = useState<"grid" | "list">("grid");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -408,7 +410,7 @@ export default function ProductsPage() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
-        const matchesCategory = activeCategory === "all" || p.category === activeCategory;
+        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category || '');
         const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase());
         const status = p.status || "active";
         const matchesStatus = statusFilter === "all" || status === statusFilter;
@@ -648,6 +650,7 @@ export default function ProductsPage() {
     setPriceRangeMax("");
     setDateRangeStart("");
     setDateRangeEnd("");
+    setSelectedCategories([]);
     setActiveCategory("all");
   }, []);
 
@@ -655,7 +658,10 @@ export default function ProductsPage() {
   const activeFilterPills = useMemo(() => {
     const pills: { label: string; onRemove: () => void; color: string }[] = [];
     if (searchTerm) pills.push({ label: `Search: "${searchTerm}"`, onRemove: () => setSearchTerm(""), color: "purple" });
-    if (activeCategory !== "all") pills.push({ label: `Category: ${activeCategory}`, onRemove: () => setActiveCategory("all"), color: "blue" });
+    selectedCategories.forEach((catId) => {
+      const cat = productCategories.find((c) => c.id === catId);
+      pills.push({ label: `Category: ${cat?.name || catId}`, onRemove: () => setSelectedCategories((prev) => prev.filter((c) => c !== catId)), color: "blue" });
+    });
     if (stockFilter !== "all") pills.push({ label: `Stock: ${stockFilter}`, onRemove: () => setStockFilter("all"), color: "amber" });
     if (statusFilter !== "all") pills.push({ label: `Status: ${statusFilter}`, onRemove: () => setStatusFilter("all"), color: "purple" });
     if (priceRangeMin !== "") pills.push({ label: `Min: ${priceRangeMin}`, onRemove: () => setPriceRangeMin(""), color: "green" });
@@ -663,7 +669,25 @@ export default function ProductsPage() {
     if (dateRangeStart) pills.push({ label: `From: ${dateRangeStart}`, onRemove: () => setDateRangeStart(""), color: "blue" });
     if (dateRangeEnd) pills.push({ label: `To: ${dateRangeEnd}`, onRemove: () => setDateRangeEnd(""), color: "blue" });
     return pills;
-  }, [searchTerm, activeCategory, stockFilter, statusFilter, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
+  }, [searchTerm, selectedCategories, productCategories, stockFilter, statusFilter, priceRangeMin, priceRangeMax, dateRangeStart, dateRangeEnd]);
+
+  // Category toggle handler
+  const toggleCategory = useCallback((catId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(catId) ? prev.filter((c) => c !== catId) : [...prev, catId]
+    );
+    setActiveCategory("all");
+  }, []);
+
+  // Sync activeCategory -> selectedCategories for tab clicks
+  const handleTabClick = useCallback((catId: string) => {
+    setActiveCategory(catId);
+    if (catId === "all") {
+      setSelectedCategories([]);
+    } else {
+      setSelectedCategories([catId]);
+    }
+  }, []);
 
   const activeFiltersCount = activeFilterPills.length;
 
@@ -711,9 +735,9 @@ export default function ProductsPage() {
   }, [productModalOpen]);
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-0 md:py-4 pb-2 bg-surface-dim min-h-screen">
-      {/* Products Header - Desktop */}
-      <div className="hidden md:block">
+    <div className="overflow-x-hidden bg-surface-dim w-full">
+      {/* Desktop Header */}
+      <div className="hidden md:block mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
         <ProductsHeader
           productsCount={products.length}
           totalInventoryValue={stats.totalInventoryValue}
@@ -727,18 +751,8 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* Mobile Add Button */}
-      <div className="md:hidden px-3 mt-3 mb-3">
-        <button
-          onClick={() => setAddProductModalOpen(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Product</span>
-        </button>
-      </div>
-
-      <main className="px-0 md:pt-4 space-y-3 md:space-y-6">
+      {/* Stats in px-3 wrapper matching orders page pattern */}
+      <div className="px-3">
         <ProductStats
           totalProducts={products.length}
           inventoryValue={stats.totalInventoryValue}
@@ -751,6 +765,9 @@ export default function ProductsPage() {
             if (type === "all") setStockFilter("all");
           }}
         />
+      </div>
+
+      <div className="px-3 md:px-6 space-y-3 md:space-y-6">
 
         <ProductFilters
           searchTerm={searchTerm}
@@ -774,13 +791,39 @@ export default function ProductsPage() {
           isLoading={loading}
           totalResults={filteredProducts.length}
           onClearAll={clearAllFilters}
+          productCategories={productCategories}
+          selectedCategories={selectedCategories}
+          onToggleCategory={toggleCategory}
         />
 
-        <ProductCategoryTabs
-          categories={categories}
-          activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
-        />
+        {/* Mobile Add Button — after stats, matching orders page pattern */}
+        <div className="md:hidden">
+          <button
+            onClick={() => setAddProductModalOpen(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Product</span>
+          </button>
+        </div>
+
+        {/* Mobile Tabs — after add button, matching orders page pattern */}
+        <div className="md:hidden">
+          <ProductCategoryTabs
+            categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={handleTabClick}
+          />
+        </div>
+
+        {/* Desktop Tabs */}
+        <div className="hidden md:block">
+          <ProductCategoryTabs
+            categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={handleTabClick}
+          />
+        </div>
 
         {/* Active filter pills */}
         {activeFiltersCount > 0 && !bulkMode && (
@@ -814,6 +857,73 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* Category checkboxes — multi-select category filter */}
+        <div className="bg-surface rounded-xl md:rounded-2xl p-3 md:p-4 border border-outline-variant shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold text-on-surface uppercase tracking-wider">Categories</span>
+            {selectedCategories.length > 0 && (
+              <button
+                onClick={() => { setSelectedCategories([]); setActiveCategory("all"); }}
+                className="ml-auto text-[10px] font-semibold text-red-500 hover:text-red-600 transition-colors"
+              >
+                Clear ({selectedCategories.length})
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {productCategories.map((cat) => {
+              const isChecked = selectedCategories.includes(cat.id);
+              const count = products.filter((p) => p.category === cat.id).length;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => toggleCategory(cat.id)}
+                  className={`
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold
+                    transition-all duration-200 active:scale-95 select-none
+                    ${isChecked
+                      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md"
+                      : "bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:border-[#25D366]/40 hover:text-[#25D366]"
+                    }
+                  `}
+                >
+                  {/* Checkbox indicator */}
+                  <span
+                    className={`
+                      w-3.5 h-3.5 rounded border flex items-center justify-center transition-all
+                      ${isChecked
+                        ? "bg-white/20 border-white/40"
+                        : "bg-transparent border-outline"
+                      }
+                    `}
+                  >
+                    {isChecked && (
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                  <span
+                    className={`
+                      inline-flex items-center justify-center min-w-[18px] h-[15px] px-1 rounded text-[9px] font-bold
+                      ${isChecked ? "bg-white/20" : "bg-surface-variant text-on-surface-variant"}
+                    `}
+                  >
+                    {count > 999 ? "999+" : count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {loading ? (
           <LoadingState />
         ) : filteredProducts.length === 0 ? (
@@ -836,44 +946,74 @@ export default function ProductsPage() {
               />
             )}
 
-            {view === "grid" ? (
-              <ProductGridView
-                products={displayedProducts}
-                bulkMode={bulkMode}
-                bulkSelected={bulkSelected}
-                toggleBulkSelect={toggleBulkSelect}
-                selectAllProducts={selectAllProducts}
-                openProductModal={openProductModal}
-                handleToggleStatus={handleToggleStatus}
-                handleDuplicateProduct={handleDuplicateProduct}
-                handleShareProduct={handleShareProduct}
-                shareProductWhatsApp={shareProductWhatsApp}
-                printProductCatalog={printProductCatalog}
-                handleDeleteProduct={handleDeleteProduct}
-                getCategoryEmoji={getCategoryEmoji}
-                getCategoryColor={getCategoryColor}
-                getStockStyle={getStockStyle}
-                getBadgeStyle={getBadgeStyle}
-              />
-            ) : (
-              <ProductListView
-                products={displayedProducts}
-                bulkMode={bulkMode}
-                bulkSelected={bulkSelected}
-                toggleBulkSelect={toggleBulkSelect}
-                selectAllProducts={selectAllProducts}
-                openProductModal={openProductModal}
-                handleToggleStatus={handleToggleStatus}
-                handleDuplicateProduct={handleDuplicateProduct}
-                handleShareProduct={handleShareProduct}
-                shareProductWhatsApp={shareProductWhatsApp}
-                printProductCatalog={printProductCatalog}
-                handleDeleteProduct={handleDeleteProduct}
-                getCategoryEmoji={getCategoryEmoji}
-                getCategoryColor={getCategoryColor}
-                getStockStyle={getStockStyle}
-              />
-            )}
+            {/* Mobile: OrderCard-style cards — matching orders page card layout */}
+            <div className="md:hidden">
+              <div className="px-0 py-2 space-y-3">
+                {displayedProducts.map((product, index) => (
+                  <ProductCardMobile
+                    key={product.id}
+                    product={product}
+                    index={index}
+                    bulkMode={bulkMode}
+                    isSelected={bulkSelected.includes(product.id)}
+                    toggleBulkSelect={toggleBulkSelect}
+                    onOpenModal={openProductModal}
+                    handleToggleStatus={handleToggleStatus}
+                    handleDuplicateProduct={handleDuplicateProduct}
+                    handleShareProduct={handleShareProduct}
+                    shareProductWhatsApp={shareProductWhatsApp}
+                    printProductCatalog={printProductCatalog}
+                    handleDeleteProduct={handleDeleteProduct}
+                    getCategoryEmoji={getCategoryEmoji}
+                    getCategoryColor={getCategoryColor}
+                    getStockStyle={getStockStyle}
+                    getBadgeStyle={getBadgeStyle}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop: grid or list view */}
+            <div className="hidden md:block">
+              {view === "grid" ? (
+                <ProductGridView
+                  products={displayedProducts}
+                  bulkMode={bulkMode}
+                  bulkSelected={bulkSelected}
+                  toggleBulkSelect={toggleBulkSelect}
+                  selectAllProducts={selectAllProducts}
+                  openProductModal={openProductModal}
+                  handleToggleStatus={handleToggleStatus}
+                  handleDuplicateProduct={handleDuplicateProduct}
+                  handleShareProduct={handleShareProduct}
+                  shareProductWhatsApp={shareProductWhatsApp}
+                  printProductCatalog={printProductCatalog}
+                  handleDeleteProduct={handleDeleteProduct}
+                  getCategoryEmoji={getCategoryEmoji}
+                  getCategoryColor={getCategoryColor}
+                  getStockStyle={getStockStyle}
+                  getBadgeStyle={getBadgeStyle}
+                />
+              ) : (
+                <ProductListView
+                  products={displayedProducts}
+                  bulkMode={bulkMode}
+                  bulkSelected={bulkSelected}
+                  toggleBulkSelect={toggleBulkSelect}
+                  selectAllProducts={selectAllProducts}
+                  openProductModal={openProductModal}
+                  handleToggleStatus={handleToggleStatus}
+                  handleDuplicateProduct={handleDuplicateProduct}
+                  handleShareProduct={handleShareProduct}
+                  shareProductWhatsApp={shareProductWhatsApp}
+                  printProductCatalog={printProductCatalog}
+                  handleDeleteProduct={handleDeleteProduct}
+                  getCategoryEmoji={getCategoryEmoji}
+                  getCategoryColor={getCategoryColor}
+                  getStockStyle={getStockStyle}
+                />
+              )}
+            </div>
 
             {/* Infinite Scroll Sentinel */}
             {!loading && hasMore && (
@@ -890,7 +1030,7 @@ export default function ProductsPage() {
             )}
           </>
         )}
-      </main>
+      </div>
 
       {/* Modals */}
       <div className="md:hidden">

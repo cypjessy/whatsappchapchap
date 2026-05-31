@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useHaptics, useClipboard, useShare, useToast } from "@/hooks/useNativeAndroid";
 import { useModalBackHandler } from "@/hooks/useModalBackHandler";
 import { useStatusBar } from "@/hooks/useStatusBar";
-import { customerService, Customer, orderService, Order } from "@/lib/db";
+import { customerService, Customer, Client } from "@/lib/db";
 import {
   CustomersHeader,
   CustomerStats,
@@ -16,7 +16,6 @@ import {
   EmptyState,
   CustomerModal,
   AddCustomerModal,
-  BroadcastModal,
   DeleteConfirmModal,
 } from "./components";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
@@ -56,46 +55,11 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("orders");
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-  const [newCustomer, setNewCustomer] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    countryCode: "+254",
-    customerType: "individual",
-    companyName: "",
-    businessReg: "",
-    taxId: "",
-    industry: "",
-    address: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "KE",
-    addressType: "home",
-    segment: "",
-    tags: [] as string[],
-    preferences: [] as string[],
-    orderUpdates: true,
-    promotions: true,
-    abandonedCart: false,
-    notes: "",
-  });
-  const [newCustomerTag, setNewCustomerTag] = useState("");
   const [savingCustomer, setSavingCustomer] = useState(false);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState("recent");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [broadcastMessage, setBroadcastMessage] = useState("");
-  const [sendingBroadcast, setSendingBroadcast] = useState(false);
-  const [customerNotes, setCustomerNotes] = useState("");
-  const [customerTags, setCustomerTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
   const [bulkSelected, setBulkSelected] = useState<string[]>([]);
   const [bulkMode, setBulkMode] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -106,8 +70,8 @@ export default function CustomersPage() {
 
   // Register modals for Android back button handling
   useModalBackHandler(showModal, () => setShowModal(false));
-  useModalBackHandler(showAddModal, () => { setShowAddModal(false); setFormErrors({}); });
-  useModalBackHandler(showBroadcastModal, () => setShowBroadcastModal(false));
+  useModalBackHandler(showAddModal, () => { setShowAddModal(false); });
+
   useModalBackHandler(showDeleteConfirm, () => setShowDeleteConfirm(false));
 
   // Load customers with pagination
@@ -149,149 +113,74 @@ export default function CustomersPage() {
     }
   }, [user, loadCustomers]);
 
-  const handleNewCustomerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    
-    if (name === "togglePreference") {
-      const pref = value;
-      setNewCustomer(prev => ({
-        ...prev,
-        preferences: prev.preferences.includes(pref)
-          ? prev.preferences.filter(p => p !== pref)
-          : [...prev.preferences, pref]
-      }));
-    } else if (type === "checkbox") {
-      setNewCustomer(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setNewCustomer(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const validateNewCustomer = () => {
-    const errors: Record<string, string> = {};
-    if (!newCustomer.firstName.trim()) errors.firstName = "First name is required";
-    if (!newCustomer.lastName.trim()) errors.lastName = "Last name is required";
-    if (!newCustomer.phone.trim()) {
-      errors.phone = "WhatsApp number is required";
-    } else {
-      const cleanPhone = newCustomer.phone.replace(/[^0-9]/g, "");
-      if (cleanPhone.length < 6) errors.phone = "Enter a valid number";
-    }
-    if (newCustomer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newCustomer.email)) {
-      errors.email = "Enter a valid email address";
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const saveNewCustomer = async () => {
+  const saveNewCustomer = async (data: { firstName: string; lastName: string; email: string; phone: string; status: string; location: string; preferredStyle: string; notes: string; tags: string[] }) => {
     if (!user) return;
-    if (!validateNewCustomer()) return;
+    if (!data.firstName.trim() || !data.lastName.trim() || !data.phone.trim()) return;
     setSavingCustomer(true);
     try {
-      const fullAddress = newCustomer.address 
-        ? `${newCustomer.address}${newCustomer.city ? ', ' + newCustomer.city : ''}${newCustomer.state ? ', ' + newCustomer.state : ''}`
-        : "";
-      const fullName = `${newCustomer.firstName.trim()} ${newCustomer.lastName.trim()}`.trim();
-      // Normalize phone to handle Kenyan formats: 07xx, 01xx, +254, 254
-      const rawNormalized = normalizePhone(newCustomer.phone);
-      const countryCodeDigits = newCustomer.countryCode.replace(/[^0-9]/g, "");
-      // Only prepend country code if normalizePhone didn't already include it
-      const fullPhone = rawNormalized.startsWith(countryCodeDigits)
-        ? rawNormalized
-        : countryCodeDigits + rawNormalized;
-      
+      const fullName = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
+      const rawNormalized = normalizePhone(data.phone);
+      const fullPhone = rawNormalized.startsWith("254") ? rawNormalized : "254" + rawNormalized.replace(/^0+/, "");
+
       await customerService.createClient(user, {
         name: fullName,
         phone: fullPhone,
-        email: newCustomer.email.trim() || undefined,
-        location: fullAddress || undefined,
-        notes: newCustomer.notes.trim() || undefined,
-        initials: `${newCustomer.firstName.charAt(0)}${newCustomer.lastName.charAt(0)}`.toUpperCase(),
-        status: 'new',
+        email: data.email.trim() || undefined,
+        location: data.location.trim() || undefined,
+        notes: data.notes.trim() || undefined,
+        preferredStyle: data.preferredStyle.trim() || undefined,
+        initials: `${data.firstName.charAt(0)}${data.lastName.charAt(0)}`.toUpperCase(),
+        status: data.status as Client["status"],
         verified: false,
         visits: 0,
         totalSpent: 0,
         rating: 0,
         services: [],
+        tags: data.tags.length > 0 ? data.tags : undefined,
       });
 
       // Send WhatsApp welcome message to new customer
       try {
         const normalizedPhone = normalizePhone(fullPhone);
         if (isValidWhatsAppPhone(normalizedPhone)) {
-          const welcomeMessage = `━━━━━━━━━━━━━━━━━━━━
-👋 *WELCOME!* 🇰🇪
-━━━━━━━━━━━━━━━━━━━━
+          const welcomeMessage = [
+            "━━━━━━━━━━━━━━━━━━━━",
+            "👋 *WELCOME!* 🇰🇪",
+            "━━━━━━━━━━━━━━━━━━━━",
+            "",
+            `Hello *${fullName}*!`,
+            "",
+            "Thank you for registering with us! 🎉",
+            "You're now part of our community.",
+            "",
+            " *WHAT'S NEXT?*",
+            "📦 Browse our products and services",
+            "🛒 Place orders directly via WhatsApp",
+            "💬 Get real-time order updates",
+            "📞 Reach us anytime for support",
+            "",
+            "━━━━━━━━━━━━━━━━━━━━",
+            "✨ *We're excited to serve you!* ✨",
+            "━━━━━━━━━━━━━━━━━━━━",
+          ].join("\n");
 
-Hello *${fullName}*! \
-
-Thank you for registering with us! 🎉
-You're now part of our community.
-
- *WHAT'S NEXT?*
-📦 Browse our products and services
-🛒 Place orders directly via WhatsApp
-💬 Get real-time order updates
-📞 Reach us anytime for support
-
-━━━━━━━━━━━━━━━━━━━━
-✨ *We're excited to serve you!* ✨
-━━━━━━━━━━━━━━━━━━━━`;
-          
           await sendEvolutionWhatsAppMessage(normalizedPhone, welcomeMessage, user.uid);
           console.log("✅ Welcome WhatsApp sent to:", normalizedPhone);
         }
       } catch (whatsappError) {
         console.error("Failed to send welcome WhatsApp:", whatsappError);
-        // Don't block the flow - customer was still saved
       }
 
       await notificationSuccess();
       await showToastNative({ text: 'Customer added successfully', duration: 'short' });
       loadCustomers();
       setShowAddModal(false);
-      setNewCustomer({
-        firstName: "", lastName: "", email: "", phone: "", countryCode: "+254",
-        customerType: "individual", companyName: "", businessReg: "", taxId: "", industry: "",
-        address: "", city: "", state: "", postalCode: "", country: "KE", addressType: "home",
-        segment: "", tags: [], preferences: [], orderUpdates: true, promotions: true, abandonedCart: false, notes: ""
-      });
-      setNewCustomerTag("");
-      setFormErrors({});
     } catch (error) {
       console.error("Error creating customer:", error);
       await notificationError();
       await showToastNative({ text: 'Failed to add customer', position: 'top' });
     } finally {
       setSavingCustomer(false);
-    }
-  };
-
-  const addCustomerTag = () => {
-    if (!newCustomerTag.trim()) return;
-    if (!newCustomer.tags.includes(newCustomerTag.trim())) {
-      setNewCustomer(prev => ({ ...prev, tags: [...prev.tags, newCustomerTag.trim()] }));
-    }
-    setNewCustomerTag("");
-  };
-
-  const removeCustomerTag = (tag: string) => {
-    setNewCustomer(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    if (name === "name") {
-      const parts = value.split(" ");
-      setNewCustomer((prev) => ({ 
-        ...prev, 
-        firstName: parts[0] || "",
-        lastName: parts.slice(1).join(" ") || ""
-      }));
-    } else {
-      setNewCustomer((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -304,21 +193,6 @@ You're now part of our community.
       setShowDeleteConfirm(false);
     } catch (error) {
       console.error("Error deleting customer:", error);
-    }
-  };
-
-  const loadCustomerOrders = async (customerId: string) => {
-    if (!user) return;
-    setLoadingOrders(true);
-    try {
-      const result = await orderService.getOrdersPaginated(user, 100);
-      const customerOrders = result.orders.filter(o => o.customerId === customerId);
-      setCustomerOrders(customerOrders);
-    } catch (error) {
-      console.error("Error loading customer orders:", error);
-      setCustomerOrders([]);
-    } finally {
-      setLoadingOrders(false);
     }
   };
 
@@ -351,79 +225,6 @@ You're now part of our community.
     link.href = URL.createObjectURL(blob);
     link.download = `customers_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
-  };
-
-  const sendBroadcast = async () => {
-    if (!broadcastMessage.trim()) {
-      await showToastNative({ text: 'Please enter a message', position: 'top' });
-      return;
-    }
-    setSendingBroadcast(true);
-    let sentCount = 0;
-    try {
-      for (const customer of customers) {
-        if (customer.phone) {
-          try {
-            const normalizedPhone = normalizePhone(customer.phone);
-            if (isValidWhatsAppPhone(normalizedPhone) && user) {
-              await sendEvolutionWhatsAppMessage(normalizedPhone, broadcastMessage, user.uid);
-              sentCount++;
-            }
-          } catch {
-            console.error("Failed to send broadcast to:", customer.phone);
-          }
-          // Brief delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      }
-      await notificationSuccess();
-      await showToastNative({ text: `Broadcast sent to ${sentCount}/${customers.length} customers`, duration: 'short' });
-      setShowBroadcastModal(false);
-      setBroadcastMessage("");
-    } catch (error) {
-      console.error("Error sending broadcast:", error);
-      await notificationError();
-      await showToastNative({ text: 'Failed to send broadcast', position: 'top' });
-    } finally {
-      setSendingBroadcast(false);
-    }
-  };
-
-  const updateCustomerNotes = async () => {
-    if (!user || !selectedCustomer) return;
-    
-    await impactLight();
-    
-    try {
-      await customerService.updateClient(user, selectedCustomer.id, { notes: customerNotes });
-      await showToastNative({ text: 'Notes updated', duration: 'short' });
-    } catch (error) {
-      console.error("Error updating notes:", error);
-      await notificationError();
-      await showToastNative({ text: 'Failed to update notes', position: 'top' });
-    }
-  };
-
-  const updateCustomerTags = async () => {
-    if (!user || !selectedCustomer) return;
-    try {
-      // Tags not supported in Client interface, skip for now
-      alert('Tags feature coming soon!');
-    } catch (error) {
-      console.error("Error updating tags:", error);
-    }
-  };
-
-  const addTag = () => {
-    if (!newTag.trim()) return;
-    if (!customerTags.includes(newTag.trim())) {
-      setCustomerTags([...customerTags, newTag.trim()]);
-    }
-    setNewTag("");
-  };
-
-  const removeTag = (tag: string) => {
-    setCustomerTags(customerTags.filter(t => t !== tag));
   };
 
   // Analytics calculations
@@ -650,8 +451,6 @@ You're now part of our community.
 
   const openCustomerModal = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setCustomerNotes(customer.notes || "");
-    setCustomerTags([]);
     setShowModal(true);
   };
 
@@ -749,7 +548,7 @@ You're now part of our community.
         onDateRangeEndChange={setDateRangeEnd}
         sortBy={sortBy}
         onSortByChange={setSortBy}
-        onBroadcast={() => setShowBroadcastModal(true)}
+
         totalCustomers={customers.length}
         filteredCount={filteredCustomers.length}
       />
@@ -862,14 +661,6 @@ You're now part of our community.
           customer={selectedCustomer}
           onClose={() => setShowModal(false)}
           onDelete={() => setShowDeleteConfirm(true)}
-          onUpdateNotes={async (notes) => {
-            if (!user || !selectedCustomer) return;
-            try {
-              await customerService.updateClient(user, selectedCustomer.id, { notes });
-            } catch (error) {
-              console.error("Error updating notes:", error);
-            }
-          }}
           onSendWhatsApp={sendWhatsAppMessage}
           formatCurrency={formatCurrency}
           getColorFromString={getColorFromString}
@@ -879,22 +670,12 @@ You're now part of our community.
 
       {showAddModal && (
         <AddCustomerModal
-          onClose={() => { setShowAddModal(false); setFormErrors({}); }}
+          onClose={() => { setShowAddModal(false); }}
           onSave={saveNewCustomer}
           saving={savingCustomer}
         />
       )}
 
-      {showBroadcastModal && (
-        <BroadcastModal
-          customerCount={customers.length}
-          message={broadcastMessage}
-          onMessageChange={setBroadcastMessage}
-          onSend={sendBroadcast}
-          onClose={() => setShowBroadcastModal(false)}
-          sending={sendingBroadcast}
-        />
-      )}
 
       {showDeleteConfirm && (
         <DeleteConfirmModal

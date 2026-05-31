@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Customer, Order, orderService } from "@/lib/db";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Customer, Client, Order, Booking, orderService, bookingService, customerService } from "@/lib/db";
 import { useAuth } from "@/context/AuthContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -10,173 +10,171 @@ interface CustomerModalProps {
   customer: Customer;
   onClose: () => void;
   onDelete: () => void;
-  onUpdateNotes: (notes: string) => void;
   onSendWhatsApp: (phone: string, message?: string) => void;
   formatCurrency: (amount: number) => string;
   getColorFromString: (str: string) => string;
   getInitials: (name: string) => string;
 }
 
-interface TabConfig {
+interface TimelineEvent {
   id: string;
-  label: string;
-  icon: string;
-  count?: number;
-}
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const TABS: TabConfig[] = [
-  { id: "orders", label: "Orders", icon: "fa-shopping-bag" },
-  { id: "messages", label: "Messages", icon: "fa-comments" },
-  { id: "activity", label: "Activity", icon: "fa-chart-line" },
-  { id: "preferences", label: "Preferences", icon: "fa-cog" },
-];
-
-const ORDER_STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
-  pending: { bg: "bg-[rgba(245,158,11,0.12)]", text: "text-[#f59e0b]", dot: "bg-[#f59e0b]" },
-  processing: { bg: "bg-[rgba(59,130,246,0.12)]", text: "text-[#3b82f6]", dot: "bg-[#3b82f6]" },
-  delivered: { bg: "bg-[rgba(37,211,102,0.12)]", text: "text-[#10b981]", dot: "bg-[#10b981]" },
-  cancelled: { bg: "bg-[rgba(239,68,68,0.12)]", text: "text-[#ef4444]", dot: "bg-[#ef4444]" },
-};
-
-const TAG_COLORS = [
-  { bg: "bg-[#ede9fe]", text: "text-[#8b5cf6]", border: "border-[#8b5cf6]/20" },
-  { bg: "bg-[#dbeafe]", text: "text-[#3b82f6]", border: "border-[#3b82f6]/20" },
-  { bg: "bg-[#dcfce7]", text: "text-[#10b981]", border: "border-[#10b981]/20" },
-  { bg: "bg-[#fef3c7]", text: "text-[#f59e0b]", border: "border-[#f59e0b]/20" },
-  { bg: "bg-[#fee2e2]", text: "text-[#ef4444]", border: "border-[#ef4444]/20" },
-  { bg: "bg-surface-variant", text: "text-on-surface-variant", border: "border-[#64748b]/20" },
-];
-
-// ─── Helper Functions ─────────────────────────────────────────────────────────
-
-function getOrderStatusConfig(status: string) {
-  return ORDER_STATUS_CONFIG[status] || {
-    bg: "bg-surface-variant",
-    text: "text-on-surface-variant",
-    dot: "bg-[#94a3b8]",
-  };
-}
-
-function getTagColor(index: number) {
-  return TAG_COLORS[index % TAG_COLORS.length];
-}
-
-function getDaysSince(dateStr?: string): string {
-  if (!dateStr) return "Unknown";
-  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-  return `${Math.floor(days / 30)} months ago`;
-}
-
-// ─── Sub-Components ───────────────────────────────────────────────────────────
-
-function StatCard({ label, value, icon, color, delay = 0 }: {
-  label: string;
-  value: string | number;
-  icon: string;
-  color: string;
-  delay?: number;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), delay);
-    return () => clearTimeout(timer);
-  }, [delay]);
-
-  return (
-    <div className={`
-      bg-surface rounded-xl p-3 border border-outline-variant transition-all duration-300
-      ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
-    `} style={{ transitionDelay: `${delay}ms` }}>
-      <div className="flex items-center gap-2 mb-1">
-        <i className={`fas ${icon} ${color} text-xs`} />
-        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{label}</span>
-      </div>
-      <div className={`text-lg font-extrabold ${color}`}>{value}</div>
-    </div>
-  );
-}
-
-function OrderCard({ order, index, formatCurrency }: {
-  order: Order;
-  index: number;
-  formatCurrency: (amount: number) => string;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-  const config = getOrderStatusConfig(order.status || "pending");
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), index * 80);
-    return () => clearTimeout(timer);
-  }, [index]);
-
-  return (
-    <div className={`
-      flex justify-between items-center p-3.5 md:p-4 bg-surface rounded-xl border border-transparent
-      hover:border-outline-variant hover:shadow-sm transition-all duration-200 cursor-pointer
-      ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}
-    `} style={{ transitionDelay: `${index * 80}ms` }}>
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`
-          w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-          ${config.bg} ${config.text}
-        `}>
-          <i className="fas fa-shopping-bag text-sm" />
-        </div>
-        <div className="min-w-0">
-          <div className="font-semibold text-sm truncate">
-            Order #{order.id?.substring(0, 8) || "N/A"}
-          </div>
-          <div className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
-            <i className="fas fa-calendar text-[9px]" />
-            {order.createdAt?.toDate
-              ? order.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              : "N/A"
-            }
-          </div>
-        </div>
-      </div>
-      <div className="text-right shrink-0 ml-3">
-        <div className="font-bold text-sm">{formatCurrency(order.total || 0)}</div>
-        <span className={`
-          inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase mt-1
-          ${config.bg} ${config.text}
-        `}>
-          <span className={`w-1 h-1 rounded-full ${config.dot}`} />
-          {order.status || "pending"}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function ActivityItem({ icon, iconColor, iconBg, title, subtitle, time }: {
+  type: "created" | "order" | "booking" | "visit";
+  title: string;
+  subtitle: string;
+  timestamp: Date;
   icon: string;
   iconColor: string;
   iconBg: string;
-  title: string;
-  subtitle: string;
-  time: string;
+}
+
+// ─── Status Config ────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+  active:   { label: "Active",   bg: "bg-emerald-100 dark:bg-emerald-900/60", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  vip:      { label: "VIP",      bg: "bg-amber-100 dark:bg-amber-900/60",    text: "text-amber-700 dark:text-amber-400",    dot: "bg-amber-500" },
+  new:      { label: "New",      bg: "bg-blue-100 dark:bg-blue-900/60",      text: "text-blue-700 dark:text-blue-400",      dot: "bg-blue-500" },
+  inactive: { label: "Inactive", bg: "bg-slate-100 dark:bg-slate-800/60",    text: "text-slate-500 dark:text-slate-400",     dot: "bg-slate-400" },
+};
+
+const ORDER_STATUS_COLORS: Record<string, string> = {
+  pending:    "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-400",
+  confirmed:  "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-400",
+  processing: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-400",
+  shipped:    "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-400",
+  delivered:  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-400",
+  cancelled:  "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-400",
+  refunded:   "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400",
+};
+
+const BOOKING_STATUS_COLORS: Record<string, string> = {
+  pending:    "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-400",
+  confirmed:  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-400",
+  completed:  "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-400",
+  cancelled:  "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-400",
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatTimeAgo(date?: Date | string | any): string {
+  if (!date) return "";
+  const d = date?.toDate ? date.toDate() : new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
+function formatDate(date?: Date | string | any): string {
+  if (!date) return "N/A";
+  const d = date?.toDate ? date.toDate() : new Date(date);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function getOrderStatusColor(status: string): string {
+  return ORDER_STATUS_COLORS[status] || "bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400";
+}
+
+function getBookingStatusColor(status: string): string {
+  return BOOKING_STATUS_COLORS[status] || "bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400";
+}
+
+// ─── Animated Counter ─────────────────────────────────────────────────────────
+
+function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; suffix?: string; prefix?: string }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    const duration = 600;
+    const start = performance.now();
+    const from = 0;
+    const to = value;
+
+    const animate = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [value]);
+
+  return <>{prefix}{display.toLocaleString()}{suffix}</>;
+}
+
+// ─── Collapsible Section ──────────────────────────────────────────────────────
+
+function CollapsibleSection({
+  title, icon, iconColor, count, children, defaultOpen = true,
+}: {
+  title: string; icon: string; iconColor: string; count?: number; children: React.ReactNode; defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-surface transition-colors group">
-      <div className={`
-        w-10 h-10 rounded-full flex items-center justify-center shrink-0
-        ${iconBg} ${iconColor} transition-transform duration-200 group-hover:scale-110
-      `}>
-        <i className={`fas ${icon} text-sm`} />
+    <div className="bg-white dark:bg-[var(--md-sys-color-surface)] rounded-2xl border border-slate-200 dark:border-[var(--md-sys-color-outline-variant)] overflow-hidden shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 md:px-5 py-3.5 hover:bg-slate-50/50 dark:hover:bg-[var(--md-sys-color-surface-variant)]/30 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${iconColor.replace("text-", "bg-").replace("]", "]/15")}`}>
+            <i className={`fas ${icon} ${iconColor} text-xs`} />
+          </div>
+          <span className="font-bold text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)]">{title}</span>
+          {count !== undefined && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-[var(--md-sys-color-surface-variant)]/80 text-slate-500 dark:text-[var(--md-sys-color-on-surface-variant)]">
+              {count}
+            </span>
+          )}
+        </div>
+        <i className={`fas fa-chevron-down text-xs text-slate-400 dark:text-[var(--md-sys-color-outline)] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      <div className={`transition-all duration-300 ease-in-out ${open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}>
+        <div className="px-4 md:px-5 pb-4 md:pb-5">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Timeline Event Card ──────────────────────────────────────────────────────
+
+function TimelineEventCard({ event, index }: { event: TimelineEvent; index: number }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), index * 60);
+    return () => clearTimeout(t);
+  }, [index]);
+
+  return (
+    <div
+      className={`flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-[var(--md-sys-color-surface-variant)]/30 transition-all duration-300 ${
+        visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
+      }`}
+    >
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${event.iconBg} ${event.iconColor}`}>
+        <i className={`fas ${event.icon} text-xs`} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm">{title}</div>
-        <div className="text-xs text-on-surface-variant">{subtitle}</div>
+        <div className="font-semibold text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)]">{event.title}</div>
+        <div className="text-xs text-slate-500 dark:text-[var(--md-sys-color-on-surface-variant)] mt-0.5">{event.subtitle}</div>
       </div>
-      <div className="text-[10px] text-outline font-medium shrink-0">{time}</div>
+      <div className="text-[10px] font-medium text-slate-400 dark:text-[var(--md-sys-color-outline)] shrink-0">{formatTimeAgo(event.timestamp)}</div>
     </div>
   );
 }
@@ -187,480 +185,559 @@ export default function CustomerModal({
   customer,
   onClose,
   onDelete,
-  onUpdateNotes,
   onSendWhatsApp,
   formatCurrency,
   getColorFromString,
   getInitials,
 }: CustomerModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("orders");
-  const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-  const [customerNotes, setCustomerNotes] = useState(customer.notes || "");
-  const [customerTags, setCustomerTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [isClosing, setIsClosing] = useState(false);
-  const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Animate in
+  // ─── State ──────────────────────────────────────────────────────────────
   const [isVisible, setIsVisible] = useState(false);
-  useEffect(() => {
-    requestAnimationFrame(() => setIsVisible(true));
-  }, []);
+  const [isClosing, setIsClosing] = useState(false);
+  const [status, setStatus] = useState(customer.status || "new");
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+
+  // Dynamic data
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  // Notes
+  const [notes, setNotes] = useState(customer.notes || "");
+  const [notesStatus, setNotesStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const notesTimer = useRef<ReturnType<typeof setTimeout>>(undefined as unknown as ReturnType<typeof setTimeout>);
+
+  // Tags
+  const [tags, setTags] = useState<string[]>(customer.tags || []);
+  const [tagInput, setTagInput] = useState("");
+  const [savingTags, setSavingTags] = useState(false);
+  const tagsTimer = useRef<ReturnType<typeof setTimeout>>(undefined as unknown as ReturnType<typeof setTimeout>);
+
+  // ─── Animate in ─────────────────────────────────────────────────────────
+  useEffect(() => { requestAnimationFrame(() => setIsVisible(true)); }, []);
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(onClose, 200);
   }, [onClose]);
 
+  // ─── Load dynamic data ──────────────────────────────────────────────────
   useEffect(() => {
-    if (activeTab === "orders") {
-      loadCustomerOrders();
-    }
-  }, [activeTab]);
-
-  const loadCustomerOrders = async () => {
     if (!user) return;
-    setLoadingOrders(true);
-    try {
-      const orders = await orderService.getOrders(user);
-      const filtered = orders.filter(o => o.customerId === customer.id);
-      setCustomerOrders(filtered);
-    } catch (error) {
-      console.error("Error loading customer orders:", error);
-      setCustomerOrders([]);
-    } finally {
-      setLoadingOrders(false);
-    }
-  };
+    let mounted = true;
+    setLoadingData(true);
 
-  // Auto-save notes with debounce
-  const handleNotesChange = (value: string) => {
-    setCustomerNotes(value);
-    setSaveStatus("saving");
-    
-    if (notesTimeoutRef.current) {
-      clearTimeout(notesTimeoutRef.current as any);
-    }
-    notesTimeoutRef.current = setTimeout(async () => {
+    const load = async () => {
       try {
-        await onUpdateNotes(value);
-        setSaveStatus("saved");
-        setTimeout(() => setSaveStatus("idle"), 2000);
-      } catch (error) {
-        console.error("Error updating notes:", error);
-        setSaveStatus("idle");
+        const [allOrders, allBookings] = await Promise.all([
+          orderService.getOrders(user),
+          bookingService.getBookings(user),
+        ]);
+
+        if (!mounted) return;
+
+        const customerOrders = allOrders.filter(o => o.customerId === customer.id || o.customerPhone === customer.phone);
+        const phoneClean = customer.phone.replace(/[^0-9]/g, "");
+        const customerBookings = allBookings.filter(b => {
+          const bPhone = b.phone?.replace(/[^0-9]/g, "") || "";
+          return bPhone.includes(phoneClean) || phoneClean.includes(bPhone);
+        });
+
+        setOrders(customerOrders);
+        setBookings(customerBookings);
+      } catch (err) {
+        console.error("Error loading customer data:", err);
+      } finally {
+        if (mounted) setLoadingData(false);
       }
-    }, 1000);
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, [user, customer.id, customer.phone]);
+
+  // ─── Build timeline ─────────────────────────────────────────────────────
+  const timeline = useMemo((): TimelineEvent[] => {
+    const events: TimelineEvent[] = [];
+
+    // Customer created
+    const createdDate = customer.createdAt?.toDate ? customer.createdAt.toDate() : new Date(customer.createdAt);
+    events.push({
+      id: "created",
+      type: "created",
+      title: "Customer registered",
+      subtitle: "Added to the system",
+      timestamp: createdDate,
+      icon: "fa-user-plus",
+      iconColor: "text-indigo-600",
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/30",
+    });
+
+    // Orders
+    orders.forEach(o => {
+      const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+      events.push({
+        id: `order-${o.id}`,
+        type: "order",
+        title: `Order placed — ${o.orderNumber || "#" + o.id?.substring(0, 7)}`,
+        subtitle: `${formatCurrency(o.total || 0)} • ${o.status}`,
+        timestamp: d,
+        icon: "fa-shopping-bag",
+        iconColor: "text-violet-600",
+        iconBg: "bg-violet-100 dark:bg-violet-900/30",
+      });
+    });
+
+    // Bookings
+    bookings.forEach(b => {
+      const d = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      events.push({
+        id: `booking-${b.id}`,
+        type: "booking",
+        title: `Booking for ${b.service}`,
+        subtitle: `${formatDate(b.date)} at ${b.time} • ${b.status}`,
+        timestamp: d,
+        icon: "fa-calendar-check",
+        iconColor: "text-emerald-600",
+        iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
+      });
+    });
+
+    // Last visit
+    if (customer.lastVisit) {
+      events.push({
+        id: "last-visit",
+        type: "visit",
+        title: "Last visit",
+        subtitle: `Visited on ${formatDate(customer.lastVisit)}`,
+        timestamp: new Date(customer.lastVisit),
+        icon: "fa-clock",
+        iconColor: "text-amber-600",
+        iconBg: "bg-amber-100 dark:bg-amber-900/30",
+      });
+    }
+
+    events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return events;
+  }, [customer, orders, bookings, formatCurrency]);
+
+  // ─── Status change ──────────────────────────────────────────────────────
+  const changeStatus = async (newStatus: string) => {
+    if (!user || newStatus === status) return;
+    setSavingStatus(true);
+    try {
+      await customerService.updateClient(user, customer.id, { status: newStatus as Client["status"] });
+      setStatus(newStatus as typeof status);
+      setShowStatusMenu(false);
+    } catch (err) {
+      console.error("Error updating status:", err);
+    } finally {
+      setSavingStatus(false);
+    }
   };
 
+  // ─── Notes auto-save ────────────────────────────────────────────────────
+  const handleNotesChange = (val: string) => {
+    setNotes(val);
+    setNotesStatus("saving");
+    if (notesTimer.current) clearTimeout(notesTimer.current);
+    notesTimer.current = setTimeout(async () => {
+      if (!user) return;
+      try {
+        await customerService.updateClient(user, customer.id, { notes: val });
+        setNotesStatus("saved");
+        setTimeout(() => setNotesStatus("idle"), 2000);
+      } catch { setNotesStatus("idle"); }
+    }, 800);
+  };
+
+  // ─── Tags ───────────────────────────────────────────────────────────────
   const addTag = () => {
-    if (!newTag.trim()) return;
-    if (!customerTags.includes(newTag.trim())) {
-      setCustomerTags([...customerTags, newTag.trim()]);
-    }
-    setNewTag("");
+    const t = tagInput.trim();
+    if (!t || tags.includes(t)) return;
+    const next = [...tags, t];
+    setTags(next);
+    setTagInput("");
+    persistTags(next);
   };
 
   const removeTag = (tag: string) => {
-    setCustomerTags(customerTags.filter(t => t !== tag));
+    const next = tags.filter(t => t !== tag);
+    setTags(next);
+    persistTags(next);
   };
 
+  const persistTags = async (newTags: string[]) => {
+    if (!user) return;
+    setSavingTags(true);
+    try {
+      await customerService.updateClient(user, customer.id, { tags: newTags } as any);
+    } catch (err) {
+      console.error("Error saving tags:", err);
+    } finally {
+      setTimeout(() => setSavingTags(false), 500);
+    }
+  };
+
+  // ─── Delete handler ─────────────────────────────────────────────────────
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this customer? This action cannot be undone.")) {
+    if (window.confirm("Delete this customer? This action cannot be undone.")) {
       onDelete();
     }
   };
 
+  // ─── Stats ──────────────────────────────────────────────────────────────
+  const stats = [
+    { label: "Total Spent", value: customer.totalSpent || 0, icon: "fa-wallet", color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/60", prefix: "KES " },
+    { label: "Orders",      value: orders.length,            icon: "fa-shopping-bag", color: "text-violet-500",  bg: "bg-violet-50 dark:bg-violet-900/60",  prefix: "" },
+    { label: "Bookings",    value: bookings.length,          icon: "fa-calendar-check", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/60", prefix: "" },
+    { label: "Visits",      value: customer.visits || 0,     icon: "fa-repeat",       color: "text-amber-500",  bg: "bg-amber-50 dark:bg-amber-900/60",   prefix: "" },
+  ];
+
+  const statusCfg = STATUS_CONFIG[status] || STATUS_CONFIG.new;
+
   return (
     <div
-      className={`
-        fixed inset-0 z-50 flex items-start justify-center p-4 md:p-8 overflow-y-auto
-        md3-dialog-backdrop transition-opacity duration-200
-        ${isVisible && !isClosing ? "opacity-100" : "opacity-0"}
-      `}
+      className={`fixed inset-0 z-[100] flex items-start justify-center p-3 md:p-6 overflow-y-auto transition-opacity duration-200 ${
+        isVisible && !isClosing ? "opacity-100" : "opacity-0"
+      }`}
       onClick={handleClose}
     >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60" />
+
+      {/* Modal */}
       <div
-        className={`
-          md3-dialog w-full max-w-4xl my-4 md:my-8
-          transition-all duration-300 ease-out
-          ${isVisible && !isClosing ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"}
-        `}
+        className={`relative w-full max-w-2xl my-4 md:my-8 transition-all duration-300 ease-out ${
+          isVisible && !isClosing ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-6"
+        }`}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header - MD3 Dialog Header */}
-        <div className="px-6 py-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex justify-between items-center">
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className={`
-              w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} 
-              flex items-center justify-center text-xl md:text-3xl font-medium text-white shrink-0
-              shadow-lg shadow-current/20
-            `}>
-              {getInitials(customer.name)}
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-lg md:text-2xl font-normal truncate text-[var(--md-sys-color-on-surface)]">{customer.name}</h2>
-              <div className="flex items-center gap-2 mt-1 text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)]">
-                <span className="flex items-center gap-1">
-                  <i className="fab fa-whatsapp text-[#25D366]" />
-                  {customer.phone}
-                </span>
-                {customer.email && (
-                  <>
-                    <span className="text-[var(--md-sys-color-outline)]">•</span>
-                    <span className="hidden sm:inline truncate">{customer.email}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handleClose}
-            className={`
-              w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-outline-variant 
-              flex items-center justify-center text-on-surface-variant 
-              hover:bg-[#ef4444] hover:border-[#ef4444] hover:text-white 
-              transition-all duration-200 active:scale-90 shrink-0
-            `}
-            aria-label="Close modal"
-          >
-            <i className="fas fa-times text-sm" />
-          </button>
-        </div>
+        <div className="bg-white dark:bg-[var(--md-sys-color-surface-container)] rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
+          {/* ═══ HEADER ═══ */}            <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 px-5 md:px-6 pt-6 pb-16">
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-violet-300/20 rounded-full blur-2xl" />
 
-        {/* Content */}
-        <div className="p-4 md:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 md:gap-6">
-            {/* Sidebar */}
-            <div className="flex flex-col gap-4">
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-2">
-                <StatCard
-                  label="Total Spent"
-                  value={formatCurrency(customer.totalSpent || 0)}
-                  icon="fa-wallet"
-                  color="text-[#8b5cf6]"
-                  delay={0}
-                />
-                <StatCard
-                  label="Visits"
-                  value={customer.visits || 0}
-                  icon="fa-calendar-check"
-                  color="text-[#10b981]"
-                  delay={100}
-                />
-                <StatCard
-                  label="Last Visit"
-                  value={getDaysSince(customer.lastVisit || customer.updatedAt)}
-                  icon="fa-clock"
-                  color="text-[#f59e0b]"
-                  delay={200}
-                />
-                <StatCard
-                  label="Orders"
-                  value={customerOrders.length}
-                  icon="fa-shopping-bag"
-                  color="text-[#3b82f6]"
-                  delay={300}
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="bg-surface rounded-2xl p-4 md:p-5 space-y-2.5">
-                <button
-                  onClick={() => onSendWhatsApp(customer.phone)}
-                  className={`
-                    w-full py-2.5 md:py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
-                    text-white rounded-xl font-bold flex items-center justify-center gap-2 
-                    shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:shadow-[#25D366]/30 
-                    hover:-translate-y-0.5 transition-all duration-200 active:scale-95
-                  `}
-                >
-                  <i className="fab fa-whatsapp" />
-                  Send WhatsApp
-                </button>
-
-                <button
-                  onClick={() => customer.email && window.open(`mailto:${customer.email}`)}
-                  disabled={!customer.email}
-                  className={`
-                    w-full py-2.5 md:py-3 rounded-xl font-bold flex items-center justify-center gap-2
-                    border-2 transition-all duration-200 active:scale-95
-                    ${customer.email
-                      ? "bg-surface border-outline-variant text-on-surface hover:border-[#3b82f6] hover:text-[#3b82f6]"
-                      : "bg-surface-variant border-outline-variant text-outline cursor-not-allowed"
-                    }
-                  `}
-                >
-                  <i className="fas fa-envelope" />
-                  Send Email
-                </button>
-
-                <button
-                  onClick={handleDelete}
-                  className="
-                    w-full py-2.5 md:py-3 rounded-lg font-medium flex items-center justify-center gap-2
-                    md3-btn-outlined text-[var(--md-sys-color-error)] border-[var(--md-sys-color-error)]
-                    hover:bg-[var(--md-sys-color-error-container)]
-                    transition-all duration-200 active:scale-95
-                  "
-                >
-                  <i className="fas fa-trash text-sm" />
-                  Delete Customer
-                </button>
-              </div>
-
-              {/* Contact Info */}
-              <div className="bg-surface rounded-2xl p-4 md:p-5 space-y-3">
-                {[
-                  { label: "Phone", value: customer.phone, icon: "fa-phone", color: "text-[#25D366]" },
-                  { label: "Email", value: customer.email || "N/A", icon: "fa-envelope", color: "text-[#3b82f6]" },
-                  { label: "Location", value: customer.location || "N/A", icon: "fa-map-marker-alt", color: "text-[#f59e0b]" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-start gap-2.5">
-                    <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center shrink-0
-                      ${item.color.replace("text-", "bg-").replace("]", "]/10")}
-                    `}>
-                      <i className={`fas ${item.icon} ${item.color} text-xs`} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-bold text-outline uppercase tracking-wider">{item.label}</div>
-                      <div className="font-semibold text-sm truncate">{item.value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Notes */}
-              <div className="bg-surface rounded-2xl p-4 md:p-5 border border-outline-variant">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-sm">Customer Notes</h4>
-                  <span className={`
-                    text-[10px] font-bold uppercase tracking-wider transition-colors
-                    ${saveStatus === "saving" ? "text-[#f59e0b]" : saveStatus === "saved" ? "text-[#10b981]" : "text-outline"}
-                  `}>
-                    {saveStatus === "saving" && <i className="fas fa-circle-notch fa-spin mr-1" />}
-                    {saveStatus === "saved" && <i className="fas fa-check mr-1" />}
-                    {saveStatus === "idle" ? "Auto-save" : saveStatus === "saving" ? "Saving..." : "Saved"}
-                  </span>
-                </div>
-                <textarea
-                  className={`
-                    w-full bg-surface p-3 rounded-xl text-sm text-on-surface 
-                    resize-none min-h-[100px] focus:outline-none 
-                    border-2 border-outline-variant focus:border-[#8b5cf6]
-                    transition-colors duration-200 placeholder:text-outline
-                  `}
-                  placeholder="Add notes about this customer..."
-                  value={customerNotes}
-                  onChange={(e) => handleNotesChange(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="min-w-0">
-              {/* Tabs */}
-              <div className="flex gap-1 border-b-2 border-outline-variant mb-4 md:mb-6 overflow-x-auto scrollbar-hide">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`
-                      relative px-3 md:px-4 py-2.5 md:py-3 font-bold text-xs md:text-sm capitalize 
-                      whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5
-                      ${activeTab === tab.id ? "text-[#8b5cf6]" : "text-on-surface-variant hover:text-on-surface"}
-                    `}
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                {/* Avatar */}
+                <div className="relative group">
+                  <div className="absolute -inset-2 rounded-full bg-white/20 blur-md animate-pulse" />
+                  <div
+                    className={`relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getColorFromString(customer.name)} flex items-center justify-center text-2xl md:text-3xl font-bold text-white shadow-xl ring-2 ring-white/30`}
                   >
-                    <i className={`fas ${tab.icon} text-xs`} />
-                    {tab.label}
-                    {tab.count !== undefined && (
-                      <span className={`
-                        ml-0.5 px-1.5 py-0.5 rounded-full text-[10px]
-                        ${activeTab === tab.id ? "bg-[#ede9fe] text-[#8b5cf6]" : "bg-surface-variant text-on-surface-variant"}
-                      `}>
-                        {tab.count}
-                      </span>
-                    )}
-                    {activeTab === tab.id && (
-                      <div className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-[#8b5cf6] rounded-full" />
-                    )}
-                  </button>
-                ))}
-              </div>
+                    {getInitials(customer.name)}
+                  </div>
+                </div>
 
-              {/* Tab Content */}
-              <div className="min-h-[300px]">
-                {activeTab === "orders" && (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold text-sm md:text-base">
-                        {customer.visits || 0} Visits • {formatCurrency(customer.totalSpent || 0)} Total
-                      </h3>
-                      {customerOrders.length > 0 && (
-                        <span className="text-xs text-outline font-medium">
-                          {customerOrders.length} order{customerOrders.length !== 1 ? 's' : ''}
-                        </span>
+                <div className="text-white">
+                  <h2 className="text-xl md:text-2xl font-bold tracking-tight drop-shadow-sm">{customer.name}</h2>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    {/* Status badge — clickable to change */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowStatusMenu(!showStatusMenu)}
+                        disabled={savingStatus}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusCfg.bg} ${statusCfg.text} hover:brightness-110 transition-all active:scale-95`}
+                      >
+                        {savingStatus ? (
+                          <i className="fas fa-circle-notch fa-spin text-[9px]" />
+                        ) : (
+                          <><span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />{status}</>
+                        )}
+                      </button>
+
+                      {showStatusMenu && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setShowStatusMenu(false)} />
+                          <div className="absolute top-full left-0 mt-1 z-20 bg-white dark:bg-[var(--md-sys-color-surface-container)] rounded-xl shadow-xl border border-slate-200 dark:border-[var(--md-sys-color-outline-variant)] p-1 min-w-[140px]">
+                            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                              <button
+                                key={key}
+                                onClick={() => changeStatus(key)}
+                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                                  key === status
+                                    ? `${cfg.bg} ${cfg.text}`
+                                    : "text-slate-600 dark:text-[var(--md-sys-color-on-surface-variant)] hover:bg-slate-50 dark:hover:bg-[var(--md-sys-color-surface-variant)]/50"
+                                }`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                                {cfg.label}
+                              </button>
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
 
-                    {loadingOrders ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="w-8 h-8 border-2 border-[#8b5cf6]/30 border-t-[#8b5cf6] rounded-full animate-spin mb-3" />
-                        <span className="text-sm text-on-surface-variant">Loading orders...</span>
-                      </div>
-                    ) : customerOrders.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant">
-                        <div className="w-14 h-14 rounded-xl bg-surface-variant flex items-center justify-center mb-3">
-                          <i className="fas fa-shopping-bag text-xl text-[#cbd5e1]" />
-                        </div>
-                        <p className="font-semibold text-sm">No orders found</p>
-                        <p className="text-xs text-outline mt-1">This customer hasn't placed any orders yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {customerOrders.map((order, idx) => (
-                          <OrderCard
-                            key={order.id}
-                            order={order}
-                            index={idx}
-                            formatCurrency={formatCurrency}
-                          />
-                        ))}
-                      </div>
+                    {customer.verified && (
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-200">
+                        <i className="fas fa-check-circle text-[10px]" />
+                        Verified
+                      </span>
                     )}
                   </div>
-                )}
+                </div>
+              </div>
 
-                {activeTab === "messages" && (
-                  <div className="bg-surface rounded-2xl p-6 md:p-8 text-center">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 flex items-center justify-center mx-auto mb-4">
-                      <i className="fab fa-whatsapp text-3xl md:text-4xl text-[#25D366]" />
+              {/* Close button */}
+              <button
+                onClick={handleClose}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-90 shrink-0 backdrop-blur-sm"
+              >
+                <i className="fas fa-times text-sm" />
+              </button>
+            </div>
+          </div>
+
+          {/* ═══ CONTENT ═══ */}
+          <div className="px-4 md:px-5 -mt-10 relative z-10 space-y-3 pb-20">
+            {/* Stats bar */}
+            <div className="grid grid-cols-4 gap-2 md:gap-3">
+              {stats.map((s, i) => (
+                <div
+                  key={s.label}
+                  className={`${s.bg} rounded-xl p-2.5 md:p-3 transition-all duration-300`}
+                  style={{ transitionDelay: `${i * 80}ms` }}
+                >
+                  <div className={`flex items-center gap-1.5 mb-1 ${s.color}`}>
+                    <i className={`fas ${s.icon} text-[10px]`} />
+                    <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">{s.label}</span>
+                  </div>
+                  <div className={`text-sm md:text-base font-extrabold ${s.color} tabular-nums`}>
+                    <AnimatedCounter value={s.value} prefix={s.prefix} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Contact quick info */}
+            <div className="flex flex-wrap items-center gap-2 px-1">                {[
+                { icon: "fab fa-whatsapp", value: customer.phone, color: "text-emerald-500", onClick: () => onSendWhatsApp(customer.phone) },
+                { icon: "fas fa-envelope", value: customer.email || "—", color: "text-blue-500", onClick: customer.email ? () => window.open(`mailto:${customer.email}`) : undefined },
+                { icon: "fas fa-map-marker-alt", value: customer.location || "—", color: "text-amber-500", onClick: customer.location ? () => window.open(`https://maps.google.com/?q=${encodeURIComponent(customer.location || "")}`) : undefined },
+              ].map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  disabled={!item.onClick ? true : undefined}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    item.onClick
+                      ? "bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)] text-slate-700 dark:text-[var(--md-sys-color-on-surface)] hover:bg-slate-100 dark:hover:bg-[var(--md-sys-color-surface-variant)]/80 active:scale-95"
+                      : "bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)] text-slate-400 dark:text-[var(--md-sys-color-outline)] cursor-not-allowed"
+                  }`}
+                >
+                  <i className={`${item.icon} ${item.onClick ? item.color : ""} text-[10px]`} />
+                  <span className="max-w-[120px] truncate">{item.value}</span>
+                </button>
+              ))}
+              {customer.favoriteService && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)] text-slate-700 dark:text-[var(--md-sys-color-on-surface)]">
+                  <i className="fas fa-star text-amber-400 text-[10px]" />
+                  {customer.favoriteService}
+                </span>
+              )}
+            </div>
+
+            {/* Loading state */}
+            {loadingData ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
+                  <span className="text-xs font-medium text-slate-400 dark:text-[var(--md-sys-color-on-surface-variant)]">Loading customer data...</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* ── Timeline ── */}
+                <CollapsibleSection title="Activity" icon="fa-chart-line" iconColor="text-indigo-500" count={timeline.length}>
+                  {timeline.length === 0 ? (
+                    <div className="text-center py-6 text-slate-400 dark:text-[var(--md-sys-color-outline)]">
+                      <i className="fas fa-history text-2xl mb-2 opacity-50" />
+                      <p className="text-xs font-medium">No activity recorded yet</p>
                     </div>
-                    <h3 className="font-bold text-base md:text-lg mb-2">WhatsApp Chat History</h3>
-                    <p className="text-sm text-on-surface-variant mb-6 max-w-sm mx-auto">
-                      View all WhatsApp conversations with this customer
-                    </p>
-                    <button
-                      onClick={() => onSendWhatsApp(customer.phone)}
-                      className={`
-                        px-5 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] 
-                        text-white rounded-xl font-bold inline-flex items-center gap-2
-                        shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:-translate-y-0.5
-                        transition-all duration-200 active:scale-95
-                      `}
-                    >
-                      <i className="fab fa-whatsapp" />
-                      Open Chat
-                    </button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="space-y-0.5">
+                      {timeline.slice(0, 20).map((event, idx) => (
+                        <TimelineEventCard key={event.id} event={event} index={idx} />
+                      ))}
+                    </div>
+                  )}
+                </CollapsibleSection>
 
-                {activeTab === "activity" && (
-                  <div className="space-y-1">
-                    <ActivityItem
-                      icon="fa-user-plus"
-                      iconColor="text-[#10b981]"
-                      iconBg="bg-[rgba(37,211,102,0.1)]"
-                      title="Customer created"
-                      subtitle="Customer added to system"
-                      time={getDaysSince(customer.createdAt)}
-                    />
-                    {customer.lastVisit && (
-                      <ActivityItem
-                        icon="fa-calendar-check"
-                        iconColor="text-[#8b5cf6]"
-                        iconBg="bg-[rgba(139,92,246,0.1)]"
-                        title="Last visit"
-                        subtitle={`Visited on ${new Date(customer.lastVisit).toLocaleDateString()}`}
-                        time={getDaysSince(customer.lastVisit)}
-                      />
-                    )}
-                    {customerOrders.length > 0 && (
-                      <ActivityItem
-                        icon="fa-shopping-bag"
-                        iconColor="text-[#3b82f6]"
-                        iconBg="bg-[rgba(59,130,246,0.1)]"
-                        title={`Placed ${customerOrders.length} order${customerOrders.length !== 1 ? 's' : ''}`}
-                        subtitle="Most recent order completed"
-                        time={getDaysSince(customerOrders[0]?.createdAt?.toDate?.().toISOString())}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "preferences" && (
-                  <div className="space-y-4">
-                    {/* Tags */}
-                    <div className="bg-surface p-4 md:p-5 rounded-2xl border border-outline-variant">
-                      <h4 className="font-bold text-sm mb-4 flex items-center gap-2">
-                        <i className="fas fa-tags text-[#8b5cf6]" />
-                        Tags
-                      </h4>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {customerTags.map((tag, i) => {
-                          const colors = getTagColor(i);
-                          return (
-                            <span
-                              key={tag}
-                              className={`
-                                px-3 py-1.5 rounded-full text-xs font-semibold 
-                                border flex items-center gap-1.5 transition-all duration-200
-                                ${colors.bg} ${colors.text} ${colors.border}
-                                hover:shadow-sm
-                              `}
-                            >
-                              {tag}
-                              <button
-                                onClick={() => removeTag(tag)}
-                                className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-black/10 transition-colors"
-                                aria-label={`Remove ${tag}`}
-                              >
-                                <i className="fas fa-times text-[9px]" />
-                              </button>
+                {/* ── Orders ── */}
+                <CollapsibleSection title="Orders" icon="fa-shopping-bag" iconColor="text-violet-500" count={orders.length} defaultOpen={orders.length > 0}>
+                  {orders.length === 0 ? (
+                    <div className="text-center py-6 text-slate-400 dark:text-[var(--md-sys-color-outline)]">
+                      <i className="fas fa-box-open text-2xl mb-2 opacity-50" />
+                      <p className="text-xs font-medium">No orders yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {orders.map((o) => (
+                        <div key={o.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)]/60 hover:bg-slate-100 dark:hover:bg-[var(--md-sys-color-surface-variant)] transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-[var(--md-sys-color-surface)] flex items-center justify-center text-slate-400 dark:text-[var(--md-sys-color-on-surface-variant)] shadow-sm">
+                              <i className="fas fa-receipt text-xs" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)] truncate">
+                                {o.orderNumber || `#${o.id?.substring(0, 7)}`}
+                              </div>
+                              <div className="text-[10px] text-slate-400 dark:text-[var(--md-sys-color-outline)] mt-0.5">
+                                {formatDate(o.createdAt)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <div className="font-bold text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)]">{formatCurrency(o.total || 0)}</div>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold mt-0.5 uppercase ${getOrderStatusColor(o.status || "pending")}`}>
+                              {o.status}
                             </span>
-                          );
-                        })}
-                        {customerTags.length === 0 && (
-                          <span className="text-sm text-outline italic">No tags added yet</span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && addTag()}
-                          className={`
-                            flex-1 px-3 py-2.5 border-2 border-outline-variant rounded-xl text-sm
-                            focus:outline-none focus:border-[#8b5cf6] transition-colors
-                            placeholder:text-outline
-                          `}
-                          placeholder="Add a tag..."
-                        />
-                        <button
-                          onClick={addTag}
-                          disabled={!newTag.trim()}
-                          className={`
-                            px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95
-                            ${newTag.trim()
-                              ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-md shadow-[#8b5cf6]/20"
-                              : "bg-surface-variant text-outline cursor-not-allowed"
-                            }
-                          `}
-                        >
-                          <i className="fas fa-plus" />
-                        </button>
-                      </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CollapsibleSection>
+
+                {/* ── Bookings ── */}
+                <CollapsibleSection title="Bookings" icon="fa-calendar-check" iconColor="text-emerald-500" count={bookings.length} defaultOpen={bookings.length > 0}>
+                  {bookings.length === 0 ? (
+                    <div className="text-center py-6 text-slate-400 dark:text-[var(--md-sys-color-outline)]">
+                      <i className="fas fa-calendar-day text-2xl mb-2 opacity-50" />
+                      <p className="text-xs font-medium">No bookings yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {bookings.map((b) => (
+                        <div key={b.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)]/60 hover:bg-slate-100 dark:hover:bg-[var(--md-sys-color-surface-variant)] transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-[var(--md-sys-color-surface)] flex items-center justify-center text-slate-400 dark:text-[var(--md-sys-color-on-surface-variant)] shadow-sm">
+                              <i className="fas fa-spa text-xs" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)] truncate">{b.service}</div>
+                              <div className="text-[10px] text-slate-400 dark:text-[var(--md-sys-color-outline)] mt-0.5">
+                                {formatDate(b.date)} at {b.time}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <div className="font-bold text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)]">{formatCurrency(b.price || 0)}</div>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold mt-0.5 uppercase ${getBookingStatusColor(b.status || "pending")}`}>
+                              {b.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CollapsibleSection>
+
+                {/* ── Notes ── */}
+                <CollapsibleSection title="Notes" icon="fa-pen" iconColor="text-amber-500">
+                  <div>
+                    <div className="flex items-center justify-end mb-2">
+                      <span className={`text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                        notesStatus === "saving" ? "text-amber-500" : notesStatus === "saved" ? "text-emerald-500" : "text-slate-300 dark:text-[var(--md-sys-color-outline)]"
+                      }`}>
+                        {notesStatus === "saving" && <><i className="fas fa-circle-notch fa-spin mr-1" />Saving...</>}
+                        {notesStatus === "saved" && <><i className="fas fa-check mr-1" />Saved</>}
+                        {notesStatus === "idle" && "Auto-save"}
+                      </span>
+                    </div>
+                    <textarea
+                      value={notes}
+                      onChange={e => handleNotesChange(e.target.value)}
+                      placeholder="Add notes about this customer..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)] rounded-xl text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)] placeholder:text-slate-300 dark:placeholder:text-[var(--md-sys-color-outline)] resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-500/40 transition-all border border-slate-200 dark:border-[var(--md-sys-color-outline-variant)]"
+                    />
+                  </div>
+                </CollapsibleSection>
+
+                {/* ── Tags ── */}
+                <CollapsibleSection title="Tags" icon="fa-tags" iconColor="text-rose-500">
+                  <div>
+                    <div className="flex flex-wrap gap-1.5 mb-3 min-h-[30px]">
+                      {tags.map((tag, i) => {
+                        const colors = [
+                          "bg-indigo-100 text-indigo-700 border-indigo-200/50 dark:bg-indigo-900/30 dark:text-indigo-400",
+                          "bg-violet-100 text-violet-700 border-violet-200/50 dark:bg-violet-900/30 dark:text-violet-400",
+                          "bg-emerald-100 text-emerald-700 border-emerald-200/50 dark:bg-emerald-900/30 dark:text-emerald-400",
+                          "bg-amber-100 text-amber-700 border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400",
+                          "bg-rose-100 text-rose-700 border-rose-200/50 dark:bg-rose-900/30 dark:text-rose-400",
+                          "bg-cyan-100 text-cyan-700 border-cyan-200/50 dark:bg-cyan-900/30 dark:text-cyan-400",
+                        ];
+                        return (
+                          <span key={tag} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${colors[i % colors.length]} animate-fadeIn`}>
+                            <i className="fas fa-hashtag text-[8px] opacity-50" />
+                            {tag}
+                            <button onClick={() => removeTag(tag)} className="w-3.5 h-3.5 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                              <i className="fas fa-times text-[7px]" />
+                            </button>
+                          </span>
+                        );
+                      })}
+                      {tags.length === 0 && (
+                        <span className="text-xs text-slate-400 dark:text-[var(--md-sys-color-outline)] italic">No tags yet</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+                        placeholder="Add a tag..."
+                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-[var(--md-sys-color-surface-variant)] rounded-xl text-sm text-slate-800 dark:text-[var(--md-sys-color-on-surface)] placeholder:text-slate-300 dark:placeholder:text-[var(--md-sys-color-outline)] focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-500/40 transition-all border border-slate-200 dark:border-[var(--md-sys-color-outline-variant)]"
+                      />
+                      <button
+                        onClick={addTag}
+                        disabled={!tagInput.trim()}
+                        className="px-3 py-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/80 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-semibold transition-all active:scale-90"
+                      >
+                        <i className="fas fa-plus text-xs" />
+                      </button>
                     </div>
                   </div>
+                </CollapsibleSection>
+              </>
+            )}
+          </div>
+
+          {/* ═══ FLOATING ACTION BAR ═══ */}
+          <div className="absolute bottom-0 left-0 right-0 px-4 md:px-5 py-3 bg-white dark:bg-[var(--md-sys-color-surface-container)] border-t border-slate-100 dark:border-[var(--md-sys-color-outline-variant)]/50">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onSendWhatsApp(customer.phone)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold text-xs shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all active:scale-95"
+                >
+                  <i className="fab fa-whatsapp text-sm" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </button>
+                {customer.email && (
+                  <button
+                    onClick={() => window.open(`mailto:${customer.email}`)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[var(--md-sys-color-surface)] border border-slate-200 dark:border-[var(--md-sys-color-outline-variant)] text-slate-700 dark:text-[var(--md-sys-color-on-surface)] rounded-xl font-bold text-xs hover:border-blue-300 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
+                  >
+                    <i className="fas fa-envelope text-sm text-blue-500" />
+                    <span className="hidden sm:inline">Email</span>
+                  </button>
                 )}
               </div>
+              <button
+                onClick={handleDelete}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all active:scale-95"
+              >
+                <i className="fas fa-trash text-sm" />
+                <span className="hidden sm:inline">Delete</span>
+              </button>
             </div>
           </div>
         </div>

@@ -13,7 +13,6 @@ import ServiceFilterBottomSheet from "@/app/(app)/services/components/ServiceFil
 import ServiceGridView from "@/app/(app)/services/components/ServiceGridView";
 import ServiceListView from "@/app/(app)/services/components/ServiceListView";
 import { serviceService, Service } from "@/lib/db";
-import { formatCurrency } from "@/lib/currency";
 
 type ViewLayout = "grid" | "list";
 type ServiceStatus = "active" | "paused" | "draft";
@@ -26,12 +25,6 @@ const FILTER_CHIPS = [
   { id: "paused", label: "Paused", color: "from-[#f59e0b] to-[#d97706]" },
   { id: "draft", label: "Drafts", color: "from-[#64748b] to-[#475569]" },
 ] as const;
-
-const STATUS_CONFIG: Record<string, { bg: string; dot: string; label: string }> = {
-  active: { bg: "bg-[#10b981]/10", dot: "bg-[#10b981]", label: "Active" },
-  paused: { bg: "bg-[#f59e0b]/10", dot: "bg-[#f59e0b]", label: "Paused" },
-  draft: { bg: "bg-[#64748b]/10", dot: "bg-[#64748b]", label: "Draft" },
-};
 
 // ─── Helper Functions ────────────────────────────────────────────────────────
 
@@ -161,83 +154,6 @@ function DeleteConfirmModal({
           >
             <i className="fas fa-trash-alt mr-2" />
             Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BulkActionBar({
-  selectedCount,
-  totalCount,
-  onSelectAll,
-  onStatusUpdate,
-  onDelete,
-  onExport,
-  onClose,
-}: {
-  selectedCount: number;
-  totalCount: number;
-  onSelectAll: () => void;
-  onStatusUpdate: (status: ServiceStatus) => void;
-  onDelete: () => void;
-  onExport: () => void;
-  onClose: () => void;
-}) {
-  const allSelected = selectedCount === totalCount && totalCount > 0;
-
-  return (
-    <div className="mb-4 bg-surface border border-outline-variant rounded-xl p-3 md:p-4 shadow-sm animate-slideDown">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <label className="flex items-center gap-2.5 cursor-pointer">
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={onSelectAll}
-              className="w-5 h-5 rounded border-2 border-outline-variant text-[#25D366] focus:ring-[#25D366] focus:ring-offset-0 cursor-pointer"
-            />
-          </div>
-          <span className="text-sm font-bold text-on-surface-variant">
-            {selectedCount} selected
-          </span>
-        </label>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => onStatusUpdate("active")}
-            disabled={selectedCount === 0}
-            className="px-3 py-1.5 rounded-lg bg-[#10b981]/10 text-[#10b981] text-xs font-bold hover:bg-[#10b981] hover:text-white transition-all disabled:opacity-40"
-          >
-            <i className="fas fa-play mr-1" /> Activate
-          </button>
-          <button
-            onClick={() => onStatusUpdate("paused")}
-            disabled={selectedCount === 0}
-            className="px-3 py-1.5 rounded-lg bg-[#f59e0b]/10 text-[#f59e0b] text-xs font-bold hover:bg-[#f59e0b] hover:text-white transition-all disabled:opacity-40"
-          >
-            <i className="fas fa-pause mr-1" /> Pause
-          </button>
-          <button
-            onClick={onDelete}
-            disabled={selectedCount === 0}
-            className="px-3 py-1.5 rounded-lg bg-[#ef4444]/10 text-[#ef4444] text-xs font-bold hover:bg-[#ef4444] hover:text-white transition-all disabled:opacity-40"
-          >
-            <i className="fas fa-trash mr-1" /> Delete
-          </button>
-          <button
-            onClick={onExport}
-            disabled={selectedCount === 0}
-            className="px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 text-[#3b82f6] text-xs font-bold hover:bg-[#3b82f6] hover:text-white transition-all disabled:opacity-40"
-          >
-            <i className="fas fa-file-csv mr-1" /> Export
-          </button>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-surface-variant text-on-surface-variant flex items-center justify-center hover:bg-surface-variant transition-all"
-          >
-            <i className="fas fa-times text-xs" />
           </button>
         </div>
       </div>
@@ -555,7 +471,6 @@ export default function ServicesPage() {
     if (services.length === 0) return "0.0";
     return (services.reduce((sum, s) => sum + (s.rating || 4.5), 0) / services.length).toFixed(1);
   }, [services]);
-  const activeServices = useMemo(() => services.filter((s) => s.status === "active").length, [services]);
   const totalBookingsAll = useMemo(() => services.reduce((sum, s) => sum + (s.bookings || 0), 0), [services]);
 
   // ─── Previous Period (for trend comparison in stats) ─────────────────────
@@ -600,7 +515,7 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="overflow-x-hidden px-3 md:px-6 py-0 md:py-4 pb-2 bg-surface-dim">
+    <div className="overflow-x-hidden bg-surface-dim w-full">
       {/* Header - Desktop only (TopBar handles mobile) */}
       <div className="hidden md:block">
         <ServicesHeader
@@ -618,39 +533,21 @@ export default function ServicesPage() {
         />
       </div>
 
-      {/* Search & Filters */}
-      <ServiceFilters
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedBusinessType={selectedBusinessType}
-        setSelectedBusinessType={setSelectedBusinessType}
-        priceRangeMin={priceRangeMin}
-        setPriceRangeMin={setPriceRangeMin}
-        priceRangeMax={priceRangeMax}
-        setPriceRangeMax={setPriceRangeMax}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        businessTypes={businessTypes}
-        onOpenFilterSheet={() => setShowFilterBottomSheet(true)}
-      />
+      {/* Stats - outside content container (like orders page) */}
+      <div className="px-3">
+        <ServiceStats
+          totalServices={services.length}
+          totalBookings={totalBookingsAll}
+          totalRevenue={totalRevenue}
+          averageRating={averageRating}
+          previousPeriod={previousPeriod}
+          onCardClick={handleStatCardClick}
+        />
+      </div>
 
-      {/* Mobile Filter Bottom Sheet */}
-      <ServiceFilterBottomSheet
-        isOpen={showFilterBottomSheet}
-        onClose={() => setShowFilterBottomSheet(false)}
-        selectedBusinessType={selectedBusinessType}
-        setSelectedBusinessType={setSelectedBusinessType}
-        priceRangeMin={priceRangeMin}
-        setPriceRangeMin={setPriceRangeMin}
-        priceRangeMax={priceRangeMax}
-        setPriceRangeMax={setPriceRangeMax}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        businessTypes={businessTypes}
-      />
-
-        {/* Mobile Add Button - Visible at top of page */}
-        <div className="md:hidden mb-3">
+      <div className="px-3 md:px-6 space-y-3 md:space-y-6">
+        {/* Mobile Add Button */}
+        <div className="md:hidden">
           <button
             onClick={() => addServiceRef.current?.open()}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
@@ -660,14 +557,20 @@ export default function ServicesPage() {
           </button>
         </div>
 
-        {/* Stats */}
-        <ServiceStats
-          totalServices={services.length}
-          totalBookings={totalBookingsAll}
-          totalRevenue={totalRevenue}
-          averageRating={averageRating}
-          previousPeriod={previousPeriod}
-          onCardClick={handleStatCardClick}
+        {/* Search & Filters */}
+        <ServiceFilters
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedBusinessType={selectedBusinessType}
+          setSelectedBusinessType={setSelectedBusinessType}
+          priceRangeMin={priceRangeMin}
+          setPriceRangeMin={setPriceRangeMin}
+          priceRangeMax={priceRangeMax}
+          setPriceRangeMax={setPriceRangeMax}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          businessTypes={businessTypes}
+          onOpenFilterSheet={() => setShowFilterBottomSheet(true)}
         />
 
         {/* Filter Chips - flex-wrap chip layout */}
@@ -745,113 +648,104 @@ export default function ServicesPage() {
           </div>
         )}
 
-        {/* Bulk Action Bar */}
-        {bulkMode && filteredServices.length > 0 && (
-          <BulkActionBar
-            selectedCount={bulkSelected.length}
-            totalCount={filteredServices.length}
-            onSelectAll={selectAllServices}
-            onStatusUpdate={handleBulkStatusUpdate}
-            onDelete={handleBulkDelete}
-            onExport={handleExportCSV}
-            onClose={() => {
-              setBulkMode(false);
-              setBulkSelected([]);
-            }}
-          />
-        )}
+        {/* Services Card Container — matches orders page pattern */}
+        <div className="bg-surface md:rounded-2xl md:border-2 border-outline md:shadow-md overflow-x-hidden">
+          {/* Services View */}
+          {filteredServices.length > 0 ? (
+            <>
+              {viewLayout === "grid" ? (
+                <div className="p-3 md:p-4">
+                  <ServiceGridView
+                    services={filteredServices}
+                    bulkMode={bulkMode}
+                    bulkSelected={bulkSelected}
+                    toggleBulkSelect={toggleBulkSelect}
+                    onSelectService={setSelectedService}
+                    onShareService={handleShareService}
+                    onCopyLink={handleCopyLink}
+                    onToggleStatus={handleToggleStatus}
+                    onDuplicateService={handleDuplicateService}
+                    onDeleteService={(id) => setShowDeleteConfirm(id)}
+                  />
+                </div>
+              ) : (
+                <div className="p-3 md:p-4">
+                  <ServiceListView
+                    services={filteredServices}
+                    bulkMode={bulkMode}
+                    bulkSelected={bulkSelected}
+                    toggleBulkSelect={toggleBulkSelect}
+                    onSelectService={setSelectedService}
+                    onShareService={handleShareService}
+                    onCopyLink={handleCopyLink}
+                    onToggleStatus={handleToggleStatus}
+                    onDuplicateService={handleDuplicateService}
+                    onDeleteService={(id) => setShowDeleteConfirm(id)}
+                  />
+                </div>
+              )}
 
-        {/* Services View */}
-        {filteredServices.length > 0 ? (
-          <>
-            {viewLayout === "grid" ? (
-              <ServiceGridView
-                services={filteredServices}
-                bulkMode={bulkMode}
-                bulkSelected={bulkSelected}
-                toggleBulkSelect={toggleBulkSelect}
-                onSelectService={setSelectedService}
-                onShareService={handleShareService}
-                onCopyLink={handleCopyLink}
-                onToggleStatus={handleToggleStatus}
-                onDuplicateService={handleDuplicateService}
-                onDeleteService={(id) => setShowDeleteConfirm(id)}
+              {/* Load More */}
+              {hasMoreServices && (
+                <div className="p-4 pt-0">
+                  <button
+                    onClick={loadMoreServices}
+                    disabled={loadingMore}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-chevron-down text-xs" />
+                        Load More Services
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <EmptyState
+                hasFilters={hasActiveFilters || filterStatus !== "all"}
+                onClearFilters={() => {
+                  setSearchQuery("");
+                  setSelectedBusinessType("");
+                  setPriceRangeMin("");
+                  setPriceRangeMax("");
+                  setFilterStatus("all");
+                }}
+                onAddService={() => addServiceRef.current?.open()}
               />
-            ) : (
-              <ServiceListView
-                services={filteredServices}
-                bulkMode={bulkMode}
-                bulkSelected={bulkSelected}
-                toggleBulkSelect={toggleBulkSelect}
-                onSelectService={setSelectedService}
-                onShareService={handleShareService}
-                onCopyLink={handleCopyLink}
-                onToggleStatus={handleToggleStatus}
-                onDuplicateService={handleDuplicateService}
-                onDeleteService={(id) => setShowDeleteConfirm(id)}
-              />
-            )}
-
-            {/* Load More */}
-            {hasMoreServices && (
-              <div className="flex justify-center pt-4 pb-8">
-                <button
-                  onClick={loadMoreServices}
-                  disabled={loadingMore}
-                  className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
-                >
-                  {loadingMore ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-chevron-down text-xs" />
-                      Load More Services
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <EmptyState
-              hasFilters={hasActiveFilters || filterStatus !== "all"}
-              onClearFilters={() => {
-                setSearchQuery("");
-                setSelectedBusinessType("");
-                setPriceRangeMin("");
-                setPriceRangeMax("");
-                setFilterStatus("all");
-              }}
-              onAddService={() => addServiceRef.current?.open()}
-            />
-            {/* Even with empty results, show Load More if there's more data to fetch */}
-            {hasMoreServices && filteredServices.length === 0 && (
-              <div className="flex justify-center pt-4 pb-8">
-                <button
-                  onClick={loadMoreServices}
-                  disabled={loadingMore}
-                  className="flex items-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
-                >
-                  {loadingMore ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-chevron-down text-xs" />
-                      Load More
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </>
-        )}
+              {/* Even with empty results, show Load More */}
+              {hasMoreServices && filteredServices.length === 0 && (
+                <div className="px-3 md:px-4 pb-3 md:pb-4">
+                  <button
+                    onClick={loadMoreServices}
+                    disabled={loadingMore}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-surface border-2 border-outline-variant rounded-xl font-bold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-95 disabled:opacity-40"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-[#25D366]/30 border-t-[#25D366] rounded-full animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-chevron-down text-xs" />
+                        Load More
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Delete Modal */}
         <DeleteConfirmModal
@@ -866,6 +760,23 @@ export default function ServicesPage() {
           open={!!selectedService}
           onClose={() => setSelectedService(null)}
         />
+
+      </div>
+
+      {/* Mobile Filter Bottom Sheet - overlay at root level */}
+      <ServiceFilterBottomSheet
+        isOpen={showFilterBottomSheet}
+        onClose={() => setShowFilterBottomSheet(false)}
+        selectedBusinessType={selectedBusinessType}
+        setSelectedBusinessType={setSelectedBusinessType}
+        priceRangeMin={priceRangeMin}
+        setPriceRangeMin={setPriceRangeMin}
+        priceRangeMax={priceRangeMax}
+        setPriceRangeMax={setPriceRangeMax}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        businessTypes={businessTypes}
+      />
 
       {/* Add Service Modal - rendered at root level */}
       <AddServiceButton ref={addServiceRef} />

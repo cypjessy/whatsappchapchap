@@ -19,17 +19,15 @@ interface NewOrderForm {
   customerPhone: string;
   customerEmail: string;
   customerAddress: string;
+  deliveryMethod: "pickup" | "delivery";
+  deliveryAddress: string;
+  expectedDate: string;
   paymentMethod: string;
+  paymentRef: string;
   selectedProducts: OrderItem[];
+  discount: number;
   notes: string;
   sendWhatsApp: boolean;
-  markAsPaid: boolean;
-  paymentRef: string;
-  expressDelivery: boolean;
-  deliveryType: 'delivery' | 'pickup';
-  deliveryDate: string;
-  discountCode: string;
-  discountAmount: number;
   saveCustomer: boolean;
 }
 
@@ -42,23 +40,12 @@ interface NewOrderModalProps {
   creatingOrder: boolean;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const PAYMENT_METHODS = [
-  { id: "Cash on Delivery", icon: "fa-money-bill-wave", desc: "Customer pays when receiving" },
-  { id: "M-Pesa", icon: "fa-mobile-alt", desc: "Mobile money payment" },
-  { id: "Bank Transfer", icon: "fa-university", desc: "Direct bank deposit" },
-  { id: "Credit Card", icon: "fa-credit-card", desc: "Card payment" },
-] as const;
-
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 interface FormErrors {
   customerName?: string;
   customerPhone?: string;
-  customerAddress?: string;
   selectedProducts?: string;
-  paymentMethod?: string;
 }
 
 function validateForm(form: NewOrderForm): FormErrors {
@@ -76,18 +63,8 @@ function validateForm(form: NewOrderForm): FormErrors {
     errors.customerPhone = "Please enter a valid phone number";
   }
 
-  if (!form.customerAddress.trim()) {
-    errors.customerAddress = "Delivery address is required";
-  } else if (form.customerAddress.trim().length < 10) {
-    errors.customerAddress = "Address must be at least 10 characters";
-  }
-
   if (form.selectedProducts.length === 0) {
     errors.selectedProducts = "Please add at least one product";
-  }
-
-  if (!form.paymentMethod) {
-    errors.paymentMethod = "Please select a payment method";
   }
 
   return errors;
@@ -97,8 +74,8 @@ function validateForm(form: NewOrderForm): FormErrors {
 
 function SectionHeader({ icon, title, required }: { icon: string; title: string; required?: boolean }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-7 h-7 rounded-lg bg-[rgba(37,211,102,0.1)] flex items-center justify-center flex-shrink-0">
+    <div className="flex items-center gap-2 mb-3">
+      <div className="w-6 h-6 rounded-lg bg-[rgba(37,211,102,0.1)] flex items-center justify-center flex-shrink-0">
         <i className={`fas ${icon} text-[#25D366] text-xs`} />
       </div>
       <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
@@ -109,106 +86,36 @@ function SectionHeader({ icon, title, required }: { icon: string; title: string;
   );
 }
 
-function FormInput({
-  label,
-  name,
-  value,
-  onChange,
-  placeholder,
-  error,
-  icon,
-  type = "text",
-  required,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  placeholder?: string;
-  error?: string;
-  icon?: string;
-  type?: string;
-  required?: boolean;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-on-surface-variant">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-            <i className={`fas ${icon} text-sm`} />
-          </div>
-        )}
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 ${
-            error
-              ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50/30"
-              : "border-outline-variant hover:border-outline"
-          } ${icon ? "pl-10" : ""}`}
-        />
-        {error && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
-            <i className="fas fa-exclamation-circle" />
-          </div>
-        )}
-      </div>
-      {error && <p className="text-xs text-red-500 font-medium animate-fadeIn">{error}</p>}
-    </div>
-  );
-}
-
 function ToggleSwitch({
   label,
   description,
   checked,
   onChange,
-  activeColor = "bg-[#25D366]",
 }: {
   label: string;
   description: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  activeColor?: string;
 }) {
   return (
-    <div className="flex items-center justify-between p-4 bg-surface border border-outline-variant rounded-xl transition-all hover:border-outline">
-      <div>
+    <div className="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-xl transition-all hover:border-outline">
+      <div className="flex-1 min-w-0">
         <div className="font-semibold text-sm text-on-surface">{label}</div>
-        <div className="text-xs text-on-surface-variant mt-0.5">{description}</div>
+        <div className="text-xs text-on-surface-variant mt-0.5 truncate">{description}</div>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        className={`w-12 h-7 rounded-full relative transition-all duration-300 ${
-          checked ? activeColor : "bg-surface-variant"
+        className={`w-11 h-6 rounded-full relative transition-all duration-300 flex-shrink-0 ml-3 ${
+          checked ? "bg-[#25D366]" : "bg-surface-variant"
         }`}
       >
         <div
-          className={`absolute top-0.5 w-6 h-6 bg-surface rounded-full shadow-md transition-all duration-300 ${
+          className={`absolute top-0.5 w-5 h-5 bg-surface rounded-full shadow-md transition-all duration-300 ${
             checked ? "right-0.5" : "left-0.5"
           }`}
         />
       </button>
-    </div>
-  );
-}
-
-function EmptyState({ icon, title, description }: { icon: string; title: string; description: string }) {
-  return (
-    <div className="p-8 text-center animate-fadeIn">
-      <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-3">
-        <i className={`fas ${icon} text-2xl text-gray-300`} />
-      </div>
-      <h4 className="text-sm font-semibold text-on-surface mb-1">{title}</h4>
-      <p className="text-xs text-on-surface-variant">{description}</p>
     </div>
   );
 }
@@ -228,29 +135,36 @@ export default function NewOrderModal({
     customerPhone: "",
     customerEmail: "",
     customerAddress: "",
-    paymentMethod: "Cash on Delivery",
+    deliveryMethod: "pickup",
+    deliveryAddress: "",
+    expectedDate: "",
+    paymentMethod: "Cash",
+    paymentRef: "",
     selectedProducts: [],
+    discount: 0,
     notes: "",
     sendWhatsApp: true,
-    markAsPaid: false,
-    paymentRef: "",
-    expressDelivery: false,
-    deliveryType: 'delivery',
-    deliveryDate: "",
-    discountCode: "",
-    discountAmount: 0,
     saveCustomer: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [customerSearch, setCustomerSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const customerDropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // ─── Payment method options ───────────────────────────────────────────
+  const PAYMENT_METHODS = useMemo(() => [
+    { id: "Cash", icon: "fa-money-bill-wave" },
+    { id: "M-Pesa", icon: "fa-mobile-alt" },
+    { id: "Bank Transfer", icon: "fa-university" },
+    { id: "Card", icon: "fa-credit-card" },
+    { id: "Other", icon: "fa-ellipsis-h" },
+  ], []);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -260,24 +174,22 @@ export default function NewOrderModal({
         customerPhone: "",
         customerEmail: "",
         customerAddress: "",
-        paymentMethod: "Cash on Delivery",
+        deliveryMethod: "pickup",
+        deliveryAddress: "",
+        expectedDate: "",
+        paymentMethod: "Cash",
+        paymentRef: "",
         selectedProducts: [],
+        discount: 0,
         notes: "",
         sendWhatsApp: true,
-        markAsPaid: false,
-        paymentRef: "",
-        expressDelivery: false,
-        deliveryType: 'delivery',
-        deliveryDate: "",
-        discountCode: "",
-        discountAmount: 0,
         saveCustomer: true,
       });
       setErrors({});
       setCustomerSearch("");
       setProductSearch("");
       setShowCustomerDropdown(false);
-      setIsNewCustomer(false);
+      setShowNewCustomerForm(false);
       setShowConfirm(false);
     }
   }, [isOpen]);
@@ -289,9 +201,7 @@ export default function NewOrderModal({
     } else {
       document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   // Close dropdown on outside click
@@ -305,16 +215,13 @@ export default function NewOrderModal({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard shortcuts
+  // Escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (showConfirm) {
-          setShowConfirm(false);
-        } else {
-          onClose();
-        }
+        if (showConfirm) setShowConfirm(false);
+        else onClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -332,29 +239,29 @@ export default function NewOrderModal({
 
   // Filtered products
   const filteredProducts = useMemo(() => {
-    if (!productSearch.trim()) return products.slice(0, 6);
+    if (!productSearch.trim()) return products.slice(0, 8);
     const q = productSearch.toLowerCase();
-    return products.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 8);
+    return products.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 10);
   }, [products, productSearch]);
 
-  // Totals
+  // Totals with discount
   const totals = useMemo(() => {
     const subtotal = form.selectedProducts.reduce((sum, p) => sum + p.price * p.quantity, 0);
-    const shipping = form.expressDelivery ? 5 : 0;
-    const tax = subtotal * 0.16;
-    const discount = form.discountAmount;
-    return { subtotal, shipping, tax, discount, total: Math.max(0, subtotal + shipping + tax - discount) };
-  }, [form.selectedProducts, form.expressDelivery, form.discountAmount]);
+    const discount = Math.min(form.discount || 0, subtotal);
+    return { subtotal, discount, total: subtotal - discount };
+  }, [form.selectedProducts, form.discount]);
+
+  // ─── Handlers ────────────────────────────────────────────────────────────────
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
       setForm((prev) => ({ ...prev, [name]: value }));
-      if (errors[name as keyof FormErrors]) {
+      if (name === "customerName" || name === "customerPhone") {
         setErrors((prev) => ({ ...prev, [name]: undefined }));
       }
     },
-    [errors]
+    []
   );
 
   const selectCustomer = useCallback((customer: Customer) => {
@@ -367,7 +274,7 @@ export default function NewOrderModal({
     }));
     setCustomerSearch("");
     setShowCustomerDropdown(false);
-    setIsNewCustomer(false);
+    setShowNewCustomerForm(false);
     setErrors((prev) => ({ ...prev, customerName: undefined, customerPhone: undefined }));
   }, []);
 
@@ -386,7 +293,13 @@ export default function NewOrderModal({
         ...prev,
         selectedProducts: [
           ...prev.selectedProducts,
-          { productId: product.id, name: product.name, quantity: 1, price: product.price, imageUrl: product.imageUrl || product.image || "" },
+          {
+            productId: product.id,
+            name: product.name,
+            quantity: 1,
+            price: product.price,
+            imageUrl: product.imageUrl || product.image || "",
+          },
         ],
       };
     });
@@ -413,19 +326,6 @@ export default function NewOrderModal({
     }));
   }, [removeProduct]);
 
-  const applyDiscount = useCallback(() => {
-    if (!form.discountCode.trim()) return;
-    // Simple mock discount logic - replace with your actual logic
-    const code = form.discountCode.toUpperCase();
-    if (code === "SAVE10") {
-      setForm((prev) => ({ ...prev, discountAmount: prev.selectedProducts.reduce((s, p) => s + p.price * p.quantity, 0) * 0.1 }));
-    } else if (code === "SAVE20") {
-      setForm((prev) => ({ ...prev, discountAmount: prev.selectedProducts.reduce((s, p) => s + p.price * p.quantity, 0) * 0.2 }));
-    } else {
-      // Invalid code - could show error
-    }
-  }, [form.discountCode]);
-
   const handleSubmit = useCallback(async () => {
     const validationErrors = validateForm(form);
     if (Object.keys(validationErrors).length > 0) {
@@ -450,7 +350,8 @@ export default function NewOrderModal({
 
   if (!isOpen) return null;
 
-  const isFormValid = form.customerName && form.customerPhone && form.selectedProducts.length > 0 && form.paymentMethod;
+  const isFormValid = form.customerName && form.customerPhone && form.selectedProducts.length > 0;
+  const selectedCount = form.selectedProducts.reduce((s, p) => s + p.quantity, 0);
 
   return (
     <>
@@ -461,584 +362,482 @@ export default function NewOrderModal({
       <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 pointer-events-none overflow-y-auto">
         <div
           ref={modalRef}
-          className="bg-surface rounded-2xl w-full max-w-sm md:max-w-2xl lg:max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp my-auto"
+          className="bg-surface rounded-2xl w-full max-w-sm md:max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col pointer-events-auto animate-slideUp my-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex-shrink-0 p-4 sm:p-5 border-b border-outline-variant bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)] animate-fadeIn">
+          {/* ── Header ── */}
+          <div className="flex-shrink-0 p-4 border-b border-outline-variant bg-gradient-to-r from-[rgba(37,211,102,0.05)] to-[rgba(18,140,126,0.05)]">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0 animate-slideUp">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#25D366] to-[#128C7E] rounded-xl flex items-center justify-center text-white text-lg shadow-lg flex-shrink-0">
                   <i className="fas fa-plus" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-on-surface">New Order</h2>
-                  <p className="text-xs sm:text-sm text-on-surface-variant hidden sm:block">Create a new order for your customer</p>
+                  <h2 className="text-lg font-extrabold text-on-surface">Manual Order</h2>
+                  <p className="text-xs text-on-surface-variant">Customer already paid — confirm & process</p>
                 </div>
               </div>
               <button
                 className="w-9 h-9 flex items-center justify-center text-on-surface-variant hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95 flex-shrink-0"
                 onClick={onClose}
+                aria-label="Close"
               >
                 <i className="fas fa-times" />
               </button>
             </div>
           </div>
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* ── Left Column ─── */}
-              <div className="space-y-6">
-                {/* Customer Selection */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.05s' }}>
-                  <SectionHeader icon="fa-user" title="Customer" required />
+          {/* ── Body ── */}
+          <div className="flex-1 overflow-y-auto p-4 scrollbar-thin space-y-5">
+            {/* ═══ Customer ═══ */}
+            <div>
+              <SectionHeader icon="fa-user" title="Customer" required />
 
-                  {/* Search */}
-                  <div className="relative mb-3" ref={customerDropdownRef}>
-                    <div className="relative">
-                      <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        className="w-full pl-10 pr-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
-                        placeholder="Search by name or phone..."
-                        value={customerSearch}
-                        onChange={(e) => {
-                          setCustomerSearch(e.target.value);
-                          setShowCustomerDropdown(true);
-                        }}
-                        onFocus={() => setShowCustomerDropdown(true)}
-                      />
-                    </div>
-
-                    {/* Dropdown */}
-                    {showCustomerDropdown && filteredCustomers.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-xl z-20 max-h-56 overflow-y-auto animate-fadeIn">
-                        {filteredCustomers.map((customer) => (
-                          <button
-                            key={customer.id}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-surface transition-colors text-left"
-                            onClick={() => selectCustomer(customer)}
-                          >
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                              {customer.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .substring(0, 2)
-                                .toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-semibold text-sm truncate">{customer.name}</div>
-                              <div className="text-xs text-on-surface-variant">{customer.phone}</div>
-                            </div>
-                            <i className="fas fa-chevron-right text-xs text-gray-300 ml-auto" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {showCustomerDropdown && customerSearch && filteredCustomers.length === 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-xl z-20 p-4 text-center animate-fadeIn">
-                        <p className="text-sm text-on-surface-variant">No customers found</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Selected Customer */}
-                  {form.customerName && (
-                    <div className="flex items-center gap-3 p-3 bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl animate-fadeIn">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {form.customerName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .substring(0, 2)
-                          .toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{form.customerName}</div>
-                        <div className="text-xs text-on-surface-variant">{form.customerPhone}</div>
-                      </div>
-                      <button
-                        className="w-7 h-7 rounded-full bg-surface text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors shadow-sm"
-                        onClick={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            customerName: "",
-                            customerPhone: "",
-                            customerEmail: "",
-                            customerAddress: "",
-                          }))
-                        }
-                      >
-                        <i className="fas fa-times text-xs" />
-                      </button>
-                    </div>
-                  )}
-
-                  {errors.customerName && <p className="text-xs text-red-500 font-medium mt-2 animate-fadeIn">{errors.customerName}</p>}
-
-                  {/* Manual Entry Toggle */}
-                  {!form.customerName && !isNewCustomer && (
-                    <button
-                      className="w-full py-2.5 mt-2 bg-surface border-2 border-dashed border-outline-variant rounded-xl text-[#25D366] font-semibold text-sm flex items-center justify-center gap-2 hover:border-[#25D366] transition-all"
-                      onClick={() => setIsNewCustomer(true)}
-                    >
-                      <i className="fas fa-user-plus" />
-                      Create New Customer
-                    </button>
-                  )}
-
-                  {/* Manual Fields */}
-                  {isNewCustomer && (
-                    <div className="space-y-3 mt-3 animate-fadeIn">
-                      <FormInput
-                        label="Full Name"
-                        name="customerName"
-                        value={form.customerName}
-                        onChange={handleInputChange}
-                        placeholder="Enter customer name"
-                        error={errors.customerName}
-                        icon="fa-user"
-                        required
-                      />
-                      <FormInput
-                        label="Phone Number"
-                        name="customerPhone"
-                        value={form.customerPhone}
-                        onChange={handleInputChange}
-                        placeholder="+1 234 567 890"
-                        error={errors.customerPhone}
-                        icon="fa-phone-alt"
-                        required
-                      />
-                      <FormInput
-                        label="Email"
-                        name="customerEmail"
-                        type="email"
-                        value={form.customerEmail}
-                        onChange={handleInputChange}
-                        placeholder="customer@example.com"
-                        icon="fa-envelope"
-                      />
-                    </div>
-                  )}
+              {/* Search existing */}
+              <div className="relative" ref={customerDropdownRef}>
+                <div className="relative">
+                  <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    className="w-full pl-9 pr-4 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                    placeholder="Search customer by name or phone..."
+                    value={customerSearch}
+                    onChange={(e) => { setCustomerSearch(e.target.value); setShowCustomerDropdown(true); }}
+                    onFocus={() => setShowCustomerDropdown(true)}
+                  />
                 </div>
 
-                {/* Products */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-                  <SectionHeader icon="fa-box" title="Products" required />
-
-                  <div className="border-2 border-outline-variant rounded-xl overflow-hidden">
-                    <div className="p-3 bg-surface border-b border-outline-variant">
-                      <div className="relative">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                        <input
-                          type="text"
-                          placeholder="Search products..."
-                          className="w-full pl-9 pr-4 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-[#25D366] transition-all"
-                          value={productSearch}
-                          onChange={(e) => setProductSearch(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="max-h-52 overflow-y-auto scrollbar-thin">
-                      {filteredProducts.length === 0 ? (
-                        <EmptyState
-                          icon="fa-box-open"
-                          title="No Products Found"
-                          description="Try a different search term"
-                        />
-                      ) : (
-                        filteredProducts.map((product) => {
-                          const prodImg = product.image || product.images?.[0];
-                          const stock = product.stock;
-                          const lowStockAlert = product.lowStockAlert || 5;
-                          const isOutOfStock = stock !== undefined && stock <= 0;
-                          const isLowStock = stock !== undefined && stock > 0 && stock <= lowStockAlert;
-                          return (
-                            <div
-                              key={product.id}
-                              className={`flex items-center gap-3 p-3 border-b border-outline-variant last:border-b-0 transition-colors group ${
-                                isOutOfStock ? 'opacity-50 bg-red-50/30' : 'hover:bg-surface'
-                              }`}
-                            >
-                              <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm">
-                                {prodImg ? (
-                                  <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl">📦</div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-sm truncate">{product.name}</div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-on-surface-variant">{formatCurrency(product.price)} each</span>
-                                  {stock !== undefined && (
-                                    <span
-                                      className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                                        isOutOfStock
-                                          ? 'bg-red-100 text-red-600'
-                                          : isLowStock
-                                          ? 'bg-amber-100 text-amber-700'
-                                          : 'bg-green-100 text-green-700'
-                                      }`}
-                                    >
-                                      <i className={`fas ${isOutOfStock ? 'fa-times-circle' : isLowStock ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-[8px]`} />
-                                      {isOutOfStock ? 'Out of Stock' : `${stock} in stock`}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => addProduct(product)}
-                                disabled={isOutOfStock}
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90 shadow-sm ${
-                                  isOutOfStock
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-[#25D366] text-white hover:bg-[#22c55e] opacity-0 group-hover:opacity-100 sm:opacity-100'
-                                }`}
-                              >
-                                <i className="fas fa-plus text-xs" />
-                              </button>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-
-                  {errors.selectedProducts && (
-                    <p className="text-xs text-red-500 font-medium mt-2 animate-fadeIn">{errors.selectedProducts}</p>
-                  )}
-                </div>
-
-                {/* Selected Products */}
-                {form.selectedProducts.length > 0 && (
-                  <div className="animate-fadeIn" style={{ animationDelay: '0.15s' }}>
-                    <SectionHeader
-                      icon="fa-shopping-cart"
-                      title={`Order Items (${form.selectedProducts.reduce((s, p) => s + p.quantity, 0)})`}
-                    />
-                    <div className="space-y-2">
-                      {form.selectedProducts.map((item) => {
-                        // Look up product image from the products array
-                        const product = products.find(p => p.id === item.productId);
-                        const prodImg = product?.image || product?.images?.[0];
-                        return (
-                          <div
-                            key={item.productId}
-                            className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant hover:border-[#25D366]/30 transition-all group"
-                          >
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm">
-                              {prodImg ? (
-                                <img src={prodImg} alt={item.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-lg">📦</div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-sm truncate">{item.name}</div>
-                              <div className="text-xs text-on-surface-variant">{formatCurrency(item.price)} each</div>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                                className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
-                              >
-                                -
-                              </button>
-                              <span className="font-bold w-7 text-center text-sm">{item.quantity}</span>
-                              <button
-                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                className="w-8 h-8 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
-                              >
-                                +
-                              </button>
-                            </div>
-                            <div className="font-bold text-[#25D366] min-w-[60px] text-right text-sm">
-                              {formatCurrency(item.price * item.quantity)}
-                            </div>
-                            <button
-                              onClick={() => removeProduct(item.productId)}
-                              className="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
-                            >
-                              <i className="fas fa-trash text-xs" />
-                            </button>
+                {showCustomerDropdown && customerSearch && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-outline-variant rounded-xl shadow-xl z-20 max-h-56 overflow-y-auto animate-fadeIn">
+                    {filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((customer) => (
+                        <button
+                          key={customer.id}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-surface transition-colors text-left"
+                          onClick={() => selectCustomer(customer)}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                            {customer.name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Order Summary */}
-                {form.selectedProducts.length > 0 && (
-                  <div className="animate-fadeIn" style={{ animationDelay: '0.2s' }}>
-                    <SectionHeader icon="fa-calculator" title="Order Summary" />
-                    <div className="bg-surface rounded-xl p-4 space-y-2 border border-outline-variant">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-on-surface-variant">
-                          Subtotal ({form.selectedProducts.reduce((s, p) => s + p.quantity, 0)} items)
-                        </span>
-                        <span className="font-semibold text-on-surface">{formatCurrency(totals.subtotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-on-surface-variant">Shipping</span>
-                        <span className="font-semibold text-on-surface">
-                          {totals.shipping > 0 ? formatCurrency(totals.shipping) : "Free"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-on-surface-variant">Tax (16%)</span>
-                        <span className="font-semibold text-on-surface">{formatCurrency(totals.tax)}</span>
-                      </div>
-                      {totals.discount > 0 && (
-                        <div className="flex justify-between text-sm text-green-600">
-                          <span className="flex items-center gap-1">
-                            <i className="fas fa-tag text-xs" />
-                            Discount
-                          </span>
-                          <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-sm truncate">{customer.name}</div>
+                            <div className="text-xs text-on-surface-variant">{customer.phone}</div>
+                          </div>
+                          <i className="fas fa-chevron-right text-xs text-gray-300" />
+                        </button>
+                      ))
+                    ) : (
+                      <div
+                        className="p-3 text-center cursor-pointer hover:bg-surface transition-colors"
+                        onClick={() => { setShowCustomerDropdown(false); setShowNewCustomerForm(true); }}
+                      >
+                        <div className="flex items-center justify-center gap-2 text-sm text-[#25D366] font-semibold">
+                          <i className="fas fa-user-plus" />
+                          <span>Create new customer</span>
                         </div>
-                      )}
-                      <div className="flex justify-between pt-3 mt-1 border-t-2 border-outline-variant">
-                        <span className="text-base font-extrabold text-on-surface">Total</span>
-                        <span className="text-xl font-extrabold text-[#25D366]">{formatCurrency(totals.total)}</span>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* ─── Right Column ─── */}
-              <div className="space-y-6 animate-fadeIn" style={{ animationDelay: '0.25s' }}>
-                {/* Payment Method */}
-                <div>
-                  <SectionHeader icon="fa-credit-card" title="Payment Method" required />
-                  <div className="space-y-2">
-                    {PAYMENT_METHODS.map((method) => (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => {
-                          setForm((prev) => ({ ...prev, paymentMethod: method.id }));
-                          setErrors((prev) => ({ ...prev, paymentMethod: undefined }));
-                        }}
-                        className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                          form.paymentMethod === method.id
-                            ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] shadow-sm"
-                            : "border-outline-variant hover:border-[#25D366]/50 hover:bg-surface"
-                        }`}
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 transition-all ${
-                            form.paymentMethod === method.id
-                              ? "bg-[#25D366] text-white shadow-md"
-                              : "bg-surface text-on-surface-variant"
-                          }`}
-                        >
-                          <i className={`fas ${method.icon}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm">{method.id}</div>
-                          <div className="text-xs text-on-surface-variant">{method.desc}</div>
-                        </div>
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            form.paymentMethod === method.id
-                              ? "bg-[#25D366] border-[#25D366]"
-                              : "border-outline-variant"
-                          }`}
-                        >
-                          {form.paymentMethod === method.id && <i className="fas fa-check text-white text-xs" />}
-                        </div>
-                      </button>
-                    ))}
+              {/* Selected customer card */}
+              {form.customerName && !showNewCustomerForm ? (
+                <div className="flex items-center gap-3 p-3 mt-2 bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl animate-fadeIn">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+                    {form.customerName.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()}
                   </div>
-                  {errors.paymentMethod && (
-                    <p className="text-xs text-red-500 font-medium mt-2 animate-fadeIn">{errors.paymentMethod}</p>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm truncate">{form.customerName}</div>
+                    <div className="text-xs text-on-surface-variant">{form.customerPhone}</div>
+                  </div>
+                  <button
+                    className="w-7 h-7 rounded-full bg-surface text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors"
+                    onClick={() => setForm((prev) => ({ ...prev, customerName: "", customerPhone: "", customerEmail: "", customerAddress: "" }))}
+                    aria-label="Clear customer"
+                  >
+                    <i className="fas fa-times text-xs" />
+                  </button>
                 </div>
+              ) : null}
 
-                {/* Delivery/Pickup Toggle */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.3s' }}>
-                  <SectionHeader icon="fa-truck" title="Fulfillment" />
-                  
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      onClick={() => setForm((prev) => ({ ...prev, deliveryType: 'delivery' }))}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
-                        form.deliveryType === 'delivery'
-                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-sm'
-                          : 'border-outline-variant text-on-surface-variant hover:border-[#25D366]/50'
-                      }`}
-                    >
-                      <i className="fas fa-truck" />
-                      Delivery
-                    </button>
-                    <button
-                      onClick={() => setForm((prev) => ({ ...prev, deliveryType: 'pickup' }))}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
-                        form.deliveryType === 'pickup'
-                          ? 'border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366] shadow-sm'
-                          : 'border-outline-variant text-on-surface-variant hover:border-[#25D366]/50'
-                      }`}
-                    >
-                      <i className="fas fa-store" />
-                      Pickup
-                    </button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {form.deliveryType === 'delivery' && (
-                      <FormInput
-                        label="Delivery Address"
-                        name="customerAddress"
-                        value={form.customerAddress}
+              {/* New customer form */}
+              {showNewCustomerForm && (
+                <div className="space-y-2.5 mt-2 animate-fadeIn">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-on-surface-variant">Full Name *</label>
+                    <div className="relative">
+                      <i className="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <input
+                        type="text"
+                        name="customerName"
+                        value={form.customerName}
                         onChange={handleInputChange}
-                        placeholder="Enter full delivery address"
-                        error={errors.customerAddress}
-                        icon="fa-map-marker-alt"
-                        required={form.deliveryType === 'delivery'}
+                        placeholder="Customer name"
+                        className={`w-full pl-9 pr-4 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all ${
+                          errors.customerName ? "border-red-300" : "border-outline-variant"
+                        }`}
                       />
-                    )}
-
-                    {form.deliveryType === 'pickup' && (
-                      <div className="p-3 bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl">
-                        <div className="flex items-center gap-2 text-sm">
-                          <i className="fas fa-store text-[#25D366]" />
-                          <span className="text-on-surface-variant">Customer will pick up at store location</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Delivery Date */}
+                    </div>
+                    {errors.customerName && <p className="text-xs text-red-500 font-medium">{errors.customerName}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-on-surface-variant">Phone *</label>
+                    <div className="relative">
+                      <i className="fas fa-phone-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <input
+                        type="text"
+                        name="customerPhone"
+                        value={form.customerPhone}
+                        onChange={handleInputChange}
+                        placeholder="+254 712 345 678"
+                        className={`w-full pl-9 pr-4 py-2.5 border-2 rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all ${
+                          errors.customerPhone ? "border-red-300" : "border-outline-variant"
+                        }`}
+                      />
+                    </div>
+                    {errors.customerPhone && <p className="text-xs text-red-500 font-medium">{errors.customerPhone}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1.5">
-                      <label className="block text-sm font-semibold text-on-surface-variant">
-                        {form.deliveryType === 'pickup' ? 'Pickup Date (Optional)' : 'Delivery Date (Optional)'}
-                      </label>
+                      <label className="block text-xs font-semibold text-on-surface-variant">Email (optional)</label>
                       <div className="relative">
-                        <i className="fas fa-calendar-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <i className="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                         <input
-                          type="date"
-                          value={form.deliveryDate}
-                          onChange={(e) => setForm((prev) => ({ ...prev, deliveryDate: e.target.value }))}
-                          className="w-full pl-9 pr-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                          type="email"
+                          name="customerEmail"
+                          value={form.customerEmail}
+                          onChange={handleInputChange}
+                          placeholder="Email"
+                          className="w-full pl-9 pr-4 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
                         />
                       </div>
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-on-surface-variant">Address (optional)</label>
+                      <div className="relative">
+                        <i className="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <input
+                          type="text"
+                          name="customerAddress"
+                          value={form.customerAddress}
+                          onChange={handleInputChange}
+                          placeholder="Address"
+                          className="w-full pl-9 pr-4 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                    <ToggleSwitch
-                      label="Express Delivery"
-                      description="Same-day delivery (+$5)"
-                      checked={form.expressDelivery}
-                      onChange={(checked) => setForm((prev) => ({ ...prev, expressDelivery: checked }))}
+              {/* Toggle existing vs new customer */}
+              {!form.customerName && !showNewCustomerForm && (
+                <p className="text-xs text-on-surface-variant mt-1.5 text-center">
+                  Start typing to search existing customers or click <strong className="text-[#25D366]">Create new customer</strong> from results
+                </p>
+              )}
+              {showNewCustomerForm && (
+                <button
+                  className="mt-2 text-xs text-on-surface-variant hover:text-[#25D366] transition-colors flex items-center gap-1"
+                  onClick={() => { setShowNewCustomerForm(false); setForm((prev) => ({ ...prev, customerName: "", customerPhone: "", customerEmail: "", customerAddress: "" })); }}
+                >
+                  <i className="fas fa-arrow-left" />
+                  Search existing customers
+                </button>
+              )}
+            </div>
+
+            {/* ═══ Products ═══ */}
+            <div>
+              <SectionHeader icon="fa-box" title="Products" required />
+
+              <div className="border-2 border-outline-variant rounded-xl overflow-hidden">
+                <div className="p-2.5 bg-surface border-b border-outline-variant">
+                  <div className="relative">
+                    <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      className="w-full pl-9 pr-4 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-[#25D366] transition-all"
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
                     />
                   </div>
                 </div>
 
-                {/* Order Options */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.35s' }}>
-                  <SectionHeader icon="fa-cog" title="Order Options" />
-                  <div className="space-y-2">
-                    <ToggleSwitch
-                      label="Send WhatsApp Confirmation"
-                      description="Notify customer immediately"
-                      checked={form.sendWhatsApp}
-                      onChange={(checked) => setForm((prev) => ({ ...prev, sendWhatsApp: checked }))}
-                    />
-                    <ToggleSwitch
-                      label="Mark as Paid"
-                      description="Payment already received"
-                      checked={form.markAsPaid}
-                      onChange={(checked) => {
-                        setForm((prev) => ({ ...prev, markAsPaid: checked }));
-                        if (!checked) setForm((prev) => ({ ...prev, paymentRef: '' }));
-                      }}
-                      activeColor="bg-green-500"
-                    />
-                  </div>
-                  
-                  {form.markAsPaid && (
-                    <div className="animate-fadeIn mt-3">
-                      <FormInput
-                        label="Payment Reference / Transaction ID"
-                        name="paymentRef"
-                        value={form.paymentRef}
-                        onChange={handleInputChange}
-                        placeholder="e.g., M-Pesa transaction ID"
-                        icon="fa-receipt"
-                      />
+                <div className="max-h-48 overflow-y-auto scrollbar-thin">
+                  {filteredProducts.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i className="fas fa-box-open text-xl text-gray-300" />
+                      </div>
+                      <p className="text-sm text-on-surface-variant">No products found</p>
                     </div>
+                  ) : (
+                    filteredProducts.map((product) => {
+                      const prodImg = product.image || product.images?.[0];
+                      const stock = product.stock;
+                      const isOutOfStock = stock !== undefined && stock <= 0;
+                      return (
+                        <div
+                          key={product.id}
+                          className={`flex items-center gap-2.5 p-2.5 border-b border-outline-variant last:border-b-0 transition-colors ${
+                            isOutOfStock ? 'opacity-40' : 'hover:bg-surface'
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm">
+                            {prodImg ? (
+                              <img src={prodImg} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-lg">📦</div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{product.name}</div>
+                            <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+                              <span>{formatCurrency(product.price)}</span>
+                              {stock !== undefined && (
+                                <span className={`font-semibold ${
+                                  stock <= (product.lowStockAlert || 5) && stock > 0 ? 'text-amber-600' : stock <= 0 ? 'text-red-500' : 'text-green-600'
+                                }`}>
+                                  {stock <= 0 ? 'Sold out' : `${stock} left`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => addProduct(product)}
+                            disabled={isOutOfStock}
+                            className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center transition-all active:scale-90 hover:bg-[#22c55e] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm"
+                            aria-label={`Add ${product.name}`}
+                          >
+                            <i className="fas fa-plus text-xs" />
+                          </button>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
+              </div>
 
-                {/* Save Customer */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.37s' }}>
-                  <ToggleSwitch
-                    label="Save Customer to Database"
-                    description="Create a customer profile for future orders"
-                    checked={form.saveCustomer}
-                    onChange={(checked) => setForm((prev) => ({ ...prev, saveCustomer: checked }))}
-                    activeColor="bg-[#25D366]"
-                  />
+              {errors.selectedProducts && (
+                <p className="text-xs text-red-500 font-medium mt-1.5 animate-fadeIn">{errors.selectedProducts}</p>
+              )}
+            </div>
+
+            {/* ═══ Selected Products ═══ */}
+            {form.selectedProducts.length > 0 && (
+              <div>
+                <SectionHeader icon="fa-shopping-cart" title={`Cart (${selectedCount} items)`} />
+                <div className="space-y-1.5">
+                  {form.selectedProducts.map((item) => (
+                    <div key={item.productId} className="flex items-center gap-2.5 p-2.5 bg-surface rounded-xl border border-outline-variant transition-all">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{item.name}</div>
+                        <div className="text-xs text-on-surface-variant">{formatCurrency(item.price)} each</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          className="w-7 h-7 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
+                          aria-label={`Decrease quantity for ${item.name}`}
+                        >-</button>
+                        <span className="font-bold w-6 text-center text-sm">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          className="w-7 h-7 rounded-lg border-2 border-outline-variant flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-all active:scale-90 text-sm font-bold"
+                          aria-label={`Increase quantity for ${item.name}`}
+                        >+</button>
+                      </div>
+                      <div className="font-bold text-[#25D366] min-w-[56px] text-right text-sm">
+                        {formatCurrency(item.price * item.quantity)}
+                      </div>
+                      <button
+                        onClick={() => removeProduct(item.productId)}
+                        className="w-7 h-7 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-all"
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        <i className="fas fa-trash text-xs" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Discount */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-                  <SectionHeader icon="fa-tag" title="Discount" />
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <i className="fas fa-percent absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                      <input
-                        type="text"
-                        value={form.discountCode}
-                        onChange={(e) => setForm((prev) => ({ ...prev, discountCode: e.target.value }))}
-                        className="w-full pl-9 pr-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
-                        placeholder="Discount code"
-                      />
+                {/* Order Summary */}
+                <div className="mt-2 p-3 bg-surface rounded-xl border border-outline-variant">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-on-surface-variant">Subtotal ({selectedCount} items)</span>
+                    <span className="font-semibold text-on-surface">{formatCurrency(totals.subtotal)}</span>
+                  </div>
+                  {totals.discount > 0 && (
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      <span className="text-on-surface-variant">Discount</span>
+                      <span className="font-semibold text-green-600">-{formatCurrency(totals.discount)}</span>
                     </div>
-                    <button
-                      onClick={applyDiscount}
-                      disabled={!form.discountCode.trim()}
-                      className="px-4 py-3 bg-surface border-2 border-outline-variant rounded-xl text-on-surface-variant font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                    >
-                      Apply
-                    </button>
+                  )}
+                  <div className="flex justify-between items-center pt-2 mt-1.5 border-t border-outline-variant">
+                    <span className="text-base font-extrabold text-on-surface">Total</span>
+                    <span className="text-xl font-extrabold text-[#25D366]">{formatCurrency(totals.total)}</span>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Notes */}
-                <div className="animate-fadeIn" style={{ animationDelay: '0.45s' }}>
-                  <SectionHeader icon="fa-sticky-note" title="Notes" />
-                  <textarea
-                    name="notes"
-                    value={form.notes}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all resize-none"
-                    rows={3}
-                    placeholder="Add any special instructions..."
-                  />
+            {/* ═══ Delivery ═══ */}
+            <div>
+              <SectionHeader icon="fa-truck" title="Delivery" />
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, deliveryMethod: "pickup", deliveryAddress: prev.customerAddress || "" }))}
+                  className={`flex-1 flex items-center justify-center gap-2 p-3 border-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                    form.deliveryMethod === "pickup"
+                      ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366]"
+                      : "border-outline-variant text-on-surface-variant hover:border-gray-400"
+                  }`}
+                >
+                  <i className="fas fa-store" />
+                  Pickup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, deliveryMethod: "delivery" }))}
+                  className={`flex-1 flex items-center justify-center gap-2 p-3 border-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                    form.deliveryMethod === "delivery"
+                      ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366]"
+                      : "border-outline-variant text-on-surface-variant hover:border-gray-400"
+                  }`}
+                >
+                  <i className="fas fa-shipping-fast" />
+                  Delivery
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {form.deliveryMethod === "delivery" && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-on-surface-variant">Delivery Address *</label>
+                    <div className="relative">
+                      <i className="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <input
+                        type="text"
+                        name="deliveryAddress"
+                        value={form.deliveryAddress}
+                        onChange={handleInputChange}
+                        placeholder="Full delivery address"
+                        className="w-full pl-9 pr-4 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-on-surface-variant">
+                    {form.deliveryMethod === "pickup" ? "Expected Pickup Date" : "Expected Delivery Date"}
+                  </label>
+                  <div className="relative">
+                    <i className="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="date"
+                      name="expectedDate"
+                      value={form.expectedDate}
+                      onChange={handleInputChange}
+                      className="w-full pl-9 pr-4 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all"
+                    />
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            {/* ═══ Payment & Notes Row ═══ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Payment Method + Discount */}
+              <div>
+                <SectionHeader icon="fa-credit-card" title="Payment" />
+                <select
+                  name="paymentMethod"
+                  value={form.paymentMethod}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all bg-surface"
+                >
+                  {PAYMENT_METHODS.map((m) => (
+                    <option key={m.id} value={m.id}>{m.id}</option>
+                  ))}
+                </select>
+                {form.paymentMethod && (
+                  <input
+                    type="text"
+                    name="paymentRef"
+                    value={form.paymentRef}
+                    onChange={handleInputChange}
+                    placeholder="Transaction ref (optional)"
+                    className="w-full mt-1.5 px-3 py-2 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] transition-all"
+                  />
+                )}
+                <div className="mt-2">
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-1">Discount (KES)</label>
+                  <div className="relative">
+                    <i className="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="number"
+                      name="discount"
+                      value={form.discount}
+                      onChange={(e) => setForm((prev) => ({ ...prev, discount: Math.max(0, Number(e.target.value) || 0) }))}
+                      placeholder="0"
+                      min="0"
+                      className="w-full pl-9 pr-4 py-2 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <SectionHeader icon="fa-sticky-note" title="Notes" />
+                <textarea
+                  name="notes"
+                  value={form.notes}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2.5 border-2 border-outline-variant rounded-xl text-sm focus:outline-none focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 transition-all resize-none"
+                  rows={3}
+                  placeholder="Order notes..."
+                  aria-label="Order notes"
+                />
+              </div>
+            </div>
+
+            {/* ═══ Options ═══ */}
+            <div>
+              <SectionHeader icon="fa-cog" title="Options" />
+              <div className="space-y-1.5">
+                <ToggleSwitch
+                  label="Send WhatsApp Notification"
+                  description="Alert customer their order is confirmed & waiting to ship"
+                  checked={form.sendWhatsApp}
+                  onChange={(checked) => setForm((prev) => ({ ...prev, sendWhatsApp: checked }))}
+                />
+                <ToggleSwitch
+                  label="Save Customer to Database"
+                  description="Create a customer profile for future orders"
+                  checked={form.saveCustomer}
+                  onChange={(checked) => setForm((prev) => ({ ...prev, saveCustomer: checked }))}
+                />
               </div>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex-shrink-0 p-3 sm:p-4 border-t border-outline-variant bg-surface animate-fadeIn" style={{ animationDelay: '0.5s' }}>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-on-surface-variant order-2 sm:order-1">
-                <i className="fas fa-shield-alt text-[#10b981]" />
+          {/* ── Footer ── */}
+          <div className="flex-shrink-0 p-3 border-t border-outline-variant bg-surface">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2.5">
+              <div className="flex items-center gap-2 text-xs text-on-surface-variant order-2 sm:order-1">
+                <i className="fas fa-check-circle text-[#10b981]" />
                 <span>
-                  <strong>Secure</strong> • {form.selectedProducts.length} items • {formatCurrency(totals.total)}
+                  <strong>Manual order</strong> • {selectedCount} items • {formatCurrency(totals.total)}
                 </span>
               </div>
               <div className="flex gap-2 w-full sm:w-auto order-1 sm:order-2">
                 <button
-                  className="flex-1 sm:flex-none px-4 py-3 bg-surface border-2 border-outline-variant text-on-surface-variant rounded-xl font-semibold text-sm hover:border-gray-400 hover:text-on-surface transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
+                  className="flex-1 sm:flex-none px-4 py-2.5 bg-surface border-2 border-outline-variant text-on-surface-variant rounded-xl font-semibold text-sm hover:border-gray-400 hover:text-on-surface transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2"
                   onClick={onClose}
                   disabled={creatingOrder || isSubmitting}
                 >
@@ -1046,7 +845,7 @@ export default function NewOrderModal({
                   Cancel
                 </button>
                 <button
-                  className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 min-w-[140px] ${
+                  className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 min-w-[140px] ${
                     isFormValid
                       ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white hover:shadow-lg hover:from-[#22c55e] hover:to-[#0d9488]"
                       : "bg-surface-container-high text-gray-400 cursor-not-allowed"
@@ -1055,15 +854,9 @@ export default function NewOrderModal({
                   disabled={!isFormValid || creatingOrder || isSubmitting}
                 >
                   {creatingOrder || isSubmitting ? (
-                    <>
-                      <i className="fas fa-circle-notch fa-spin" />
-                      <span>Creating...</span>
-                    </>
+                    <><i className="fas fa-circle-notch fa-spin" /><span>Processing...</span></>
                   ) : (
-                    <>
-                      <i className="fas fa-check" />
-                      <span>Create Order</span>
-                    </>
+                    <><i className="fas fa-check" /><span>Create Order</span></>
                   )}
                 </button>
               </div>
@@ -1072,7 +865,7 @@ export default function NewOrderModal({
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* ═══ Confirmation Modal ═══ */}
       {showConfirm && (
         <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
@@ -1080,12 +873,21 @@ export default function NewOrderModal({
             <div className="w-14 h-14 rounded-full bg-[rgba(37,211,102,0.1)] flex items-center justify-center mx-auto mb-4">
               <i className="fas fa-clipboard-check text-2xl text-[#25D366]" />
             </div>
-            <h3 className="text-xl font-bold text-on-surface text-center mb-2">Confirm Order</h3>
-            <p className="text-on-surface-variant text-center mb-6">
-              Create order for <strong>{form.customerName}</strong> with{" "}
-              <strong>{form.selectedProducts.reduce((s, p) => s + p.quantity, 0)} items</strong> totaling{" "}
-              <strong className="text-[#25D366]">{formatCurrency(totals.total)}</strong>?
+            <h3 className="text-xl font-bold text-on-surface text-center mb-2">Confirm Manual Order</h3>
+            <p className="text-on-surface-variant text-center text-sm mb-6">
+              This will create a <strong>paid</strong> order for <strong>{form.customerName}</strong> with{" "}
+              <strong>{selectedCount} items</strong> totaling{" "}
+              <strong className="text-[#25D366]">{formatCurrency(totals.total)}</strong>{" "}
+              ({form.deliveryMethod === "pickup" ? "Pickup" : "Delivery"})
+              {form.expectedDate && <> • {form.expectedDate}</>}.
+              A WhatsApp notification will be sent to the customer.
             </p>
+            <div className="bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl p-3 mb-5 flex items-start gap-2.5">
+              <i className="fas fa-info-circle text-[#25D366] mt-0.5" />
+              <p className="text-xs text-on-surface-variant">
+                Manual order means <strong>payment was already collected</strong> by you. The order will be marked as <strong>paid</strong> and set to <strong>processing</strong> status.
+              </p>
+            </div>
             <div className="flex gap-3">
               <button
                 className="flex-1 px-4 py-3 bg-surface-variant text-on-surface rounded-xl font-semibold hover:bg-surface-container-high transition-all active:scale-95"
@@ -1103,7 +905,7 @@ export default function NewOrderModal({
                 ) : (
                   <i className="fas fa-check" />
                 )}
-                {isSubmitting ? "Creating..." : "Confirm"}
+                {isSubmitting ? "Processing..." : "Confirm & Send"}
               </button>
             </div>
           </div>

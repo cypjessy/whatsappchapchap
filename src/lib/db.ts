@@ -44,6 +44,9 @@ export interface Tenant {
   whatsappInstanceId?: string;
   whatsappConnectionStatus?: string;
   shippingMethods?: Array<{ id: string; name: string; price: number }>;
+  trialDays?: number; // How many days the free trial lasts
+  trialEndsAt?: any; // When the free trial ends (createdAt + trialDays)
+  planStartedAt?: any; // When the current plan was started/implemented — billing cycle anchor
   createdAt: any;
   updatedAt: any;
   // UI helper fields
@@ -301,6 +304,7 @@ export interface Client {
   avgGap?: string;
   favoriteService?: string;
   referrals?: number;
+  tags?: string[];
   notes?: string;
   avatarGradient?: string;
   avatarText?: string;
@@ -2084,7 +2088,110 @@ export const adminService = {
   },
 
   async updateTenantPlan(tenantId: string, plan: "free" | "starter" | "pro" | "enterprise"): Promise<void> {
-    await updateDoc(doc(db, "tenants", tenantId), { plan, updatedAt: serverTimestamp() });
+    await updateDoc(doc(db, "tenants", tenantId), { plan, planStartedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  },
+
+  async setTenantFreeTrial(tenantId: string, days: number): Promise<void> {
+    // Calculate trial end date from now
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    await updateDoc(doc(db, "tenants", tenantId), {
+      plan: "free",
+      trialDays: days,
+      trialEndsAt: trialEnd,
+      status: "active",
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  async checkAndAutoSuspendExpiredTrials(): Promise<number> {
+    // Check all active free-plan tenants and suspend those whose trial has expired
+    // Skip admin accounts — they are exempt from auto-suspension and plan restrictions
+    const tenants = await this.getAllTenants();
+    const now = new Date();
+    let suspendedCount = 0;
+
+    for (const tenant of tenants) {
+      if (tenant.role === "admin" || tenant.role === "superadmin") continue;
+      if (tenant.plan !== "free") continue;
+      if (tenant.status !== "active") continue;
+      if (!tenant.trialEndsAt) continue;
+
+      let endDate: Date;
+      if (tenant.trialEndsAt.toDate) {
+        endDate = tenant.trialEndsAt.toDate();
+      } else if (tenant.trialEndsAt instanceof Date) {
+        endDate = tenant.trialEndsAt;
+      } else if (typeof tenant.trialEndsAt === 'object' && tenant.trialEndsAt.seconds) {
+        endDate = new Date(tenant.trialEndsAt.seconds * 1000);
+      } else {
+        endDate = new Date(tenant.trialEndsAt);
+      }
+
+      if (endDate <= now) {
+        await this.updateTenantStatus(tenant.id, "suspended");
+        await this.addActivityLog(tenant.id, {
+          action: "Auto-Suspended",
+          details: `Free trial ended on ${endDate.toLocaleDateString()}. Account auto-suspended.`,
+          metadata: { adminAction: "auto_suspend_trial_expired", trialEndedAt: endDate.toISOString() },
+        });
+        suspendedCount++;
+      }
+    }
+
+    return suspendedCount;
+  },
+
+  async checkAndAutoSuspendExpiredSubscriptions(): Promise<number> {
+    // Check all active paid-plan tenants and suspend those whose billing cycle has expired
+    // Billing cycle is based on planStartedAt + 30 days
+    // Skip admin/superadmin accounts — they are exempt
+    const tenants = await this.getAllTenants();
+    const now = new Date();
+    let suspendedCount = 0;
+
+    for (const tenant of tenants) {
+      // Skip admin accounts
+      if (tenant.role === "admin" || tenant.role === "superadmin") continue;
+      // Skip free-plan tenants (handled by trial check separately)
+      if (tenant.plan === "free") continue;
+      // Only suspend active accounts
+      if (tenant.status !== "active") continue;
+      // Need a planStartedAt to determine billing cycle
+      if (!tenant.planStartedAt) continue;
+
+      // Parse planStartedAt into a Date
+      let startDate: Date;
+      if (tenant.planStartedAt.toDate) {
+        startDate = tenant.planStartedAt.toDate();
+      } else if (tenant.planStartedAt instanceof Date) {
+        startDate = tenant.planStartedAt;
+      } else if (typeof tenant.planStartedAt === 'object' && tenant.planStartedAt.seconds) {
+        startDate = new Date(tenant.planStartedAt.seconds * 1000);
+      } else {
+        startDate = new Date(tenant.planStartedAt);
+      }
+
+      // Billing cycle = startDate + 30 days
+      const billingEnd = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      if (billingEnd <= now) {
+        await this.updateTenantStatus(tenant.id, "suspended");
+        await this.addActivityLog(tenant.id, {
+          action: "Auto-Suspended",
+          details: `${tenant.plan} subscription billing cycle ended on ${billingEnd.toLocaleDateString()}. Account auto-suspended for non-payment.`,
+          metadata: { 
+            adminAction: "auto_suspend_subscription_expired", 
+            plan: tenant.plan,
+            planStartedAt: startDate.toISOString(),
+            billingEndedAt: billingEnd.toISOString(),
+          },
+        });
+        suspendedCount++;
+      }
+    }
+
+    return suspendedCount;
   },
 
   async deleteTenant(tenantId: string): Promise<void> {
@@ -2114,7 +2221,12 @@ export const adminService = {
   },
 
   async updateTenant(tenantId: string, data: Partial<Tenant>): Promise<void> {
-    await updateDoc(doc(db, "tenants", tenantId), { ...data, updatedAt: serverTimestamp() });
+    const updateData: any = { ...data, updatedAt: serverTimestamp() };
+    // If plan is being updated, also reset the billing cycle anchor
+    if (data.plan !== undefined) {
+      updateData.planStartedAt = serverTimestamp();
+    }
+    await updateDoc(doc(db, "tenants", tenantId), updateData);
   },
 
   async addTenantNote(tenantId: string, note: string, adminId: string): Promise<void> {

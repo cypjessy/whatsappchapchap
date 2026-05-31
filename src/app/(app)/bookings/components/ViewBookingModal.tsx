@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Booking } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
-import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
-import { useAuth } from "@/context/AuthContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,849 +18,692 @@ interface ViewBookingModalProps {
   onSendReminder?: (bookingId: string) => Promise<void>;
 }
 
-interface Toast {
-  id: number;
-  message: string;
-  type: "success" | "error" | "info";
+type TabKey = "info" | "payment" | "timeline";
+
+// ─── Status Themes ────────────────────────────────────────────────────────────
+
+const STATUS_THEME: Record<string, { ring: string; light: string; icon: string; label: string }> = {
+  confirmed:  { ring: "#059669", light: "#D1FAE5", icon: "fa-check-circle", label: "Confirmed" },
+  pending:    { ring: "#D97706", light: "#FEF3C7", icon: "fa-clock",        label: "Pending" },
+  completed:  { ring: "#2563EB", light: "#DBEAFE", icon: "fa-check-double", label: "Completed" },
+  cancelled:  { ring: "#DC2626", light: "#FEE2E2", icon: "fa-times-circle", label: "Cancelled" },
+};
+
+const PAYMENT_THEME: Record<string, { bg: string; text: string; border: string; icon: string }> = {
+  paid:    { bg: "bg-emerald-50",   text: "text-emerald-700",   border: "border-emerald-200", icon: "fa-check-circle" },
+  partial: { bg: "bg-amber-50",     text: "text-amber-700",     border: "border-amber-200",   icon: "fa-adjust" },
+  unpaid:  { bg: "bg-rose-50",      text: "text-rose-700",      border: "border-rose-200",    icon: "fa-times-circle" },
+};
+
+function getStatus(s?: string) {
+  return STATUS_THEME[s || ""] || { ring: "#94A3B8", light: "#F1F5F9", icon: "fa-question", label: s || "Unknown" };
 }
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
-const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: string; dot: string; gradient: string }> = {
-  confirmed: {
-    bg: "bg-[#D1FAE5]",
-    text: "text-[#059669]",
-    border: "border-[#059669]/20",
-    icon: "fa-check-circle",
-    dot: "bg-[#059669]",
-    gradient: "from-[#059669] to-[#10B981]",
-  },
-  pending: {
-    bg: "bg-[#FEF3C7]",
-    text: "text-[#D97706]",
-    border: "border-[#D97706]/20",
-    icon: "fa-clock",
-    dot: "bg-[#D97706]",
-    gradient: "from-[#D97706] to-[#F59E0B]",
-  },
-  completed: {
-    bg: "bg-[#EFF6FF]",
-    text: "text-[#2563EB]",
-    border: "border-[#2563EB]/20",
-    icon: "fa-check-double",
-    dot: "bg-[#2563EB]",
-    gradient: "from-[#2563EB] to-[#3B82F6]",
-  },
-  cancelled: {
-    bg: "bg-[#FEE2E2]",
-    text: "text-[#DC2626]",
-    border: "border-[#DC2626]/20",
-    icon: "fa-times-circle",
-    dot: "bg-[#DC2626]",
-    gradient: "from-[#DC2626] to-[#EF4444]",
-  },
-};
-
-const PAYMENT_CONFIG: Record<string, { bg: string; text: string; border: string; icon: string; gradient: string }> = {
-  paid: { bg: "bg-[#D1FAE5]", text: "text-[#059669]", border: "border-[#059669]/20", icon: "fa-check-circle", gradient: "from-[#059669] to-[#10B981]" },
-  partial: { bg: "bg-[#FEF3C7]", text: "text-[#D97706]", border: "border-[#D97706]/20", icon: "fa-adjust", gradient: "from-[#D97706] to-[#F59E0B]" },
-  unpaid: { bg: "bg-[#FEE2E2]", text: "text-[#DC2626]", border: "border-[#DC2626]/20", icon: "fa-times-circle", gradient: "from-[#DC2626] to-[#EF4444]" },
-};
-
-// ─── Helper Functions ─────────────────────────────────────────────────────────
+function getPayment(s?: string) {
+  return PAYMENT_THEME[s || "unpaid"] || PAYMENT_THEME.unpaid;
+}
 
 function formatDate(dateStr: string) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(dateStr).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
-function getStatusConfig(status: string) {
-  return STATUS_CONFIG[status] || {
-    bg: "bg-surface-variant",
-    text: "text-on-surface-variant",
-    border: "border-outline-variant",
-    icon: "fa-question",
-    dot: "bg-[#94A3B8]",
-    gradient: "from-[#94A3B8] to-[#94A3B8]",
-  };
-}
-
-function getPaymentConfig(status?: string) {
-  return PAYMENT_CONFIG[status || "unpaid"] || PAYMENT_CONFIG.unpaid;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+function formatTime(dateStr: string) {
+  return new Date(dateStr).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: number) => void }) {
+function AvatarRing({ name, status, size = 56 }: { name: string; status: string; size?: number }) {
+  const st = getStatus(status);
+  const initial = name?.charAt(0)?.toUpperCase() || "?";
   return (
-    <div className="fixed top-4 right-4 z-[3000] space-y-2 pointer-events-none">
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className={`
-            pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-md
-            text-sm font-semibold animate-slideInRight
-            ${toast.type === "success" ? "bg-[#10B981]/95 text-white" : ""}
-            ${toast.type === "error" ? "bg-[#EF4444]/95 text-white" : ""}
-            ${toast.type === "info" ? "bg-[#8B5CF6]/95 text-white" : ""}
-          `}
-        >
-          <i className={`fas ${toast.type === "success" ? "fa-check-circle" : toast.type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}`} />
-          {toast.message}
-          <button onClick={() => onRemove(toast.id)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
-            <i className="fas fa-times text-xs" />
-          </button>
-        </div>
-      ))}
-    </div>
+    <svg width={size} height={size} viewBox="0 0 60 60" className="shrink-0">
+      <circle cx="30" cy="30" r="27" fill="none" stroke="#E2E8F0" strokeWidth="2.5" />
+      <circle
+        cx="30" cy="30" r="27" fill="none" stroke={st.ring} strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray={`${(2 * Math.PI * 27 * 0.85).toFixed(1)} ${(2 * Math.PI * 27 * 0.15).toFixed(1)}`}
+        strokeDashoffset="0"
+        transform="rotate(-90 30 30)"
+        className="transition-all duration-700"
+      />
+      <circle cx="30" cy="30" r="24" fill={st.light} />
+      <text x="30" y="30" textAnchor="middle" dominantBaseline="central" fontSize="20" fontWeight="800" fill={st.ring} fontFamily="system-ui">
+        {initial}
+      </text>
+    </svg>
   );
 }
 
-function StatCard({
-  icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-  delay = 0,
-}: {
-  icon: string;
-  iconBg: string;
-  iconColor: string;
-  label: string;
-  value: string;
-  delay?: number;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), delay);
-    return () => clearTimeout(timer);
-  }, [delay]);
-
+function InfoPill({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div
-      className={`
-        bg-surface rounded-2xl p-3.5 md:p-4 border border-outline-variant
-        transition-all duration-500 ease-out cursor-default
-        hover:shadow-md hover:-translate-y-0.5
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
-      `}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-2.5 transition-transform duration-300 group-hover:scale-110`}>
-        <i className={`fas ${icon} text-sm md:text-base`} />
+    <div className="shrink-0 flex items-center gap-2 px-3.5 py-2.5 bg-white rounded-xl border border-slate-200 shadow-sm">
+      <div className="w-7 h-7 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
+        <i className={`fas ${icon} text-[10px]`} />
       </div>
-      <div className="text-[10px] md:text-xs text-outline font-bold uppercase tracking-wider mb-0.5">{label}</div>
-      <div className="font-extrabold text-sm md:text-base text-on-surface truncate">{value}</div>
-    </div>
-  );
-}
-
-function PremiumSectionHeader({ icon, title, color = "#8B5CF6" }: { icon: string; title: string; color?: string }) {
-  return (
-    <div className="flex items-center gap-2.5 mb-4">
-      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
-        <i className={`fas ${icon} text-xs`} style={{ color }} />
+      <div className="min-w-0">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+        <div className="text-xs font-bold text-slate-800 truncate max-w-[100px]">{value}</div>
       </div>
-      <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-on-surface-variant">{title}</span>
     </div>
   );
 }
 
-function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[2500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
-      <img src={src} alt="Payment proof" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/20 hover:rotate-90 transition-all duration-300"
-      >
-        <i className="fas fa-times" />
-      </button>
-    </div>
-  );
-}
-
-function PremiumActionButton({
-  icon,
-  label,
-  variant = "default",
-  onClick,
-  disabled,
-  loading,
-}: {
-  icon: string;
-  label: string;
-  variant?: "default" | "danger" | "success" | "whatsapp" | "primary";
-  onClick: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-}) {
-  const variants = {
-    default:
-      "bg-surface text-on-surface-variant border-2 border-outline-variant hover:border-[#8B5CF6]/30 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/5",
-    danger:
-      "bg-gradient-to-r from-[#EF4444] to-[#DC2626] text-white shadow-lg shadow-[#EF4444]/25 hover:shadow-xl hover:shadow-[#EF4444]/30",
-    success:
-      "bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-lg shadow-[#10B981]/25 hover:shadow-xl hover:shadow-[#10B981]/30",
-    whatsapp:
-      "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-xl hover:shadow-[#25D366]/30",
-    primary:
-      "bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] text-white shadow-lg shadow-[#8B5CF6]/25 hover:shadow-xl hover:shadow-[#8B5CF6]/30",
-  };
-
+function TabButton({ active, icon, label, onClick }: { active: boolean; icon: string; label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      disabled={disabled || loading}
-      className={`
-        flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-sm
-        transition-all duration-200 active:scale-[0.97] w-full
-        ${variants[variant]}
-        ${disabled || loading ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"}
-      `}
+      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+        active
+          ? "bg-slate-900 text-white shadow-md shadow-slate-900/20"
+          : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300"
+      }`}
     >
-      {loading ? (
-        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-      ) : (
-        <i className={`fas ${icon} text-sm`} />
-      )}
-      <span>{label}</span>
+      <i className={`fas ${icon} text-[10px]`} />
+      {label}
     </button>
+  );
+}
+
+function TimelineDot({ active, color }: { active: boolean; color: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`w-2.5 h-2.5 rounded-full ${active ? "" : "bg-slate-200"}`} style={{ backgroundColor: active ? color : undefined }} />
+      <div className="w-px h-8 bg-slate-200" />
+    </div>
+  );
+}
+
+function ImagePreview({ src, onOpen }: { src: string; onOpen: () => void }) {
+  return (
+    <div className="relative rounded-xl overflow-hidden border border-slate-200 cursor-pointer group" onClick={onOpen}>
+      <img src={src} alt="Proof" className="w-full h-28 object-cover transition-transform duration-300 group-hover:scale-105" />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <i className="fas fa-expand text-xs text-slate-700" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmDialog({ open, title, message, confirmText, onConfirm, onCancel }: {
+  open: boolean; title: string; message: string; confirmText: string; onConfirm: () => void; onCancel: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6" onClick={onCancel}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative bg-white rounded-2xl w-full max-w-xs p-5 shadow-2xl animate-fadeIn" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
+          <i className="fas fa-exclamation-triangle text-sm" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-800 text-center mb-1">{title}</h3>
+        <p className="text-xs text-slate-500 text-center mb-4">{message}</p>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 active:scale-95 transition-all">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 px-3 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold active:scale-95 transition-all shadow-md shadow-rose-600/20">{confirmText}</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function ViewBookingModal({
-  booking,
-  open,
-  onClose,
-  onUpdateStatus,
-  onDelete,
-  onEdit,
-  onOpenPaymentModal,
-  onSendReminder,
-}: ViewBookingModalProps) {
-  const { user } = useAuth();
-  const modalRef = useRef<HTMLDivElement>(null);
+export default function ViewBookingModal(props: ViewBookingModalProps) {
+  const { booking, open, onClose, onUpdateStatus, onDelete, onEdit, onOpenPaymentModal, onSendReminder } = props;
+
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("info");
   const [isVisible, setIsVisible] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [sendingReminder, setSendingReminder] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" }[]>([]);
+  const toastId = useRef(0);
 
-  const toastIdRef = useRef(0);
-
-  const addToast = useCallback((message: string, type: Toast["type"] = "success") => {
-    const id = ++toastIdRef.current;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+  const addToast = useCallback((msg: string, type: "success" | "error" = "success") => {
+    const id = ++toastId.current;
+    setToasts(p => [...p, { id, msg, type }]);
+    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 2500);
   }, []);
 
   // Entrance animation
   useEffect(() => {
-    if (open) {
-      requestAnimationFrame(() => setIsVisible(true));
-    } else {
-      setIsVisible(false);
-    }
+    if (open) { requestAnimationFrame(() => setIsVisible(true)); setActiveTab("info"); setDragY(0); }
+    else { setIsVisible(false); }
   }, [open]);
 
-  // Scroll progress
-  const handleScroll = useCallback(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const progress = el.scrollTop / (el.scrollHeight - el.clientHeight);
-    setScrollProgress(Math.min(progress, 1));
-  }, []);
+  // Lock body scroll
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
-  // Close with animation
+  // Close animation
   const handleClose = useCallback(() => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsClosing(false);
-      onClose();
-    }, 200);
+    setIsVisible(false);
+    setTimeout(onClose, 250);
   }, [onClose]);
 
-  // Keyboard & outside click handlers
+  // Escape key
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        handleClose();
-      }
-    };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-
-    if (open) {
-      document.addEventListener("mousedown", handleClick);
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
+    if (open) window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [open, handleClose]);
 
-  // All hooks must be called BEFORE early return
-  const statusConfig = booking ? getStatusConfig(booking.status) : null;
-  const paymentConfig = booking ? getPaymentConfig(booking.paymentStatus) : null;
-  const balanceDue = booking ? Math.max(0, (booking.balance ?? booking.price) - (booking.deposit || 0)) : 0;
-  const isCompleted = booking?.status === "completed";
+  // Drag-to-dismiss on mobile
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (contentRef.current && contentRef.current.scrollTop <= 0) {
+      dragStartY.current = e.touches[0].clientY;
+      setIsDragging(true);
+    }
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const dy = e.touches[0].clientY - dragStartY.current;
+    if (dy > 0) setDragY(dy);
+  }, [isDragging]);
+
+  const onTouchEnd = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      if (dragY > 120) handleClose();
+      else setDragY(0);
+    }
+  }, [isDragging, dragY, handleClose]);
+
+  // Hooks before early return
+  const st = booking ? getStatus(booking.status) : null;
+  const pt = booking ? getPayment(booking.paymentStatus) : null;
+  const isPaid = booking?.paymentStatus === "paid";
   const isCancelled = booking?.status === "cancelled";
+  const isCompleted = booking?.status === "completed";
+  const balanceDue = booking ? Math.max(0, (booking.balance ?? booking.price) - (booking.deposit || 0)) : 0;
 
-  const handleCopyId = useCallback(() => {
-    if (!booking) return;
-    navigator.clipboard.writeText(booking.id);
-    addToast("Booking ID copied!", "success");
-  }, [booking?.id, addToast]);
+  if (!open || !booking || !st) return null;
 
-  const handleCopyPhone = useCallback(() => {
-    if (!booking) return;
-    navigator.clipboard.writeText(booking.phone);
-    addToast("Phone number copied!", "success");
-  }, [booking?.phone, addToast]);
-
-  const handleCopyEmail = useCallback(() => {
-    if (!booking?.email) return;
-    navigator.clipboard.writeText(booking.email);
-    addToast("Email copied!", "success");
-  }, [booking?.email, addToast]);
-
-  // Valid status transitions (disallow invalid transitions)
-  const VALID_TRANSITIONS: Record<string, Set<string>> = {
-    confirmed: new Set(["completed", "cancelled"]),
-    pending: new Set(["confirmed", "completed", "cancelled"]),
-    completed: new Set([]), // No transitions from completed
-    cancelled: new Set([]), // No transitions from cancelled
-  };
-
-  const isTransitionValid = useCallback(
-    (targetStatus: string): boolean => {
-      if (!booking) return false;
-      return VALID_TRANSITIONS[booking.status]?.has(targetStatus) ?? false;
-    },
-    [booking?.status]
-  );
-
-  const safeFirstLetter = useMemo(() => {
-    const clientName = booking?.client || "";
-    return clientName ? clientName.charAt(0).toUpperCase() : "?";
-  }, [booking?.client]);
-
-  const handleSendReminder = useCallback(async () => {
-    if (!booking || !onSendReminder) return;
-    setSendingMessage(true);
-    try {
-      await onSendReminder(booking.id);
-      addToast("Reminder sent!", "success");
-    } catch {
-      addToast("Failed to send reminder", "error");
-    } finally {
-      setSendingMessage(false);
-    }
-  }, [booking?.id, onSendReminder, addToast]);
-
-  const handleStatusUpdate = useCallback(
-    (status: Booking["status"]) => {
-      if (!booking) return;
-      onUpdateStatus?.(booking.id, status);
-      addToast(`Marked as ${status}`, "success");
-    },
-    [booking?.id, onUpdateStatus, addToast]
-  );
-
-  const handleDelete = useCallback(() => {
-    if (!booking) return;
-    if (window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) {
-      onDelete?.(booking.id);
-      handleClose();
-    }
-  }, [booking?.id, onDelete, handleClose]);
-
-  if (!open || !booking) return null;
-
-  const config = statusConfig!;
-  const payConfig = paymentConfig!;
-  const isUnpaid = booking.paymentStatus !== "paid";
+  const timeline = [
+    { label: "Booked", date: booking.createdAt?.toDate ? booking.createdAt.toDate().toISOString() : booking.createdAt, done: true },
+    { label: "Confirmed", done: booking.status === "confirmed" || booking.status === "completed" || booking.status === "cancelled" },
+    { label: "Completed", done: booking.status === "completed" },
+  ];
 
   return (
     <>
-      <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
-      {lightboxImage && <ImageLightbox src={lightboxImage} onClose={() => setLightboxImage(null)} />}
+      {/* Toasts */}
+      <div className="fixed top-4 right-4 z-[4000] space-y-1.5 pointer-events-none">
+        {toasts.map(t => (
+          <div key={t.id} className={`pointer-events-auto px-3.5 py-2.5 rounded-xl shadow-lg text-xs font-bold animate-slideInRight ${t.type === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"}`}>
+            <i className={`fas ${t.type === "success" ? "fa-check-circle" : "fa-exclamation-circle"} mr-1.5`} />
+            {t.msg}
+          </div>
+        ))}
+      </div>
+
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setLightboxImg(null)}>
+          <img src={lightboxImg} alt="Proof" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()} />
+          <button onClick={() => setLightboxImg(null)} className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/20 hover:rotate-90 transition-all" aria-label="Close image">
+            <i className="fas fa-times" />
+          </button>
+        </div>
+      )}
+
+      {/* Confirm dialogs */}
+      <ConfirmDialog
+        open={confirmCancel}
+        title="Cancel Booking?"
+        message="This will mark the booking as cancelled and notify the customer."
+        confirmText="Cancel Booking"
+        onConfirm={() => { onUpdateStatus?.(booking.id, "cancelled"); setConfirmCancel(false); handleClose(); }}
+        onCancel={() => setConfirmCancel(false)}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete Booking?"
+        message="This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={() => { onDelete?.(booking.id); setConfirmDelete(false); handleClose(); }}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       {/* Backdrop */}
       <div
-        className={`
-          fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4
-          transition-all duration-300
-          ${isClosing ? "opacity-0" : "opacity-100"}
-        `}
+        className="fixed inset-0 z-[2000] flex items-end md:items-center justify-center p-0 md:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Booking details: ${booking.service}`}
         onClick={handleClose}
       >
-        <div
-          className={`
-            absolute inset-0 transition-all duration-300
-            ${isClosing ? "bg-black/0 backdrop-blur-0" : "bg-black/60 backdrop-blur-sm"}
-          `}
-        />
+        <div className={`absolute inset-0 transition-all duration-300 ${isVisible ? "bg-black/50 backdrop-blur-sm" : "bg-black/0 backdrop-blur-0"}`} />
 
-        {/* Modal */}
+        {/* Sheet */}
         <div
-          ref={modalRef}
-          className={`
-            relative w-full max-w-[680px] max-h-[94vh] sm:max-h-[88vh]
-            rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col
-            transition-all duration-300 ease-out
-            bg-surface
-            ${isVisible && !isClosing
-              ? "opacity-100 translate-y-0 sm:scale-100"
-              : "opacity-0 translate-y-12 sm:scale-[0.97]"
-            }
-          `}
-          onClick={(e) => e.stopPropagation()}
+          ref={sheetRef}
+          className={`relative w-full max-w-[560px] max-h-[92vh] md:max-h-[84vh] bg-white rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+            isVisible ? "opacity-100 translate-y-0 md:translate-y-0 md:scale-100" : "opacity-0 translate-y-8 md:translate-y-0 md:scale-[0.96]"
+          }`}
+          style={{ transform: isDragging ? `translateY(${dragY}px)` : undefined }}
+          onClick={e => e.stopPropagation()}
         >
-          {/* Scroll progress bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-surface-variant z-30">
-            <div
-              className="h-full bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] rounded-full transition-all duration-150"
-              style={{ width: `${scrollProgress * 100}%` }}
-            />
+          {/* Drag handle (mobile) */}
+          <div ref={dragRef} className="md:hidden flex justify-center pt-2 pb-1" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+            <div className="w-10 h-1 rounded-full bg-slate-300" />
           </div>
 
-          {/* ========== HERO HEADER ========== */}
-          <div className={`relative h-48 md:h-56 shrink-0 bg-gradient-to-br ${config.gradient}`}>
-            {/* Decorative pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute -top-8 -right-8 text-9xl text-white/20">📅</div>
-              <div className="absolute bottom-4 left-4 text-5xl opacity-50 text-white/20">✦</div>
-              <div className="absolute top-6 right-12 text-3xl opacity-30 text-white/20">✦</div>
+          {/* ─── HEADER ─── */}
+          <div className="shrink-0 flex items-center justify-between px-5 pt-2 md:pt-4 pb-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <AvatarRing name={booking.client} status={booking.status} />
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-slate-800 truncate">{booking.service}</h2>
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span>{formatDate(booking.date)}</span>
+                  <span>·</span>
+                  <span>{booking.time}</span>
+                </div>
+              </div>
             </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: st.light, color: st.ring }}>
+                <i className={`fas ${st.icon} text-[8px]`} />
+                {st.label}
+              </span>
+              <button onClick={handleClose} className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-200 hover:text-slate-600 transition-all hover:rotate-90" aria-label="Close">
+                <i className="fas fa-times text-xs" />
+              </button>
+            </div>
+          </div>
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+          {/* ─── TAB BAR ─── */}
+          <div className="shrink-0 px-5 pb-3">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+              <TabButton active={activeTab === "info"} icon="fa-info-circle" label="Info" onClick={() => setActiveTab("info")} />
+              <TabButton active={activeTab === "payment"} icon="fa-credit-card" label="Payment" onClick={() => setActiveTab("payment")} />
+              <TabButton active={activeTab === "timeline"} icon="fa-clock" label="Timeline" onClick={() => setActiveTab("timeline")} />
+            </div>
+          </div>
 
-            {/* Hero content */}
-            <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/20 backdrop-blur-md text-white border border-white/20">
-                  <span className={`w-1.5 h-1.5 rounded-full ${config.dot} ${booking.status === "pending" ? "animate-pulse" : ""}`} />
-                  <i className={`fas ${config.icon} text-[9px]`} />
-                  {booking.status}
-                </span>
-                {booking.verified && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#10B981]/80 backdrop-blur-md text-white border border-white/20">
-                    <i className="fas fa-badge-check text-[9px]" />
-                    Verified
-                  </span>
+          {/* ─── DIVIDER ─── */}
+          <div className="shrink-0 mx-5 h-px bg-slate-100" />
+
+          {/* ─── SCROLLABLE CONTENT ─── */}
+          <div ref={contentRef} className="flex-1 overflow-y-auto scroll-smooth px-5 py-4" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+
+            {/* === INFO TAB === */}
+            {activeTab === "info" && (
+              <div className="space-y-4 animate-fadeIn">
+                {/* Client Card */}
+                <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <AvatarRing name={booking.client} status={booking.status} size={44} />
+                    <div>
+                      <div className="font-bold text-sm text-slate-800">{booking.client}</div>
+                      <div className="text-xs text-slate-500">{booking.phone}</div>
+                      {booking.email && <div className="text-xs text-slate-400">{booking.email}</div>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href={`https://wa.me/${booking.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all shadow-sm shadow-emerald-600/20">
+                      <i className="fab fa-whatsapp text-sm" /> WhatsApp
+                    </a>
+                    <a href={`tel:${booking.phone}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:border-slate-300 active:scale-95 transition-all">
+                      <i className="fas fa-phone text-sm" /> Call
+                    </a>
+                  </div>
+                </div>
+
+                {/* Info Pills — horizontal scroll */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                  <InfoPill icon="fa-calendar" label="Date" value={formatDate(booking.date)} />
+                  <InfoPill icon="fa-clock" label="Time" value={booking.time} />
+                  <InfoPill icon="fa-map-marker-alt" label="Location" value={booking.location} />
+                  <InfoPill icon="fa-tag" label="Price" value={formatCurrency(booking.price)} />
+                  {booking.duration && <InfoPill icon="fa-hourglass-half" label="Duration" value={booking.duration} />}
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {booking.bookingNumber && (
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Booking #</div>
+                      <div className="text-xs font-bold text-slate-700 font-mono truncate">{booking.bookingNumber}</div>
+                    </div>
+                  )}
+                  {booking.packageTier && (
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Package</div>
+                      <div className="text-xs font-bold text-slate-700 capitalize">{booking.packageTier}</div>
+                    </div>
+                  )}
+                  {booking.source && (
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Source</div>
+                      <div className="text-xs font-bold text-slate-700 capitalize">{booking.source}</div>
+                    </div>
+                  )}
+                  {booking.assignedTo && (
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Assigned To</div>
+                      <div className="text-xs font-bold text-slate-700 truncate">{booking.assignedTo}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes */}
+                {booking.notes && (
+                  <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <i className="fas fa-sticky-note text-[10px] text-amber-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Notes</span>
+                    </div>
+                    <p className="text-xs text-amber-800 leading-relaxed">{booking.notes}</p>
+                  </div>
+                )}
+                {booking.cancellationReason && isCancelled && (
+                  <div className="bg-rose-50 rounded-2xl p-4 border border-rose-100">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <i className="fas fa-exclamation-triangle text-[10px] text-rose-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Cancellation Reason</span>
+                    </div>
+                    <p className="text-xs text-rose-800 leading-relaxed">{booking.cancellationReason}</p>
+                  </div>
+                )}
+
+                {/* Reference */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Reference</span>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(booking.id); addToast("ID copied!"); }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 text-[10px] font-bold hover:border-slate-300 active:scale-95 transition-all"
+                    >
+                      <i className="fas fa-copy text-[8px]" /> Copy ID
+                    </button>
+                  </div>
+                  <code className="text-[11px] font-mono text-violet-600 bg-violet-50 px-2 py-1 rounded-lg block truncate">{booking.id}</code>
+                </div>
+
+                {/* Reschedule info */}
+                {booking.rescheduleCount && booking.rescheduleCount > 0 && (
+                  <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <i className="fas fa-calendar-week text-[10px] text-sky-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Rescheduled</span>
+                    </div>
+                    <p className="text-xs text-sky-700">Rescheduled {booking.rescheduleCount} time{booking.rescheduleCount > 1 ? "s" : ""}</p>
+                  </div>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-1 leading-tight">{booking.service || "N/A"}</h1>
-              <div className="flex items-center gap-3 text-sm text-white/80 flex-wrap">
-                <span className="flex items-center gap-1.5">
-                  <i className="fas fa-calendar-alt text-xs opacity-70" />
-                  {formatDate(booking.date)}
-                </span>
-                <span className="text-white/40">•</span>
-                <span className="flex items-center gap-1.5">
-                  <i className="fas fa-clock text-xs opacity-70" />
-                  {booking.time}
-                </span>
-              </div>
-            </div>
+            )}
 
-            {/* Close button */}
-            <button
-              onClick={handleClose}
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/30 hover:rotate-90 transition-all duration-300 z-10 border border-white/20"
-            >
-              <i className="fas fa-times" />
-            </button>
-          </div>
+            {/* === PAYMENT TAB === */}
+            {activeTab === "payment" && (
+              <div className="space-y-4 animate-fadeIn">
+                {/* Summary Card */}
+                <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total</span>
+                    <span className="text-2xl font-extrabold text-slate-800">{formatCurrency(booking.price)}</span>
+                  </div>
 
-          {/* ========== SCROLLABLE BODY ========== */}
-          <div
-            ref={contentRef}
-            className="flex-1 overflow-y-auto scroll-smooth"
-            onScroll={handleScroll}
-          >
-            {/* ─── Quick Stats Grid ─── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3 p-4 md:p-5 border-b border-outline-variant bg-gradient-to-b from-surface to-surface-variant/30">
-              <StatCard icon="fa-calendar" iconBg="bg-[#EDE9FE]" iconColor="text-[#8B5CF6]" label="Date" value={formatDate(booking.date)} delay={0} />
-              <StatCard icon="fa-clock" iconBg="bg-[#D1FAE5]" iconColor="text-[#10B981]" label="Time" value={booking.time} delay={80} />
-              <StatCard icon="fa-map-marker-alt" iconBg="bg-[#FEF3C7]" iconColor="text-[#F59E0B]" label="Location" value={booking.location} delay={160} />
-              <StatCard icon="fa-tag" iconBg="bg-[#DBEAFE]" iconColor="text-[#3B82F6]" label="Price" value={formatCurrency(booking.price)} delay={240} />
-            </div>
-
-            {/* ─── Client Profile Card ─── */}
-            <div className="p-4 md:p-5">
-              <PremiumSectionHeader icon="fa-user" title="Client" color="#8B5CF6" />
-              <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] rounded-2xl p-4 md:p-5 border border-outline shadow-md hover:shadow-lg transition-shadow duration-300">
-                <div className="flex items-center gap-4 md:gap-5 mb-5">
-                  {/* Premium Avatar */}
-                  <div className="relative">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white flex items-center justify-center font-bold text-2xl md:text-3xl shadow-md shadow-[#8B5CF6]/30">
-                      {safeFirstLetter}
+                  {/* Deposit & Balance */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Deposit</div>
+                      <div className="font-bold text-sm text-emerald-600">{formatCurrency(booking.deposit || 0)}</div>
                     </div>
-                    {booking.verified && (
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-[#10B981] to-[#059669] text-white rounded-full flex items-center justify-center text-[10px] border-[3px] border-white shadow-sm">
-                        <i className="fas fa-check" />
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Balance</div>
+                      <div className={`font-bold text-sm ${balanceDue > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                        {formatCurrency(balanceDue)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-500 transition-all duration-700"
+                      style={{ width: `${Math.min(((booking.deposit || 0) / Math.max(booking.price, 1)) * 100, 100)}%` }}
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">Status</span>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${pt!.bg} ${pt!.text} ${pt!.border} border`}>
+                        <i className={`fas ${pt!.icon} text-[8px]`} />
+                        {(booking.paymentStatus || "unpaid").charAt(0).toUpperCase() + (booking.paymentStatus || "unpaid").slice(1)}
+                      </span>
+                    </div>
+                    {booking.paymentMethod && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">Method</span>
+                        <span className="text-xs font-bold text-slate-700 capitalize">{booking.paymentMethod}</span>
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-lg md:text-xl text-on-surface truncate">{booking.client}</div>
-                    <div className="flex flex-col gap-1 mt-1">
-                      <div className="flex items-center gap-2 text-sm text-on-surface-variant group">
-                        <i className="fab fa-whatsapp text-[#25D366] text-sm" />
-                        <span className="truncate">{booking.phone}</span>
-                        <button
-                          onClick={handleCopyPhone}
-                          className="shrink-0 opacity-0 md:group-hover:opacity-100 transition-opacity w-5 h-5 rounded-md bg-[#EDE9FE] text-[#8B5CF6] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white active:scale-90"
-                          title="Copy phone number"
-                        >
-                          <i className="fas fa-copy text-[8px]" />
-                        </button>
+                </div>
+
+                {/* Payment Proof */}
+                {booking.paymentProof && (
+                  <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 space-y-3">
+                    <div className="flex items-center gap-1.5">
+                      <i className="fas fa-check-circle text-emerald-500 text-xs" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Payment Confirmed</span>
+                    </div>
+                    {booking.paymentProof.transactionId && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">Transaction</span>
+                        <span className="text-xs font-bold font-mono text-slate-700">{booking.paymentProof.transactionId}</span>
                       </div>
-                      {booking.email && (
-                        <div className="flex items-center gap-2 text-sm text-on-surface-variant group">
-                          <i className="fas fa-envelope text-[#8B5CF6] text-xs" />
-                          <span className="truncate">{booking.email}</span>
-                          <button
-                            onClick={handleCopyEmail}
-                            className="shrink-0 opacity-0 md:group-hover:opacity-100 transition-opacity w-5 h-5 rounded-md bg-[#EDE9FE] text-[#8B5CF6] flex items-center justify-center hover:bg-[#8B5CF6] hover:text-white active:scale-90"
-                            title="Copy email"
-                          >
-                            <i className="fas fa-copy text-[8px]" />
-                          </button>
-                        </div>
-                      )}
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">Amount</span>
+                      <span className="font-bold text-sm text-emerald-600">{formatCurrency(booking.paymentProof.amount)}</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Quick action buttons */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <a
-                    href={`https://wa.me/${booking.phone.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-bold text-sm shadow-sm shadow-[#25D366]/20 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-[0.97]"
-                  >
-                    <i className="fab fa-whatsapp text-base" />
-                    WhatsApp
-                  </a>
-                  <a
-                    href={`tel:${booking.phone}`}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-surface border-2 border-outline-variant text-on-surface rounded-xl font-bold text-sm hover:border-[#8B5CF6]/40 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/5 transition-all active:scale-[0.97]"
-                  >
-                    <i className="fas fa-phone text-sm" />
-                    Call
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* ─── Payment Section ─── */}
-            <div className="px-4 md:px-5 pb-2">
-              <PremiumSectionHeader icon="fa-credit-card" title="Payment" color="#10B981" />
-              <div className="bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] rounded-2xl p-4 md:p-5  border border-[#10B981]/20 shadow-sm space-y-3">
-                {/* Total */}
-                <div className="flex justify-between items-center pb-3 border-b border-[#10B981]/10">
-                  <span className="text-sm text-on-surface-variant font-medium">Total Price</span>
-                  <span className="font-extrabold text-2xl md:text-3xl text-[#8B5CF6]">{formatCurrency(booking.price)}</span>
-                </div>
-
-                {/* Deposit & Balance */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/60 rounded-xl p-3">
-                    <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">Deposit Paid</div>
-                    <div className="font-bold text-lg text-[#10B981]">{formatCurrency(booking.deposit || 0)}</div>
-                  </div>
-                  <div className="bg-white/60 rounded-xl p-3">
-                    <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">Balance Due</div>
-                    <div className={`font-bold text-lg ${balanceDue > 0 ? "text-[#F59E0B]" : "text-[#10B981]"}`}>
-                      {formatCurrency(balanceDue)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="pt-1">
-                  <div className="h-2 bg-white/80 rounded-full overflow-hidden shadow-inner">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#10B981] transition-all duration-700 ease-out"
-                      style={{ width: `${Math.min(((booking.deposit || 0) / booking.price) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Payment status & method */}
-                <div className="flex justify-between items-center pt-2 border-t border-[#10B981]/10">
-                  <span className="text-sm text-on-surface-variant">Status</span>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${payConfig.bg} ${payConfig.text}`}>
-                    <i className={`fas ${payConfig.icon} text-[9px]`} />
-                    {booking.paymentStatus || "Unpaid"}
-                  </span>
-                </div>
-
-                {booking.paymentMethod && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-on-surface-variant">Method</span>
-                    <span className="text-sm font-bold text-on-surface capitalize flex items-center gap-1.5">
-                      <i className={`fas ${
-                        booking.paymentMethod === "mpesa" ? "fa-mobile-alt" :
-                        booking.paymentMethod === "card" ? "fa-credit-card" :
-                        booking.paymentMethod === "bank" ? "fa-university" :
-                        "fa-money-bill-wave"
-                      } text-[#8B5CF6] text-sm`} />
-                      {booking.paymentMethod}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* ─── Payment Proof ─── */}
-            {booking.paymentProof && (
-              <div className="px-4 md:px-5 pb-2">
-                <PremiumSectionHeader icon="fa-check-circle" title="Payment Confirmed" color="#10B981" />
-                <div className="bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] rounded-2xl p-4 md:p-5  border border-[#10B981]/20 shadow-sm space-y-3">
-                  {booking.paymentProof.transactionId && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-on-surface-variant">Transaction ID</span>
-                      <span className="font-mono font-bold text-sm text-on-surface">{booking.paymentProof.transactionId}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-on-surface-variant">Amount Paid</span>
-                    <span className="font-extrabold text-lg text-[#10B981]">{formatCurrency(booking.paymentProof.amount)}</span>
-                  </div>
-                  {booking.paymentProof.confirmedBy && (
-                    <div className="flex justify-between items-center pt-2 border-t border-[#10B981]/10">
-                      <span className="text-sm text-on-surface-variant">Confirmed By</span>
-                      <span className="font-bold text-sm text-on-surface">{booking.paymentProof.confirmedBy}</span>
-                    </div>
-                  )}
-                  {booking.paymentProof.proofImage && (
-                    <div className="pt-2 border-t border-[#10B981]/10">
-                      <div className="text-sm text-on-surface-variant mb-2">Proof</div>
-                      <div
-                        className="rounded-xl overflow-hidden border-2 border-[#10B981]/20 cursor-pointer hover:opacity-90 transition-all hover:shadow-md"
-                        onClick={() => booking.paymentProof?.proofImage && setLightboxImage(booking.paymentProof.proofImage)}
-                      >
-                        <img src={booking.paymentProof.proofImage} alt="Payment proof" className="w-full h-36 object-cover" />
+                    {booking.paymentProof.confirmedBy && (
+                      <div className="flex items-center justify-between pt-2 border-t border-emerald-200/50">
+                        <span className="text-xs text-slate-500">Confirmed By</span>
+                        <span className="text-xs font-bold text-slate-700">{booking.paymentProof.confirmedBy}</span>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ─── Additional Details Grid ─── */}
-            <div className="px-4 md:px-5 pb-2">
-              <PremiumSectionHeader icon="fa-info-circle" title="Details" color="#3B82F6" />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 md:gap-3">
-                {booking.packageTier && (
-                  <div className="bg-white rounded-2xl p-3.5 border border-outline-variant hover:border-[#8B5CF6]/30 transition-all duration-200">
-                    <div className="w-8 h-8 rounded-xl bg-[#EDE9FE] text-[#8B5CF6] flex items-center justify-center mb-2">
-                      <i className="fas fa-layer-group text-xs" />
-                    </div>
-                    <div className="text-[10px] text-outline font-bold uppercase tracking-wide mb-0.5">Package</div>
-                    <div className="font-bold text-sm text-on-surface">{booking.packageTier}</div>
+                    )}
+                    {booking.paymentProof?.proofImage && (
+                      <div className="pt-2 border-t border-emerald-200/50">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">Proof Screenshot</span>
+                        <ImagePreview src={booking.paymentProof.proofImage} onOpen={() => setLightboxImg(booking.paymentProof!.proofImage!)} />
+                      </div>
+                    )}
                   </div>
                 )}
-                {booking.duration && (
-                  <div className="bg-white rounded-2xl p-3.5 border border-outline-variant hover:border-[#8B5CF6]/30 transition-all duration-200">
-                    <div className="w-8 h-8 rounded-xl bg-[#D1FAE5] text-[#10B981] flex items-center justify-center mb-2">
-                      <i className="fas fa-hourglass-half text-xs" />
-                    </div>
-                    <div className="text-[10px] text-outline font-bold uppercase tracking-wide mb-0.5">Duration</div>
-                    <div className="font-bold text-sm text-on-surface">{booking.duration}</div>
-                  </div>
-                )}
-                {booking.source && (
-                  <div className="bg-white rounded-2xl p-3.5 border border-outline-variant hover:border-[#8B5CF6]/30 transition-all duration-200">
-                    <div className="w-8 h-8 rounded-xl bg-[#DBEAFE] text-[#3B82F6] flex items-center justify-center mb-2">
-                      <i className={`fas ${
-                        booking.source === "whatsapp" ? "fa-whatsapp" :
-                        booking.source === "online" ? "fa-globe" : "fa-phone"
-                      } text-xs`} />
-                    </div>
-                    <div className="text-[10px] text-outline font-bold uppercase tracking-wide mb-0.5">Source</div>
-                    <div className="font-bold text-sm text-on-surface capitalize">{booking.source}</div>
-                  </div>
-                )}
-                {booking.assignedTo && (
-                  <div className="bg-white rounded-2xl p-3.5 border border-outline-variant hover:border-[#8B5CF6]/30 transition-all duration-200">
-                    <div className="w-8 h-8 rounded-xl bg-[#FEF3C7] text-[#F59E0B] flex items-center justify-center mb-2">
-                      <i className="fas fa-user-tie text-xs" />
-                    </div>
-                    <div className="text-[10px] text-outline font-bold uppercase tracking-wide mb-0.5">Assigned</div>
-                    <div className="font-bold text-sm text-on-surface">{booking.assignedTo}</div>
-                  </div>
-                )}
-              </div>
-            </div>
 
-            {/* ─── Notes ─── */}
-            {booking.notes && (
-              <div className="px-4 md:px-5 pb-2">
-                <PremiumSectionHeader icon="fa-sticky-note" title="Notes" color="#F59E0B" />
-                <div className="bg-[#FFFBEB] rounded-2xl p-4 border border-[#FDE68A]/40 shadow-sm">
-                  <p className="text-sm text-[#92400E] leading-relaxed">{booking.notes}</p>
-                </div>
-              </div>
-            )}
-
-            {/* ─── Cancellation Reason ─── */}
-            {isCancelled && booking.cancellationReason && (
-              <div className="px-4 md:px-5 pb-2">
-                <PremiumSectionHeader icon="fa-exclamation-triangle" title="Cancellation Reason" color="#EF4444" />
-                <div className="bg-[#FEF2F2] rounded-2xl p-4 border border-[#FCA5A5]/40 shadow-sm">
-                  <p className="text-sm text-[#991B1B] leading-relaxed">{booking.cancellationReason}</p>
-                </div>
-              </div>
-            )}
-
-            {/* ─── Reference ─── */}
-            <div className="px-4 md:px-5 pb-2">
-              <PremiumSectionHeader icon="fa-fingerprint" title="Reference" color="#64748B" />
-              <div className="bg-surface rounded-2xl p-4 border border-outline shadow-sm space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <code className="text-sm font-mono text-[#8B5CF6] font-bold truncate">{booking.id}</code>
+                {/* Mark as Paid button */}
+                {!isPaid && onOpenPaymentModal && (
                   <button
-                    onClick={handleCopyId}
-                    className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 bg-[#EDE9FE] text-[#8B5CF6] rounded-xl text-sm font-bold hover:bg-[#8B5CF6] hover:text-white transition-all active:scale-95"
+                    onClick={onOpenPaymentModal}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-600/20 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all"
                   >
-                    <i className="fas fa-copy text-xs" />
-                    Copy
+                    <i className="fas fa-check-circle" />
+                    Confirm Payment
                   </button>
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-outline-variant">
-                  <div>
-                    <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">Created</div>
-                    <div className="font-bold text-sm text-on-surface">
-                      {booking.createdAt?.toDate ? booking.createdAt.toDate().toLocaleDateString() : "Recent"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">Updated</div>
-                    <div className="font-bold text-sm text-on-surface">
-                      {booking.updatedAt?.toDate ? booking.updatedAt.toDate().toLocaleDateString() : "—"}
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-            </div>
+            )}
 
-            {/* Bottom spacing */}
-            <div className="h-2" />
+            {/* === TIMELINE TAB === */}
+            {activeTab === "timeline" && (
+              <div className="space-y-5 animate-fadeIn">
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <i className="fas fa-history text-[10px] text-slate-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity</span>
+                  </div>
+                  <div className="space-y-0">
+                    {/* Created */}
+                    <div className="flex gap-3">
+                      <TimelineDot active={true} color="#8B5CF6" />
+                      <div className="pb-4">
+                        <div className="text-xs font-bold text-slate-700">Booking Created</div>
+                        <div className="text-[10px] text-slate-400">
+                          {booking.createdAt?.toDate ? formatDate(booking.createdAt.toDate().toISOString()) : "Recently"}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Status events */}
+                    {booking.status === "confirmed" && (
+                      <div className="flex gap-3">
+                        <TimelineDot active={true} color="#059669" />
+                        <div className="pb-4">
+                          <div className="text-xs font-bold text-slate-700">Confirmed</div>
+                          <div className="text-[10px] text-slate-400">Booking was confirmed</div>
+                        </div>
+                      </div>
+                    )}
+                    {booking.status === "completed" && (
+                      <>
+                        <div className="flex gap-3">
+                          <TimelineDot active={true} color="#059669" />
+                          <div className="pb-4">
+                            <div className="text-xs font-bold text-slate-700">Confirmed</div>
+                            <div className="text-[10px] text-slate-400">Booking was confirmed</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <TimelineDot active={true} color="#2563EB" />
+                          <div className="pb-4">
+                            <div className="text-xs font-bold text-slate-700">Completed</div>
+                            <div className="text-[10px] text-slate-400">Service completed</div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {booking.status === "cancelled" && (
+                      <div className="flex gap-3">
+                        <TimelineDot active={true} color="#DC2626" />
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Cancelled</div>
+                          <div className="text-[10px] text-slate-400">{booking.cancellationReason || "No reason provided"}</div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Upcoming states */}
+                    {booking.status === "pending" && (
+                      <div className="flex gap-3">
+                        <TimelineDot active={false} color="#94A3B8" />
+                        <div>
+                          <div className="text-xs font-bold text-slate-400">Awaiting Confirmation</div>
+                          <div className="text-[10px] text-slate-300">Booking needs to be confirmed</div>
+                        </div>
+                      </div>
+                    )}
+                    {booking.status === "confirmed" && (
+                      <div className="flex gap-3">
+                        <TimelineDot active={false} color="#94A3B8" />
+                        <div>
+                          <div className="text-xs font-bold text-slate-400">Pending Completion</div>
+                          <div className="text-[10px] text-slate-300">Service not yet completed</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reminder status */}
+                {booking.reminderSent && (
+                  <div className="bg-sky-50 rounded-2xl p-4 border border-sky-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <i className="fas fa-bell text-sky-500 text-[10px]" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Reminder Sent</span>
+                    </div>
+                    <p className="text-xs text-sky-700">Customer was notified about their upcoming booking.</p>
+                  </div>
+                )}
+
+                {/* Send Reminder */}
+                {onSendReminder && !isCancelled && !isCompleted && (
+                  <button
+                    onClick={async () => {
+                      setSendingReminder(true);
+                      try { await onSendReminder(booking.id); addToast("Reminder sent!", "success"); }
+                      catch { addToast("Failed to send reminder", "error"); }
+                      finally { setSendingReminder(false); }
+                    }}
+                    disabled={sendingReminder}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:border-slate-300 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {sendingReminder ? (
+                      <div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                    ) : (
+                      <i className="fas fa-bell text-xs" />
+                    )}
+                    Send Reminder
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Bottom spacing for FABs */}
+            <div className="h-20" />
           </div>
 
-          {/* ========== FOOTER ACTIONS ========== */}
-          <div className="shrink-0 p-4 md:p-5 border-t border-outline-variant bg-gradient-to-t from-surface to-surface/95">
-            <div className="flex flex-col gap-2.5">
-              {/* Primary actions row */}
-              <div className="grid grid-cols-2 gap-2.5">
-                {onEdit && (
-                  <PremiumActionButton icon="fa-edit" label="Edit Booking" variant="primary" onClick={() => onEdit(booking)} />
-                )}
-
-                {onSendReminder && (
-                  <PremiumActionButton
-                    icon="fa-bell"
-                    label="Reminder"
-                    variant={onEdit ? "default" : "primary"}
-                    onClick={handleSendReminder}
-                    loading={sendingMessage}
-                  />
-                )}
-              </div>
-
-              {/* Payment action */}
-              {onOpenPaymentModal && isUnpaid && (
-                <PremiumActionButton
-                  icon="fa-check-circle"
-                  label="Confirm Payment"
-                  variant="success"
-                  onClick={onOpenPaymentModal}
-                />
+          {/* ─── FLOATING ACTION BAR ─── */}
+          <div className="shrink-0 px-5 py-3 border-t border-slate-100 bg-gradient-to-t from-white via-white to-white/95">
+            <div className="flex gap-2">
+              {/* Edit */}
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(booking)}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all flex-1"
+                >
+                  <i className="fas fa-edit text-xs" /> Edit
+                </button>
               )}
-
-              {/* Status actions divider */}
-              {!isCompleted && !isCancelled && (
-                <div className="h-px bg-gradient-to-r from-transparent via-outline-variant to-transparent my-1" />
+              {/* Status actions */}
+              {!isCancelled && !isCompleted && (
+                <button
+                  onClick={() => setConfirmCancel(true)}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 active:scale-95 transition-all shadow-sm shadow-rose-600/20 flex-1"
+                >
+                  <i className="fas fa-times text-xs" /> Cancel
+                </button>
               )}
-
-              {/* Status change actions */}
-              {!isCompleted && !isCancelled && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {booking.status !== "confirmed" && (
-                    <PremiumActionButton
-                      icon="fa-check-circle"
-                      label="Confirm"
-                      variant="primary"
-                      onClick={() => handleStatusUpdate("confirmed")}
-                    />
-                  )}
-
-                  <PremiumActionButton
-                    icon="fa-check"
-                    label={booking.status === "pending" ? "Complete" : "Complete"}
-                    variant="success"
-                    onClick={() => handleStatusUpdate("completed")}
-                  />
-                </div>
+              {/* Complete / Confirm */}
+              {!isCancelled && !isCompleted && (
+                <button
+                  onClick={() => {
+                    if (booking.status === "pending" || booking.status === "confirmed") {
+                      onUpdateStatus?.(booking.id, "completed");
+                    }
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all shadow-sm shadow-emerald-600/20 flex-1"
+                >
+                  <i className="fas fa-check text-xs" /> {booking.status === "completed" ? "Complete" : "Complete"}
+                </button>
               )}
-
-              {/* Cancel + Close */}
-              <div className="grid grid-cols-2 gap-2.5">
-                {!isCancelled && (
-                  <PremiumActionButton
-                    icon="fa-times"
-                    label="Cancel Booking"
-                    variant="danger"
-                    onClick={() => handleStatusUpdate("cancelled")}
-                  />
-                )}
-
-                {/* Delete button (always visible) */}
-                <PremiumActionButton
-                  icon="fa-trash-alt"
-                  label="Delete"
-                  variant="danger"
-                  onClick={handleDelete}
-                />
-              </div>
-
-              {/* Close */}
-              <PremiumActionButton icon="fa-times" label="Close" variant="default" onClick={handleClose} />
+              {/* Delete */}
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="flex items-center justify-center px-4 py-2.5 bg-white border border-rose-200 text-rose-600 rounded-xl text-xs font-bold hover:border-rose-300 hover:bg-rose-50 active:scale-95 transition-all"
+                aria-label="Delete booking"
+                title="Delete booking"
+              >
+                <i className="fas fa-trash-alt text-xs" />
+              </button>
             </div>
           </div>
         </div>

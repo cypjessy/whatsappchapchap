@@ -115,6 +115,36 @@ Our team will review your booking and send you a confirmation shortly.
 
 ━━━━━━━━━━━━━━━━━━━━
 ✨ *Thank you for choosing us!* ✨
+━━━━━━━━━━━━━━━━━━━━`,
+
+    manual_booking: `━━━━━━━━━━━━━━━━━━━━
+✅ *BOOKING CONFIRMED – WAITING TO SERVE YOU* ✅
+━━━━━━━━━━━━━━━━━━━━
+
+Dear *${clientName}*,
+
+Your booking has been created and payment has been *confirmed!* 🎉
+
+📋 *BOOKING DETAILS*
+━━━━━━━━━━━━━━━━━━
+💼 *Service:* ${serviceName}
+📅 *Date:* ${date}
+ *Time:* ${time}${location ? `\n📍 *Location:* ${location}` : ''}${price ? `\n💰 *Amount Paid:* ${price}` : ''}
+🔖 *Booking ID:* ${bookingId}
+━━━━━━━━━━━━━━━━━━
+
+ *What's Next?*
+We have received your payment and your booking is confirmed. We're looking forward to serving you!
+
+📝 *Please Note:*
+• Arrive 5 minutes before your scheduled time
+• Bring any required documents or items
+• Your booking is fully paid — no additional charges
+
+💬 Questions? Reply to this message anytime!
+
+━━━━━━━━━━━━━━━━━━━━
+✨ *We can't wait to serve you!* ✨
 ━━━━━━━━━━━━━━━━━━━━`
   };
 

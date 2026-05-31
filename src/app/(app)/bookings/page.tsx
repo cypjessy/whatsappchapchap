@@ -15,7 +15,7 @@ import BookingAnalytics from "./components/BookingAnalytics";
 import BookingFilters from "./components/BookingFilters";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
 import BookingCancellationRequests from "./components/BookingCancellationRequests";
-import { ListTab, GridTab } from "./components/tabs";
+import { GridTab } from "./components/tabs";
 import PageHeaderCard from "@/components/PageHeaderCard";
 import { collection, query, where, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
 import { app as firebaseApp } from "@/lib/firebase";
@@ -33,7 +33,7 @@ const getTenantId = (user: any): string => `tenant_${user.uid}`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ViewMode = "list" | "grid" | "cancellations";
+type ViewMode = "grid" | "cancellations";
 
 interface Toast {
   id: number;
@@ -43,17 +43,13 @@ interface Toast {
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
-const VIEW_TABS = [
-  { id: "list" as ViewMode, label: "List", icon: "fa-list", desc: "Detailed rows" },
-  { id: "grid" as ViewMode, label: "Grid", icon: "fa-th", desc: "Card view" },
-];
-
 const STATUS_CHIPS = [
   { id: "all", label: "All", icon: "fa-layer-group" },
-  { id: "confirmed", label: "Confirmed", icon: "fa-check-circle" },
   { id: "pending", label: "Pending", icon: "fa-clock" },
+  { id: "confirmed", label: "Confirmed", icon: "fa-check-circle" },
   { id: "completed", label: "Completed", icon: "fa-check-double" },
   { id: "cancelled", label: "Cancelled", icon: "fa-times-circle" },
+  { id: "cancellations", label: "Cancellations", icon: "fa-exclamation-triangle" },
 ];
 
 // ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -139,7 +135,6 @@ function DeleteConfirmDialog({
 
 function EmptyState({ viewMode }: { viewMode: ViewMode }) {
   const icons: Record<ViewMode, string> = {
-    list: "fa-list",
     grid: "fa-th-large",
     cancellations: "fa-exclamation-triangle",
   };
@@ -165,7 +160,7 @@ export default function BookingsPage() {
   const { copy } = useClipboard();
   const { share } = useShare();
   const { show: showToastNative } = useToast();
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -217,18 +212,6 @@ export default function BookingsPage() {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
   }, []);
-
-  // Persist view mode
-  useEffect(() => {
-    const saved = localStorage.getItem("bookings_view_mode") as ViewMode;
-    if (saved && VIEW_TABS.some((t) => t.id === saved)) {
-      setViewMode(saved);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("bookings_view_mode", viewMode);
-  }, [viewMode]);
 
   // Scroll detection for header shadow
   useEffect(() => {
@@ -871,18 +854,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-4 px-3 md:px-6 py-3 md:py-4">
-        {/* Mobile Add Button - Visible at top of page */}
-        <div className="md:hidden mb-3">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"
-          >
-            <i className="fas fa-plus" />
-            <span>New Booking</span>
-          </button>
-        </div>
-
+      <div className="space-y-4">
         {/* Analytics */}
         <BookingAnalytics
           totalRevenue={analytics.currentPeriodRevenue}
@@ -892,6 +864,17 @@ export default function BookingsPage() {
           isLoading={loading}
           previousPeriodRevenue={analytics.previousPeriodRevenue}
         />
+
+        {/* Mobile Add Button */}
+        <div className="md:hidden">
+          <button
+            onClick={() => setModalOpen(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+          >
+            <i className="fas fa-plus" />
+            <span>New Booking</span>
+          </button>
+        </div>
 
         {/* Filters */}
         <BookingFilters
@@ -925,57 +908,55 @@ export default function BookingsPage() {
           }}
         />
 
-        {/* View Tabs - flex-wrap chip layout */}
-        <div className="bg-surface rounded-xl md:rounded-2xl border-2 border-outline p-2 shadow-sm">
-          <div className="flex flex-wrap gap-1.5">
-            {VIEW_TABS.map((tab) => (
+
+
+        {/* Status Tabs — wrap on all sizes, no scrolling needed */}
+        <div className="flex flex-wrap gap-1.5 pb-1">
+          {STATUS_CHIPS.map((chip) => {
+            const isCancellationsTab = chip.id === "cancellations";
+            const isActive = isCancellationsTab
+              ? viewMode === "cancellations"
+              : viewMode === "grid" && filterStatus === chip.id;
+
+            return (
               <button
-                key={tab.id}
-                onClick={async () => {
-                  await impactLight();
-                  setViewMode(tab.id);
+                key={chip.id}
+                onClick={() => {
+                  if (isCancellationsTab) {
+                    setViewMode(viewMode === "cancellations" ? "grid" : "cancellations");
+                  } else {
+                    setViewMode("grid");
+                    setFilterStatus(chip.id);
+                  }
                 }}
                 className={`
-                  inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-[11px] leading-none
+                  inline-flex items-center gap-1.5 px-3 py-2 rounded-lg
+                  text-[11px] font-bold leading-none whitespace-nowrap
                   transition-all duration-200 active:scale-95 select-none
-                  ${viewMode === tab.id
-                    ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
-                    : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
+                  ${isActive
+                    ? isCancellationsTab
+                      ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-900/20"
+                      : "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md shadow-slate-900/20"
+                    : "bg-surface border border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface hover:bg-surface/80"
                   }
                 `}
               >
-                <i className={`fas ${tab.icon} text-[10px]`} />
-                <span>{tab.label}</span>
+                <i className={`fas ${chip.icon} text-[10px] ${isActive ? "text-white/90" : "text-outline"}`} />
+                {chip.label}
+                <span className={`
+                  inline-flex items-center justify-center min-w-[18px] h-[16px] px-1
+                  rounded-md text-[9px] font-bold leading-none
+                  ${isActive ? "bg-white/20 text-white" : "bg-surface-variant text-on-surface-variant"}
+                `}>
+                  {chip.id === "all"
+                    ? bookings.length
+                    : chip.id === "cancellations"
+                      ? cancellationRequests.filter(r => r.status === "pending").length
+                      : bookings.filter((b) => b.status === chip.id).length}
+                </span>
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Status Chips - flex-wrap chip layout */}
-        <div className="flex flex-wrap gap-1.5">
-          {STATUS_CHIPS.map((chip) => (
-            <button
-              key={chip.id}
-              onClick={() => setFilterStatus(chip.id)}
-              className={`
-                inline-flex items-center gap-1.5 px-3 py-2 rounded-full font-bold text-[11px] leading-none
-                transition-all duration-200 active:scale-95 select-none
-                ${filterStatus === chip.id
-                  ? "bg-gradient-to-r from-[#1e293b] to-[#334155] text-white shadow-md"
-                  : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b]/40 hover:text-on-surface"
-                }
-              `}
-            >
-              <i className={`fas ${chip.icon} text-[10px]`} />
-              {chip.label}
-              <span className={`
-                ml-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold
-                ${filterStatus === chip.id ? "bg-white/20" : "bg-surface-variant"}
-              `}>
-                {chip.id === "all" ? bookings.length : bookings.filter((b) => b.status === chip.id).length}
-              </span>
-            </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* Content Area */}
@@ -997,24 +978,13 @@ export default function BookingsPage() {
             <EmptyState viewMode={viewMode} />
           ) : (
             <>
-              {viewMode === "list" && (
-                <ListTab
-                  bookings={filteredBookings}
-                  onViewBooking={setSelectedBooking}
-                  isLoading={loading}
-                  onUpdateStatus={handleUpdateStatus}
-                  onDelete={handleDeleteBooking}
-                />
-              )}
-              {viewMode === "grid" && (
-                <GridTab
-                  bookings={filteredBookings}
-                  onViewBooking={setSelectedBooking}
-                  isLoading={loading}
-                  onUpdateStatus={handleUpdateStatus}
-                  onDelete={handleDeleteBooking}
-                />
-              )}
+              <GridTab
+                bookings={filteredBookings}
+                onViewBooking={setSelectedBooking}
+                isLoading={loading}
+                onUpdateStatus={handleUpdateStatus}
+                onDelete={handleDeleteBooking}
+              />
 
               {/* Load More */}
               {hasMoreBookings && (
@@ -1042,6 +1012,8 @@ export default function BookingsPage() {
           )}
         </div>
       </div>
+
+
 
       {/* Modals */}
       <ViewBookingModal
