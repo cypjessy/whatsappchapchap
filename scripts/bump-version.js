@@ -19,19 +19,10 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 
-// ─── Helper: Detect Vercel URL from .env.local ───────────────────────
-function getVercelUrl() {
-  try {
-    const envPath = path.join(ROOT, ".env.local");
-    const envContent = fs.readFileSync(envPath, "utf-8");
-    const match = envContent.match(/^NEXT_PUBLIC_API_URL\s*=\s*(\S+)$/m);
-    if (match) {
-      const base = match[1].replace(/[\"']/g, "").replace(/\/+$/, "");
-      return base + "/whatsappchapchap.apk";
-    }
-  } catch {}
-  // Fallback: hardcoded known Vercel URL
-  return "https://whatsappchapchap.vercel.app/whatsappchapchap.apk";
+// ─── Helper: Get APK download URL (via GitHub Releases) ─────────────
+function getApkDownloadUrl() {
+  // APK is now distributed via GitHub Releases instead of being tracked in git
+  return "https://github.com/cypjessy/whatsappchapchap/releases/latest/download/whatsappchapchap.apk";
 }
 
 // ─── File Paths ──────────────────────────────────────────────────────
@@ -114,11 +105,11 @@ if (useFirestore) {
     if (equalsUrl) firestoreArgs.push(equalsUrl);
   }
 
-  // Auto-detect Vercel URL for APK download
+  // Auto-detect GitHub Releases URL for APK download
   if (!firestoreArgs.some(a => a.startsWith("--url"))) {
-    const vercelUrl = getVercelUrl();
-    if (vercelUrl) {
-      firestoreArgs.push("--url", vercelUrl);
+    const apkUrl = getApkDownloadUrl();
+    if (apkUrl) {
+      firestoreArgs.push("--url", apkUrl);
     }
   }
 

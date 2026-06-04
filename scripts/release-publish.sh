@@ -101,7 +101,7 @@ print_status "Building Next.js + Capacitor + Gradle..."
 # Build without bumping version again (step 2 already bumped)
 npm run build:android
 cd android
-ANDROID_HOME=$HOME/Android/Sdk ./gradlew clean assembleDebug
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleDebug
 cd "$PROJECT_ROOT"
 mkdir -p public
 cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk
@@ -111,8 +111,8 @@ print_success "APK build complete!"
 # ─── Step 4: Commit and push to GitHub ────────────────────────────────────
 print_step "Step 4: Committing and pushing to GitHub"
 
-# Add changed files (only the version/APK files, not .env.local which is gitignored)
-git add src/lib/app-version.ts android/app/build.gradle public/whatsappchapchap.apk
+# Add changed files (version files only — APK is distributed via GitHub Releases)
+git add src/lib/app-version.ts android/app/build.gradle
 
 # Commit with version info
 COMMIT_MSG="Release v$VERSION_NAME (build $VERSION_CODE)"
@@ -127,7 +127,7 @@ fi
 
 # Push to GitHub
 print_status "Pushing to GitHub..."
-if git push origin main; then
+if git push origin master:main; then
     print_success "✅ Pushed to GitHub!"
     echo ""
     echo "  🚀 GitHub Actions should now auto-build the release:"
@@ -135,7 +135,7 @@ if git push origin main; then
 else
     print_error "Failed to push to GitHub!"
     echo ""
-    echo "  Manual step: git push origin main"
+    echo "  Manual step: git push origin master:main"
     exit 1
 fi
 
@@ -151,7 +151,7 @@ echo "  2. Verify the new APK is available at the download URL"
 echo "  3. Then run this command to force-update all users:"
 echo ""
 
-# Auto-detect the APK download URL from .env.local
+# Auto-detect the APK download URL (now using GitHub Releases)
 APK_URL=$(node -e "
 try {
   const fs = require('fs');
@@ -160,12 +160,11 @@ try {
     const content = fs.readFileSync(envPath, 'utf-8');
     const match = content.match(/^NEXT_PUBLIC_API_URL\s*=\s*(\S+)$/m);
     if (match) {
-      const base = match[1].replace(/[\"']/g, '').replace(/\/+$/, '');
-      console.log(base + '/whatsappchapchap.apk');
+      console.log('https://github.com/cypjessy/whatsappchapchap/releases/latest/download/whatsappchapchap.apk');
     }
   }
 } catch {}
-" 2>/dev/null || echo "https://whatsappchapchap.vercel.app/whatsappchapchap.apk")
+" 2>/dev/null || echo "https://github.com/cypjessy/whatsappchapchap/releases/latest/download/whatsappchapchap.apk")
 
 echo "  npm run release:firestore -- --url $APK_URL"
 echo ""
@@ -179,7 +178,7 @@ echo "╔═══════════════════════�
 echo "║        🚀 RELEASE PUBLISHED SUCCESSFULLY!        ║"
 echo "╠══════════════════════════════════════════════════╣"
 echo "║  Version:  $(echo $VERSION_NAME | head -c 20) (code $VERSION_CODE)              ║"
-echo "║  Branch:   main                                          ║"
+echo "║  Branch:   master → main                                 ║"
 echo "║  GitHub:   Pushed ✅                                     ║"
 echo "║  Actions:  Running... (check the Actions tab)            ║"
 echo "║  ⚠️  Run 'npm run release:firestore' AFTER deploy!       ║"
