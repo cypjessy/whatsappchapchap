@@ -516,8 +516,8 @@ export default function ServicesPage() {
 
   return (
     <div className="overflow-x-hidden bg-surface-dim w-full">
-      {/* Header - Desktop only (TopBar handles mobile) */}
-      <div className="hidden md:block">
+      {/* Header - now visible on both mobile and desktop */}
+      <div className="mb-3 md:mb-6">
         <ServicesHeader
           servicesCount={services.length}
           bulkMode={bulkMode}

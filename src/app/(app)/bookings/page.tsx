@@ -790,8 +790,8 @@ export default function BookingsPage() {
     <div ref={pageRef} className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface-dim">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
-      {/* Sticky Header - Desktop only (TopBar handles mobile) */}
-      <div className="sticky top-0 z-[60] hidden md:block mb-6">
+      {/* Sticky Header - now visible on both mobile and desktop */}
+      <div className="sticky top-0 z-[60] mb-3 md:mb-6">
         <PageHeaderCard className="w-full">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div>

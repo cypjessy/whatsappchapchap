@@ -514,8 +514,8 @@ export default function CustomersPage() {
 
   return (
     <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface-dim">
-      {/* Hide header on mobile - TopBar handles navigation */}
-      <div className="hidden md:block">
+      {/* Header - now visible on both mobile and desktop */}
+      <div className="mb-3 md:mb-6">
         <CustomersHeader
           bulkMode={bulkMode}
           onToggleBulkMode={() => { setBulkMode(!bulkMode); setBulkSelected([]); }}

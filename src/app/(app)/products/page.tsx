@@ -736,8 +736,8 @@ export default function ProductsPage() {
 
   return (
     <div className="overflow-x-hidden bg-surface-dim w-full">
-      {/* Desktop Header */}
-      <div className="hidden md:block mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+      {/* Desktop & Mobile Header */}
+      <div className="mb-3 md:mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
         <ProductsHeader
           productsCount={products.length}
           totalInventoryValue={stats.totalInventoryValue}

@@ -219,7 +219,10 @@ export default function AndroidTopBar({
   return (
     <>
       {/* Spacer for fixed header */}
-      <div className="lg:hidden flex-shrink-0" style={{ height: '52px' }} />
+      <div 
+        className="lg:hidden flex-shrink-0" 
+        style={{ height: 'calc(52px + var(--safe-area-top))' }} 
+      />
 
       {/* Premium TopBar */}
       <header
@@ -231,18 +234,19 @@ export default function AndroidTopBar({
         style={{
           top: 0,
           willChange: 'transform',
+          paddingTop: 'var(--safe-area-top)',
+          background: isScrolled
+            ? '#ffffff'
+            : 'linear-gradient(135deg, #25D366 0%, #075E54 100%)',
+          boxShadow: isScrolled
+            ? '0 2px 12px rgba(0,0,0,0.08)'
+            : '0 2px 16px rgba(37, 211, 102, 0.2)',
         }}
       >
         <div
           className="relative transition-all duration-300 flex-shrink-0 w-full"
           style={{
             minHeight: '52px',
-            background: isScrolled
-              ? '#ffffff'
-              : 'linear-gradient(135deg, #25D366 0%, #075E54 100%)',
-            boxShadow: isScrolled
-              ? '0 2px 12px rgba(0,0,0,0.08)'
-              : '0 2px 16px rgba(37, 211, 102, 0.2)',
           }}
         >
           {/* Radial overlay for depth */}

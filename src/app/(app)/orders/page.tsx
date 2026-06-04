@@ -1095,8 +1095,8 @@ export default function OrdersPage() {
 
   return (
     <div className="overflow-x-hidden bg-surface-dim w-full">
-      {/* Desktop Header — hidden on mobile, TopBar handles mobile */}
-      <div className="hidden md:block mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+      {/* Header — now visible on both mobile and desktop */}
+      <div className="mb-3 md:mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
         <PageHeaderCard className="w-full">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
