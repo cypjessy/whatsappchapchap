@@ -8,6 +8,7 @@ import categoryData from "@/lib/categoryData";
 import type { Category, Subcategory, SpecField } from "@/lib/categoryData";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getShippingMethodsForUser, getPaymentMethodsForUser } from "@/lib/business-settings";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface AddProductModalProps {
 interface ProductImage {
   id: number;
   url: string;
+  file?: File;
   isMain: boolean;
 }
 
@@ -255,6 +257,67 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   useEffect(() => { if (!isCameraOpen && streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }, [isCameraOpen]);
   useEffect(() => { setSelectedSpecs({}); setCustomSpecOptions({}); setVariants([]); }, [selectedCategoryId, selectedSubcategoryKey]);
 
+  // ── Load shipping & payment methods from DB ────────────────────────────
+  useEffect(() => {
+    if (!isOpen || !user) return;
+    const loadSettings = async () => {
+      try {
+        const [shippingMethodsData, paymentMethodsData] = await Promise.all([
+          getShippingMethodsForUser(user),
+          getPaymentMethodsForUser(user),
+        ]);
+
+        // Convert shipping methods (id, name, price: number) to modal format (id, name, price: string)
+        if (shippingMethodsData && shippingMethodsData.length > 0) {
+          setShippingMethods(shippingMethodsData.map(s => ({
+            id: s.id,
+            name: s.name,
+            price: String(s.price),
+          })));
+        }
+
+        // Convert payment methods from business profile object to array format
+        if (paymentMethodsData) {
+          const payments: PaymentMethod[] = [];
+          if (paymentMethodsData.mpesa?.enabled) {
+            payments.push({
+              id: 'mpesa',
+              name: 'M-Pesa',
+              details: paymentMethodsData.mpesa.paybill?.businessName || paymentMethodsData.mpesa.buyGoods?.businessName || paymentMethodsData.mpesa.paybill?.paybillNumber || paymentMethodsData.mpesa.buyGoods?.tillNumber || 'Mobile Money',
+            });
+          }
+          if (paymentMethodsData.bank?.enabled) {
+            payments.push({
+              id: 'bank',
+              name: paymentMethodsData.bank.bankName || 'Bank Transfer',
+              details: paymentMethodsData.bank.accountNumber || '',
+            });
+          }
+          if (paymentMethodsData.card?.enabled) {
+            payments.push({
+              id: 'card',
+              name: 'Card Payment',
+              details: paymentMethodsData.card.instructions || paymentMethodsData.card.provider || '',
+            });
+          }
+          if (paymentMethodsData.cash?.enabled) {
+            payments.push({
+              id: 'cash',
+              name: 'Cash',
+              details: paymentMethodsData.cash.instructions || 'Pay on delivery',
+            });
+          }
+          if (payments.length > 0) {
+            setPaymentMethods(payments);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading business settings:", error);
+      }
+    };
+    loadSettings();
+  }, [isOpen, user]);
+
   const resetForm = () => {
     setForm({
       name: "", description: "", price: "", salePrice: "", costPrice: "",
@@ -333,7 +396,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       if (file.size > 5 * 1024 * 1024) { showToast("error", "Image must be less than 5MB"); return; }
       const id = Date.now() + Math.random();
       const reader = new FileReader();
-      reader.onload = () => setProductImages((prev) => [...prev, { id, url: reader.result as string, isMain: prev.length === 0 }]);
+      reader.onload = () => setProductImages((prev) => [...prev, { id, url: reader.result as string, file, isMain: prev.length === 0 }]);
       reader.readAsDataURL(file);
     });
   };
@@ -342,7 +405,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     if (file.size > 5 * 1024 * 1024) { showToast("error", "Image must be less than 5MB"); return; }
     const id = Date.now() + Math.random();
     const reader = new FileReader();
-    reader.onload = () => setProductImages((prev) => [...prev, { id, url: reader.result as string, isMain: prev.length === 0 }]);
+    reader.onload = () => setProductImages((prev) => [...prev, { id, url: reader.result as string, file, isMain: prev.length === 0 }]);
     reader.readAsDataURL(file);
   };
 
@@ -387,7 +450,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     const uniqueImages = productImages.filter((img, i, self) => i === self.findIndex((t) => t.url === img.url));
     const urls: string[] = [];
     for (const img of uniqueImages) {
-      if (img.url.startsWith("data:")) {
+      if (img.file) {
+        // Use stored File object directly — avoids data URL re-fetch issues on Android
+        const result = await bunnyStorage.uploadFile(user, img.file, "products");
+        if (result.success && result.url) urls.push(result.url);
+      } else if (img.url.startsWith("data:")) {
         const blob = await (await fetch(img.url)).blob();
         const file = new File([blob], `image_${img.id}.webp`, { type: "image/webp" });
         const result = await bunnyStorage.uploadFile(user, file, "products");

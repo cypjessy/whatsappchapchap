@@ -400,7 +400,7 @@ export default function CustomerModal({
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-start justify-center p-3 md:p-6 overflow-y-auto transition-opacity duration-200 ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6 overflow-y-auto transition-opacity duration-200 ${
         isVisible && !isClosing ? "opacity-100" : "opacity-0"
       }`}
       onClick={handleClose}

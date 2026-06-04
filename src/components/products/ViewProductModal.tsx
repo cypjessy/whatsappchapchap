@@ -199,7 +199,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     <>
       {lightboxOpen && currentImage && <ImageLightbox src={currentImage} alt={product.name} onClose={() => setLightboxOpen(false)} />}
 
-      <div className={`fixed inset-0 z-[2000] flex items-start md:items-center justify-center p-0 md:p-4 overflow-y-auto transition-all duration-200 ${isVisible && !isClosing ? "opacity-100" : "opacity-0"}`} onClick={handleClose}>
+      <div className={`fixed inset-0 z-[2000] flex items-center justify-center p-3 md:p-4 overflow-y-auto transition-all duration-200 ${isVisible && !isClosing ? "opacity-100" : "opacity-0"}`} onClick={handleClose}>
         <div className="absolute inset-0 bg-black/60" />
 
         <div className={`relative w-full max-w-lg bg-[var(--md-sys-color-surface-container)] rounded-t-3xl md:rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[92vh] overflow-hidden transition-all duration-300 ${isVisible && !isClosing ? "translate-y-0 md:scale-100" : "translate-y-12 md:scale-[0.97]"}`}

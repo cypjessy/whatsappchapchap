@@ -280,7 +280,7 @@ export default function ViewBookingModal(props: ViewBookingModalProps) {
 
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[2000] flex items-end md:items-center justify-center p-0 md:p-6"
+        className="fixed inset-0 z-[2000] flex items-center justify-center p-3 md:p-6"
         role="dialog"
         aria-modal="true"
         aria-label={`Booking details: ${booking.service}`}

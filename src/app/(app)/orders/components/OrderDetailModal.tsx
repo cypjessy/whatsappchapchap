@@ -654,7 +654,7 @@ export default function OrderDetailModal({
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9990] animate-fadeIn" onClick={onClose} />
 
       {/* Modal Container */}
-      <div className="fixed inset-0 z-[9991] flex items-end md:items-center justify-center pointer-events-none">
+      <div className="fixed inset-0 z-[9991] flex items-center justify-center p-3 pointer-events-none">
         <div
           role="dialog"
           aria-modal="true"
