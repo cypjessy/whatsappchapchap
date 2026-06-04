@@ -1264,27 +1264,27 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 md3-dialog-backdrop z-50 flex items-center justify-center p-2 md:p-4">
+        <div className="modal-dialog-overlay" onClick={closeModal}>
           <div
-            className="md3-dialog w-full max-w-3xl my-2 md:my-8 bg-surface rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+            className="modal-dialog modal-dialog-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-surface rounded-t-2xl border-b border-outline-variant">
-              <div className="flex items-center justify-between px-6 py-5">
+            <div className="modal-dialog-header flex-col items-stretch p-0">
+              <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg">
                     <i className="fas fa-plus text-lg" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-normal text-on-surface leading-tight">Add New Service</h2>
-                    <p className="text-xs text-on-surface-variant mt-0.5">Step {currentStep} of {WIZARD_STEPS.length}</p>
+                    <h2 className="text-lg font-bold text-on-surface leading-tight">Add New Service</h2>
+                    <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mt-0.5 opacity-60">Step {currentStep} of {WIZARD_STEPS.length}</p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
                   disabled={isSaving || isUploading}
-                  className="w-10 h-10 rounded-full bg-transparent text-on-surface-variant flex items-center justify-center hover:bg-surface-variant transition-all duration-200 active:scale-95"
+                  className="modal-dialog-close"
                 >
                   <i className="fas fa-times" />
                 </button>
@@ -1294,7 +1294,7 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
             </div>
 
             {/* Body - Scrollable */}
-            <div className="md3-dialog-content overflow-y-auto flex-1 px-6 py-4">
+            <div className="modal-dialog-body flex-1 px-6 py-4 space-y-4">
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
@@ -1306,33 +1306,35 @@ const AddServiceButton = forwardRef<AddServiceButtonRef, {}>((_props, ref) => {
             </div>
 
             {/* Footer - Always Visible */}
-            <div className="md3-dialog-actions sticky bottom-0 bg-surface border-t border-outline-variant px-6 py-4 rounded-b-2xl">
+            <div className="modal-dialog-footer bg-surface border-t border-outline-variant px-6 py-4">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 1 || isSaving || isUploading}
-                className={`md3-btn-text ${currentStep === 1 ? 'invisible' : ''}`}
+                className={`px-4 py-2 font-bold text-sm text-on-surface-variant hover:bg-surface-variant rounded-xl transition-all ${currentStep === 1 ? 'invisible' : ''}`}
               >
                 Back
               </button>
 
-              {currentStep < WIZARD_STEPS.length ? (
-                <button
-                  onClick={nextStep}
-                  disabled={!canProceed || isSaving || isUploading}
-                  className={`md3-btn-filled ${!canProceed ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  onClick={saveService}
-                  disabled={isSaving || isUploading}
-                  className={`md3-btn-filled ${(isSaving || isUploading) ? 'opacity-50 cursor-wait' : ''} flex items-center gap-2`}
-                >
-                  <i className={`fas ${isUploading ? "fa-spinner fa-spin text-sm" : isSaving ? "fa-spinner fa-spin text-sm" : "fa-save text-sm"}`} />
-                  {isUploading ? "Uploading..." : isSaving ? "Saving..." : "Save Service"}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {currentStep < WIZARD_STEPS.length ? (
+                  <button
+                    onClick={nextStep}
+                    disabled={!canProceed || isSaving || isUploading}
+                    className={`px-6 py-2 bg-[#8b5cf6] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#8b5cf6]/20 transition-all active:scale-95 ${!canProceed ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#7c3aed]'}`}
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    onClick={saveService}
+                    disabled={isSaving || isUploading}
+                    className={`px-6 py-2 bg-[#8b5cf6] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#8b5cf6]/20 transition-all active:scale-95 ${(isSaving || isUploading) ? 'opacity-50 cursor-wait' : 'hover:bg-[#7c3aed]'} flex items-center gap-2`}
+                  >
+                    <i className={`fas ${isUploading ? "fa-spinner fa-spin text-sm" : isSaving ? "fa-spinner fa-spin text-sm" : "fa-save text-sm"}`} />
+                    {isUploading ? "Uploading..." : isSaving ? "Saving..." : "Save Service"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

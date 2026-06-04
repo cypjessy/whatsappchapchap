@@ -585,52 +585,57 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   return (
     <>
-      <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 overflow-y-auto" onClick={onClose}>
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-
-        <div className="relative w-full max-w-lg bg-[var(--md-sys-color-surface-container)] rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden animate-scaleIn"
-          onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog-overlay" onClick={onClose}>
+        <div 
+          className="modal-dialog modal-dialog-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* ─── Header ──────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between px-5 pt-5 pb-0 shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="modal-dialog-header">
+            <h2 className="modal-dialog-title">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md">
                 <i className="fas fa-plus text-xs" />
               </div>
-              <span className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">Add Product</span>
-            </div>
-            <button onClick={onClose} disabled={saving} className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-all active:scale-90">
+              <span>Add Product</span>
+            </h2>
+            <button 
+              onClick={onClose} 
+              disabled={saving} 
+              className="modal-dialog-close"
+              aria-label="Close"
+            >
               <i className="fas fa-times text-sm" />
             </button>
           </div>
 
-          {/* ─── Live Preview ────────────────────────────────────────────── */}
-          <div className="flex flex-col items-center gap-2 py-4 px-5 shrink-0">
-            <div className="relative group">
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-indigo-400/20 to-violet-400/20 blur-xl animate-pulse" />
-              <div className={`relative w-16 h-16 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xl font-bold text-white shadow-2xl transition-all duration-300 group-hover:scale-105`}>
-                {(form.name || "P").charAt(0).toUpperCase()}
+          {/* ─── Body (Scrollable) ────────────────────────────────────────── */}
+          <div className="modal-dialog-body space-y-4">
+            {/* Live Preview Banner */}
+            <div className="flex flex-col items-center gap-2 py-2">
+              <div className="relative group">
+                <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-indigo-400/20 to-violet-400/20 blur-xl animate-pulse" />
+                <div className={`relative w-16 h-16 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xl font-bold text-white shadow-lg transition-all duration-300 group-hover:scale-105`}>
+                  {(form.name || "P").charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-[var(--md-sys-color-on-surface)] tracking-tight truncate max-w-[280px]">
+                  {form.name || "New Product"}
+                </h3>
+                <div className="flex items-center gap-2 mt-0.5 justify-center">
+                  {previewPrice && (
+                    <span className="text-sm font-bold text-indigo-500">
+                      KES {previewPrice.toLocaleString()}
+                      {hasDiscount && <span className="line-through text-xs text-rose-400 ml-1">KES {previewSalePrice!.toLocaleString()}</span>}
+                    </span>
+                  )}
+                  {hasDiscount && discountPercent > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600">-{discountPercent}%</span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="text-center">
-              <h3 className="text-lg font-bold text-[var(--md-sys-color-on-surface)] tracking-tight truncate max-w-[280px]">
-                {form.name || "New Product"}
-              </h3>
-              <div className="flex items-center gap-2 mt-0.5 justify-center">
-                {previewPrice && (
-                  <span className="text-sm font-bold text-indigo-500">
-                    KES {previewPrice.toLocaleString()}
-                    {hasDiscount && <span className="line-through text-xs text-rose-400 ml-1">KES {previewSalePrice!.toLocaleString()}</span>}
-                  </span>
-                )}
-                {hasDiscount && discountPercent > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600">-{discountPercent}%</span>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* ─── Scrollable form ─────────────────────────────────────────── */}
-          <div className="px-5 pb-5 space-y-3 overflow-y-auto flex-1">
             {/* Basic Info */}
             <FieldGroup label="Basic Info" icon="fa-info-circle" accent>
               <div className="space-y-3">
@@ -643,7 +648,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   className="w-full px-3 py-2 bg-[var(--md-sys-color-surface)] rounded-xl text-sm font-medium text-[var(--md-sys-color-on-surface)] placeholder:text-[var(--md-sys-color-outline)] border border-[var(--md-sys-color-outline-variant)] focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none transition-all" />
               </div>
             </FieldGroup>
-
+            
+            {/* ... rest of the form sections ... */}
+            {/* (I'm keeping the internal form logic as is, just wrapping it in the new modal structure) */}
+            
             {/* Pricing */}
             <FieldGroup label="Pricing" icon="fa-tag" accent>
               <div className="grid grid-cols-3 gap-2.5">
@@ -898,12 +906,19 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           </div>
 
           {/* ─── Footer ──────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between px-5 py-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] rounded-b-3xl shrink-0">
-            <button onClick={onClose} disabled={saving} className="px-4 py-2.5 rounded-xl font-semibold text-sm text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-all active:scale-95">
+          <div className="modal-dialog-footer">
+            <button 
+              onClick={onClose} 
+              disabled={saving} 
+              className="px-4 py-2.5 rounded-xl font-semibold text-sm text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-variant)] transition-all active:scale-95"
+            >
               Cancel
             </button>
-            <button onClick={saveProduct} disabled={saving}
-              className="px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <button 
+              onClick={saveProduct} 
+              disabled={saving}
+              className="px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
               {saving ? (
                 <><i className="fas fa-circle-notch fa-spin text-sm" />Saving...</>
               ) : (

@@ -94,7 +94,6 @@ const TIER_CONFIG = {
 } as const;
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const FULL_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const STATUS_CONFIG: Record<string, { bg: string; dot: string; label: string }> = {
   active: { bg: "bg-[#10b981]/20", dot: "bg-[#10b981]", label: "Active" },
@@ -163,7 +162,6 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const textarea = document.createElement("textarea");
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -203,7 +201,6 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
   const nextImage = () => setLightboxIndex((prev) => (prev === null ? 0 : (prev + 1) % images.length));
   const prevImage = () => setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + images.length) % images.length));
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (lightboxIndex === null) return;
@@ -229,7 +226,6 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
               alt={`${serviceName} portfolio ${idx + 1}`}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               loading="lazy"
-              decoding="async"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
               <ExternalLink className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -238,7 +234,6 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
         ))}
       </div>
 
-      {/* Lightbox */}
       {lightboxIndex !== null && (
         <div
           className="fixed inset-0 z-[2500] bg-black/90 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
@@ -288,7 +283,6 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
 
-  // Close handlers with animation
   const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
@@ -297,19 +291,6 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
     }, 200);
   }, [onClose]);
 
-  // Outside click
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        handleClose();
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open, handleClose]);
-
-  // Escape key
   useEffect(() => {
     if (!open) return;
     const handleEscape = (e: KeyboardEvent) => {
@@ -319,19 +300,6 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open, handleClose]);
 
-  // Body scroll lock
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  // Scroll progress
   const handleScroll = useCallback(() => {
     const el = contentRef.current;
     if (!el) return;
@@ -342,7 +310,6 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
   if (!open || !service) return null;
 
   const statusConfig = STATUS_CONFIG[service.status || "active"] || STATUS_CONFIG.active;
-
   const packagePrices = service.packagePrices || {
     basic: service.priceMin || 0,
     standard: Math.round((service.priceMin || 0) * 1.5),
@@ -354,26 +321,18 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
     standard: ["Everything in Basic", "Priority scheduling", "Enhanced support"],
     premium: ["Everything in Standard", "VIP treatment", "24/7 support"],
   };
-
   const packageFeatures = service.packageFeatures || defaultFeatures;
-
   const ModeIcon = MODE_LABELS[service.mode]?.icon || User;
 
   return (
     <div
-      className={`
-        fixed inset-0 z-[2000] flex items-center justify-center p-2 md:p-4
-        bg-black/60 backdrop-blur-sm
-        transition-all duration-200
-        ${isClosing ? "opacity-0" : "opacity-100 animate-fadeIn"}
-      `}
+      className={`modal-dialog-overlay ${isClosing ? "opacity-0" : "opacity-100 animate-fadeIn"}`}
       onClick={handleClose}
     >
       <div
         ref={modalRef}
         className={`
-          relative bg-surface rounded-xl md:rounded-2xl w-full max-w-[800px] max-h-[92vh]
-          overflow-hidden shadow-2xl flex flex-col
+          modal-dialog modal-dialog-lg
           transition-all duration-300
           ${isClosing ? "scale-95 opacity-0 translate-y-4" : "scale-100 opacity-100 translate-y-0"}
         `}
@@ -392,35 +351,19 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           relative h-48 md:h-56 overflow-hidden shrink-0
           bg-gradient-to-br ${service.bgGradient || "from-[#8b5cf6] to-[#7c3aed]"}
         `}>
-          {/* Service Image Background */}
           {service.imageUrl && (
-            <img
-              src={service.imageUrl}
-              alt={service.name}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="eager"
-              decoding="async"
-            />
+            <img src={service.imageUrl} alt={service.name} className="absolute inset-0 w-full h-full object-cover" />
           )}
-
-          {/* Background pattern (shown only when no image) */}
           {!service.imageUrl && (
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-4 left-4 text-8xl">{service.emoji || "✨"}</div>
               <div className="absolute bottom-4 right-4 text-6xl opacity-50">{service.emoji || "✨"}</div>
             </div>
           )}
-
-          {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-          {/* Content */}
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
             <div className="flex items-center gap-2 mb-2">
-              <span className={`
-                inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md
-                ${statusConfig.bg}
-              `}>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md ${statusConfig.bg}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} ${service.status === "active" ? "animate-pulse" : ""}`} />
                 {statusConfig.label}
               </span>
@@ -429,55 +372,22 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-1">{service.name}</h1>
-            {service.providerName && (
-              <p className="text-sm text-white/80 font-medium">by {service.providerName}</p>
-            )}
+            {service.providerName && <p className="text-sm text-white/80 font-medium">by {service.providerName}</p>}
           </div>
-
-          {/* Close button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-surface/30 hover:rotate-90 transition-all duration-300 z-10"
-          >
+          <button onClick={handleClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-surface/30 transition-all duration-300 z-10">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div
-          ref={contentRef}
-          className="overflow-y-auto flex-1 scroll-smooth"
-          onScroll={handleScroll}
-        >
-          {/* Quick Stats */}
+        {/* Scrollable Body */}
+        <div ref={contentRef} className="modal-dialog-body flex-1 scroll-smooth" onScroll={handleScroll}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 p-4 md:p-6 border-b border-outline-variant">
-            <StatCard
-              value={service.duration || "—"}
-              label="Duration"
-              icon={Clock}
-              delay={0}
-            />
-            <StatCard
-              value={service.bookings || 0}
-              label="Bookings"
-              icon={CalendarCheck}
-              delay={80}
-            />
-            <StatCard
-              value={service.views || 0}
-              label="Views"
-              icon={Eye}
-              delay={160}
-            />
-            <StatCard
-              value={service.rating ? service.rating.toFixed(1) : "—"}
-              label={service.rating ? "Rating" : "No Ratings"}
-              icon={Star}
-              delay={240}
-            />
+            <StatCard value={service.duration || "—"} label="Duration" icon={Clock} />
+            <StatCard value={service.bookings || 0} label="Bookings" icon={CalendarCheck} delay={50} />
+            <StatCard value={service.views || 0} label="Views" icon={Eye} delay={100} />
+            <StatCard value={service.rating ? service.rating.toFixed(1) : "—"} label={service.rating ? "Rating" : "No Ratings"} icon={Star} delay={150} />
           </div>
 
-          {/* Description */}
           {service.description && (
             <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={AlignLeft} title="Description" />
@@ -485,41 +395,6 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
             </div>
           )}
 
-          {/* Provider */}
-          {service.providerName && (
-            <div className="p-4 md:p-6 border-b border-outline-variant">
-              <SectionHeader icon={Store} title="Business / Provider" />
-              <div className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white flex items-center justify-center text-xl shadow-sm">
-                  {service.emoji || "✨"}
-                </div>
-                <div>
-                  <div className="font-bold text-on-surface">{service.providerName}</div>
-                  <div className="text-xs text-on-surface-variant">Service Provider</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tags */}
-          {service.tags && service.tags.length > 0 && (
-            <div className="p-4 md:p-6 border-b border-outline-variant">
-              <SectionHeader icon={Tag} title="Tags" />
-              <div className="flex flex-wrap gap-2">
-                {service.tags.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs font-semibold text-on-surface-variant flex items-center gap-1.5 hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-colors"
-                  >
-                    <Tag className="w-3 h-3 text-[#8b5cf6]" />
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Pricing Tiers */}
           <div className="p-4 md:p-6 border-b border-outline-variant">
             <SectionHeader icon={DollarSign} title="Pricing Packages" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
@@ -527,41 +402,14 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
                 const config = TIER_CONFIG[tier];
                 const isFeatured = tier === "standard";
                 return (
-                  <div
-                    key={tier}
-                    className={`
-                      relative rounded-xl p-4 border-2 transition-all duration-300
-                      ${isFeatured
-                        ? `${config.bgColor} ${config.borderColor} shadow-md`
-                        : "bg-surface border-outline-variant hover:border-outline-variant"
-                      }
-                      hover:-translate-y-0.5 hover:shadow-lg
-                    `}
-                  >
-                    {isFeatured && (
-                      <div className="absolute -top-2 left-4 px-2.5 py-0.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white text-[9px] font-bold uppercase rounded-full shadow-sm">
-                        Popular
-                      </div>
-                    )}
-                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${config.textColor}`}>
-                      {config.label}
-                    </div>
-                    <div className="text-2xl md:text-3xl font-extrabold text-on-surface mb-1">
-                      {formatCurrency(packagePrices[tier] || 0)}
-                    </div>
-                    <div className="text-[11px] text-outline mb-3 pb-3 border-b border-outline-variant">
-                      {service.selectedDuration && !isNaN(service.selectedDuration)
-                        ? `${service.selectedDuration} min`
-                        : service.duration?.match(/(\d+)/)?.[1]
-                          ? `${service.duration.match(/(\d+)/)![1]} min`
-                          : "Duration TBD"}
-                    </div>
-                    <ul className="space-y-2">
+                  <div key={tier} className={`relative rounded-xl p-4 border-2 transition-all duration-300 ${isFeatured ? `${config.bgColor} ${config.borderColor} shadow-md` : "bg-surface border-outline-variant"} hover:-translate-y-0.5 hover:shadow-lg`}>
+                    {isFeatured && <div className="absolute -top-2 left-4 px-2.5 py-0.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white text-[9px] font-bold uppercase rounded-full shadow-sm">Popular</div>}
+                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${config.textColor}`}>{config.label}</div>
+                    <div className="text-2xl md:text-3xl font-extrabold text-on-surface mb-1">{formatCurrency(packagePrices[tier] || 0)}</div>
+                    <ul className="space-y-2 mt-3">
                       {(packageFeatures[tier] || defaultFeatures[tier]).map((feature: string, idx: number) => (
                         <li key={idx} className="text-xs text-on-surface-variant flex items-start gap-2">
-                          <div className="w-4 h-4 rounded-full bg-[#10b981]/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <Check className="w-2.5 h-2.5 text-[#10b981]" />
-                          </div>
+                          <Check className="w-3 h-3 text-[#10b981] shrink-0 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -572,107 +420,20 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
             </div>
           </div>
 
-          {/* Service Mode & Location */}
           <div className="p-4 md:p-6 border-b border-outline-variant">
             <SectionHeader icon={MapPin} title="Service Delivery" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-4 bg-surface rounded-xl border border-outline-variant">
-                <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2">Mode</div>
-                <div className="font-bold text-on-surface flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
-                    <ModeIcon className="w-4 h-4 text-[#8b5cf6]" />
-                  </div>
-                  {MODE_LABELS[service.mode]?.label || service.mode}
-                </div>
+              <div className="p-4 bg-surface rounded-xl border border-outline-variant flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center"><ModeIcon className="w-4 h-4 text-[#8b5cf6]" /></div>
+                <div><div className="text-[10px] text-outline font-bold uppercase">Mode</div><div className="font-bold text-sm">{MODE_LABELS[service.mode]?.label || service.mode}</div></div>
               </div>
-              <div className="p-4 bg-surface rounded-xl border border-outline-variant">
-                <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2">Location</div>
-                <div className="font-bold text-on-surface flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-[#8b5cf6]" />
-                  </div>
-                  {LOCATION_LABELS[service.location] || service.location}
-                </div>
+              <div className="p-4 bg-surface rounded-xl border border-outline-variant flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center"><MapPin className="w-4 h-4 text-[#8b5cf6]" /></div>
+                <div><div className="text-[10px] text-outline font-bold uppercase">Location</div><div className="font-bold text-sm">{LOCATION_LABELS[service.location] || service.location}</div></div>
               </div>
             </div>
           </div>
 
-          {/* Availability */}
-          {service.availability?.days && service.availability.days.length > 0 && (
-            <div className="p-4 md:p-6 border-b border-outline-variant">
-              <SectionHeader icon={CalendarCheck} title="Availability" />
-              <div className="grid grid-cols-7 gap-1.5 md:gap-2 mb-4">
-                {DAY_NAMES.map((day, idx) => {
-                  const isAvailable = service.availability?.days.includes(day);
-                  return (
-                    <div
-                      key={day}
-                      className={`
-                        text-center p-2 md:p-3 rounded-xl transition-all
-                        ${isAvailable
-                          ? "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
-                          : "bg-surface text-outline opacity-50"
-                        }
-                      `}
-                    >
-                      <div className="text-[9px] md:text-[10px] font-bold uppercase mb-0.5">{day}</div>
-                      <div className="text-xs md:text-sm font-bold">
-                        {isAvailable ? <Check className="w-3 h-3 mx-auto" /> : "—"}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {service.availability.timeSlots && service.availability.timeSlots.length > 0 && (
-                <div>
-                  <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2">Time Slots</div>
-                  <div className="flex flex-wrap gap-2">
-                    {service.availability.timeSlots.slice(0, 8).map((time, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 bg-surface border border-outline-variant rounded-lg text-[11px] font-semibold text-on-surface-variant"
-                      >
-                        {time}
-                      </span>
-                    ))}
-                    {service.availability.timeSlots.length > 8 && (
-                      <span className="px-2.5 py-1 bg-[#ede9fe] text-[#8b5cf6] rounded-lg text-[11px] font-bold">
-                        +{service.availability.timeSlots.length - 8} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Specifications */}
-          {service.specifications && Object.keys(service.specifications).length > 0 && (
-            <div className="p-4 md:p-6 border-b border-outline-variant">
-              <SectionHeader icon={SlidersHorizontal} title="Specifications" />
-              <div className="space-y-4">
-                {Object.entries(service.specifications).map(([key, values]) => (
-                  <div key={key} className="pb-3 border-b border-[#f1f5f9] last:border-0 last:pb-0">
-                    <div className="text-[11px] font-semibold text-outline uppercase tracking-wider mb-2 capitalize">
-                      {key.replace(/_/g, " ")}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(values as string[]).map((val: string, idx: number) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1.5 bg-[#ede9fe] text-[#7c3aed] rounded-lg text-xs font-medium border border-[#8b5cf6]/10"
-                        >
-                          {val}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Portfolio Images */}
           {service.portfolioImages && service.portfolioImages.length > 0 && (
             <div className="p-4 md:p-6 border-b border-outline-variant">
               <SectionHeader icon={Images} title={`Portfolio (${service.portfolioImages.length})`} />
@@ -680,37 +441,25 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
             </div>
           )}
 
-          {/* Booking Link */}
           {service.bookingUrl && (
             <div className="p-4 md:p-6">
               <SectionHeader icon={Link2} title="Booking Link" />
               <div className="p-4 bg-[#ede9fe] rounded-xl border-2 border-[#8b5cf6]/30">
-                <div className="flex items-center gap-3 mb-3">
-                  <code className="text-sm text-[#7c3aed] break-all flex-1 font-mono bg-surface/50 px-3 py-2 rounded-lg">
-                    {service.bookingUrl}
-                  </code>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-3">
+                  <code className="text-xs text-[#7c3aed] break-all flex-1 font-mono bg-surface/50 px-3 py-2 rounded-lg">{service.bookingUrl}</code>
                   <CopyButton text={service.bookingUrl} />
                 </div>
-                <p className="text-xs text-on-surface-variant">
-                  Share this link with clients to let them book appointments directly.
-                </p>
+                <p className="text-[10px] text-on-surface-variant font-medium">Share this link with clients to let them book appointments directly.</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Sticky Footer */}
-        <div className="p-4 border-t border-outline-variant bg-surface shrink-0">
-          <div className="flex gap-3">
-            <button
-              onClick={handleClose}
-              className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] transition-all active:scale-95"
-            >
-              Close
-            </button>
-            {service.bookingUrl && (
-              <CopyButton text={service.bookingUrl} label="Copy Link" />
-            )}
+        {/* Footer */}
+        <div className="modal-dialog-footer">
+          <div className="flex gap-3 w-full">
+            <button onClick={handleClose} className="flex-1 px-4 py-3 border-2 border-outline-variant rounded-xl font-bold text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95">Close</button>
+            {service.bookingUrl && <CopyButton text={service.bookingUrl} label="Copy Link" />}
           </div>
         </div>
       </div>

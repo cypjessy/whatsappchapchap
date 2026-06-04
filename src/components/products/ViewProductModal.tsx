@@ -199,25 +199,26 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
     <>
       {lightboxOpen && currentImage && <ImageLightbox src={currentImage} alt={product.name} onClose={() => setLightboxOpen(false)} />}
 
-      <div className={`fixed inset-0 z-[2000] flex items-center justify-center p-3 md:p-4 overflow-y-auto transition-all duration-200 ${isVisible && !isClosing ? "opacity-100" : "opacity-0"}`} onClick={handleClose}>
-        <div className="absolute inset-0 bg-black/60" />
-
-        <div className={`relative w-full max-w-lg bg-[var(--md-sys-color-surface-container)] rounded-t-3xl md:rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[92vh] overflow-hidden transition-all duration-300 ${isVisible && !isClosing ? "translate-y-0 md:scale-100" : "translate-y-12 md:scale-[0.97]"}`}
-          onClick={(e) => e.stopPropagation()}>
-
-          {/* ─── Hero Header ────────────────────────────────────────────── */}
-          <div className="relative shrink-0 overflow-hidden">
+      <div className="modal-dialog-overlay" onClick={handleClose}>
+        <div 
+          className="modal-dialog modal-dialog-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ─── Hero Header (Custom for View) ─────────────────────────── */}
+          <div className="relative shrink-0 overflow-hidden min-h-[120px]">
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
             <div className="absolute inset-0 bg-black/10" />
             <div className="absolute inset-0 opacity-10">
               <div className="absolute -top-6 -right-6 text-7xl text-white/20">✦</div>
               <div className="absolute bottom-2 left-2 text-3xl text-white/20">✦</div>
-              <div className="absolute top-4 right-16 text-2xl text-white/20">✦</div>
             </div>
 
             <div className="relative px-5 pt-5 pb-4">
               {/* Close button */}
-              <button onClick={handleClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 hover:rotate-90 transition-all z-10">
+              <button 
+                onClick={handleClose} 
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition-all z-10"
+              >
                 <i className="fas fa-times text-xs" />
               </button>
 
@@ -250,8 +251,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
           </div>
 
           {/* ─── Scrollable Body ────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-
+          <div className="modal-dialog-body space-y-4">
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-2">
               <StatCard icon="fa-tag" label="Price" value={`KES ${product.price.toLocaleString()}`} color="indigo" />
@@ -465,9 +465,9 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
             ), false, false)}
           </div>
 
-          {/* ─── Floating Action Bar ─────────────────────────────────────── */}
-          <div className="shrink-0 px-5 py-3 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] rounded-b-3xl">
-            <div className="grid grid-cols-2 gap-2">
+          {/* ─── Footer ──────────────────────────────────────────────────── */}
+          <div className="modal-dialog-footer">
+            <div className="grid grid-cols-2 gap-2 w-full">
               <button onClick={() => onEdit(product)}
                 className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 shadow-lg shadow-indigo-500/25 transition-all active:scale-95">
                 <i className="fas fa-edit text-xs" />
