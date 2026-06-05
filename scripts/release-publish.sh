@@ -101,7 +101,7 @@ print_status "Building Next.js + Capacitor + Gradle..."
 # Build without bumping version again (step 2 already bumped)
 npm run build:android
 cd android
-JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleDebug
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleRelease
 cd "$PROJECT_ROOT"
 mkdir -p public
 cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk

@@ -12,6 +12,7 @@ import {
   APP_VERSION_FIRESTORE_PATH,
 } from "@/lib/app-version";
 import { ForceUpdateDialog } from "@/components/ForceUpdateDialog";
+import { App } from "@capacitor/app";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
   // Initialize Capacitor lifecycle management to prevent idle freeze
@@ -25,6 +26,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   // This runs once on mount and blocks the entire app if an update is required
   const [forceUpdateState, setForceUpdateState] = useState<{
     force: boolean;
+    currentVersion: string;
     minimumVersion: string;
     updateUrl?: string;
     message?: string;
@@ -36,6 +38,20 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 
   const checkForcedUpdate = async () => {
     try {
+      // 1. Get current native version (more accurate than hardcoded web version)
+      let currentCode = APP_VERSION_CODE;
+      let currentName = APP_VERSION_NAME;
+      
+      try {
+        const info = await App.getInfo();
+        if (info.build) {
+          currentCode = parseInt(info.build, 10);
+          currentName = info.version;
+        }
+      } catch (e) {
+        console.log("[ForceUpdate] Could not get native app info, using fallback");
+      }
+
       const versionDoc = await getDoc(doc(db, APP_VERSION_FIRESTORE_PATH));
 
       if (!versionDoc.exists()) {
@@ -48,10 +64,10 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         );
 
         const initialData = {
-          minimumVersionCode: APP_VERSION_CODE,
-          minimumVersionName: APP_VERSION_NAME,
-          latestVersionCode: APP_VERSION_CODE,
-          latestVersionName: APP_VERSION_NAME,
+          minimumVersionCode: currentCode,
+          minimumVersionName: currentName,
+          latestVersionCode: currentCode,
+          latestVersionName: currentName,
           updateUrl: "",
           forceUpdateMessage: "",
           updatedAt: new Date(),
@@ -76,18 +92,16 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       }
 
       console.log(
-        "[ForceUpdate] Installed v" +
-          APP_VERSION_CODE +
-          " | Minimum required v" +
-          minimumVersionCode
+        `[ForceUpdate] Installed v${currentCode} (${currentName}) | Minimum required v${minimumVersionCode}`
       );
 
-      if (APP_VERSION_CODE < minimumVersionCode) {
+      if (currentCode < minimumVersionCode) {
         console.log(
           "[ForceUpdate] ⚠️ App is outdated — showing force update dialog"
         );
         setForceUpdateState({
           force: true,
+          currentVersion: `${currentName} (build ${currentCode})`,
           minimumVersion:
             (config.minimumVersionName as string) ||
             String(minimumVersionCode),
@@ -97,7 +111,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       } else {
         console.log(
           "[ForceUpdate] ✅ App is up to date (v" +
-            APP_VERSION_CODE +
+            currentCode +
             ")"
         );
       }
@@ -124,7 +138,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       {/* ⭐ Forced Update Dialog — renders ABOVE everything including modals */}
       {forceUpdateState?.force && (
         <ForceUpdateDialog
-          currentVersion={`${APP_VERSION_NAME} (build ${APP_VERSION_CODE})`}
+          currentVersion={forceUpdateState.currentVersion}
           minimumVersion={forceUpdateState.minimumVersion}
           updateUrl={forceUpdateState.updateUrl}
           message={forceUpdateState.message}

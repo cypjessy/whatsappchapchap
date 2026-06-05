@@ -5,9 +5,8 @@ const config: CapacitorConfig = {
   appName: 'WhatsApp Chap Chap',
   webDir: process.env.CAPACITOR_WEB_DIR || 'out',
   android: {
-    allowMixedContent: true,
+    allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: true,
     backgroundColor: '#ffffff',
   },
   plugins: {
