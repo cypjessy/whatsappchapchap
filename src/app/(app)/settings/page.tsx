@@ -341,6 +341,7 @@ export default function SettingsPage() {
       await businessProfileService.createOrUpdateProfile(user, cleanedProfile as any);
       await notificationSuccess();
       await showToastNative({ text: 'Business profile saved successfully!', duration: 'short' });
+      await loadData();
     } catch (error: any) {
       console.error("Error saving profile:", error);
       await notificationError();
@@ -370,6 +371,7 @@ export default function SettingsPage() {
       await whatsappSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
       await notificationSuccess();
       await showToastNative({ text: 'WhatsApp settings saved successfully!', duration: 'short' });
+      await loadData();
     } catch (error: any) {
       console.error("Error saving WhatsApp settings:", error);
       await notificationError();
@@ -393,6 +395,7 @@ export default function SettingsPage() {
       await productSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
       await notificationSuccess();
       await showToastNative({ text: 'Product settings saved successfully!', duration: 'short' });
+      await loadData();
     } catch (error: any) {
       console.error("Error saving product settings:", error);
       await notificationError();
@@ -416,6 +419,7 @@ export default function SettingsPage() {
       await serviceSettingsService.createOrUpdateSettings(user, cleanedSettings as any);
       await notificationSuccess();
       await showToastNative({ text: 'Service settings saved successfully!', duration: 'short' });
+      await loadData();
     } catch (error: any) {
       console.error("Error saving service settings:", error);
       await notificationError();

@@ -790,64 +790,72 @@ export default function BookingsPage() {
     <div ref={pageRef} className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-2 bg-surface-dim">
       <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
-      {/* Sticky Header - now visible on both mobile and desktop */}
-      <div className="sticky top-0 z-[60] mb-3 md:mb-6">
+      {/* Header — Premium MD3 Card */}
+      <div className="mb-3 md:mb-6">
         <PageHeaderCard className="w-full">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-[10px] text-outline font-bold uppercase tracking-wider mb-1">
-                <i className="fas fa-home text-[8px]" />
-                <span>Dashboard</span>
-                <i className="fas fa-chevron-right text-[6px]" />
-                <span className="text-on-surface">Bookings</span>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
+            {/* Left: Icon + Title */}
+            <div className="flex items-center gap-3 md:gap-4 min-w-0 w-full md:w-auto">
+              {/* Premium gradient icon with glow */}
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] blur-md opacity-30 animate-pulse" />
+                <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg shadow-[#8b5cf6]/20">
+                  <i className="fas fa-calendar-alt text-base md:text-lg" />
+                </div>
               </div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
-                Bookings
-                <span className="text-sm font-bold text-outline ml-1">
-                  ({filteredBookings.length})
-                </span>
-              </h1>
+
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl lg:text-[1.625rem] font-extrabold text-on-surface tracking-tight">
+                  Bookings
+                </h1>
+                <p className="text-xs md:text-sm text-on-surface-variant font-medium mt-0.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#8b5cf6] animate-pulse mr-1.5 align-middle" />
+                  Schedule and manage your service bookings
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <button
-                onClick={() => setBulkMode(!bulkMode)}
-                className={`
-                  flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
-                  ${bulkMode
-                    ? "bg-[#1e293b] text-white shadow-md"
-                    : "border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface"
-                  }
-                `}
-              >
-                <i className={`fas ${bulkMode ? "fa-check-square" : "fa-square"} text-xs`} />
-                <span className="hidden sm:inline">Bulk</span>
-              </button>
-
-              <button
-                onClick={handleExportCSV}
-                disabled={isExporting || filteredBookings.length === 0}
-                className={`
-                  flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all active:scale-95
-                  border-2 border-outline-variant text-on-surface-variant hover:border-[#1e293b] hover:text-on-surface
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                `}
-              >
-                {isExporting ? (
-                  <div className="w-3.5 h-3.5 border-2 border-[#1e293b]/30 border-t-[#1e293b] rounded-full animate-spin" />
-                ) : (
-                  <i className="fas fa-download text-xs" />
-                )}
-                <span className="hidden sm:inline">Export</span>
-              </button>
-
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#1e293b] to-[#334155] text-white rounded-xl font-semibold text-xs md:text-sm shadow-md hover:opacity-90 transition-all active:scale-95"
-              >
-                <i className="fas fa-plus text-xs" />
-                <span className="hidden sm:inline">New Booking</span>
-              </button>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar pb-0.5 md:pb-0 snap-x">
+              <div className="snap-start shrink-0">
+                <button
+                  onClick={() => setBulkMode(!bulkMode)}
+                  className={`
+                    flex items-center gap-2 px-3.5 py-2.5 md:px-4 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm
+                    transition-all duration-200 active:scale-95
+                    ${bulkMode
+                      ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md shadow-[#8b5cf6]/20"
+                      : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:shadow-md hover:-translate-y-0.5"
+                    }
+                  `}
+                >
+                  <i className={`fas ${bulkMode ? "fa-check-square" : "fa-square"} text-xs`} />
+                  <span className="hidden xs:inline">{bulkMode ? "Done" : "Bulk"}</span>
+                </button>
+              </div>
+              <div className="snap-start shrink-0">
+                <button
+                  onClick={handleExportCSV}
+                  disabled={isExporting || filteredBookings.length === 0}
+                  className="flex items-center gap-2 px-3.5 py-2.5 md:px-4 md:py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-xs md:text-sm text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:hover:transform-none"
+                >
+                  {isExporting ? (
+                    <div className="w-3.5 h-3.5 border-2 border-[#8b5cf6]/30 border-t-[#8b5cf6] rounded-full animate-spin" />
+                  ) : (
+                    <i className="fas fa-download text-xs" />
+                  )}
+                  <span className="hidden xs:inline">Export</span>
+                </button>
+              </div>
+              <div className="snap-start shrink-0">
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 md:px-5 md:py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white rounded-xl font-semibold text-xs md:text-sm shadow-lg shadow-[#8b5cf6]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+                >
+                  <i className="fas fa-plus text-xs" />
+                  <span>New Booking</span>
+                </button>
+              </div>
             </div>
           </div>
         </PageHeaderCard>

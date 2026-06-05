@@ -8,8 +8,6 @@ import {
   CheckSquare,
   Plus,
   Layers,
-  TrendingUp,
-  Package,
 } from "lucide-react";
 import PageHeaderCard from "@/components/PageHeaderCard";
 
@@ -122,6 +120,7 @@ function HeaderButton({
   isActive = false,
   asLabel = false,
   children,
+  mobileLabel,
 }: {
   onClick?: () => void;
   icon: React.ElementType;
@@ -130,15 +129,16 @@ function HeaderButton({
   isActive?: boolean;
   asLabel?: boolean;
   children?: React.ReactNode;
+  mobileLabel?: string;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
   const variants = {
     default: isActive
-      ? "bg-[#25D366] text-white shadow-lg shadow-[#25D366]/25 border-transparent"
+      ? "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-md shadow-[#25D366]/20 border-0"
       : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md hover:-translate-y-0.5",
-    primary: "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 hover:-translate-y-0.5 border-transparent",
+    primary: "bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/25 hover:shadow-[#25D366]/40 hover:-translate-y-0.5 border-0",
     danger: "bg-surface border-2 border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444] hover:text-white hover:border-[#ef4444]",
   };
 
@@ -152,8 +152,8 @@ function HeaderButton({
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       className={`
-        flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl font-semibold text-sm
-        transition-all duration-200 active:scale-95 shrink-0 cursor-pointer
+        flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm
+        transition-all duration-200 active:scale-95 shrink-0 cursor-pointer snap-start
         ${variants[variant]}
         ${isPressed ? "scale-95" : "scale-100"}
       `}
@@ -164,7 +164,8 @@ function HeaderButton({
           ${isHovered && !isActive ? "scale-110" : "scale-100"}
         `}
       />
-      <span>{label}</span>
+      <span className="hidden sm:inline">{label}</span>
+      {mobileLabel && <span className="sm:hidden">{mobileLabel}</span>}
       {children}
     </Component>
   );
@@ -199,116 +200,110 @@ export default function ProductsHeader({
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
       `}
     >
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 md:gap-4">
-          {/* Left: Title + Stats - NOW LEFT ALIGNED */}
-          <div className="flex items-center gap-3 md:gap-4 w-full lg:w-auto">
-            {/* Icon container with pulse */}
-            <div className="relative shrink-0">
-              <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-lg shadow-[#25D366]/20">
-                <Box className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-              {/* Pulse ring */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] animate-ping opacity-20" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg md:text-xl font-extrabold text-on-surface tracking-tight">
-                Products
-              </h1>
-
-              {/* Stats row */}
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <span className="text-xs text-outline">
-                  {animatedCount.toLocaleString()} items
-                </span>
-                <span className="text-[#e2e8f0]">·</span>
-                <span
-                  className="text-xs text-outline font-medium"
-                  title={`KES ${totalInventoryValue.toLocaleString()}`}
-                >
-                  KES {animatedValue.toLocaleString()} value
-                </span>
-
-                {/* Stock alerts */}
-                {lowStockCount > 0 && (
-                  <StatPill
-                    icon={Package}
-                    value={lowStockCount}
-                    label="low"
-                    color="amber"
-                    delay={200}
-                  />
-                )}
-                {outOfStockCount > 0 && (
-                  <StatPill
-                    icon={Package}
-                    value={outOfStockCount}
-                    label="out"
-                    color="red"
-                    delay={300}
-                  />
-                )}
-              </div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-6">
+        {/* Left: Title + Stats */}
+        <div className="flex items-center gap-3 md:gap-4 min-w-0 w-full lg:w-auto">
+          {/* Premium gradient icon with glow */}
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] blur-md opacity-30 animate-pulse" />
+            <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg shadow-[#25D366]/20">
+              <Box className="w-5 h-5 md:w-6 md:h-6" />
             </div>
           </div>
 
-          {/* Right: Actions - NOW RIGHT ALIGNED */}
-          <div
-            className={`
-              flex items-center gap-2 w-full lg:w-auto overflow-x-auto hide-scrollbar pb-1 lg:pb-0 snap-x snap-mandatory
-              transition-all duration-500 justify-start lg:justify-end
-              ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}
-            `}
-            style={{ transitionDelay: "200ms" }}
-          >
-            {/* Export */}
-            <div className="snap-start">
-              <HeaderButton
-                onClick={exportProducts}
-                icon={Download}
-                label="Export"
-              />
-            </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl md:text-2xl lg:text-[1.625rem] font-extrabold text-on-surface tracking-tight">
+              Products
+            </h1>
 
-            {/* Import */}
-            <div className="snap-start">
-              <label
-                className={`
-                  flex items-center gap-2 px-3 md:px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95 shrink-0 cursor-pointer
-                `}
+            {/* Stats row */}
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="text-xs md:text-sm text-outline font-medium">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse mr-1.5 align-middle" />
+                {animatedCount.toLocaleString()} items
+              </span>
+              <span className="text-outline">·</span>
+              <span
+                className="text-xs md:text-sm text-outline font-medium"
+                title={`KES ${totalInventoryValue.toLocaleString()}`}
               >
-                <Upload className="w-4 h-4" />
-                <span className="hidden sm:inline">Import</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={importProducts}
-                  className="hidden"
+                KES {animatedValue.toLocaleString()} value
+              </span>
+
+              {/* Stock alerts */}
+              {lowStockCount > 0 && (
+                <StatPill
+                  icon={Layers}
+                  value={lowStockCount}
+                  label="low"
+                  color="amber"
+                  delay={200}
                 />
-              </label>
-            </div>
-
-            {/* Bulk toggle */}
-            <div className="snap-start">
-              <HeaderButton
-                onClick={() => setBulkMode(!bulkMode)}
-                icon={CheckSquare}
-                label={bulkMode ? "Done" : "Bulk"}
-                isActive={bulkMode}
-              />
-            </div>
-
-            {/* Add product */}
-            <div className="snap-start">
-              <HeaderButton
-                onClick={() => setAddProductModalOpen(true)}
-                icon={Plus}
-                label="Add Product"
-                variant="primary"
-              />
+              )}
+              {outOfStockCount > 0 && (
+                <StatPill
+                  icon={Layers}
+                  value={outOfStockCount}
+                  label="out"
+                  color="red"
+                  delay={300}
+                />
+              )}
             </div>
           </div>
         </div>
+
+        {/* Right: Actions */}
+        <div
+          className={`
+            flex items-center gap-2 w-full lg:w-auto overflow-x-auto hide-scrollbar pb-0.5 lg:pb-0 snap-x snap-mandatory
+            transition-all duration-500 justify-start lg:justify-end
+            ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}
+          `}
+          style={{ transitionDelay: "200ms" }}
+        >
+          {/* Export */}
+          <HeaderButton
+            onClick={exportProducts}
+            icon={Download}
+            label="Export"
+            mobileLabel=""
+          />
+
+          {/* Import */}
+          <HeaderButton
+            icon={Upload}
+            label="Import"
+            asLabel
+            mobileLabel=""
+          >
+            <input
+              type="file"
+              accept=".csv"
+              onChange={importProducts}
+              className="hidden"
+            />
+          </HeaderButton>
+
+          {/* Bulk toggle */}
+          <HeaderButton
+            onClick={() => setBulkMode(!bulkMode)}
+            icon={CheckSquare}
+            label={bulkMode ? "Done" : "Bulk"}
+            isActive={bulkMode}
+            mobileLabel={bulkMode ? "Done" : "Bulk"}
+          />
+
+          {/* Add product */}
+          <HeaderButton
+            onClick={() => setAddProductModalOpen(true)}
+            icon={Plus}
+            label="Add Product"
+            variant="primary"
+            mobileLabel="Add"
+          />
+        </div>
+      </div>
     </PageHeaderCard>
   );
 }

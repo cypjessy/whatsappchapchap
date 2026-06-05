@@ -42,7 +42,7 @@ function BulkActionBar({
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   return (
-    <div className="bg-surface border-y border-outline-variant px-4 py-3 animate-fadeIn">
+    <div className="bg-surface border-y border-outline-variant px-4 py-3 animate-fadeIn mt-3 rounded-xl border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/10 flex items-center justify-center">
@@ -93,24 +93,27 @@ function BulkActionBar({
 }
 
 function IconButton({
-  icon: Icon, label, onClick, variant = "default", isActive = false, isLoading = false, badge,
+  icon: Icon, label, onClick, variant = "default", isActive = false, isLoading = false, badge, mobileLabel,
 }: {
   icon: React.ElementType; label: string; onClick: () => void; variant?: "default" | "primary" | "danger";
-  isActive?: boolean; isLoading?: boolean; badge?: number;
+  isActive?: boolean; isLoading?: boolean; badge?: number; mobileLabel?: string;
 }) {
   const variants = {
-    default: isActive ? "bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/25" : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6]",
-    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/40",
+    default: isActive
+      ? "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-md shadow-[#8b5cf6]/20 border-0"
+      : "bg-surface border-2 border-outline-variant text-on-surface-variant hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:shadow-md hover:-translate-y-0.5",
+    primary: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/40 hover:-translate-y-0.5 border-0",
     danger: "bg-[#ef4444] text-white hover:bg-[#dc2626]",
   };
 
   return (
     <button onClick={onClick} disabled={isLoading}
-      className={`relative flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 shrink-0 ${
+      className={`relative flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 active:scale-95 shrink-0 snap-start ${
         isLoading ? "opacity-50 cursor-wait" : "hover:-translate-y-0.5"
       } ${variants[variant]}`}>
       {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
-      <span>{label}</span>
+      <span className="hidden sm:inline">{label}</span>
+      {mobileLabel && <span className="sm:hidden">{mobileLabel}</span>}
       {badge !== undefined && badge > 0 && (
         <span className={`absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold ${
           variant === "primary" || variant === "danger" ? "bg-surface text-on-surface" : "bg-[#8b5cf6] text-white"
@@ -151,29 +154,45 @@ export default function ServicesHeader({
 
   return (
     <PageHeaderCard className="sticky top-0 z-30">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
         {/* Left: Title */}
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3 md:gap-4 min-w-0 w-full md:w-auto">
+          {/* Premium gradient icon with glow */}
           <div className="relative shrink-0">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/20">
-              <Layers className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] blur-md opacity-30 animate-pulse" />
+            <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white shadow-lg shadow-[#8b5cf6]/20">
+              <Layers className="w-5 h-5 md:w-6 md:h-6" />
             </div>
-            <div className="absolute inset-0 rounded-xl ring-2 ring-[#8b5cf6]/20 animate-ping opacity-30" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg md:text-2xl font-extrabold text-on-surface tracking-tight">Services</h1>
+            <h1 className="text-xl md:text-2xl lg:text-[1.625rem] font-extrabold text-on-surface tracking-tight">
+              Services
+            </h1>
             <p className="text-xs md:text-sm text-outline mt-0.5 font-medium">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#8b5cf6] animate-pulse mr-1.5 align-middle" />
               {servicesCount.toLocaleString()} service{servicesCount !== 1 ? "s" : ""} total
             </p>
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar pb-1 md:pb-0 snap-x snap-mandatory">
-          <IconButton icon={Download} label="Export" onClick={handleExport} isLoading={exportLoading} />
-          <IconButton icon={CheckSquare} label={bulkMode ? "Done" : "Bulk"} onClick={() => setBulkMode(!bulkMode)} isActive={bulkMode} badge={bulkMode ? bulkSelected.length : undefined} />
-          <IconButton icon={viewLayout === "grid" ? List : Grid3X3} label={viewLayout === "grid" ? "List" : "Grid"} onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")} />
-          <IconButton icon={Plus} label="Add Service" onClick={onAddService} variant="primary" />
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar pb-0.5 md:pb-0 snap-x">
+          <IconButton icon={Download} label="Export" onClick={handleExport} isLoading={exportLoading} mobileLabel="" />
+          <IconButton
+            icon={CheckSquare}
+            label={bulkMode ? "Done" : "Bulk"}
+            onClick={() => setBulkMode(!bulkMode)}
+            isActive={bulkMode}
+            badge={bulkMode ? bulkSelected.length : undefined}
+            mobileLabel={bulkMode ? "Done" : "Bulk"}
+          />
+          <IconButton
+            icon={viewLayout === "grid" ? List : Grid3X3}
+            label={viewLayout === "grid" ? "List" : "Grid"}
+            onClick={() => setViewLayout(viewLayout === "grid" ? "list" : "grid")}
+            mobileLabel=""
+          />
+          <IconButton icon={Plus} label="Add Service" onClick={onAddService} variant="primary" mobileLabel="Add" />
         </div>
       </div>
 

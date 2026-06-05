@@ -141,7 +141,7 @@ export default function LoginPage() {
   const [checkingBiometric, setCheckingBiometric] = useState(true);
   const sessionRestored = useRef(false);
   const router = useRouter();
-  const { user, loading: authLoading, signIn, signInWithGoogle, logout } = useAuth();
+  const { user, loading: authLoading, signIn, logout } = useAuth();
   const { impactLight, notificationSuccess, notificationError } = useHaptics();
   const { authenticate, isAvailable: isBiometricAvailable } = useBiometricAuth();
 
@@ -246,28 +246,6 @@ export default function LoginPage() {
     },
     [email, password, signIn, router, redirectTo, impactLight, notificationSuccess, notificationError]
   );
-
-  const handleGoogleLogin = useCallback(async () => {
-    // Immediate loading feedback (no delay)
-    setIsLoading(true);
-    setError("");
-
-    // Fire haptic feedback without blocking
-    impactLight().catch(() => {});
-
-    try {
-      await signInWithGoogle();
-      // Fire success haptic without blocking
-      notificationSuccess().catch(() => {});
-      // Use Next.js router for client-side navigation (preserves auth state, no full reload)
-      router.push(redirectTo);
-    } catch (err: any) {
-      setError(err.message || "Google sign-in failed. Please try again.");
-      setIsLoading(false);
-      // Fire error haptic without blocking
-      notificationError().catch(() => {});
-    }
-  }, [signInWithGoogle, router, redirectTo, impactLight, notificationSuccess, notificationError]);
 
   const handleBiometricLogin = useCallback(async () => {
     if (!isBiometricAvailable) {
@@ -417,7 +395,6 @@ export default function LoginPage() {
               onPasswordChange={setPassword}
               onTogglePassword={togglePassword}
               onSubmit={handleSubmit}
-              onGoogleLogin={handleGoogleLogin}
               onBiometricLogin={handleBiometricLogin}
             />
           </div>
@@ -430,10 +407,7 @@ export default function LoginPage() {
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
             `}
           >
-            {/* Admin note — registration is done via All Tenants page */}
-            <p className="text-center text-xs text-[#9ca3af] mt-6">
-              Need to register a new user? Use the <strong>All Tenants</strong> page.
-            </p>
+            <div className="mt-6" />
           </div>
         </div>
       </div>

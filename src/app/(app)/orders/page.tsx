@@ -1095,48 +1095,63 @@ export default function OrdersPage() {
 
   return (
     <div className="overflow-x-hidden bg-surface-dim w-full">
-      {/* Header — now visible on both mobile and desktop */}
-      <div className="mb-3 md:mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+      {/* Header — Premium MD3 Card */}
+      <div className="mb-3 md:mb-6">
         <PageHeaderCard className="w-full">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg">
-              <i className="fas fa-shopping-bag" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
+            {/* Left: Icon + Title */}
+            <div className="flex items-center gap-3 md:gap-4 min-w-0 w-full md:w-auto">
+              {/* Premium gradient icon with glow */}
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] blur-md opacity-30 animate-pulse" />
+                <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg shadow-[#25D366]/20">
+                  <i className="fas fa-shopping-bag text-base md:text-lg" />
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl lg:text-[1.625rem] font-extrabold text-on-surface tracking-tight">
+                  Orders
+                </h1>
+                <p className="text-xs md:text-sm text-on-surface-variant font-medium mt-0.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse mr-1.5 align-middle" />
+                  Track and manage your WhatsApp orders
+                </p>
+              </div>
             </div>
-            Orders
-          </h1>
-          <p className="text-on-surface-variant text-sm mt-1">
-            Track and manage your WhatsApp orders
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <a
-            href={`/order?tenant=${user?.uid}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
-          >
-            <i className="fas fa-store" />
-            <span>View Store</span>
-          </a>
-          <button
-            className="px-4 py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-sm hover:border-[#25D366] hover:text-[#25D366] transition-all flex items-center gap-2 active:scale-95"
-            onClick={handleExportCSV}
-          >
-            <i className="fas fa-download" />
-            <span>Export</span>
-          </button>
-          <button
-            className="px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
-            onClick={() => setNewOrderModalOpen(true)}
-          >
-            <i className="fas fa-plus" />
-            <span>New Order</span>
-          </button>
-        </div>
-      </div>
-      </PageHeaderCard>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar pb-0.5 md:pb-0 snap-x">
+              <a
+                href={`/order?tenant=${user?.uid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="snap-start shrink-0 flex items-center gap-2 px-3.5 py-2.5 md:px-4 md:py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-xs md:text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+              >
+                <i className="fas fa-store text-xs" />
+                <span className="hidden xs:inline">View Store</span>
+              </a>
+              <div className="snap-start shrink-0">
+                <button
+                  className="flex items-center gap-2 px-3.5 py-2.5 md:px-4 md:py-2.5 bg-surface border-2 border-outline-variant rounded-xl font-semibold text-xs md:text-sm text-on-surface-variant hover:border-[#25D366] hover:text-[#25D366] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+                  onClick={handleExportCSV}
+                >
+                  <i className="fas fa-download text-xs" />
+                  <span className="hidden xs:inline">Export</span>
+                </button>
+              </div>
+              <div className="snap-start shrink-0">
+                <button
+                  className="flex items-center gap-2 px-4 py-2.5 md:px-5 md:py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white rounded-xl font-semibold text-xs md:text-sm shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+                  onClick={() => setNewOrderModalOpen(true)}
+                >
+                  <i className="fas fa-plus text-xs" />
+                  <span>New Order</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </PageHeaderCard>
       </div>
 
       {/* Desktop Tabs */}

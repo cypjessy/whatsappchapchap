@@ -44,38 +44,38 @@ function ActionButton({
   onClick,
   icon,
   label,
-  mobileLabel,
   variant = "default",
   isActive = false,
   isLoading = false,
   disabled = false,
+  mobileLabel,
 }: {
   onClick: () => void;
   icon: string;
   label: string;
-  mobileLabel?: string;
   variant?: "default" | "primary" | "danger" | "ghost";
   isActive?: boolean;
   isLoading?: boolean;
   disabled?: boolean;
+  mobileLabel?: string;
 }) {
   const [isPressed, setIsPressed] = useState(false);
 
   const variants = {
     default: `
       bg-surface border-2 border-outline-variant text-on-surface-variant
-      hover:border-[#8b5cf6] hover:text-[#8b5cf6] hover:bg-[#f5f3ff]
-      active:bg-[#ede9fe]
+      hover:border-[#25D366] hover:text-[#128C7E] hover:shadow-md hover:-translate-y-0.5
+      active:scale-95
     `,
     primary: `
       bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white border-0
       shadow-lg shadow-[#25D366]/20 hover:shadow-xl hover:shadow-[#25D366]/30
-      hover:-translate-y-0.5 active:translate-y-0
+      hover:-translate-y-0.5 active:scale-95
     `,
     danger: `
       bg-[#ef4444] text-white border-0
       shadow-lg shadow-[#ef4444]/20 hover:shadow-xl hover:shadow-[#ef4444]/30
-      hover:-translate-y-0.5 active:translate-y-0
+      hover:-translate-y-0.5 active:scale-95
     `,
     ghost: `
       bg-transparent border-2 border-outline-variant text-on-surface-variant
@@ -94,30 +94,24 @@ function ActionButton({
       onTouchEnd={() => setIsPressed(false)}
       className={`
         relative flex-1 md:flex-none flex items-center justify-center gap-2 
-        px-3 md:px-4 py-2.5 rounded-xl font-semibold text-sm
-        transition-all duration-200 overflow-hidden
+        px-3 md:px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm
+        transition-all duration-200 overflow-hidden snap-start shrink-0
         ${isPressed ? "scale-95" : "scale-100"}
-        ${isActive ? "ring-2 ring-offset-2 ring-[#8b5cf6]" : ""}
+        ${isActive ? "ring-2 ring-offset-2 ring-[#25D366]" : ""}
         ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         ${variants[variant]}
       `}
       aria-label={label}
     >
-      {/* Ripple effect container */}
-      <span className="absolute inset-0 overflow-hidden rounded-xl">
-        {isPressed && (
-          <span className="absolute inset-0 bg-black/5 animate-pulse" />
-        )}
-      </span>
-
       <span className="relative z-10 flex items-center gap-2">
         {isLoading ? (
-          <i className="fas fa-circle-notch fa-spin text-sm" />
+          <i className="fas fa-circle-notch fa-spin text-xs" />
         ) : (
-          <i className={`fas ${icon} text-xs md:text-sm`} />
+          <i className={`fas ${icon} text-xs`} />
         )}
-        <span className="hidden md:inline">{label}</span>
-        {mobileLabel && <span className="md:hidden">{mobileLabel}</span>}
+        <span className="hidden sm:inline">{label}</span>
+        {mobileLabel && <span className="sm:hidden">{mobileLabel}</span>}
+        {!mobileLabel && <span className="sm:hidden">{label}</span>}
       </span>
     </button>
   );
@@ -150,72 +144,61 @@ export default function CustomersHeader({
 
   return (
     <PageHeaderCard className="mb-4 md:mb-6">
-    <div className={`
-      flex flex-col md:flex-row justify-between items-start md:items-center
-      gap-3 md:gap-4
-      transition-all duration-500 ease-out
-      ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}
-    `}>
-      {/* Title Section */}
-      <div className="min-w-0">
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">
-          <div className={`
-            w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10 
-            flex items-center justify-center shrink-0
-            ${isVisible ? "scale-100 rotate-0" : "scale-0 -rotate-180"}
-            transition-all duration-500 delay-100
-          `}>
-            <i className="fas fa-users text-[#25D366] text-sm md:text-base" />
+      <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 transition-all duration-500 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}>
+        {/* Left: Title + Stats */}
+        <div className="flex items-center gap-3 md:gap-4 min-w-0 w-full md:w-auto">
+          {/* Premium gradient icon with glow */}
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] blur-md opacity-30 animate-pulse" />
+            <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center text-white shadow-lg shadow-[#25D366]/20">
+              <i className="fas fa-users text-base md:text-lg" />
+            </div>
           </div>
-          <span className="truncate">Customers</span>
-          {customerCount !== undefined && (
-            <span className={`
-              hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full 
-              bg-surface-variant text-on-surface-variant text-xs font-bold
-              ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-75"}
-              transition-all duration-500 delay-200
-            `}>
-              <AnimatedCounter value={customerCount} />
-            </span>
-          )}
-        </h1>
-        <p className={`
-          text-on-surface-variant text-sm mt-1 hidden md:block
-          ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}
-          transition-all duration-500 delay-200
-        `}>
-          Build relationships and grow your business
-        </p>
+
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl lg:text-[1.625rem] font-extrabold text-on-surface tracking-tight flex items-center gap-2.5">
+              <span>Customers</span>
+              {customerCount !== undefined && (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-75"} transition-all duration-500 delay-200`}>
+                  <AnimatedCounter value={customerCount} />
+                </span>
+              )}
+            </h1>
+            <p className="text-xs md:text-sm text-outline font-medium mt-0.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse mr-1.5 align-middle" />
+              Build relationships and grow your business
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto hide-scrollbar pb-0.5 md:pb-0 snap-x">
+          <ActionButton
+            onClick={handleExport}
+            icon="fa-download"
+            label="Export CSV"
+            mobileLabel=""
+            isLoading={isExporting}
+          />
+
+          <ActionButton
+            onClick={onToggleBulkMode}
+            icon={bulkMode ? "fa-times" : "fa-check-square"}
+            label={bulkMode ? "Done" : "Bulk"}
+            variant={bulkMode ? "danger" : "default"}
+            isActive={bulkMode}
+            mobileLabel={bulkMode ? "Done" : "Bulk"}
+          />
+
+          <ActionButton
+            onClick={onAddCustomer}
+            icon="fa-user-plus"
+            label="Add Customer"
+            variant="primary"
+            mobileLabel="Add"
+          />
+        </div>
       </div>
-
-      {/* Actions */}
-      <div className="flex gap-2 w-full md:w-auto">
-        <ActionButton
-          onClick={handleExport}
-          icon="fa-download"
-          label="Export CSV"
-          mobileLabel="Export"
-          isLoading={isExporting}
-        />
-
-        <ActionButton
-          onClick={onToggleBulkMode}
-          icon={bulkMode ? "fa-times" : "fa-check-square"}
-          label={bulkMode ? "Cancel" : "Select"}
-          mobileLabel={bulkMode ? "Cancel" : "Select"}
-          variant={bulkMode ? "danger" : "default"}
-          isActive={bulkMode}
-        />
-
-        <ActionButton
-          onClick={onAddCustomer}
-          icon="fa-user-plus"
-          label="Add Customer"
-          mobileLabel="+"
-          variant="primary"
-        />
-      </div>
-    </div>
     </PageHeaderCard>
   );
 }

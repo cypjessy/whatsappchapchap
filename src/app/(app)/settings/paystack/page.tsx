@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { buildApiUrl } from "@/lib/api-config";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -156,14 +156,16 @@ function KeyInput({
           placeholder={placeholder}
           className="flex-1 px-3 py-3 text-sm font-mono bg-transparent outline-none placeholder:text-[#cbd5e1]"
         />
-        <button
-          onClick={onToggleVisibility}
-          className="w-10 h-10 flex items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-variant/50 transition-all rounded-r-xl"
-          type="button"
-          aria-label={showValue ? "Hide key" : "Show key"}
-        >
-          <i className={`fas fa-eye${showValue ? "-slash" : ""} text-xs`} />
-        </button>
+        {type === "secret" && (
+          <button
+            onClick={onToggleVisibility}
+            className="w-10 h-10 flex items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-variant/50 transition-all rounded-r-xl"
+            type="button"
+            aria-label={showValue ? "Hide key" : "Show key"}
+          >
+            <i className={`fas fa-eye${showValue ? "-slash" : ""} text-xs`} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -186,14 +188,13 @@ function SectionHeader({ icon, title, subtitle, color }: { icon: string; title: 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PaystackSettingsPage() {
-  const router = useRouter();
   const { user } = useAuth();
   
   const [settings, setSettings] = useState<PaystackSettings>({
     ...DEFAULT_SETTINGS,
   });
-  const [showTestSecret, setShowTestSecret] = useState(false);
-  const [showLiveSecret, setShowLiveSecret] = useState(false);
+  const [showTestSecret, setShowTestSecret] = useState(true);
+  const [showLiveSecret, setShowLiveSecret] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [paymentSuccess, setPaymentSuccess] = useState<{reference: string; amount: string} | null>(null);
@@ -224,6 +225,7 @@ export default function PaystackSettingsPage() {
         
         if (!res.ok) {
           console.error("Failed to fetch settings:", res.status);
+          setError("Failed to load saved settings");
           setLoading(false);
           return;
         }
@@ -243,6 +245,7 @@ export default function PaystackSettingsPage() {
         }
       } catch (err) {
         console.error("Error loading settings:", err);
+        setError("Could not load your saved settings — try refreshing");
       } finally {
         setLoading(false);
       }
@@ -362,16 +365,13 @@ export default function PaystackSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-dim flex items-center justify-center p-4">
-        <div className="text-center animate-fadeIn">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center mx-auto mb-5 shadow-lg shadow-[#8b5cf6]/20">
-            <i className="fas fa-circle-notch fa-spin text-2xl text-white"></i>
-          </div>
-          <p className="text-on-surface-variant font-medium">Loading Paystack Settings...</p>
-          <div className="mt-4 flex justify-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#8b5cf6] animate-bounce" style={{ animationDelay: "0ms" }} />
-            <div className="w-2 h-2 rounded-full bg-[#7c3aed] animate-bounce" style={{ animationDelay: "150ms" }} />
-            <div className="w-2 h-2 rounded-full bg-[#6d28d9] animate-bounce" style={{ animationDelay: "300ms" }} />
+      <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 bg-surface-dim">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center animate-fadeIn">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center mx-auto mb-5 shadow-lg shadow-[#8b5cf6]/20">
+              <i className="fas fa-circle-notch fa-spin text-2xl text-white"></i>
+            </div>
+            <p className="text-on-surface-variant font-medium">Loading Paystack Settings...</p>
           </div>
         </div>
       </div>
@@ -379,7 +379,7 @@ export default function PaystackSettingsPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-surface-dim pb-28 transition-all duration-500 ${isVisible ? "opacity-100" : "opacity-0"}`}>
+    <div className="overflow-x-hidden bg-surface-dim">
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 right-4 z-50 animate-slideDown">
@@ -403,28 +403,20 @@ export default function PaystackSettingsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-surface border-b border-outline-variant sticky top-0 z-30 shadow-sm">
-        <div className="px-3 md:px-6 py-3 md:py-4 flex items-center justify-between max-w-4xl mx-auto">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-xl hover:bg-surface-variant flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-            >
-              <i className="fas fa-arrow-left text-on-surface-variant text-sm"></i>
-            </button>
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#10b981]/10 to-[#059669]/10 flex items-center justify-center">
-              <i className="fas fa-credit-card text-[#10b981] text-sm md:text-base" />
+      <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-24 space-y-4 md:space-y-5 max-w-4xl mx-auto">
+        {/* Header */}
+        <PageHeaderCard>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#10b981]/10 to-[#059669]/10 flex items-center justify-center shrink-0">
+              <i className="fas fa-credit-card text-[#10b981] text-sm md:text-base"></i>
             </div>
-            <div>
-              <h1 className="text-base md:text-xl font-extrabold text-on-surface">Paystack Settings</h1>
-              <p className="text-[10px] md:text-xs text-on-surface-variant hidden sm:block">Configure payment gateway integration</p>
-            </div>
-          </div>
-        </div>
-      </div>
+            <span>Paystack Settings</span>
+          </h1>
+          <p className="text-on-surface-variant text-sm mt-1.5 md:mt-2 max-w-2xl">
+            Configure your Paystack payment gateway integration for online payments
+          </p>
+        </PageHeaderCard>
 
-      <div className="max-w-4xl mx-auto overflow-x-hidden px-3 md:px-6 py-3 md:py-4 space-y-4 md:space-y-5">
         {/* Info Banner */}
         <div className={`
           bg-gradient-to-r from-[#10b981]/5 via-[#059669]/5 to-[#047857]/5 rounded-2xl border border-[#10b981]/20 shadow-sm

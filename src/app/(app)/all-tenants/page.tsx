@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import AdminProtection from "@/components/AdminProtection";
 import AddTenantDialog from "@/components/AddTenantDialog";
 import { adminService, Tenant, pricingPlanService, PricingPlan } from "@/lib/db";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import IntegrationsTab from "@/components/IntegrationsTab";
 import ConnectionTestTab from "@/components/ConnectionTestTab";
+import PageHeaderCard from "@/components/PageHeaderCard";
 
 // Toast type
 interface Toast {
@@ -541,8 +542,14 @@ export default function AllTenantsPage() {
   // Save platform settings
   const savePlatformSettings = async () => {
     try {
+      // Persist platform settings to Firestore
+      await setDoc(doc(db, "platformSettings", "global"), {
+        ...platformSettings,
+        updatedAt: serverTimestamp(),
+      });
       showToast("success", "Settings Updated", "Platform settings saved successfully.");
     } catch (error) {
+      console.error("Error saving platform settings:", error);
       showToast("error", "Error", "Failed to save settings.");
     }
   };
@@ -1499,22 +1506,18 @@ export default function AllTenantsPage() {
         ))}
       </div>
 
-      {/* Page Header */}
-      {/* Premium Info Banner */}
-      <div className="relative overflow-hidden rounded-2xl mb-4 md:mb-5 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border border-emerald-200/60">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_70%)]"></div>
-        <div className="relative p-4 md:p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-200 flex-shrink-0">
-              <i className="fas fa-shield-alt text-white text-xl md:text-2xl"></i>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Tenant Management</h2>
-              <p className="text-sm md:text-base text-gray-600 mt-1">Manage all sellers, service providers, subscriptions and platform settings</p>
-            </div>
+      {/* Page Header — Premium Card */}
+      <PageHeaderCard className="mb-4 md:mb-5">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-200 flex-shrink-0">
+            <i className="fas fa-shield-alt text-white text-xl md:text-2xl"></i>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Tenant Management</h2>
+            <p className="text-sm md:text-base text-gray-600 mt-1">Manage all sellers, service providers, subscriptions and platform settings</p>
           </div>
         </div>
-      </div>
+      </PageHeaderCard>
 
       {/* Main Navigation Tabs */}
       <div className="bg-surface rounded-xl border border-outline-variant shadow-sm p-1 mb-4 md:mb-5">

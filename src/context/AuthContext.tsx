@@ -7,9 +7,7 @@ import {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup
+  signOut
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { tenantService } from "@/lib/db";
@@ -21,7 +19,6 @@ interface AuthContextType {
   isLoadingAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<UserCredential>;
-  signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -85,39 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await createUserWithEmailAndPassword(auth, email, password);
   };
 
-  const signInWithGoogle = async () => {
-    if (!auth) throw new Error("Auth not initialized");
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    
-    // After successful Google sign-in, check if tenant exists and create if needed
-    const user = result.user;
-    if (user) {
-      try {
-        // Check if tenant already exists
-        const existingTenant = await tenantService.getTenant(user);
-        
-        if (!existingTenant) {
-          // Create new tenant for Google user
-          const businessName = user.displayName || `${user.email?.split('@')[0]}'s Business` || 'My Business';
-          await tenantService.createTenant(user, businessName);
-          console.log('[Google Sign-In] Created tenant for:', user.email);
-        } else {
-          console.log('[Google Sign-In] Tenant already exists for:', user.email);
-        }
-      } catch (error) {
-        console.error('[Google Sign-In] Error creating/checking tenant:', error);
-        // Don't throw - user is still authenticated even if tenant creation fails
-      }
-    }
-  };
-
   const logout = async () => {
     await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, isLoadingAdmin, signIn, signUp, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, isLoadingAdmin, signIn, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );

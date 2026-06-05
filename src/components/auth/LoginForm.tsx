@@ -13,7 +13,6 @@ interface LoginFormProps {
   onPasswordChange: (password: string) => void;
   onTogglePassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
-  onGoogleLogin: () => void;
   onBiometricLogin?: () => void;
 }
 
@@ -27,7 +26,6 @@ export default function LoginForm({
   onPasswordChange,
   onTogglePassword,
   onSubmit,
-  onGoogleLogin,
   onBiometricLogin,
 }: LoginFormProps) {
   const { isAvailable, getBiometricIcon, getBiometricLabel } = useBiometricAuth();
@@ -42,7 +40,7 @@ export default function LoginForm({
         
         {/* Email Input - Material Design 3 */}
         <div className="mb-5 lg:mb-6">
-          <label className="block mb-2 font-semibold text-[#1a1a2e] text-sm lg:text-base">Email Address</label>
+          <label htmlFor="email" className="block mb-2 font-semibold text-[#1a1a2e] text-sm lg:text-base">Email Address</label>
           <div className="relative">
             <input
               type="email"
@@ -68,7 +66,7 @@ export default function LoginForm({
 
         {/* Password Input - Material Design 3 */}
         <div className="mb-5 lg:mb-6">
-          <label className="block mb-2 font-semibold text-[#1a1a2e] text-sm lg:text-base">Password</label>
+          <label htmlFor="password" className="block mb-2 font-semibold text-[#1a1a2e] text-sm lg:text-base">Password</label>
           <div className="relative">
             <svg
               className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b7280] pointer-events-none z-10"
@@ -140,6 +138,8 @@ export default function LoginForm({
             "Sign In"
           )}
         </button>
+
+
 
         {/* Biometric Login Button - Only show if available */}
         {isAvailable && onBiometricLogin && (
