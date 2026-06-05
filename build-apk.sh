@@ -138,8 +138,8 @@ cd android
 # Make gradlew executable
 chmod +x gradlew
 
-# Build debug APK
-./gradlew assembleDebug
+# Build release APK (properly signed, no Play Protect warning)
+./gradlew assembleRelease
 
 if [ $? -ne 0 ]; then
     print_error "Gradle build failed!"
@@ -151,7 +151,7 @@ cd ..
 print_success "APK build complete!"
 
 # Locate the APK (defined here before being used below)
-APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
 
 # Step 9: Copy APK to public/ for Vercel hosting
 print_status "Copying APK to public/ for Vercel deployment..."

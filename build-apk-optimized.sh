@@ -88,7 +88,7 @@ print_success "Capacitor sync complete"
 print_status "Building APK with Gradle..."
 cd android
 chmod +x gradlew
-./gradlew assembleDebug
+./gradlew assembleRelease
 GRADLE_EXIT=$?
 cd ..
 
@@ -99,7 +99,7 @@ fi
 print_success "APK build complete!"
 
 # Step 7: Locate the APK
-APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
 if [ -f "$APK_PATH" ]; then
     echo ""
     echo "=========================================="

@@ -47,3 +47,7 @@ service-account-key.json
 # APK build artifacts
 # *.apk (Removed to allow Vercel/GitHub distribution)
 
+# Release signing keystore (KEEP PRIVATE!)
+android/app/release.keystore
+android/keystore.properties
+

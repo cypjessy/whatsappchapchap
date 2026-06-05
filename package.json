@@ -13,8 +13,8 @@
     "run:android:live": "npx cap run android --livereload --external",
     "bump-version": "node scripts/bump-version.js",
     "update-firestore": "node scripts/update-firestore-version.js",
-    "release:android": "node scripts/bump-version.js && npm run build:android && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleDebug && cd ..",
-    "release:full": "node scripts/bump-version.js && npm run build:android && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleDebug && cd .. && mkdir -p public && cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk && echo '' && echo '==============================================' && echo ' ✅ RELEASE COMPLETE!' && echo ' 📱 APK ready at public/whatsappchapchap.apk' && echo ' 🌐 Run npm run release:publish to push to GitHub' && echo ' ⚠️  Run npm run release:firestore AFTER deployment is confirmed' && echo '=============================================='",
+    "release:android": "node scripts/bump-version.js && npm run build:android && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleRelease && cd ..",
+    "release:full": "node scripts/bump-version.js && npm run build:android && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleRelease && cd .. && mkdir -p public && cp android/app/build/outputs/apk/release/app-release.apk public/whatsappchapchap.apk && echo '' && echo '==============================================' && echo ' ✅ RELEASE COMPLETE!' && echo ' 📱 APK ready at public/whatsappchapchap.apk' && echo ' 🌐 Run npm run release:publish to push to GitHub' && echo ' ⚠️  Run npm run release:firestore AFTER deployment is confirmed' && echo '=============================================='",
     "release:publish": "bash scripts/release-publish.sh",
     "release:firestore": "node scripts/update-firestore-version.js --force"
   },
