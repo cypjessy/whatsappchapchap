@@ -169,7 +169,7 @@ export default function ProductFilterBottomSheet({
   return (
     <div className="fixed inset-0 z-[100] md:hidden" onClick={onClose}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fadeIn" />
+      <div className="absolute inset-0 bg-black/40 animate-fadeIn" />
 
       {/* Bottom Sheet */}
       <div

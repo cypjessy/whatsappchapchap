@@ -74,7 +74,7 @@ export default function ServiceFilterBottomSheet({
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 bg-black/50 backdrop-blur-sm z-[3000] transition-opacity duration-300
+          fixed inset-0 bg-black/50 z-[3000] transition-opacity duration-300
           md:hidden
           ${isOpen ? "opacity-100" : "opacity-0"}
         `}

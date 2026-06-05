@@ -356,7 +356,7 @@ export default function NewOrderModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] animate-fadeIn" onClick={onClose} />
+      <div className="fixed inset-0 bg-[#0f172a]/60 z-[2500] animate-fadeIn" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 pointer-events-none overflow-y-auto">
@@ -868,7 +868,7 @@ export default function NewOrderModal({
       {/* ═══ Confirmation Modal ═══ */}
       {showConfirm && (
         <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirm(false)} />
           <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slideUp">
             <div className="w-14 h-14 rounded-full bg-[rgba(37,211,102,0.1)] flex items-center justify-center mx-auto mb-4">
               <i className="fas fa-clipboard-check text-2xl text-[#25D366]" />

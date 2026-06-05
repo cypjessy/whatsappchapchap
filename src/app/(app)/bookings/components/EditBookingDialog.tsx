@@ -186,7 +186,7 @@ export default function EditBookingDialog({ booking, open, onClose, onSaved }: E
       className="fixed inset-0 z-[2500] flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
       onClick={handleClose}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60" />
 
       <div
         className={`

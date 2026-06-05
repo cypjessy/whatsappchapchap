@@ -217,7 +217,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
           </div>
         </div>
         {allImages.length > 1 && (
-          <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/60 text-white text-xs font-bold rounded-full backdrop-blur-sm">
+          <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/60 text-white text-xs font-bold rounded-full">
             {selectedImage + 1} / {allImages.length}
           </div>
         )}

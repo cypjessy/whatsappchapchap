@@ -489,7 +489,6 @@ export default function RequestReviewsModal({ isOpen, onClose }: RequestReviewsM
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;

@@ -164,14 +164,14 @@ export default function OrderDetailModal({
         {/* Header */}
         <div className={`relative shrink-0 bg-gradient-to-r ${theme.gradient} px-5 py-5 text-white`}>
           <div className="flex items-center justify-between mb-3">
-            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all">
+            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all">
               <i className="fas fa-arrow-left text-sm" />
             </button>
             <div className="flex gap-2">
-              <button onClick={() => handleAction("print", () => onPrintInvoice(order))} className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all">
+              <button onClick={() => handleAction("print", () => onPrintInvoice(order))} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all">
                 <i className={`fas ${loadingAction === "print" ? "fa-circle-notch fa-spin" : "fa-print"} text-sm`} />
               </button>
-              <button onClick={() => handleAction("whatsapp", () => onSendWhatsApp(order, order.status as any))} className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all">
+              <button onClick={() => handleAction("whatsapp", () => onSendWhatsApp(order, order.status as any))} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all">
                 <i className={`fab ${loadingAction === "whatsapp" ? "fa-circle-notch fa-spin" : "fa-whatsapp"} text-sm`} />
               </button>
             </div>

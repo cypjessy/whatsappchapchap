@@ -48,7 +48,7 @@ function DeleteConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div className="relative bg-surface rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scaleIn">
         <div className="w-14 h-14 rounded-full bg-[#ef4444]/10 flex items-center justify-center mx-auto mb-4">
           <i className="fas fa-exclamation-triangle text-[#ef4444] text-xl" />

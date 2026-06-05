@@ -528,7 +528,7 @@ function OrderPageContent() {
                     <span className="text-6xl"></span>
                   )}
                   {(product.images && product.images.length > 0) && (
-                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 backdrop-blur-sm text-white rounded-lg text-xs font-semibold">
+                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 text-white rounded-lg text-xs font-semibold">
                       {product.images.length + (product.image ? 1 : 0)} photos
                     </div>
                   )}

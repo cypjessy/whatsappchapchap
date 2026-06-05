@@ -191,7 +191,7 @@ export default function MenuSheet({ isOpen, onClose, onLogout, isAdmin }: MenuSh
           background: isVisible && !isClosing
             ? 'rgba(0, 0, 0, 0.5)'
             : 'rgba(0, 0, 0, 0)',
-          backdropFilter: isVisible && !isClosing ? 'blur(8px)' : 'blur(0px)',
+          
           WebkitBackdropFilter: isVisible && !isClosing ? 'blur(8px)' : 'blur(0px)',
         }}
         onClick={handleClose}

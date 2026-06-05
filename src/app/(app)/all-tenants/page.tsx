@@ -1158,7 +1158,6 @@ export default function AllTenantsPage() {
         /* Premium Modals */
         .modal-overlay {
           display: none; position: fixed; inset: 0; z-index: 300;
-          background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
           align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px;
         }
         .modal-overlay.open { display: flex; }

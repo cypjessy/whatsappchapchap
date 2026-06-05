@@ -217,7 +217,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
               {/* Close button */}
               <button 
                 onClick={handleClose} 
-                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition-all z-10"
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-all z-10"
               >
                 <i className="fas fa-times text-xs" />
               </button>
@@ -273,7 +273,7 @@ export default function ViewProductModal({ isOpen, onClose, product, onEdit }: V
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                       <i className="fas fa-expand text-white text-sm" />
                     </div>
                   </div>

@@ -178,7 +178,7 @@ function DropdownMenu({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-1.5 bg-surface border border-outline rounded-xl shadow-xl z-30 w-52 overflow-hidden animate-scaleIn origin-top-right backdrop-blur-xl"
+      className="absolute right-0 top-full mt-1.5 bg-surface border border-outline rounded-xl shadow-xl z-30 w-52 overflow-hidden animate-scaleIn origin-top-right"
     >
       {children}
     </div>

@@ -20,7 +20,7 @@ export default function PageHeaderCard({ children, className = "", gradient }: P
       className={`
         relative overflow-hidden rounded-2xl md:rounded-[20px]
         shadow-xl shadow-black/5
-        backdrop-blur-xl
+
         transition-all duration-500 ease-out
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3"}
         ${className}

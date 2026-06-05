@@ -290,7 +290,7 @@ export default function SearchBar({
   const hasResults = searchResults.length > 0;
 
   return (
-    <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant">
+    <div className="sticky top-0 z-50 bg-white/80 border-b border-outline-variant">
       <div className="max-w-2xl mx-auto px-4 py-3 md:py-4">
         <div ref={searchContainerRef} className="relative">
           {/* Search Input */}
@@ -358,7 +358,7 @@ export default function SearchBar({
             >
               {/* Header */}
               {!isSearching && hasResults && (
-                <div className="sticky top-0 z-10 px-4 py-2.5 bg-white/95 backdrop-blur-sm border-b border-[#f1f5f9] flex items-center justify-between">
+                <div className="sticky top-0 z-10 px-4 py-2.5 bg-white/95 border-b border-[#f1f5f9] flex items-center justify-between">
                   <span className="text-[11px] font-bold text-outline uppercase tracking-wider">
                     Found {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
                   </span>

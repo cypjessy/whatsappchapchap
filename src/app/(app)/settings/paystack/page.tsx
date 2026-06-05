@@ -651,7 +651,7 @@ export default function PaystackSettingsPage() {
 
       {/* Sticky Save Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40">
-        <div className="bg-surface/90 backdrop-blur-xl border-t border-outline-variant shadow-2xl shadow-black/5">
+        <div className="bg-surface/90 border-t border-outline-variant shadow-2xl shadow-black/5">
           <div className="max-w-4xl mx-auto px-3 md:px-6 py-3 md:py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs md:text-sm text-on-surface-variant">
               <i className="fas fa-info-circle text-[10px] md:text-xs hidden sm:inline" />
@@ -703,7 +703,7 @@ export default function PaystackSettingsPage() {
 
       {/* Premium Payment Success Modal */}
       {paymentSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-modalBackdrop">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-modalBackdrop">
           <div className="bg-surface rounded-3xl shadow-2xl max-w-sm w-full animate-modalSlideUp overflow-hidden">
             {/* Success Header */}
             <div className="bg-gradient-to-br from-[#10b981] to-[#059669] p-6 md:p-8 text-center">

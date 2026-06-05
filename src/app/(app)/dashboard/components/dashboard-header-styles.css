@@ -107,7 +107,6 @@
 
 @media (max-width: 767px) {
   .dashboard-header-mobile {
-    -webkit-backdrop-filter: blur(0px); /* GPU acceleration hint */
     transform: translateZ(0);
   }
 }

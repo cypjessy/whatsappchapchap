@@ -104,7 +104,7 @@ export default function CustomerFilterBottomSheet({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] animate-fadeIn lg:hidden"
+        className="fixed inset-0 bg-black/50 z-[60] animate-fadeIn lg:hidden"
         onClick={onClose}
         aria-hidden="true"
       />

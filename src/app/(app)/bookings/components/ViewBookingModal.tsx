@@ -119,7 +119,7 @@ function ImagePreview({ src, onOpen }: { src: string; onOpen: () => void }) {
     <div className="relative rounded-xl overflow-hidden border border-slate-200 cursor-pointer group" onClick={onOpen}>
       <img src={src} alt="Proof" className="w-full h-28 object-cover transition-transform duration-300 group-hover:scale-105" />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <i className="fas fa-expand text-xs text-slate-700" />
         </div>
       </div>
@@ -133,7 +133,7 @@ function ConfirmDialog({ open, title, message, confirmText, onConfirm, onCancel 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6" onClick={onCancel}>
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50" />
       <div className="relative bg-white rounded-2xl w-full max-w-xs p-5 shadow-2xl animate-fadeIn" onClick={e => e.stopPropagation()}>
         <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3">
           <i className="fas fa-exclamation-triangle text-sm" />
@@ -252,9 +252,9 @@ export default function ViewBookingModal(props: ViewBookingModalProps) {
 
       {/* Lightbox */}
       {lightboxImg && (
-        <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setLightboxImg(null)}>
+        <div className="fixed inset-0 z-[3000] bg-black/90 flex items-center justify-center p-6" onClick={() => setLightboxImg(null)}>
           <img src={lightboxImg} alt="Proof" className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()} />
-          <button onClick={() => setLightboxImg(null)} className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/20 hover:rotate-90 transition-all" aria-label="Close image">
+          <button onClick={() => setLightboxImg(null)} className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 hover:rotate-90 transition-all" aria-label="Close image">
             <i className="fas fa-times" />
           </button>
         </div>
@@ -286,7 +286,7 @@ export default function ViewBookingModal(props: ViewBookingModalProps) {
         aria-label={`Booking details: ${booking.service}`}
         onClick={handleClose}
       >
-        <div className={`absolute inset-0 transition-all duration-300 ${isVisible ? "bg-black/50 backdrop-blur-sm" : "bg-black/0 backdrop-blur-0"}`} />
+        <div className={`absolute inset-0 transition-all duration-300 ${isVisible ? "bg-black/50" : "bg-black/0"}`} />
 
         {/* Sheet */}
         <div

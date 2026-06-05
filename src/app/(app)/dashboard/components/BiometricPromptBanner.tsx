@@ -83,7 +83,7 @@ export function BiometricPromptBanner() {
 
       <div className="relative p-4 md:p-5 flex items-start gap-4">
         {/* Icon */}
-        <div className="shrink-0 w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+        <div className="shrink-0 w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
           <i className={`fas ${getBiometricIcon()} text-2xl text-white`} />
         </div>
 

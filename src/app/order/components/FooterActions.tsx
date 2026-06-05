@@ -179,7 +179,7 @@ export default function FooterActions({
     <div
       className={`
         sticky bottom-0 z-40 bg-white border-t border-outline-variant
-        shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm
+        shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
         transition-all duration-300
         ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"}
       `}

@@ -216,7 +216,7 @@ export default function CategoriesModal({ isOpen, onClose, products, onCategoryS
 
   return (
     <>
-      <div className="fixed inset-0 bg-[#0f172a]/60 backdrop-blur-sm z-[2500] flex items-center justify-center p-3 md:p-4 overflow-y-auto" onClick={onClose}>
+      <div className="fixed inset-0 bg-[#0f172a]/60 z-[2500] flex items-center justify-center p-3 md:p-4 overflow-y-auto" onClick={onClose}>
         <div className="bg-white rounded-2xl md:rounded-[20px] w-full max-w-sm md:max-w-2xl lg:max-w-[900px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-[slideUp_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={e => e.stopPropagation()}>
           
           {/* Header */}

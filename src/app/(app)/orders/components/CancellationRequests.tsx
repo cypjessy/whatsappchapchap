@@ -185,7 +185,7 @@ function ConfirmModal({
   return (
     <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 animate-fadeIn">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
       <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slideUp">

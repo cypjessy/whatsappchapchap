@@ -642,7 +642,6 @@ export default function ViewCampaignModal({ campaign, isOpen, onClose, onPause, 
             right: 0;
             bottom: 0;
             background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -715,7 +714,6 @@ export default function ViewCampaignModal({ campaign, isOpen, onClose, onPause, 
             font-size: 0.8rem;
             font-weight: 700;
             text-transform: uppercase;
-            backdrop-filter: blur(10px);
           }
 
           .header-actions {

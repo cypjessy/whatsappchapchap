@@ -406,7 +406,6 @@ body::after {
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
 }
 
 .payment-modal {
@@ -439,7 +438,6 @@ body::after {
   height: 80px;
   margin: 0 auto 1.5rem;
   background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1272,7 +1270,6 @@ body::after {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2156,7 +2153,6 @@ body:has(.landing-page-wrapper)::after {
 
 .navbar.scrolled {
   background: rgba(10, 11, 15, 0.95);
-  backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-light);
   padding: 0.75rem 2rem;
 }
@@ -2686,8 +2682,6 @@ body:has(.landing-page-wrapper)::after {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 /* Modal content card */
@@ -3314,7 +3308,6 @@ body:has(.landing-page-wrapper)::after {
 /* MD3 Dialog Backdrop */
 .md3-dialog-backdrop {
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
 }
 
 /* MD3 Bottom Sheet Dialog */

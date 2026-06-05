@@ -61,7 +61,7 @@ function SuccessOverlay({ onComplete }: { onComplete: () => void }) {
   }, [onComplete]);
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-surface/95 backdrop-blur-sm animate-fadeIn">
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-surface/95 animate-fadeIn">
       <div className="relative w-20 h-20 mb-4">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
           <circle cx="40" cy="40" r="36" fill="none" stroke="#e2e8f0" strokeWidth="4" />
@@ -349,7 +349,7 @@ export default function PaymentConfirmationModal({
       className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 animate-fadeIn"
       onClick={handleClose}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60" />
 
       <div
         className={`

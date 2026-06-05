@@ -236,7 +236,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
 
       {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-[2500] bg-black/90 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 z-[2500] bg-black/90 flex items-center justify-center animate-fadeIn"
           onClick={closeLightbox}
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full p-4" onClick={(e) => e.stopPropagation()}>
@@ -248,7 +248,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
               <button
                 onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="w-10 h-10 rounded-full bg-surface/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-surface/40 transition-all"
+                className="w-10 h-10 rounded-full bg-surface/20 text-white flex items-center justify-center hover:bg-surface/40 transition-all"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -257,7 +257,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="w-10 h-10 rounded-full bg-surface/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-surface/40 transition-all"
+                className="w-10 h-10 rounded-full bg-surface/20 text-white flex items-center justify-center hover:bg-surface/40 transition-all"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -265,7 +265,7 @@ function ImageGallery({ images, serviceName }: { images: string[]; serviceName: 
           </div>
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-surface/40 transition-all"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 text-white flex items-center justify-center hover:bg-surface/40 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -363,18 +363,18 @@ export default function ViewServiceModal({ service, open, onClose }: ViewService
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
             <div className="flex items-center gap-2 mb-2">
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md ${statusConfig.bg}`}>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide text-white ${statusConfig.bg}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} ${service.status === "active" ? "animate-pulse" : ""}`} />
                 {statusConfig.label}
               </span>
-              <span className="px-2 py-0.5 bg-surface/20 backdrop-blur-md rounded-full text-[10px] font-bold text-white/90">
+              <span className="px-2 py-0.5 bg-surface/20 rounded-full text-[10px] font-bold text-white/90">
                 {BUSINESS_TYPE_NAMES[service.businessType] || service.businessType}
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-1">{service.name}</h1>
             {service.providerName && <p className="text-sm text-white/80 font-medium">by {service.providerName}</p>}
           </div>
-          <button onClick={handleClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-surface/30 transition-all duration-300 z-10">
+          <button onClick={handleClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/20 text-white flex items-center justify-center hover:bg-surface/30 transition-all duration-300 z-10">
             <X className="w-5 h-5" />
           </button>
         </div>

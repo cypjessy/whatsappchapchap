@@ -145,7 +145,7 @@ function CategoryTab({
           inline-flex items-center justify-center min-w-[1.25rem] px-1.5 md:px-2 py-0.5 rounded-full 
           text-[10px] md:text-[11px] font-medium transition-all duration-300
           ${isActive
-            ? "bg-[var(--md-sys-color-on-primary)]/20 text-[var(--md-sys-color-on-primary)] backdrop-blur-sm"
+            ? "bg-[var(--md-sys-color-on-primary)]/20 text-[var(--md-sys-color-on-primary)]"
             : "bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]"
           }
           ${!isActive && isHovered ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" : ""}

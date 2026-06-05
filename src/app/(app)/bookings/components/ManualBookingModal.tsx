@@ -462,7 +462,7 @@ export default function ManualBookingModal({
       className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 animate-fadeIn"
       onClick={handleClose}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60" />
 
       <div
         className="relative bg-surface rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col animate-scaleIn"

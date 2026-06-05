@@ -244,7 +244,7 @@ export default function FilterBottomSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 animate-fadeIn"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

@@ -221,7 +221,7 @@ const DeleteConfirmDialog = memo(({
 }) => {
   if (!product) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onCancel}>
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onCancel}>
       <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-2xl animate-scaleIn" onClick={(e) => e.stopPropagation()}>
         <div className="text-center mb-6">
           <div className="w-16 h-16 rounded-full bg-[#fee2e2] flex items-center justify-center mx-auto mb-4">
@@ -551,7 +551,7 @@ function ListHeader({
   const CheckboxIcon = isAllSelected ? CheckSquare : isPartialSelected ? MinusSquare : Square;
 
   return (
-    <div className="sticky top-0 z-20 bg-gradient-to-b from-[#f8fafc] to-[#f8fafc]/95 backdrop-blur-sm border-b-2 border-outline-variant">
+    <div className="sticky top-0 z-20 bg-gradient-to-b from-[#f8fafc] to-[#f8fafc]/95 border-b-2 border-outline-variant">
       <div className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_60px_2fr_1fr_1fr_1fr_1fr] gap-3 md:gap-4 p-3 md:p-4 items-center">
         {bulkMode && (
           <button onClick={onSelectAll} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-variant transition-all active:scale-95">

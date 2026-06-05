@@ -98,7 +98,7 @@ export function ForceUpdateDialog({
       onTouchStart={preventDismiss}
     >
       {/* Backdrop with blur — can't be clicked to dismiss */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" />
+      <div className="absolute inset-0 bg-black/70" />
 
       {/* Main Dialog Card */}
       <div className="relative z-10 w-[90%] max-w-md mx-auto animate-slideUp">
@@ -110,7 +110,7 @@ export function ForceUpdateDialog({
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full" />
 
             {/* Warning Icon */}
-            <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
               <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>

@@ -8,7 +8,6 @@ import categoryData from "@/lib/categoryData";
 import type { Category, Subcategory, SpecField } from "@/lib/categoryData";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getShippingMethodsForUser, getPaymentMethodsForUser } from "@/lib/business-settings";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,18 +32,6 @@ interface Variant {
   stock: string;
 }
 
-interface ShippingMethod {
-  id: string;
-  name: string;
-  price: string;
-}
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  details: string;
-}
-
 interface FormData {
   name: string;
   description: string;
@@ -53,11 +40,7 @@ interface FormData {
   costPrice: string;
   stock: string;
   lowStockAlert: string;
-  sku: string;
-  barcode: string;
   condition: string;
-  taxEnabled: boolean;
-  taxRate: string;
   warranty: string;
   weight: string;
   weightUnit: string;
@@ -215,8 +198,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   // ── Form State ────────────────────────────────────────────────────────────
   const [form, setForm] = useState<FormData>({
     name: "", description: "", price: "", salePrice: "", costPrice: "",
-    stock: "", lowStockAlert: "", sku: "", barcode: "", condition: "new",
-    taxEnabled: false, taxRate: "16", warranty: "",
+    stock: "", lowStockAlert: "", condition: "new", warranty: "",
     weight: "", weightUnit: "kg", dimLength: "", dimWidth: "", dimHeight: "",
   });
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -231,11 +213,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
   const [variants, setVariants] = useState<Variant[]>([]);
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
-
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [newShipping, setNewShipping] = useState({ name: "", price: "" });
-  const [newPayment, setNewPayment] = useState({ name: "", details: "" });
 
   const [saving, setSaving] = useState(false);
   const [toasts, setToasts] = useState<{ id: number; type: string; message: string }[]>([]);
@@ -257,72 +234,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   useEffect(() => { if (!isCameraOpen && streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }, [isCameraOpen]);
   useEffect(() => { setSelectedSpecs({}); setCustomSpecOptions({}); setVariants([]); }, [selectedCategoryId, selectedSubcategoryKey]);
 
-  // ── Load shipping & payment methods from DB ────────────────────────────
-  useEffect(() => {
-    if (!isOpen || !user) return;
-    const loadSettings = async () => {
-      try {
-        const [shippingMethodsData, paymentMethodsData] = await Promise.all([
-          getShippingMethodsForUser(user),
-          getPaymentMethodsForUser(user),
-        ]);
-
-        // Convert shipping methods (id, name, price: number) to modal format (id, name, price: string)
-        if (shippingMethodsData && shippingMethodsData.length > 0) {
-          setShippingMethods(shippingMethodsData.map(s => ({
-            id: s.id,
-            name: s.name,
-            price: String(s.price),
-          })));
-        }
-
-        // Convert payment methods from business profile object to array format
-        if (paymentMethodsData) {
-          const payments: PaymentMethod[] = [];
-          if (paymentMethodsData.mpesa?.enabled) {
-            payments.push({
-              id: 'mpesa',
-              name: 'M-Pesa',
-              details: paymentMethodsData.mpesa.paybill?.businessName || paymentMethodsData.mpesa.buyGoods?.businessName || paymentMethodsData.mpesa.paybill?.paybillNumber || paymentMethodsData.mpesa.buyGoods?.tillNumber || 'Mobile Money',
-            });
-          }
-          if (paymentMethodsData.bank?.enabled) {
-            payments.push({
-              id: 'bank',
-              name: paymentMethodsData.bank.bankName || 'Bank Transfer',
-              details: paymentMethodsData.bank.accountNumber || '',
-            });
-          }
-          if (paymentMethodsData.card?.enabled) {
-            payments.push({
-              id: 'card',
-              name: 'Card Payment',
-              details: paymentMethodsData.card.instructions || paymentMethodsData.card.provider || '',
-            });
-          }
-          if (paymentMethodsData.cash?.enabled) {
-            payments.push({
-              id: 'cash',
-              name: 'Cash',
-              details: paymentMethodsData.cash.instructions || 'Pay on delivery',
-            });
-          }
-          if (payments.length > 0) {
-            setPaymentMethods(payments);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading business settings:", error);
-      }
-    };
-    loadSettings();
-  }, [isOpen, user]);
-
   const resetForm = () => {
     setForm({
       name: "", description: "", price: "", salePrice: "", costPrice: "",
-      stock: "", lowStockAlert: "", sku: "", barcode: "", condition: "new",
-      taxEnabled: false, taxRate: "16", warranty: "",
+      stock: "", lowStockAlert: "", condition: "new", warranty: "",
       weight: "", weightUnit: "kg", dimLength: "", dimWidth: "", dimHeight: "",
     });
     setSelectedCategoryId(null);
@@ -331,10 +246,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setCustomSpecOptions({});
     setVariants([]);
     setProductImages([]);
-    setShippingMethods([]);
-    setPaymentMethods([]);
-    setNewShipping({ name: "", price: "" });
-    setNewPayment({ name: "", details: "" });
+
     setErrors({});
     setCustomInputState({ specKey: null, fieldLabel: "" });
     setCustomInputValue("");
@@ -500,9 +412,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       const filters: Record<string, string[]> = {};
       Object.entries(selectedSpecs).forEach(([k, set]) => { if (k !== "brand" && k !== "type" && set.size > 0) filters[k] = Array.from(set); });
 
-      const shippingMethodsToSave = shippingMethods.filter(s => s.name.trim()).map(s => ({ id: s.id, name: s.name, price: parseFloat(s.price) || 0 }));
-      const paymentMethodsToSave = paymentMethods.filter(p => p.name.trim()).map(p => ({ id: p.id, name: p.name, details: p.details }));
-
       const productToSave = await productService.createProduct(user, {
         name: form.name,
         description: form.description || undefined,
@@ -518,11 +427,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         subcategoryId: selectedSubcategoryKey!,
         stock: totalStock || parseInt(form.stock) || 0,
         lowStockAlert: form.lowStockAlert ? parseInt(form.lowStockAlert) : undefined,
-        sku: form.sku || undefined,
-        barcode: form.barcode || undefined,
         condition: form.condition !== "new" ? form.condition : undefined,
-        taxEnabled: form.taxEnabled || undefined,
-        taxRate: form.taxEnabled && form.taxRate ? parseFloat(form.taxRate) : undefined,
         warranty: form.warranty || undefined,
         weight: form.weight ? parseFloat(form.weight) : undefined,
         weightUnit: form.weight ? form.weightUnit : undefined,
@@ -536,8 +441,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         status: "active",
         filters: Object.keys(filters).length > 0 ? filters : undefined,
         variants: vs.length > 0 ? vs.map((v, idx) => ({ id: `variant_${idx + 1}`, specs: v.specs, sku: v.sku || "", price: v.price, stock: v.stock })) : undefined,
-        shippingMethods: shippingMethodsToSave.length > 0 ? shippingMethodsToSave : undefined,
-        paymentMethods: paymentMethodsToSave.length > 0 ? paymentMethodsToSave : undefined,
       });
 
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -648,10 +551,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   className="w-full px-3 py-2 bg-[var(--md-sys-color-surface)] rounded-xl text-sm font-medium text-[var(--md-sys-color-on-surface)] placeholder:text-[var(--md-sys-color-outline)] border border-[var(--md-sys-color-outline-variant)] focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none transition-all" />
               </div>
             </FieldGroup>
-            
-            {/* ... rest of the form sections ... */}
-            {/* (I'm keeping the internal form logic as is, just wrapping it in the new modal structure) */}
-            
+
             {/* Pricing */}
             <FieldGroup label="Pricing" icon="fa-tag" accent>
               <div className="grid grid-cols-3 gap-2.5">
@@ -680,10 +580,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                 </div>
                 <PillInput value={form.lowStockAlert} onChange={(v) => update("lowStockAlert", v)} placeholder="Low stock alert" type="number" min="0" />
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                <PillInput value={form.sku} onChange={(v) => update("sku", v)} placeholder="SKU" />
-                <PillInput value={form.barcode} onChange={(v) => update("barcode", v)} placeholder="Barcode" />
-              </div>
+
             </FieldGroup>
 
             {/* Category */}
@@ -812,75 +709,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <PillInput value={form.dimWidth} onChange={(v) => update("dimWidth", v)} placeholder="Width" type="number" min="0" step="0.1" />
                   <PillInput value={form.dimHeight} onChange={(v) => update("dimHeight", v)} placeholder="Height" type="number" min="0" step="0.1" />
                 </div>
-              </div>
-            </FieldGroup>
-
-            {/* Tax & Warranty */}
-            <FieldGroup label="Tax & Warranty" icon="fa-file-invoice">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)]">
-                  <div className="flex items-center gap-2">
-                    <i className={`fas fa-receipt text-sm ${form.taxEnabled ? "text-indigo-500" : "text-[var(--md-sys-color-outline)]"}`} />
-                    <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)]">Enable Tax</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="number" value={form.taxRate} onChange={(e) => update("taxRate", e.target.value)}
-                      disabled={!form.taxEnabled} placeholder="16" min="0" max="100"
-                      className="w-16 px-2 py-1 rounded-lg text-xs font-bold text-center border border-[var(--md-sys-color-outline-variant)] focus:border-indigo-400 focus:outline-none disabled:opacity-40 bg-white" />
-                    <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)]">%</span>
-                    <button onClick={() => update("taxEnabled", !form.taxEnabled)}
-                      className={`relative w-10 h-5 rounded-full transition-all ${form.taxEnabled ? "bg-indigo-500" : "bg-gray-300"}`}>
-                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${form.taxEnabled ? "left-5" : "left-0.5"}`} />
-                    </button>
-                  </div>
-                </div>
-                <PillInput value={form.warranty} onChange={(v) => update("warranty", v)} placeholder="Warranty info (e.g. 1 year manufacturer)" />
-              </div>
-            </FieldGroup>
-
-            {/* Shipping Methods */}
-            <FieldGroup label="Shipping" icon="fa-truck">
-              {shippingMethods.map((s, i) => (
-                <div key={s.id} className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)]">
-                  <span className="text-xs font-medium text-[var(--md-sys-color-on-surface)] flex-1">{s.name}</span>
-                  <span className="text-xs font-bold text-indigo-500">KES {s.price}</span>
-                  <button onClick={() => setShippingMethods((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-all">
-                    <i className="fas fa-times text-[8px]" />
-                  </button>
-                </div>
-              ))}
-              <div className="flex gap-1.5">
-                <PillInput value={newShipping.name} onChange={(v) => setNewShipping((p) => ({ ...p, name: v }))} placeholder="Method name" />
-                <PillInput value={newShipping.price} onChange={(v) => setNewShipping((p) => ({ ...p, price: v }))} placeholder="Price" type="number" min="0" />
-                <button onClick={() => { if (!newShipping.name.trim()) return; setShippingMethods((prev) => [...prev, { id: `ship_${Date.now()}`, name: newShipping.name, price: newShipping.price }]); setNewShipping({ name: "", price: "" }); }}
-                  className="shrink-0 w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 hover:bg-indigo-200 flex items-center justify-center transition-all active:scale-90">
-                  <i className="fas fa-plus text-xs" />
-                </button>
-              </div>
-            </FieldGroup>
-
-            {/* Payment Methods */}
-            <FieldGroup label="Payment" icon="fa-credit-card">
-              {paymentMethods.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)]">
-                  <div className="flex-1">
-                    <span className="text-xs font-medium text-[var(--md-sys-color-on-surface)]">{p.name}</span>
-                    {p.details && <span className="text-[10px] text-[var(--md-sys-color-outline)] ml-2">{p.details}</span>}
-                  </div>
-                  <button onClick={() => setPaymentMethods((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-all">
-                    <i className="fas fa-times text-[8px]" />
-                  </button>
-                </div>
-              ))}
-              <div className="flex gap-1.5">
-                <PillInput value={newPayment.name} onChange={(v) => setNewPayment((p) => ({ ...p, name: v }))} placeholder="Payment method" />
-                <PillInput value={newPayment.details} onChange={(v) => setNewPayment((p) => ({ ...p, details: v }))} placeholder="Details" />
-                <button onClick={() => { if (!newPayment.name.trim()) return; setPaymentMethods((prev) => [...prev, { id: `pay_${Date.now()}`, name: newPayment.name, details: newPayment.details }]); setNewPayment({ name: "", details: "" }); }}
-                  className="shrink-0 w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 hover:bg-indigo-200 flex items-center justify-center transition-all active:scale-90">
-                  <i className="fas fa-plus text-xs" />
-                </button>
               </div>
             </FieldGroup>
 

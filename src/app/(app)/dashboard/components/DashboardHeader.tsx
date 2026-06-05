@@ -181,7 +181,7 @@ function MobileHeader({
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             }`}
           >
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-white/90 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-white/90 bg-white/15 px-2.5 py-1 rounded-full">
               <span className="text-[13px]">{greetingEmoji}</span>
               {formatTime(currentTime)}
             </span>
@@ -224,7 +224,7 @@ function MobileHeader({
             avatarVisible ? "opacity-100 scale-100" : "opacity-0 scale-50"
           }`}
         >
-          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-base shrink-0 border-2 border-white/40 shadow-lg">
+          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-base shrink-0 border-2 border-white/40 shadow-lg">
             <span className="text-white drop-shadow-sm">
               {getInitials(tenantName)}
             </span>

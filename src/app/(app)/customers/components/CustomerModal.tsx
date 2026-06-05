@@ -80,7 +80,7 @@ export default function CustomerModal({
         {/* Header */}
         <div className={`relative shrink-0 bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 px-6 py-6 text-white`}>
           <div className="flex items-center justify-between mb-4">
-            <button onClick={handleClose} className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all">
+            <button onClick={handleClose} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all">
               <i className="fas fa-arrow-left text-sm" />
             </button>
             <button onClick={onDelete} className="text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-rose-200 transition-all">

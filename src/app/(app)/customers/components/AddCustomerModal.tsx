@@ -202,7 +202,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
       className="fixed inset-0 z-[2500] flex items-center justify-center p-3 md:p-4 overflow-y-auto"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50" />
 
       <div
         className="relative w-full max-w-md bg-[var(--md-sys-color-surface-container)] rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden animate-scaleIn"

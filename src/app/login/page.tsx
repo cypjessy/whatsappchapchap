@@ -41,7 +41,7 @@ function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss:
       {/* Backdrop */}
       <div 
         className={`
-          absolute inset-0 bg-black/60 backdrop-blur-sm
+          absolute inset-0 bg-black/60
           transition-opacity duration-300
           ${isVisible ? "opacity-100" : "opacity-0"}
         `}
@@ -61,7 +61,7 @@ function PremiumErrorModal({ message, onDismiss }: { message: string; onDismiss:
       >
         {/* Gradient Header */}
         <div className="bg-gradient-to-br from-red-500 to-pink-500 p-6 text-center">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
             <i className="fas fa-shield-alt text-4xl text-white" />
           </div>
           <h2 className="text-2xl font-black text-white mb-1">Access Denied</h2>

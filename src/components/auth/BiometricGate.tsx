@@ -108,7 +108,7 @@ export default function BiometricGate({ email, onVerified, onFallback, onLogout 
       <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-6">
         {/* Icon with pulse animation */}
         <div className="relative mb-8">
-          <div className={`w-28 h-28 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white
+          <div className={`w-28 h-28 rounded-full bg-white/10 flex items-center justify-center text-white
             ${isAuthenticating ? 'animate-pulse' : ''}
             transition-all duration-500`}>
             {getIcon()}
@@ -138,7 +138,7 @@ export default function BiometricGate({ email, onVerified, onFallback, onLogout 
           <button
             onClick={handleAuthenticate}
             disabled={isAuthenticating}
-            className="w-full py-3.5 px-6 bg-white/15 backdrop-blur-sm hover:bg-white/25 text-white font-bold rounded-xl border border-white/20 transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-3 group"
+            className="w-full py-3.5 px-6 bg-white/15 hover:bg-white/25 text-white font-bold rounded-xl border border-white/20 transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-3 group"
           >
             <i className={`${getBiometricIcon()} text-lg group-hover:scale-110 transition-transform`}></i>
             <span>{getBiometricLabel()}</span>
@@ -155,7 +155,7 @@ export default function BiometricGate({ email, onVerified, onFallback, onLogout 
 
         {/* Error message */}
         {error && (
-          <div className="mt-4 w-full p-3 bg-red-500/15 backdrop-blur-sm border border-red-400/30 rounded-xl">
+          <div className="mt-4 w-full p-3 bg-red-500/15 border border-red-400/30 rounded-xl">
             <div className="flex items-start gap-2">
               <i className="fas fa-exclamation-circle text-red-300 mt-0.5 text-sm"></i>
               <p className="text-red-200 text-xs leading-relaxed">{error}</p>

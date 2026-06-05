@@ -167,14 +167,14 @@ function MainImage({
         <>
           <button
             onClick={(e) => { e.stopPropagation(); onPrev(); }}
-            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-on-surface transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-on-surface transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
             aria-label="Previous image"
           >
             <i className="fas fa-chevron-left text-sm" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onNext(); }}
-            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-on-surface transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-on-surface-variant hover:bg-white hover:text-on-surface transition-all duration-200 active:scale-90 opacity-0 group-hover:opacity-100 md:opacity-100"
             aria-label="Next image"
           >
             <i className="fas fa-chevron-right text-sm" />
@@ -184,13 +184,13 @@ function MainImage({
 
       {/* Counter */}
       {total > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-xs font-bold">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 text-white text-xs font-bold">
           {currentIndex + 1} / {total}
         </div>
       )}
 
       {/* Zoom hint */}
-      <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity md:hidden">
+      <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/40 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity md:hidden">
         <i className="fas fa-search-plus mr-1" />
         Tap to zoom
       </div>

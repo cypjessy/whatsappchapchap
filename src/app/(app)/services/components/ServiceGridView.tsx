@@ -98,7 +98,7 @@ function DropdownMenu({ isOpen, onClose, children }: { isOpen: boolean; onClose:
   }, [isOpen, onClose]);
   if (!isOpen) return null;
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-1.5 bg-surface border border-outline rounded-xl shadow-xl z-30 w-52 overflow-hidden animate-scaleIn origin-top-right backdrop-blur-xl">
+    <div ref={ref} className="absolute right-0 top-full mt-1.5 bg-surface border border-outline rounded-xl shadow-xl z-30 w-52 overflow-hidden animate-scaleIn origin-top-right">
       {children}
     </div>
   );
@@ -240,7 +240,7 @@ function ServiceCard({
         {!bulkMode && (
           <div className="absolute top-3 right-3 z-10">
             <button
-              className="w-8 h-8 rounded-xl bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-all duration-200"
+              className="w-8 h-8 rounded-xl bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all duration-200"
               onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
               aria-label="More actions"
             >

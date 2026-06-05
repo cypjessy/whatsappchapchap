@@ -184,7 +184,7 @@ export default function AddTenantDialog({ isOpen, onClose, onSuccess }: AddTenan
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={(e) => {
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={(e) => {
       if (e.target === e.currentTarget) handleClose();
     }}>
       <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
