@@ -38,10 +38,10 @@ function CollapsibleSection({ title, icon, defaultOpen = false, accent = false, 
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 ${accent ? "border-indigo-200/60 bg-indigo-50 dark:bg-indigo-900/20" : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]"}`}>
+    <div className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 ${accent ? "border-indigo-300 dark:border-indigo-600 bg-[var(--md-sys-color-surface)]" : "border-[var(--md-sys-color-outline-variant)] dark:border-gray-600 bg-[var(--md-sys-color-surface)]"}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-3 text-left">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg border-2 border-indigo-300 dark:border-indigo-600 bg-[var(--md-sys-color-surface)] flex items-center justify-center">
             <i className={`fas ${icon} text-[10px] text-indigo-500`} />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--md-sys-color-on-surface-variant)]">{title}</span>
@@ -63,7 +63,7 @@ function StatCard({ icon, label, value, color = "indigo" }: {
   icon: string; label: string; value: string; color?: string;
 }) {
   const colorMap: Record<string, string> = {
-    indigo: "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500",
+    indigo: "border-2 border-indigo-300 dark:border-indigo-600 bg-[var(--md-sys-color-surface)] text-indigo-500",
     emerald: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500",
     amber: "bg-amber-50 dark:bg-amber-900/30 text-amber-500",
     rose: "bg-rose-50 dark:bg-rose-900/30 text-rose-500",
@@ -90,7 +90,7 @@ function InfoRow({ label, value, icon, color = "indigo" }: {
 }) {
   if (!value && value !== 0) return null;
   const colorMap: Record<string, string> = {
-    indigo: "text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30",
+    indigo: "text-indigo-500 border-2 border-indigo-300 dark:border-indigo-600 bg-[var(--md-sys-color-surface)]",
     emerald: "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30",
     amber: "text-amber-500 bg-amber-50 dark:bg-amber-900/30",
     blue: "text-blue-500 bg-blue-50 dark:bg-blue-900/30",
@@ -200,7 +200,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
     <div className="p-6 space-y-5 sticky top-0">
       {/* Main Image */}
       <div className="relative group">
-        <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/30 dark:to-violet-950/30 shadow-lg cursor-pointer"
+        <div className="aspect-square rounded-2xl overflow-hidden bg-[var(--md-sys-color-surface)] border-2 border-[var(--md-sys-color-outline-variant)] shadow-lg cursor-pointer"
           onClick={() => setLightboxOpen(true)}>
           {currentImage && !imgErrors.has(selectedImage) ? (
             <img src={currentImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -367,8 +367,7 @@ export default function ViewProductModalDesktop({ isOpen, onClose, product, onEd
             <div className="space-y-1.5">
               {product.variants.map((v, i) => (
                 <div key={v.id || i} className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] hover:border-indigo-300 dark:hover:border-indigo-700/50 transition-all">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <div className="flex items-center gap-2 min-w-0">                      <div className="w-6 h-6 rounded-lg border-2 border-indigo-300 dark:border-indigo-600 bg-[var(--md-sys-color-surface)] flex items-center justify-center">
                       <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400">{i + 1}</span>
                     </div>
                     <span className="text-xs font-medium text-[var(--md-sys-color-on-surface)] truncate">{Object.values(v.specs).join(" / ")}</span>
