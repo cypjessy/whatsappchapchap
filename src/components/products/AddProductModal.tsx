@@ -72,7 +72,7 @@ function getGradient(seed: string) {
 
 function FieldGroup({ label, icon, children, accent = false }: { label: string; icon?: string; children: React.ReactNode; accent?: boolean }) {
   return (
-    <div className={`p-4 rounded-2xl border-2 transition-all duration-200 ${accent ? "border-indigo-300 dark:border-indigo-600 bg-[var(--md-sys-color-surface)]" : "border-[var(--md-sys-color-outline-variant)] dark:border-gray-600 bg-[var(--md-sys-color-surface)]"}`}>
+    <div className={`p-4 rounded-2xl border-2 transition-all duration-200 ${accent ? "border-indigo-200/60 bg-indigo-50 dark:bg-indigo-900/40" : "border-transparent bg-[var(--md-sys-color-surface)]"}`}>
       <div className="flex items-center gap-2 mb-3">
         {icon && <i className={`fas ${icon} text-[10px] text-indigo-400`} />}
         <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--md-sys-color-on-surface-variant)]">{label}</label>
@@ -112,7 +112,7 @@ function SelectableCard({
 }) {
   return (
     <button onClick={onClick} className={`relative p-3 border-2 rounded-xl text-center cursor-pointer transition-all duration-200 active:scale-95 ${
-      selected ? "border-indigo-500 bg-[var(--md-sys-color-surface)] shadow-md shadow-indigo-500/10" : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-indigo-400 hover:shadow-sm"
+      selected ? "border-indigo-500 bg-gradient-to-br from-indigo-50 to-violet-50 shadow-md shadow-indigo-500/10" : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] hover:border-indigo-300 hover:shadow-sm"
     } ${className}`}>
       {selected && (
         <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-sm">
@@ -139,7 +139,7 @@ function SpecButton({ label, selected, onClick, isCustom, multiple }: {
 
 function Tag({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[var(--md-sys-color-surface)] text-indigo-600 border-2 border-indigo-300 dark:border-indigo-600">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200/50">
       {label}
       <button onClick={onRemove} className="w-3.5 h-3.5 rounded-full flex items-center justify-center hover:bg-indigo-200/60 transition-colors">
         <i className="fas fa-times text-[7px]" />
@@ -621,7 +621,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <i className={`fas ${sf.icon || "fa-tag"} text-[10px] text-indigo-400`} />
                             <span className="text-[11px] font-semibold text-[var(--md-sys-color-on-surface-variant)]">{sf.label}</span>
-                            {isMultiple && <span className="text-[8px] border-2 border-indigo-300 dark:border-indigo-600 px-1.5 py-0.5 rounded-full text-indigo-600 font-bold">Multi</span>}
+                            {isMultiple && <span className="text-[8px] bg-indigo-100 px-1.5 py-0.5 rounded-full text-indigo-600 font-bold">Multi</span>}
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {options.map((opt) => (
@@ -663,7 +663,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                     <div key={v.id} className="grid grid-cols-[1fr_60px_60px] gap-2 items-center p-2 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)]">
                       <div className="flex flex-wrap gap-0.5">
                         {Object.values(v.specs).map((s, j) => (
-                          <span key={j} className="text-[9px] px-1.5 py-0.5 border-2 border-indigo-300 dark:border-indigo-600 rounded-full text-indigo-700 font-medium">{s}</span>
+                          <span key={j} className="text-[9px] px-1.5 py-0.5 bg-indigo-100 rounded-full text-indigo-700 font-medium">{s}</span>
                         ))}
                       </div>
                       <input type="number" value={v.price} onChange={(e) => setVariants((prev) => prev.map((x, idx) => idx === i ? { ...x, price: e.target.value } : x))}
@@ -684,7 +684,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   {CONDITION_OPTIONS.map((c) => (
                     <button key={c} onClick={() => update("condition", c)}
                       className={`px-3 py-1.5 rounded-full text-[10px] font-bold border-2 transition-all active:scale-95 capitalize ${
-                        form.condition === c ? "border-indigo-500 text-indigo-700 font-bold" : "border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)]"
+                        form.condition === c ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-transparent bg-[var(--md-sys-color-surface-variant)]/40 text-[var(--md-sys-color-on-surface-variant)]"
                       }`}>
                       {c}
                     </button>
@@ -719,12 +719,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <ImageCard key={img.id} image={img} index={idx} onSetMain={() => setMainImage(img.id)} onRemove={() => removeImage(img.id)} onReorder={reorderImages} totalImages={productImages.length} />
                 ))}
                 <div className="flex flex-col gap-1.5">
-                  <label className="border-2 border-dashed border-[var(--md-sys-color-outline-variant)] rounded-xl p-2 text-center cursor-pointer hover:border-indigo-400 hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex flex-col items-center justify-center h-24 group">
+                  <label className="border-2 border-dashed border-[var(--md-sys-color-outline-variant)] rounded-xl p-2 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col items-center justify-center h-24 group">
                     <i className="fas fa-plus text-[var(--md-sys-color-outline)] text-lg mb-0.5 group-hover:text-indigo-500" />
                     <span className="text-[9px] text-[var(--md-sys-color-outline)] group-hover:text-indigo-500">Upload</span>
                     <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
                   </label>
-                  <button onClick={openCamera} className="border-2 border-dashed border-[var(--md-sys-color-outline-variant)] rounded-xl p-1 text-center hover:border-indigo-400 hover:bg-[var(--md-sys-color-surface-variant)] transition-all flex flex-col items-center justify-center group">
+                  <button onClick={openCamera} className="border-2 border-dashed border-[var(--md-sys-color-outline-variant)] rounded-xl p-1 text-center hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col items-center justify-center group">
                     <i className="fas fa-camera text-[var(--md-sys-color-outline)] text-lg mb-0.5 group-hover:text-indigo-500" />
                     <span className="text-[9px] text-[var(--md-sys-color-outline)] group-hover:text-indigo-500">Camera</span>
                   </button>
