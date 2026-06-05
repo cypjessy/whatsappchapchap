@@ -8,8 +8,8 @@
  * versionName: Human-readable version string
  */
 
-export const APP_VERSION_CODE = 51; // Must match android/app/build.gradle → versionCode
-export const APP_VERSION_NAME = "1.0.50"; // Must match android/app/build.gradle → versionName
+export const APP_VERSION_CODE = 52; // Must match android/app/build.gradle → versionCode
+export const APP_VERSION_NAME = "1.0.51"; // Must match android/app/build.gradle → versionName
 export const APP_PACKAGE_NAME = "com.whatsappchapchap.app";
 
 /**
