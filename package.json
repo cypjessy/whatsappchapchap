@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:android": "rm -rf .next out && if [ -d src/app/api ]; then mv src/app/api src/app/_api && BUILD_TARGET=android npm run build && mv src/app/_api src/app/api; else BUILD_TARGET=android npm run build; fi && npx cap sync android",
+    "build:android": "rm -rf .next out && ([ -d src/app/api ] && mv src/app/api src/app/_api; BUILD_TARGET=android npm run build; status=$?; [ -d src/app/_api ] && [ ! -d src/app/api ] && mv src/app/_api src/app/api; exit $status) && npx cap sync android",
     "open:android": "npx cap open android",
     "run:android": "npx cap run android",
     "run:android:live": "npx cap run android --livereload --external",
