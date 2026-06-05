@@ -119,27 +119,24 @@
 
 /* Prevent autofill popup from squishing the top bar */
 html, body {
-  height: 100%;
-  overflow: hidden;
-  position: fixed;
+  min-height: 100%;
   width: 100%;
 }
 
 #__next {
-  height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  min-height: 100%;
 }
 
 /* Prevent weird bounce on scroll */
 html {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
 }
 
 /* Smooth momentum scrolling */
 body {
-  overflow-y: scroll;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  padding-top: var(--safe-area-top, 0px);
 }
 
 /* Premium momentum scrolling for scrollable containers */

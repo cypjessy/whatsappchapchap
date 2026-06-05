@@ -104,7 +104,7 @@ cd android
 JAVA_HOME=/usr/lib/jvm/java-21-openjdk ANDROID_HOME=/opt/android-sdk ./gradlew clean assembleRelease
 cd "$PROJECT_ROOT"
 mkdir -p public
-cp android/app/build/outputs/apk/debug/app-debug.apk public/whatsappchapchap.apk
+cp android/app/build/outputs/apk/release/app-release.apk public/whatsappchapchap.apk
 
 print_success "APK build complete!"
 

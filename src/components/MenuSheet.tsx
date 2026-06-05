@@ -11,46 +11,28 @@ interface MenuSheetProps {
   onClose: () => void;
   onLogout: () => void;
   isAdmin?: boolean;
-}
-
-interface SheetItem {
-  id: string;
-  label: string;
-  icon: string;
-  href: string;
-}
-
-interface SheetSection {
-  title: string;
-  items: SheetItem[];
+  onQuickAction?: (actionId: string) => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const FAB_MENU_SECTIONS: SheetSection[] = [
-  {
-    title: "Create New",
-    items: [
-      { id: "new-order", label: "New Order", icon: "fa-shopping-cart", href: "/orders?new=true" },
-      { id: "new-booking", label: "New Booking", icon: "fa-calendar-plus", href: "/bookings?new=true" },
-      { id: "add-product", label: "Add Product", icon: "fa-plus-square", href: "/products?new=true" },
-      { id: "add-customer", label: "Add Customer", icon: "fa-user-plus", href: "/customers?new=true" },
-    ],
-  },
-  {
-    title: "Navigate",
-    items: [
-      { id: "products", label: "Products", icon: "fa-box", href: "/products" },
-      { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services" },
-      { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings" },
-      { id: "paystack", label: "Paystack", icon: "fa-credit-card", href: "/settings/paystack" },
-    ],
-  },
+const QUICK_ACTION_ITEMS = [
+  { id: "new-order", label: "New Order", icon: "fa-shopping-cart" },
+  { id: "new-booking", label: "New Booking", icon: "fa-calendar-plus" },
+  { id: "add-product", label: "Add Product", icon: "fa-plus-square" },
+  { id: "add-customer", label: "Add Customer", icon: "fa-user-plus" },
+];
+
+const NAVIGATE_ITEMS = [
+  { id: "products", label: "Products", icon: "fa-box", href: "/products" },
+  { id: "services", label: "My Services", icon: "fa-concierge-bell", href: "/services" },
+  { id: "settings", label: "Settings", icon: "fa-cog", href: "/settings" },
+  { id: "paystack", label: "Paystack", icon: "fa-credit-card", href: "/settings/paystack" },
 ];
 
 // ─── MenuSheet Component ───────────────────────────────────────────────────────
 
-export default function MenuSheet({ isOpen, onClose, onLogout, isAdmin }: MenuSheetProps) {
+export default function MenuSheet({ isOpen, onClose, onLogout, isAdmin, onQuickAction }: MenuSheetProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -256,45 +238,85 @@ export default function MenuSheet({ isOpen, onClose, onLogout, isAdmin }: MenuSh
 
         {/* Premium Sections */}
         <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto hide-scrollbar">
-          {FAB_MENU_SECTIONS.map((section, sectionIdx) => (
-            <div key={section.title} className={sectionIdx > 0 ? "mt-5" : "mt-1"}>
-              <div className="px-2 mb-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.08em]">
-                  {section.title}
-                </span>
-              </div>
-              <div className="grid grid-cols-4 gap-2.5">
-                {section.items.map((item, idx) => (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    onClick={() => { onClose(); }}
-                    className={`
-                      flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl
-                      hover:bg-gray-50 active:bg-gray-100 active:scale-95
-                      transition-all duration-150
-                      animate-menuItem
-                    `}
-                    style={{ animationDelay: `${sectionIdx * 80 + idx * 40}ms` }}
-                    aria-label={`Navigate to ${item.label}`}
-                  >
-                    <div className={`
-                      w-14 h-14 rounded-2xl flex items-center justify-center
-                      bg-gradient-to-br from-gray-50 to-gray-100
-                      text-emerald-600 text-lg
-                      shadow-sm border border-gray-100
-                      transition-all duration-200
-                    `}>
-                      <i className={`fas ${item.icon}`} aria-hidden="true" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-gray-700 text-center leading-tight">
-                      {item.label}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+          {/* Create New Section (Quick Actions) */}
+          <div className="mt-1">
+            <div className="px-2 mb-3">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.08em]">
+                Create New
+              </span>
             </div>
-          ))}
+            <div className="grid grid-cols-4 gap-2.5">
+              {QUICK_ACTION_ITEMS.map((item, idx) => (
+                <button
+                  key={item.id}
+                  onClick={() => { 
+                    handleClose();
+                    setTimeout(() => onQuickAction?.(item.id), 300);
+                  }}
+                  className={`
+                    flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl
+                    hover:bg-gray-50 active:bg-gray-100 active:scale-95
+                    transition-all duration-150
+                    animate-menuItem
+                  `}
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                  aria-label={`Open ${item.label} modal`}
+                >
+                  <div className={`
+                    w-14 h-14 rounded-2xl flex items-center justify-center
+                    bg-gradient-to-br from-gray-50 to-gray-100
+                    text-emerald-600 text-lg
+                    shadow-sm border border-gray-100
+                    transition-all duration-200
+                  `}>
+                    <i className={`fas ${item.icon}`} aria-hidden="true" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-gray-700 text-center leading-tight">
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigate Section */}
+          <div className="mt-5">
+            <div className="px-2 mb-3">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.08em]">
+                Navigate
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-2.5">
+              {NAVIGATE_ITEMS.map((item, idx) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => { handleClose(); }}
+                  className={`
+                    flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl
+                    hover:bg-gray-50 active:bg-gray-100 active:scale-95
+                    transition-all duration-150
+                    animate-menuItem
+                  `}
+                  style={{ animationDelay: `${80 + idx * 40}ms` }}
+                  aria-label={`Navigate to ${item.label}`}
+                >
+                  <div className={`
+                    w-14 h-14 rounded-2xl flex items-center justify-center
+                    bg-gradient-to-br from-gray-50 to-gray-100
+                    text-emerald-600 text-lg
+                    shadow-sm border border-gray-100
+                    transition-all duration-200
+                  `}>
+                    <i className={`fas ${item.icon}`} aria-hidden="true" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-gray-700 text-center leading-tight">
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
 
           {/* Admin Section */}
           {isAdmin && (

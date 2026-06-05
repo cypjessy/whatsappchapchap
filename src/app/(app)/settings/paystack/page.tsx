@@ -219,7 +219,8 @@ export default function PaystackSettingsPage() {
           return;
         }
 
-        const res = await fetch(buildApiUrl("/api/settings/paystack"), {
+        const tenantId = `tenant_${user.uid}`;
+        const res = await fetch(buildApiUrl(`/api/settings/paystack?tenantId=${tenantId}`), {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -237,9 +238,9 @@ export default function PaystackSettingsPage() {
             ...prev,
             mode: data.mode || "test",
             testPublicKey: data.testPublicKey || "",
-            testSecretKey: data.testSecretKey || "",
+            testSecretKey: data.hasTestSecret ? "********" : "",
             livePublicKey: data.livePublicKey || "",
-            liveSecretKey: data.liveSecretKey || "",
+            liveSecretKey: data.hasLiveSecret ? "********" : "",
             webhookUrl: data.webhookUrl || "",
           }));
         }
@@ -275,13 +276,17 @@ export default function PaystackSettingsPage() {
         return;
       }
 
+      const tenantId = `tenant_${user.uid}`;
       const res = await fetch(buildApiUrl("/api/settings/paystack"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({
+          ...settings,
+          tenantId
+        }),
       });
       
       if (!res.ok) {
@@ -403,7 +408,7 @@ export default function PaystackSettingsPage() {
         </div>
       )}
 
-      <div className="overflow-x-hidden px-3 md:px-6 py-3 md:py-4 pb-24 space-y-4 md:space-y-5 max-w-4xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 pb-24 space-y-4 md:space-y-5">
         {/* Header */}
         <PageHeaderCard>
           <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-on-surface flex items-center gap-2.5 md:gap-3">

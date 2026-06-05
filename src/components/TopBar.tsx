@@ -221,7 +221,7 @@ export default function AndroidTopBar({
       {/* Spacer for fixed header */}
       <div 
         className="lg:hidden flex-shrink-0" 
-        style={{ height: 'calc(52px + var(--safe-area-top))' }} 
+        style={{ height: 'calc(52px + var(--safe-area-top, 0px))' }} 
       />
 
       {/* Premium TopBar */}
@@ -234,7 +234,7 @@ export default function AndroidTopBar({
         style={{
           top: 0,
           willChange: 'transform',
-          paddingTop: 'var(--safe-area-top)',
+          paddingTop: 'var(--safe-area-top, 0px)',
           background: isScrolled
             ? '#ffffff'
             : 'linear-gradient(135deg, #25D366 0%, #075E54 100%)',

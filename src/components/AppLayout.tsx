@@ -1,17 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(false); // Start collapsed on desktop
   const [isMobile, setIsMobile] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -33,6 +36,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleFabClick = () => {
     setShowFabMenu(!showFabMenu);
+  };
+
+  const handleQuickAction = (actionId: string) => {
+    setShowFabMenu(false);
+    
+    // For stability and to unblock the build, we navigate to the page with a query param.
+    // Each page already has robust logic to open its respective "New" modal when this param is present.
+    if (actionId === "new-order") {
+      router.push("/orders?new=true");
+    } else if (actionId === "new-booking") {
+      router.push("/bookings?new=true");
+    } else if (actionId === "add-product") {
+      router.push("/products?new=true");
+    } else if (actionId === "add-customer") {
+      router.push("/customers?new=true");
+    }
   };
 
   return (
@@ -81,7 +100,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Premium Mobile Bottom Navigation - Only on mobile (< 768px) */}
-      {isMobile && <BottomNav onFABClick={handleFabClick} />}
+      {isMobile && <BottomNav onFABClick={handleFabClick} onQuickAction={handleQuickAction} />}
     </div>
   );
 }

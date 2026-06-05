@@ -21,6 +21,7 @@ interface NavItem {
 
 interface BottomNavProps {
   onFABClick?: () => void;
+  onQuickAction?: (actionId: string) => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -217,7 +218,7 @@ function BottomNavItem({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function BottomNav({ onFABClick }: BottomNavProps) {
+export default function BottomNav({ onFABClick, onQuickAction }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, isAdmin } = useAuth();
@@ -312,13 +313,19 @@ export default function BottomNav({ onFABClick }: BottomNavProps) {
     };
 
     document.addEventListener('pointerdown', handlePointerActivity, { passive: true });
-    return () => document.removeEventListener('pointerdown', handlePointerActivity);
+    return () => document.addEventListener('pointerdown', handlePointerActivity);
   }, []);
 
   return (
     <>
       {/* Menu Sheet */}
-      <MenuSheet isOpen={fabOpen} onClose={() => setFabOpen(false)} onLogout={handleLogout} isAdmin={isAdmin} />
+      <MenuSheet 
+        isOpen={fabOpen} 
+        onClose={() => setFabOpen(false)} 
+        onLogout={handleLogout} 
+        isAdmin={isAdmin}
+        onQuickAction={onQuickAction}
+      />
 
       {/* Premium Bottom Navigation Bar */}
       <nav
