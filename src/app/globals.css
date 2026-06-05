@@ -2653,9 +2653,11 @@ body:has(.landing-page-wrapper)::after {
 }
 
 /* ============================================
-   UNIFIED MODAL DIALOG SYSTEM
+   PREMIUM MODAL DIALOG SYSTEM
    All pop-up dialogs across the app use these classes
    for consistent positioning, backdrop, and animation.
+   Premium enhancements: deeper shadows, springier animation,
+   subtle gradient accents, and elevated card feel.
    ============================================ */
 
 /* Modal overlay: fixed fullscreen backdrop + flex-centered container */
@@ -2676,7 +2678,7 @@ body:has(.landing-page-wrapper)::after {
   }
 }
 
-/* Modal backdrop blur */
+/* Modal backdrop - dark, no blur */
 .modal-dialog-overlay::before {
   content: '';
   position: absolute;
@@ -2684,19 +2686,30 @@ body:has(.landing-page-wrapper)::after {
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* Modal content card */
+/* Modal content card - premium with deeper shadow and smoother animation */
 .modal-dialog {
   position: relative;
   width: 100%;
   max-width: 560px;
   max-height: 92vh;
   background: var(--md-sys-color-surface-container, #ffffff);
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalPremiumSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPremiumSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Modal sizes */
@@ -2730,12 +2743,90 @@ body:has(.landing-page-wrapper)::after {
   }
 }
 
+/* Premium Card Section - used inside modals instead of tinted backgrounds */
+.modal-card-section {
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.2s ease;
+}
+
+.modal-card-section:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Premium Card Section with left accent bar */
+.modal-card-accent {
+  background: var(--md-sys-color-surface, #ffffff);
+  border: 1px solid var(--md-sys-color-outline-variant, #f1f5f9);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-card-accent::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #8b5cf6, #6366f1);
+  border-radius: 0 2px 2px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-card-accent {
+    background: var(--md-sys-color-surface-container-high, #1e293b);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .modal-card-accent::before {
+    background: linear-gradient(to bottom, #a78bfa, #818cf8);
+  }
+}
+
+/* Premium Chip / Tag */
+.chip-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.chip-premium-primary {
+  background: #eef2ff;
+  color: #4f46e5;
+  border-color: #c7d2fe;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chip-premium {
+    background: rgba(255,255,255,0.08);
+    color: #94a3b8;
+    border-color: rgba(255,255,255,0.08);
+  }
+  .chip-premium-primary {
+    background: rgba(79,70,229,0.15);
+    color: #a5b4fc;
+    border-color: rgba(79,70,229,0.3);
+  }
+}
+
 /* Modal header */
 .modal-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
+  padding: 1.125rem 1.25rem;
   border-bottom: 1px solid var(--md-sys-color-outline-variant, #e2e8f0);
   flex-shrink: 0;
   background: var(--md-sys-color-surface, #ffffff);
@@ -2751,8 +2842,8 @@ body:has(.landing-page-wrapper)::after {
 }
 
 .modal-dialog-close {
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -2767,6 +2858,7 @@ body:has(.landing-page-wrapper)::after {
 .modal-dialog-close:hover {
   background: var(--md-sys-color-surface-variant, #f1f5f9);
   color: var(--md-sys-color-on-surface, #1e293b);
+  transform: rotate(90deg);
 }
 
 /* Modal body (scrollable) */

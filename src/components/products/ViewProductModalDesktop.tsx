@@ -38,10 +38,10 @@ function CollapsibleSection({ title, icon, defaultOpen = false, accent = false, 
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 ${accent ? "border-indigo-200/60 bg-indigo-50 dark:bg-indigo-900/20" : "border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]"}`}>
+    <div className={`${accent ? "modal-card-accent" : "rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)]"} overflow-hidden transition-all duration-200`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-3 text-left">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
             <i className={`fas ${icon} text-[10px] text-indigo-500`} />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--md-sys-color-on-surface-variant)]">{title}</span>
@@ -63,7 +63,7 @@ function StatCard({ icon, label, value, color = "indigo" }: {
   icon: string; label: string; value: string; color?: string;
 }) {
   const colorMap: Record<string, string> = {
-    indigo: "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500",
+    indigo: "border-2 border-indigo-100 bg-indigo-50/50 text-indigo-500",
     emerald: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500",
     amber: "bg-amber-50 dark:bg-amber-900/30 text-amber-500",
     rose: "bg-rose-50 dark:bg-rose-900/30 text-rose-500",
@@ -72,7 +72,7 @@ function StatCard({ icon, label, value, color = "indigo" }: {
   };
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] shadow-sm hover:shadow-md transition-shadow">
-      <div className={`w-10 h-10 rounded-xl ${colorMap[color] || colorMap.indigo} flex items-center justify-center`}>
+      <div className={`w-10 h-10 rounded-xl ${colorMap[color] || colorMap.indigo} flex items-center justify-center shadow-sm`}>
         <i className={`fas ${icon} text-sm`} />
       </div>
       <div className="min-w-0">
@@ -90,7 +90,7 @@ function InfoRow({ label, value, icon, color = "indigo" }: {
 }) {
   if (!value && value !== 0) return null;
   const colorMap: Record<string, string> = {
-    indigo: "text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30",
+    indigo: "text-indigo-500 border border-indigo-100 bg-indigo-50/50",
     emerald: "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30",
     amber: "text-amber-500 bg-amber-50 dark:bg-amber-900/30",
     blue: "text-blue-500 bg-blue-50 dark:bg-blue-900/30",

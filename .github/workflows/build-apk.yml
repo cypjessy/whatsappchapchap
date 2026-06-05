@@ -61,11 +61,8 @@ jobs:
           echo "name=$(node -p "require('fs').readFileSync('src/lib/app-version.ts','utf-8').match(/APP_VERSION_NAME\s*=\s*\"([^\"]+)\"/)[1]")" >> $GITHUB_OUTPUT
           echo "code=$(node -p "require('fs').readFileSync('src/lib/app-version.ts','utf-8').match(/APP_VERSION_CODE\s*=\s*(\d+)/)[1]")" >> $GITHUB_OUTPUT
 
-      - name: Build Next.js
-        run: npm run build
-
-      - name: Sync Capacitor
-        run: npx cap sync android
+      - name: Build Next.js + Sync Capacitor
+        run: npm run build:android
 
       - name: 📱 Build APK
         run: |

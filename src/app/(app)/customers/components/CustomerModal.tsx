@@ -107,11 +107,11 @@ export default function CustomerModal({
         <div className="modal-dialog-body flex-1 p-5 space-y-4">
           {/* Quick Info */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100">
+            <div className="modal-card-accent p-3">
               <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">Total Spent</div>
               <div className="text-lg font-black text-indigo-600">{formatCurrency(customer.totalSpent || 0)}</div>
             </div>
-            <div className="p-3 bg-violet-50 rounded-2xl border border-violet-100">
+            <div className="modal-card-accent p-3">
               <div className="text-[9px] font-black uppercase tracking-widest text-violet-400 mb-1">Orders</div>
               <div className="text-lg font-black text-violet-600">{orders.length}</div>
             </div>

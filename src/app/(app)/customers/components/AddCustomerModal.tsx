@@ -74,7 +74,7 @@ function LiveAvatar({ firstName, lastName }: { firstName: string; lastName: stri
 
 function FieldGroup({ label, children, accent = false }: { label: string; children: React.ReactNode; accent?: boolean }) {
   return (
-    <div className={`p-4 rounded-2xl border-2 transition-all duration-200 ${accent ? "border-indigo-200/60 bg-indigo-50 dark:bg-indigo-900/40" : "border-transparent bg-[var(--md-sys-color-surface)]"}`}>
+    <div className={`${accent ? "modal-card-accent p-4" : "p-4"}`}>
       <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--md-sys-color-on-surface-variant)] mb-3">
         {label}
       </label>
@@ -112,15 +112,7 @@ PillInput.displayName = "PillInput";
 
 function TagChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span
-      className="
-        inline-flex items-center gap-1.5 px-3 py-1.5
-        rounded-full text-xs font-semibold
-        bg-gradient-to-r from-indigo-100 to-violet-100
-        text-indigo-700 border border-indigo-200/50
-        shadow-sm animate-fadeIn
-      "
-    >
+    <span className="chip-premium chip-premium-primary animate-fadeIn">
       <i className="fas fa-hashtag text-[9px] opacity-60" />
       {label}
       <button
@@ -346,7 +338,7 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
                 type="button"
                 onClick={addTag}
                 disabled={!tagInput.trim()}
-                className="shrink-0 w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 hover:bg-indigo-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-90"
+                className="shrink-0 w-9 h-9 rounded-xl bg-indigo-50 text-indigo-500 hover:bg-indigo-100 border border-indigo-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-90"
               >
                 <i className="fas fa-plus text-xs" />
               </button>
