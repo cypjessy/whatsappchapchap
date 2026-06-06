@@ -196,6 +196,13 @@ export default function BookingsPage() {
     style: headerScrolled ? 'dark' : 'light'
   });
 
+  // Listen for quick action from bottom nav
+  useEffect(() => {
+    const handleNewBooking = () => setModalOpen(true);
+    window.addEventListener('open-modal:new-booking', handleNewBooking);
+    return () => window.removeEventListener('open-modal:new-booking', handleNewBooking);
+  }, []);
+
   // Register modals for Android back button handling
   useModalBackHandler(modalOpen, () => setModalOpen(false));
   useModalBackHandler(editModalOpen, () => setEditModalOpen(false));

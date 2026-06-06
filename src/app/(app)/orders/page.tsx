@@ -15,6 +15,9 @@ import {
   customerService,
   Customer,
   inventoryService,
+  shippingService,
+  businessProfileService,
+  BusinessProfile,
 } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 import { app as firebaseApp } from "@/lib/firebase";
@@ -46,6 +49,7 @@ import OrderCard from "./components/OrderCard";
 import OrderDetailModal from "./components/OrderDetailModal";
 import EditOrderModal from "./components/EditOrderModal";
 import NewOrderModal from "./components/NewOrderModal";
+import PrintInvoiceModal from "./components/PrintInvoiceModal";
 import CancellationRequests from "./components/CancellationRequests";
 import OrderTabSwitcher from "./components/OrderTabSwitcher";
 import PageHeaderCard from "@/components/PageHeaderCard";
@@ -200,6 +204,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [pickupStations, setPickupStations] = useState<any[]>([]);
   const [cancellationRequests, setCancellationRequests] = useState<any[]>([]);
   const [counts, setCounts] = useState({
     all: 0,
@@ -235,12 +240,24 @@ export default function OrdersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  // Business profile for invoice printing
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+
+  // Listen for quick action from bottom nav
+  useEffect(() => {
+    const handleNewOrder = () => setNewOrderModalOpen(true);
+    window.addEventListener('open-modal:new-order', handleNewOrder);
+    return () => window.removeEventListener('open-modal:new-order', handleNewOrder);
+  }, []);
 
   // Register modals for Android back button handling
   useModalBackHandler(modalOpen, () => setModalOpen(false));
   useModalBackHandler(editModalOpen, () => setEditModalOpen(false));
   useModalBackHandler(newOrderModalOpen, () => setNewOrderModalOpen(false));
+  useModalBackHandler(printModalOpen, () => setPrintModalOpen(false));
 
   // Cancellation
   const [cancellationFilter, setCancellationFilter] = useState<
@@ -344,6 +361,16 @@ export default function OrdersPage() {
     }
   }, [user]);
 
+  const loadPickupStations = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await shippingService.getPickupStations(user);
+      setPickupStations(data);
+    } catch (error) {
+      console.error("Error loading pickup stations:", error);
+    }
+  }, [user]);
+
   const loadCancellationRequests = useCallback(async () => {
     if (!user) return;
     try {
@@ -367,6 +394,16 @@ export default function OrdersPage() {
     }
   }, [user]);
 
+  const loadBusinessProfile = useCallback(async () => {
+    if (!user) return;
+    try {
+      const profile = await businessProfileService.getProfile(user);
+      setBusinessProfile(profile);
+    } catch (error) {
+      console.error("Error loading business profile:", error);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     loadOrders();
@@ -374,7 +411,9 @@ export default function OrdersPage() {
     loadProducts();
     loadCustomers();
     loadCancellationRequests();
-  }, [user, loadOrders, loadCounts, loadProducts, loadCustomers, loadCancellationRequests]);
+    loadPickupStations();
+    loadBusinessProfile();
+  }, [user, loadOrders, loadCounts, loadProducts, loadCustomers, loadCancellationRequests, loadPickupStations, loadBusinessProfile]);
 
   // ─── Filtered Orders ────────────────────────────────────────────────────────
 
@@ -567,134 +606,8 @@ export default function OrdersPage() {
   );
 
   const handlePrintInvoice = useCallback((order: Order) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invoice #${order.orderNumber || order.id.substring(0, 8)}</title>
-        <style>
-          body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #1e293b; }
-          .back-button { 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            padding: 10px 20px; 
-            background: #25D366; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin-bottom: 20px;
-            text-decoration: none;
-            transition: all 0.2s;
-          }
-          .back-button:hover { background: #128C7E; transform: translateY(-1px); }
-          .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #25D366; padding-bottom: 20px; }
-          .logo { font-size: 32px; font-weight: 900; color: #25D366; letter-spacing: -1px; }
-          .invoice-meta { display: flex; justify-content: space-between; margin: 20px 0; padding: 20px; background: #f8fafc; border-radius: 12px; }
-          table { width: 100%; border-collapse: collapse; margin: 30px 0; }
-          th { background: #f8fafc; padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; border-bottom: 2px solid #e2e8f0; }
-          td { padding: 16px 12px; border-bottom: 1px solid #e2e8f0; }
-          .total-row { font-size: 20px; font-weight: 900; color: #25D366; border-top: 3px solid #e2e8f0; }
-          .footer { margin-top: 60px; text-align: center; color: #64748b; font-size: 14px; }
-          @media print { 
-            body { padding: 0; } 
-            .back-button { display: none !important; }
-          }
-        </style>
-      </head>
-      <body>
-        <button class="back-button" onclick="window.close()">
-          <span>←</span>
-          <span>Back to Orders</span>
-        </button>
-        
-        <div class="header">
-          <div class="logo">INVOICE</div>
-          <div style="color: #64748b; margin-top: 8px;">Order #${order.orderNumber || order.id.substring(0, 8)}</div>
-          <div style="color: #94a3b8; font-size: 14px;">${formatDate(order.createdAt)}</div>
-        </div>
-        
-        <div class="invoice-meta">
-          <div>
-            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Billed To</div>
-            <div style="font-weight: 700;">${order.customerName || "Customer"}</div>
-            <div style="color: #64748b; font-size: 14px;">${order.customerPhone || "N/A"}</div>
-            <div style="color: #64748b; font-size: 14px;">${order.customerEmail || ""}</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Ship To</div>
-            <div style="color: #64748b; font-size: 14px;">${order.deliveryAddress || order.customerAddress || "N/A"}</div>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th style="text-align: right;">Price</th>
-              <th style="text-align: center;">Qty</th>
-              <th style="text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(order.products || [])
-              .map(
-                (p) => `
-              <tr>
-                <td>
-                  <div style="font-weight: 600;">${p.name}</div>
-                </td>
-                <td style="text-align: right;">${formatCurrency(p.price)}</td>
-                <td style="text-align: center;">${p.quantity}</td>
-                <td style="text-align: right; font-weight: 700;">${formatCurrency(p.price * p.quantity)}</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-
-        <div style="margin-left: auto; width: 300px;">
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b;">
-            <span>Subtotal</span>
-            <span style="font-weight: 600;">${formatCurrency(order.subtotal || 0)}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b;">
-            <span>Shipping</span>
-            <span style="font-weight: 600;">${formatCurrency(order.shipping || 0)}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b;">
-            <span>Tax</span>
-            <span style="font-weight: 600;">${formatCurrency(order.tax || 0)}</span>
-          </div>
-          ${order.discount ? `
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #10b981;">
-            <span>Discount</span>
-            <span style="font-weight: 600;">-${formatCurrency(order.discount)}</span>
-          </div>
-          ` : ""}
-          <div class="total-row" style="display: flex; justify-content: space-between; padding: 16px 0; margin-top: 8px;">
-            <span>Total</span>
-            <span>${formatCurrency(order.total || 0)}</span>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Thank you for your business!</p>
-          <p style="font-size: 12px; margin-top: 8px;">This is a computer-generated invoice and does not require a signature.</p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
+    setSelectedOrder(order);
+    setPrintModalOpen(true);
   }, []);
 
   const handleDuplicateOrder = useCallback(
@@ -977,8 +890,8 @@ export default function OrdersPage() {
           }
         }
 
-        // Send WhatsApp notification that order is confirmed & waiting to ship
-        if (formData.sendWhatsApp && createdOrder.orderNumber) {
+        // Always send WhatsApp notification that order is confirmed & waiting to ship
+        if (createdOrder.orderNumber) {
           try {
             const productName =
               formData.selectedProducts?.[0]?.name || "Order";
@@ -998,9 +911,20 @@ export default function OrdersPage() {
             if (isValidWhatsAppPhone(phone)) {
               await sendEvolutionWhatsAppMessage(phone, message, user.uid);
               console.log("✅ Manual order WhatsApp sent to:", phone);
+            } else {
+              console.warn("⚠️ Invalid WhatsApp phone, opening fallback:", phone);
+              // Open WhatsApp Web as fallback
+              const cleanPhone = normalizedPhone.replace(/[^0-9]/g, "");
+              const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+              window.open(waUrl, '_blank');
             }
           } catch (whatsappError) {
             console.error("Failed to send manual order WhatsApp:", whatsappError);
+            // Show warning toast
+            await showToast({
+              text: 'Order created but WhatsApp notification failed to send',
+              position: 'top',
+            });
           }
         }
 
@@ -1440,8 +1364,17 @@ export default function OrdersPage() {
         onClose={() => setNewOrderModalOpen(false)}
         products={products}
         customers={customers}
+        pickupStations={pickupStations}
         onCreateOrder={handleCreateOrder}
         creatingOrder={false}
+      />
+
+      <PrintInvoiceModal
+        order={selectedOrder}
+        businessProfile={businessProfile}
+        isOpen={printModalOpen}
+        onClose={() => setPrintModalOpen(false)}
+        formatDate={formatDate}
       />
     </div>
   );

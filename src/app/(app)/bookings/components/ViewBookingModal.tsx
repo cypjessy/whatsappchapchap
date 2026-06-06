@@ -291,7 +291,7 @@ export default function ViewBookingModal(props: ViewBookingModalProps) {
         {/* Sheet */}
         <div
           ref={sheetRef}
-          className={`relative w-full max-w-[560px] max-h-[92vh] md:max-h-[84vh] bg-white rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+          className={`relative w-full max-w-[560px] max-h-[92vh] md:max-h-[84vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
             isVisible ? "opacity-100 translate-y-0 md:translate-y-0 md:scale-100" : "opacity-0 translate-y-8 md:translate-y-0 md:scale-[0.96]"
           }`}
           style={{ transform: isDragging ? `translateY(${dragY}px)` : undefined }}
@@ -662,7 +662,7 @@ export default function ViewBookingModal(props: ViewBookingModalProps) {
           </div>
 
           {/* ─── FLOATING ACTION BAR ─── */}
-          <div className="shrink-0 px-5 py-3 border-t border-slate-100 bg-gradient-to-t from-white via-white to-white/95">
+          <div className="shrink-0 px-5 py-3 border-t border-slate-100 bg-gradient-to-t from-white via-white to-white/95 rounded-b-3xl">
             <div className="flex gap-2">
               {/* Edit */}
               {onEdit && (

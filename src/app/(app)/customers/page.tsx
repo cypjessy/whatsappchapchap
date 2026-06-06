@@ -68,6 +68,13 @@ export default function CustomersPage() {
   const [spendingMin, setSpendingMin] = useState<number | "">("");
   const [spendingMax, setSpendingMax] = useState<number | "">("");
 
+  // Listen for quick action from bottom nav
+  useEffect(() => {
+    const handleAddCustomer = () => setShowAddModal(true);
+    window.addEventListener('open-modal:add-customer', handleAddCustomer);
+    return () => window.removeEventListener('open-modal:add-customer', handleAddCustomer);
+  }, []);
+
   // Register modals for Android back button handling
   useModalBackHandler(showModal, () => setShowModal(false));
   useModalBackHandler(showAddModal, () => { setShowAddModal(false); });
@@ -113,7 +120,7 @@ export default function CustomersPage() {
     }
   }, [user, loadCustomers]);
 
-  const saveNewCustomer = async (data: { firstName: string; lastName: string; email: string; phone: string; status: string; location: string; preferredStyle: string; notes: string; tags: string[] }) => {
+  const saveNewCustomer = async (data: { firstName: string; lastName: string; phone: string; status: string; location: string }) => {
     if (!user) return;
     if (!data.firstName.trim() || !data.lastName.trim() || !data.phone.trim()) return;
     setSavingCustomer(true);
@@ -125,10 +132,7 @@ export default function CustomersPage() {
       await customerService.createClient(user, {
         name: fullName,
         phone: fullPhone,
-        email: data.email.trim() || undefined,
         location: data.location.trim() || undefined,
-        notes: data.notes.trim() || undefined,
-        preferredStyle: data.preferredStyle.trim() || undefined,
         initials: `${data.firstName.charAt(0)}${data.lastName.charAt(0)}`.toUpperCase(),
         status: data.status as Client["status"],
         verified: false,
@@ -136,7 +140,6 @@ export default function CustomersPage() {
         totalSpent: 0,
         rating: 0,
         services: [],
-        tags: data.tags.length > 0 ? data.tags : undefined,
       });
 
       // Send WhatsApp welcome message to new customer
@@ -175,10 +178,17 @@ export default function CustomersPage() {
       await showToastNative({ text: 'Customer added successfully', duration: 'short' });
       loadCustomers();
       setShowAddModal(false);
-    } catch (error) {
-      console.error("Error creating customer:", error);
+    } catch (error: any) {
+      console.error("🚨 Error creating customer:", error);
+      console.error("   Message:", error?.message || error?.toString());
+      console.error("   Code:", error?.code);
       await notificationError();
-      await showToastNative({ text: 'Failed to add customer', position: 'top' });
+      const errorMsg = error?.code === 'permission-denied'
+        ? 'Permission denied — check Firestore rules'
+        : error?.message?.includes('network')
+        ? 'Network error — check your connection'
+        : 'Failed to add customer';
+      await showToastNative({ text: errorMsg, position: 'top' });
     } finally {
       setSavingCustomer(false);
     }

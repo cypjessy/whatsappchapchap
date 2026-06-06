@@ -143,6 +143,17 @@ export default function OrderDetailModal({
   const orderNumber = order.orderNumber || order.id.substring(0, 8);
   const statusBadge = getStatusBadge(order.status);
 
+  // Resolve product image from the productImages map
+  const getProductImage = (p: { productId?: string; name?: string; imageUrl?: string }): string | undefined => {
+    if (p.imageUrl) return p.imageUrl;
+    if (p.productId && productImages[p.productId]) return productImages[p.productId];
+    if (p.name) {
+      const nameLookup = productImages[`name:${p.name.toLowerCase().trim()}`];
+      if (nameLookup) return nameLookup;
+    }
+    return undefined;
+  };
+
   const handleAction = async (action: string, handler: () => any) => {
     setLoadingAction(action);
     try { await handler(); } finally { setLoadingAction(null); }
@@ -219,18 +230,36 @@ export default function OrderDetailModal({
 
           <SectionCard icon="fa-box" title="Items">
             <div className="space-y-2">
-              {order.products?.map((p, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-2.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
-                  <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center border border-outline-variant/30 shrink-0">
-                    <i className="fas fa-box text-on-surface-variant opacity-30 text-xs" />
+              {order.products?.map((p, idx) => {
+                const imgSrc = getProductImage(p);
+                return (
+                  <div key={idx} className="flex items-center gap-3 p-2.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
+                    {/* Product image */}
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant shadow-sm border border-outline-variant/30">
+                      {imgSrc ? (
+                        <img
+                          src={imgSrc}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            img.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <i className="fas fa-box text-on-surface-variant opacity-30 text-sm" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-xs text-on-surface truncate">{p.name}</h4>
+                      <p className="text-[10px] text-on-surface-variant">{formatCurrency(p.price)} × {p.quantity}</p>
+                    </div>
+                    <div className="text-right font-black text-xs text-on-surface">{formatCurrency(p.price * p.quantity)}</div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-xs text-on-surface truncate">{p.name}</h4>
-                    <p className="text-[10px] text-on-surface-variant">{formatCurrency(p.price)} × {p.quantity}</p>
-                  </div>
-                  <div className="text-right font-black text-xs text-on-surface">{formatCurrency(p.price * p.quantity)}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </SectionCard>
 

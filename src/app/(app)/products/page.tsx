@@ -300,6 +300,13 @@ export default function ProductsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Listen for quick action from bottom nav
+  useEffect(() => {
+    const handleAddProduct = () => setAddProductModalOpen(true);
+    window.addEventListener('open-modal:add-product', handleAddProduct);
+    return () => window.removeEventListener('open-modal:add-product', handleAddProduct);
+  }, []);
+
   // Modals back handler
   useModalBackHandler(productModalOpen, () => setProductModalOpen(false));
   useModalBackHandler(addProductModalOpen, () => setAddProductModalOpen(false));

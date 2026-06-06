@@ -105,7 +105,7 @@ function ProductThumbnail({ image, name, fallback }: { image?: string; name: str
   const [error, setError] = useState(false);
   if (image && !error) {
     return (
-      <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant ring-1 ring-outline/20">
+      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-surface-variant ring-1 ring-outline/20 shadow-sm">
         <img
           src={image}
           alt={name}
@@ -117,7 +117,7 @@ function ProductThumbnail({ image, name, fallback }: { image?: string; name: str
     );
   }
   return (
-    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f0fdf4] to-[#e0e7ff] flex items-center justify-center text-base flex-shrink-0 ring-1 ring-outline/20">
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#f0fdf4] to-[#e0e7ff] flex items-center justify-center text-lg flex-shrink-0 ring-1 ring-outline/20 shadow-sm">
       {fallback}
     </div>
   );

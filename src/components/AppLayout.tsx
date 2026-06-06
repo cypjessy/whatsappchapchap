@@ -41,16 +41,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const handleQuickAction = (actionId: string) => {
     setShowFabMenu(false);
     
-    // For stability and to unblock the build, we navigate to the page with a query param.
-    // Each page already has robust logic to open its respective "New" modal when this param is present.
-    if (actionId === "new-order") {
-      router.push("/orders?new=true");
-    } else if (actionId === "new-booking") {
-      router.push("/bookings?new=true");
-    } else if (actionId === "add-product") {
-      router.push("/products?new=true");
-    } else if (actionId === "add-customer") {
-      router.push("/customers?new=true");
+    // Dispatch custom events for each page to open their modals directly
+    // Each page listens for these events and opens the respective modal
+    const eventMap: Record<string, string> = {
+      "new-order": "open-modal:new-order",
+      "new-booking": "open-modal:new-booking",
+      "add-product": "open-modal:add-product",
+      "add-customer": "open-modal:add-customer",
+    };
+    
+    const eventName = eventMap[actionId];
+    if (eventName) {
+      window.dispatchEvent(new CustomEvent(eventName));
     }
   };
 

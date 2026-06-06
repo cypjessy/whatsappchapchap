@@ -72,6 +72,26 @@ function Checkbox({
   );
 }
 
+function ProductImageCell({ image, name }: { image?: string | null; name: string }) {
+  const [error, setError] = useState(false);
+  if (image && !error) {
+    return (
+      <img
+        src={image}
+        alt={name}
+        className="w-12 h-12 rounded-xl object-cover flex-shrink-0 bg-surface-variant shadow-sm ring-1 ring-outline/20"
+        onError={() => setError(true)}
+        loading="lazy"
+      />
+    );
+  }
+  return (
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0 shadow-sm ring-1 ring-outline/20">
+      📦
+    </div>
+  );
+}
+
 function ActionButton({
   icon,
   color,
@@ -411,33 +431,17 @@ export default function OrderTable({
                     {/* Products */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        {(function() {
-                          // Resolve product image: direct field, productId map, or name-based lookup
+                        {(() => {
                           const imgSrc = order.productImage ||
                             (order.products?.[0]?.productId && productImages[order.products[0].productId]) ||
                             (order.products?.[0]?.name && productImages[`name:${order.products[0].name.toLowerCase().trim()}`]) ||
                             (order.productName && productImages[`name:${order.productName.toLowerCase().trim()}`]) ||
                             null;
-                          
-                          if (imgSrc) {
-                            return (
-                              <img
-                                src={imgSrc}
-                                alt={order.products?.[0]?.name || order.productName || "Product"}
-                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface-variant shadow-sm"
-                                onError={(e) => {
-                                  const img = e.target as HTMLImageElement;
-                                  img.style.display = 'none';
-                                  const fallback = img.nextElementSibling as HTMLElement;
-                                  if (fallback) fallback.style.display = 'flex';
-                                }}
-                              />
-                            );
-                          }
                           return (
-                            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] flex items-center justify-center text-xl flex-shrink-0 shadow-sm">
-                              📦
-                            </div>
+                            <ProductImageCell
+                              image={imgSrc}
+                              name={order.products?.[0]?.name || order.productName || "Product"}
+                            />
                           );
                         })()}
                         <div className="min-w-0">

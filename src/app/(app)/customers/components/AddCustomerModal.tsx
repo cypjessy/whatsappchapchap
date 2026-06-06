@@ -7,13 +7,9 @@ import { useState, useRef, useEffect, forwardRef } from "react";
 interface NewCustomerData {
   firstName: string;
   lastName: string;
-  email: string;
   phone: string;
   status: "new" | "active" | "vip" | "inactive";
   location: string;
-  preferredStyle: string;
-  notes: string;
-  tags: string[];
 }
 
 interface AddCustomerModalProps {
@@ -110,37 +106,16 @@ const PillInput = forwardRef<HTMLInputElement, {
 });
 PillInput.displayName = "PillInput";
 
-function TagChip({ label, onRemove }: { label: string; onRemove: () => void }) {
-  return (
-    <span className="chip-premium chip-premium-primary animate-fadeIn">
-      <i className="fas fa-hashtag text-[9px] opacity-60" />
-      {label}
-      <button
-        type="button"
-        onClick={onRemove}
-        className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-indigo-200/60 transition-colors"
-      >
-        <i className="fas fa-times text-[8px]" />
-      </button>
-    </span>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AddCustomerModal({ onClose, onSave, saving }: AddCustomerModalProps) {
   const [data, setData] = useState<NewCustomerData>({
     firstName: "",
     lastName: "",
-    email: "",
     phone: "",
     status: "new",
     location: "",
-    preferredStyle: "",
-    notes: "",
-    tags: [],
   });
-  const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const firstNameRef = useRef<HTMLInputElement>(null);
 
@@ -156,15 +131,6 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
     }
   };
 
-  const addTag = () => {
-    const t = tagInput.trim();
-    if (!t || data.tags.includes(t)) return;
-    updateField("tags", [...data.tags, t]);
-    setTagInput("");
-  };
-
-  const removeTag = (tag: string) => updateField("tags", data.tags.filter((t) => t !== tag));
-
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!data.firstName.trim()) errs.firstName = "Required";
@@ -172,7 +138,6 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
     const clean = data.phone.replace(/[^0-9]/g, "");
     if (!clean) errs.phone = "Required";
     else if (clean.length < 6) errs.phone = "Min 6 digits";
-    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errs.email = "Invalid email";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -275,90 +240,29 @@ export default function AddCustomerModal({ onClose, onSave, saving }: AddCustome
 
           {/* Contact */}
           <FieldGroup label="Contact" accent>
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-indigo-500 shrink-0">+254</span>
-                  <PillInput
-                    value={data.phone}
-                    onChange={(v) => updateField("phone", v.replace(/[^0-9]/g, ""))}
-                    placeholder="712 345 678"
-                  />
-                </div>
-                {errors.phone && (
-                  <p className="text-[10px] text-rose-500 font-semibold mt-1 flex items-center gap-1">
-                    <i className="fas fa-circle text-[4px]" />{errors.phone}
-                  </p>
-                )}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-indigo-500 shrink-0">+254</span>
+                <PillInput
+                  value={data.phone}
+                  onChange={(v) => updateField("phone", v.replace(/[^0-9]/g, ""))}
+                  placeholder="712 345 678"
+                />
               </div>
-              <PillInput
-                value={data.email}
-                onChange={(v) => updateField("email", v)}
-                placeholder="Email address (optional)"
-              />
-            </div>
-          </FieldGroup>
-
-          {/* Location & Style */}
-          <div className="grid grid-cols-2 gap-3">
-            <FieldGroup label="Location">
-              <PillInput
-                value={data.location}
-                onChange={(v) => updateField("location", v)}
-                placeholder="Nairobi, Kenya"
-              />
-            </FieldGroup>
-            <FieldGroup label="Style">
-              <PillInput
-                value={data.preferredStyle}
-                onChange={(v) => updateField("preferredStyle", v)}
-                placeholder="e.g. Braids, Casual"
-              />
-            </FieldGroup>
-          </div>
-
-          {/* Tags */}
-          <FieldGroup label="Tags">
-            <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
-              {data.tags.map((tag, i) => (
-                <TagChip key={`${tag}-${i}`} label={tag} onRemove={() => removeTag(tag)} />
-              ))}
-              {data.tags.length === 0 && (
-                <span className="text-xs text-[var(--md-sys-color-outline)] italic">No tags yet</span>
+              {errors.phone && (
+                <p className="text-[10px] text-rose-500 font-semibold mt-1 flex items-center gap-1">
+                  <i className="fas fa-circle text-[4px]" />{errors.phone}
+                </p>
               )}
             </div>
-            <div className="flex gap-1.5">
-              <PillInput
-                value={tagInput}
-                onChange={setTagInput}
-                placeholder="Type and press Enter..."
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); }}}
-              />
-              <button
-                type="button"
-                onClick={addTag}
-                disabled={!tagInput.trim()}
-                className="shrink-0 w-9 h-9 rounded-xl bg-indigo-50 text-indigo-500 hover:bg-indigo-100 border border-indigo-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-90"
-              >
-                <i className="fas fa-plus text-xs" />
-              </button>
-            </div>
           </FieldGroup>
 
-          {/* Notes */}
-          <FieldGroup label="Notes">
-            <textarea
-              value={data.notes}
-              onChange={(e) => updateField("notes", e.target.value)}
-              placeholder="Anything special about this customer?"
-              rows={2}
-              className="
-                w-full px-3 py-2 bg-[var(--md-sys-color-surface)] rounded-xl text-sm font-medium resize-none
-                text-[var(--md-sys-color-on-surface)] placeholder:text-[var(--md-sys-color-outline)]
-                border border-[var(--md-sys-color-outline-variant)]
-                focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30
-                transition-all duration-200
-              "
+          {/* Location */}
+          <FieldGroup label="Location" accent>
+            <PillInput
+              value={data.location}
+              onChange={(v) => updateField("location", v)}
+              placeholder="Nairobi, Kenya"
             />
           </FieldGroup>
         </div>

@@ -6,6 +6,7 @@ import { serviceService, bookingService, customerService, Booking, Service } fro
 import { formatCurrency } from "@/lib/currency";
 import { sendEvolutionWhatsAppMessage } from "@/utils/sendWhatsApp";
 import { getBookingStatusMessage } from "@/utils/bookingMessages";
+import { normalizePhone } from "@/utils/phoneUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -207,11 +208,14 @@ export default function ManualBookingModal({
   const [errors, setErrors] = useState<FormErrors>({});
   const [saveCustomer, setSaveCustomer] = useState(true);
   const [sendWhatsApp, setSendWhatsApp] = useState(true);
+
+  // Phone prefix constant
+  const PHONE_PREFIX = "254";
   const customerRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [clientName, setClientName] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
+  const [clientPhone, setClientPhone] = useState(PHONE_PREFIX);
   const [clientEmail, setClientEmail] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -258,7 +262,7 @@ export default function ManualBookingModal({
 
   const selectCustomer = useCallback((customer: CustomerResult) => {
     setClientName(customer.name);
-    setClientPhone(customer.phone);
+    setClientPhone(normalizePhone(customer.phone));
     setClientEmail(customer.email || "");
     setCustomerSearch("");
     setShowCustomerDropdown(false);
@@ -288,7 +292,7 @@ export default function ManualBookingModal({
 
   const resetForm = useCallback(() => {
     setClientName("");
-    setClientPhone("");
+    setClientPhone(PHONE_PREFIX);
     setClientEmail("");
     setCustomerSearch("");
     setShowCustomerDropdown(false);
@@ -388,25 +392,23 @@ export default function ManualBookingModal({
 
       const createdBooking = await bookingService.createBooking(user, bookingData);
 
-      // Send WhatsApp notification
-      if (sendWhatsApp) {
-        try {
-          const message = getBookingStatusMessage(
-            "manual_booking",
-            clientName,
-            createdBooking.bookingNumber || createdBooking.id,
-            selectedService.name,
-            selectedDate,
-            selectedTime,
-            "Not specified",
-            formatCurrency(price)
-          );
+      // Always send WhatsApp notification
+      try {
+        const message = getBookingStatusMessage(
+          "manual_booking",
+          clientName,
+          createdBooking.bookingNumber || createdBooking.id,
+          selectedService.name,
+          selectedDate,
+          selectedTime,
+          location || "Not specified",
+          formatCurrency(price)
+        );
 
-          await sendEvolutionWhatsAppMessage(clientPhone, message, `tenant_${user.uid}`);
-        } catch (err) {
-          console.error("Error sending WhatsApp notification:", err);
-          // Non-blocking — booking already created
-        }
+        await sendEvolutionWhatsAppMessage(clientPhone, message, `tenant_${user.uid}`);
+      } catch (err) {
+        console.error("Error sending WhatsApp notification:", err);
+        // Non-blocking — booking already created
       }
 
       // Save customer to database if toggled
@@ -555,12 +557,38 @@ export default function ManualBookingModal({
                 />
               </FormField>
               <FormField label="Phone Number" required error={errors.clientPhone}>
-                <Input
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="+254 700 000 000"
-                  error={errors.clientPhone}
-                />
+                <div className="relative">
+                  <div className="flex items-stretch">
+                    <div className="flex items-center px-3.5 bg-[#f1f5f9] border-2 border-r-0 border-outline rounded-l-xl text-sm font-bold text-on-surface-variant shrink-0">
+                      <i className="fas fa-phone-alt text-[10px] mr-1.5 text-outline" />
+                      +{PHONE_PREFIX}
+                    </div>
+                    <input
+                      type="tel"
+                      value={clientPhone.startsWith(PHONE_PREFIX) ? clientPhone.slice(PHONE_PREFIX.length) : clientPhone}
+                      onChange={(e) => {
+                        // Only allow digits
+                        const digits = e.target.value.replace(/\D/g, "");
+                        setClientPhone(PHONE_PREFIX + digits);
+                      }}
+                      placeholder="700 000 000"
+                      className={`
+                        flex-1 px-3 py-3 rounded-r-xl border-2 transition-all duration-200 text-sm
+                        focus:outline-none min-w-0
+                        ${errors.clientPhone
+                          ? "border-[#ef4444] bg-[#ef4444]/5"
+                          : "border-outline focus:border-[#8b5cf6] focus:shadow-md focus:shadow-[#8b5cf6]/10"
+                        }
+                      `}
+                    />
+                  </div>
+                  {errors.clientPhone && (
+                    <p className="text-[11px] text-[#ef4444] font-medium flex items-center gap-1 mt-1.5 animate-fadeIn">
+                      <i className="fas fa-exclamation-circle text-[10px]" />
+                      {errors.clientPhone}
+                    </p>
+                  )}
+                </div>
               </FormField>
               <FormField label="Email Address">
                 <Input
@@ -793,34 +821,23 @@ export default function ManualBookingModal({
               />
             </FormField>
 
-            {/* Send WhatsApp toggle */}
-            <div className="mt-4 flex items-center justify-between p-3 bg-[#F0FDF4] rounded-xl border border-[#10b981]/20">
+            {/* WhatsApp notification — always sent */}
+            <div className="mt-4 p-3 bg-[#F0FDF4] rounded-xl border border-[#10b981]/20">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center shrink-0">
                   <i className="fab fa-whatsapp text-[#10b981] text-sm" />
                 </div>
-                <div>
-                  <div className="text-sm font-semibold text-on-surface">Send WhatsApp Notification</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+                    WhatsApp Notification
+                    <span className="px-1.5 py-0.5 rounded-full bg-[#10b981] text-white text-[8px] font-bold uppercase tracking-wider">Always on</span>
+                  </div>
                   <div className="text-[11px] text-on-surface-variant">
-                    Notify client that booking is confirmed &amp; paid
+                    Client will be notified when booking is confirmed
                   </div>
                 </div>
+                <i className="fas fa-check-circle text-[#10b981] text-sm" />
               </div>
-              <button
-                type="button"
-                onClick={() => setSendWhatsApp(!sendWhatsApp)}
-                className={`
-                  relative w-12 h-6 rounded-full transition-all duration-200
-                  ${sendWhatsApp ? "bg-[#10b981]" : "bg-outline-variant"}
-                `}
-              >
-                <div
-                  className={`
-                    absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200
-                    ${sendWhatsApp ? "left-[26px]" : "left-0.5"}
-                  `}
-                />
-              </button>
             </div>
           </SectionCard>
         </div>

@@ -102,14 +102,14 @@ function ProductImage({ src, name }: { src?: string; name: string }) {
 
   if (!src || error) {
     return (
-      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-2xl bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] shrink-0 border border-white/50 shadow-sm">
+      <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-xl md:text-3xl bg-gradient-to-br from-[#DCF8C6] to-[#e0e7ff] shrink-0 border border-white/50 shadow-sm">
         📦
       </div>
     );
   }
 
   return (
-    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
+    <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden shrink-0 ring-2 ring-white shadow-md">
       <img
         src={src}
         alt={name}
@@ -345,8 +345,7 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
               {/* Left status accent bar */}
               <div className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full ${status.dot}`} />
 
-              <div className="p-4 pl-5">
-                <div className="flex items-start gap-3">
+              <div className="p-4 pl-5">                  <div className="flex items-start gap-3.5">
                   <ProductImage src={order.productImage} name={order.productName} />
                   <div className="flex-1 min-w-0">
                     {/* Top row: Order ID + Status */}
@@ -429,8 +428,8 @@ export function RecentOrders({ refreshTrigger, maxItems = 5, showViewAll = true 
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <ProductImage src={order.productImage} name={order.productName} />
-                      <div>
-                        <p className="font-semibold text-sm text-gray-800 group-hover:text-gray-900 transition-colors">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-gray-800 group-hover:text-gray-900 transition-colors truncate max-w-[200px]">
                           {order.productName}
                         </p>
                       </div>

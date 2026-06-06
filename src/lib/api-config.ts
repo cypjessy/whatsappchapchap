@@ -78,8 +78,14 @@ export function getApiBaseUrl(): string {
  */
 export function buildApiUrl(path: string): string {
   const base = getApiBaseUrl();
-  // Ensure trailing slash to avoid CORS-breaking 308 redirect from Vercel
-  const cleanPath = (path.startsWith('/') ? path : `/${path}`).replace(/\/?$/, '/');
+  
+  // Split query string from path to handle trailing slash correctly
+  // The trailing slash must be added BEFORE the query string (e.g. /api/endpoint/?key=val)
+  // so Vercel doesn't issue a CORS-breaking 308 redirect.
+  const [pathPart, queryString] = path.split('?');
+  const cleanPathPart = (pathPart.startsWith('/') ? pathPart : `/${pathPart}`).replace(/\/?$/, '/');
+  const cleanPath = queryString != null ? `${cleanPathPart}?${queryString}` : cleanPathPart;
+  
   if (!base) return cleanPath;
   return `${base.replace(/\/$/, '')}${cleanPath}`;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Product, Customer } from "@/lib/db";
+import { Product, Customer, PickupStation } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -20,6 +20,8 @@ interface NewOrderForm {
   customerEmail: string;
   customerAddress: string;
   deliveryMethod: "pickup" | "delivery";
+  selectedPickupStationId: string;
+  selectedPickupStationName: string;
   deliveryAddress: string;
   expectedDate: string;
   paymentMethod: string;
@@ -36,6 +38,7 @@ interface NewOrderModalProps {
   onClose: () => void;
   products: Product[];
   customers: Customer[];
+  pickupStations: PickupStation[];
   onCreateOrder: (orderData: NewOrderForm) => Promise<void>;
   creatingOrder: boolean;
 }
@@ -127,6 +130,7 @@ export default function NewOrderModal({
   onClose,
   products,
   customers,
+  pickupStations,
   onCreateOrder,
   creatingOrder,
 }: NewOrderModalProps) {
@@ -136,6 +140,8 @@ export default function NewOrderModal({
     customerEmail: "",
     customerAddress: "",
     deliveryMethod: "pickup",
+    selectedPickupStationId: "",
+    selectedPickupStationName: "",
     deliveryAddress: "",
     expectedDate: "",
     paymentMethod: "Cash",
@@ -166,6 +172,17 @@ export default function NewOrderModal({
     { id: "Other", icon: "fa-ellipsis-h" },
   ], []);
 
+  // Group pickup stations by county → town for the selector
+  const pickupStationsByCounty = useMemo(() => {
+    const grouped: Record<string, Record<string, PickupStation[]>> = {};
+    for (const station of pickupStations) {
+      if (!grouped[station.county]) grouped[station.county] = {};
+      if (!grouped[station.county][station.town]) grouped[station.county][station.town] = [];
+      grouped[station.county][station.town].push(station);
+    }
+    return grouped;
+  }, [pickupStations]);
+
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -175,6 +192,8 @@ export default function NewOrderModal({
         customerEmail: "",
         customerAddress: "",
         deliveryMethod: "pickup",
+        selectedPickupStationId: "",
+        selectedPickupStationName: "",
         deliveryAddress: "",
         expectedDate: "",
         paymentMethod: "Cash",
@@ -690,7 +709,7 @@ export default function NewOrderModal({
               <div className="flex gap-2 mb-3">
                 <button
                   type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, deliveryMethod: "pickup", deliveryAddress: prev.customerAddress || "" }))}
+                  onClick={() => setForm((prev) => ({ ...prev, deliveryMethod: "pickup", selectedPickupStationId: "", selectedPickupStationName: "", deliveryAddress: "" }))}
                   className={`flex-1 flex items-center justify-center gap-2 p-3 border-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                     form.deliveryMethod === "pickup"
                       ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366]"
@@ -702,7 +721,7 @@ export default function NewOrderModal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, deliveryMethod: "delivery" }))}
+                  onClick={() => setForm((prev) => ({ ...prev, deliveryMethod: "delivery", selectedPickupStationId: "", selectedPickupStationName: "" }))}
                   className={`flex-1 flex items-center justify-center gap-2 p-3 border-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                     form.deliveryMethod === "delivery"
                       ? "border-[#25D366] bg-[rgba(37,211,102,0.05)] text-[#25D366]"
@@ -713,6 +732,97 @@ export default function NewOrderModal({
                   Delivery
                 </button>
               </div>
+
+              {/* Pickup station selector - choose from saved stations */}
+              {form.deliveryMethod === "pickup" && pickupStations.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  <label className="block text-xs font-semibold text-on-surface-variant">Select Pickup Station *</label>
+                  <div className="border-2 border-outline-variant rounded-xl overflow-hidden max-h-56 overflow-y-auto scrollbar-thin">
+                    {Object.entries(pickupStationsByCounty).map(([county, towns]) => (
+                      <div key={county}>
+                        <div className="px-3 py-2 bg-surface-variant/50 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant border-b border-outline-variant">
+                          <i className="fas fa-map-pin mr-1.5" />{county}
+                        </div>
+                        {Object.entries(towns).map(([town, stations]) => (
+                          <div key={`${county}-${town}`}>
+                            <div className="px-4 py-1.5 text-[10px] font-semibold text-on-surface-variant/60 border-b border-outline-variant/30">
+                              {town}
+                            </div>
+                            {stations.map((station) => {
+                              const isSelected = form.selectedPickupStationId === station.id;
+                              return (
+                                <button
+                                  key={station.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      selectedPickupStationId: station.id,
+                                      selectedPickupStationName: station.stationName,
+                                      deliveryAddress: `${station.stationName}, ${station.town}, ${station.county}${station.address ? ` - ${station.address}` : ""}`,
+                                    }));
+                                  }}
+                                  className={`w-full flex items-center gap-3 p-2.5 border-b border-outline-variant last:border-b-0 text-left transition-colors ${
+                                    isSelected
+                                      ? "bg-[rgba(37,211,102,0.08)] border-l-2 border-l-[#25D366]"
+                                      : "hover:bg-surface"
+                                  }`}
+                                >
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                    isSelected ? "bg-[#25D366] text-white" : "bg-surface-variant text-on-surface-variant"
+                                  }`}>
+                                    <i className={`fas ${isSelected ? "fa-check" : "fa-location-dot"} text-xs`} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-semibold text-xs truncate">{station.stationName}</div>
+                                    <div className="text-[10px] text-on-surface-variant truncate">
+                                      {station.address}
+                                      {station.contactPhone && ` • ${station.contactPhone}`}
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <i className="fas fa-check-circle text-[#25D366] text-sm" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No pickup stations message */}
+              {form.deliveryMethod === "pickup" && pickupStations.length === 0 && (
+                <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-start gap-2">
+                    <i className="fas fa-info-circle text-amber-500 mt-0.5 text-xs" />
+                    <div>
+                      <p className="text-xs font-semibold text-amber-800">No pickup stations found</p>
+                      <p className="text-[10px] text-amber-700 mt-0.5">
+                        Go to Settings &gt; Pickup Stations to add pickup locations first.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Selected pickup station summary */}
+              {form.deliveryMethod === "pickup" && form.selectedPickupStationName && (
+                <div className="mb-3 p-2.5 bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl animate-fadeIn">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
+                      <i className="fas fa-store text-[#25D366] text-xs" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-xs truncate">{form.selectedPickupStationName}</div>
+                      <div className="text-[10px] text-on-surface-variant truncate">{form.deliveryAddress}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {form.deliveryMethod === "delivery" && (
@@ -810,12 +920,24 @@ export default function NewOrderModal({
             <div>
               <SectionHeader icon="fa-cog" title="Options" />
               <div className="space-y-1.5">
-                <ToggleSwitch
-                  label="Send WhatsApp Notification"
-                  description="Alert customer their order is confirmed & waiting to ship"
-                  checked={form.sendWhatsApp}
-                  onChange={(checked) => setForm((prev) => ({ ...prev, sendWhatsApp: checked }))}
-                />
+                {/* WhatsApp notification is always sent */}
+              <div className="p-3 bg-[rgba(37,211,102,0.05)] border border-[#25D366]/30 rounded-xl">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#25D366]/10 flex items-center justify-center shrink-0">
+                    <i className="fab fa-whatsapp text-[#25D366] text-sm" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-xs text-on-surface flex items-center gap-1.5">
+                      WhatsApp Notification
+                      <span className="px-1.5 py-0.5 rounded-full bg-[#25D366] text-white text-[8px] font-bold uppercase tracking-wider">Always on</span>
+                    </div>
+                    <p className="text-[10px] text-on-surface-variant mt-0.5">
+                      Customer will be notified when order is confirmed
+                    </p>
+                  </div>
+                  <i className="fas fa-check-circle text-[#25D366] text-sm" />
+                </div>
+              </div>
                 <ToggleSwitch
                   label="Save Customer to Database"
                   description="Create a customer profile for future orders"

@@ -662,14 +662,14 @@ export default function SettingsPage() {
       <div className="mb-4 md:mb-6">
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
           {[
-            { id: "profile", label: "Business", sublabel: "Profile", icon: "fa-building", color: "from-[#8b5cf6] to-[#7c3aed]" },
-            { id: "products", label: "Product", sublabel: "Store", icon: "fa-store", color: "from-blue-500 to-indigo-500" },
-            { id: "services", label: "Services", sublabel: "", icon: "fa-concierge-bell", color: "from-purple-500 to-pink-500" },
-            { id: "shipping", label: "Shipping", sublabel: "", icon: "fa-shipping-fast", color: "from-green-500 to-teal-500" },
-            { id: "pickup-stations", label: "Pickup", sublabel: "Stations", icon: "fa-map-marker-alt", color: "from-blue-500 to-indigo-500" },
+            { id: "profile", label: "Business", sublabel: "Profile", icon: "fas fa-building", color: "from-[#8b5cf6] to-[#7c3aed]" },
+            { id: "products", label: "Product", sublabel: "Store", icon: "fas fa-store", color: "from-blue-500 to-indigo-500" },
+            { id: "services", label: "Services", sublabel: "", icon: "fas fa-bell-concierge", color: "from-purple-500 to-pink-500" },
+            { id: "shipping", label: "Shipping", sublabel: "", icon: "fas fa-truck-fast", color: "from-green-500 to-teal-500" },
+            { id: "pickup-stations", label: "Pickup", sublabel: "Stations", icon: "fas fa-map-marker-alt", color: "from-blue-500 to-indigo-500" },
             { id: "whatsapp", label: "WhatsApp", sublabel: "", icon: "fab fa-whatsapp", color: "from-[#25D366] to-[#128C7E]" },
-            { id: "payments", label: "Payment", sublabel: "Methods", icon: "fa-credit-card", color: "from-green-500 to-emerald-500" },
-            { id: "security", label: "Security", sublabel: "Biometrics", icon: "fa-fingerprint", color: "from-orange-500 to-red-500" },
+            { id: "payments", label: "Payment", sublabel: "Methods", icon: "fas fa-credit-card", color: "from-green-500 to-emerald-500" },
+            { id: "security", label: "Security", sublabel: "Biometrics", icon: "fas fa-fingerprint", color: "from-orange-500 to-red-500" },
           ].map((tab) => (
             <button
               key={tab.id}

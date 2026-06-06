@@ -1392,8 +1392,14 @@ export const clientService = {
   async createClient(user: User, client: Omit<Client, "id" | "tenantId" | "createdAt" | "updatedAt">): Promise<Client> {
     const tenantId = getTenantId(user);
     const docRef = doc(collection(db, "clients"));
+    
+    // Clean client data - remove undefined values (Firebase doesn't allow undefined)
+    const cleanClient = Object.fromEntries(
+      Object.entries(client).filter(([_, value]) => value !== undefined)
+    ) as Omit<Client, "id" | "tenantId" | "createdAt" | "updatedAt">;
+    
     const clientData: Client = {
-      ...client,
+      ...cleanClient,
       id: docRef.id,
       tenantId,
       visits: client.visits || 0,
