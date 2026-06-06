@@ -607,39 +607,43 @@ export default function CustomersPage() {
             />
           )}
 
-          {/* Mobile List View */}
-          <CustomerListView
-            customers={filteredCustomers}
-            bulkMode={bulkMode}
-            bulkSelected={bulkSelected}
-            onToggleSelection={toggleCustomerSelection}
-            onSelectCustomer={openCustomerModal}
-            onShareWhatsApp={shareCustomerWhatsApp}
-            onPrintProfile={printCustomerProfile}
-            onClearSelection={() => setBulkSelected([])}
-            getColorFromString={getColorFromString}
-            getInitials={getInitials}
-            formatCurrency={formatCurrency}
-          />
+          {/* Mobile List View — hidden on md+ */}
+          <div className="md:hidden">
+            <CustomerListView
+              customers={filteredCustomers}
+              bulkMode={bulkMode}
+              bulkSelected={bulkSelected}
+              onToggleSelection={toggleCustomerSelection}
+              onSelectCustomer={openCustomerModal}
+              onShareWhatsApp={shareCustomerWhatsApp}
+              onPrintProfile={printCustomerProfile}
+              onClearSelection={() => setBulkSelected([])}
+              getColorFromString={getColorFromString}
+              getInitials={getInitials}
+              formatCurrency={formatCurrency}
+            />
+          </div>
 
-          {/* Desktop Grid View */}
-          <CustomerGridView
-            customers={filteredCustomers}
-            bulkMode={bulkMode}
-            bulkSelected={bulkSelected}
-            onToggleSelection={toggleCustomerSelection}
-            onSelectCustomer={openCustomerModal}
-            onSendWhatsApp={sendWhatsAppMessage}
-            onShareWhatsApp={shareCustomerWhatsApp}
-            onDuplicate={handleDuplicateCustomer}
-            onPrintProfile={printCustomerProfile}
-            onBulkActivate={(id) => { handleBulkStatusUpdate('active'); toggleCustomerSelection(id); }}
-            onBulkSetVIP={(id) => { handleBulkStatusUpdate('vip'); toggleCustomerSelection(id); }}
-            onBulkDelete={(id) => { handleBulkDelete(); toggleCustomerSelection(id); }}
-            getColorFromString={getColorFromString}
-            getInitials={getInitials}
-            formatCurrency={formatCurrency}
-          />
+          {/* Desktop Grid View — only visible on md+ */}
+          <div className="hidden md:block">
+            <CustomerGridView
+              customers={filteredCustomers}
+              bulkMode={bulkMode}
+              bulkSelected={bulkSelected}
+              onToggleSelection={toggleCustomerSelection}
+              onSelectCustomer={openCustomerModal}
+              onSendWhatsApp={sendWhatsAppMessage}
+              onShareWhatsApp={shareCustomerWhatsApp}
+              onDuplicate={handleDuplicateCustomer}
+              onPrintProfile={printCustomerProfile}
+              onBulkActivate={(id) => { handleBulkStatusUpdate('active'); toggleCustomerSelection(id); }}
+              onBulkSetVIP={(id) => { handleBulkStatusUpdate('vip'); toggleCustomerSelection(id); }}
+              onBulkDelete={(id) => { handleBulkDelete(); toggleCustomerSelection(id); }}
+              getColorFromString={getColorFromString}
+              getInitials={getInitials}
+              formatCurrency={formatCurrency}
+            />
+          </div>
 
           {/* Load More */}
           {hasMoreCustomers && (

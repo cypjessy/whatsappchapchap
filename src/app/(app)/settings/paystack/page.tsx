@@ -277,16 +277,19 @@ export default function PaystackSettingsPage() {
       }
 
       const tenantId = `tenant_${user.uid}`;
+
+      // Don't send masked placeholder secret keys — they'd overwrite the real ones
+      const payload: any = { ...settings, tenantId };
+      if (payload.testSecretKey === '********') delete payload.testSecretKey;
+      if (payload.liveSecretKey === '********') delete payload.liveSecretKey;
+
       const res = await fetch(buildApiUrl("/api/settings/paystack"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...settings,
-          tenantId
-        }),
+        body: JSON.stringify(payload),
       });
       
       if (!res.ok) {

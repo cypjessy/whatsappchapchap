@@ -811,7 +811,8 @@ async function processCancellation(
       `Our team will review your request and process the refund within 24-48 hours.\n\n` +
       `You will receive a confirmation once the refund is processed.\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `0️⃣ - Back to Main Menu`
+      `0️⃣ - Back to Main Menu\n\n` +
+      `_Reply 0 for main menu_`
     );
     
     // Clear flow state
@@ -830,7 +831,8 @@ async function processCancellation(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Error processing cancellation request. Please try again or contact support.\n\n0️⃣ - Back to Main Menu`
+      `❌ Error processing cancellation request. Please try again or contact support.\n\n0️⃣ - Back to Main Menu\n\n` +
+      `_Reply 0 for main menu_`
     );
     
     // Clear flow state on error too

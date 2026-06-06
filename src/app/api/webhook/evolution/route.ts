@@ -405,8 +405,13 @@ async function getMenuActionMap(tenantId: string): Promise<(number | null)[]> {
     actionMap[display++] = 4; // Search Services
   }
 
-  actionMap[display++] = 5; // Check Order Status
-  actionMap[display++] = 6; // Check Booking Status
+  // Only show order/booking status options when the store has relevant data
+  if (hasProducts) {
+    actionMap[display++] = 5; // Check Order Status
+  }
+  if (hasServices) {
+    actionMap[display++] = 6; // Check Booking Status
+  }
 
   return actionMap;
 }
@@ -429,22 +434,27 @@ function buildMenu(
   let display = 1;
 
   if (hasProducts) {
-    lines.push(`${getNumberEmoji(display)} Browse Products`);
+    lines.push(`Reply *${display}* to Browse Products`);
     actionMap[display++] = 1;
-    lines.push(`${getNumberEmoji(display)} 🔍 Search Products`);
+    lines.push(`Reply *${display}* to 🔍 Search Products`);
     actionMap[display++] = 3;
   }
   if (hasServices) {
-    lines.push(`${getNumberEmoji(display)} Browse Services`);
+    lines.push(`Reply *${display}* to Browse Services`);
     actionMap[display++] = 2;
-    lines.push(`${getNumberEmoji(display)} 🔍 Search Services`);
+    lines.push(`Reply *${display}* to 🔍 Search Services`);
     actionMap[display++] = 4;
   }
 
-  lines.push(`${getNumberEmoji(display)} Check Order Status`);
-  actionMap[display++] = 5;
-  lines.push(`${getNumberEmoji(display)} Check Booking Status`);
-  actionMap[display++] = 6;
+  // Only show order/booking status options when the store has relevant data
+  if (hasProducts) {
+    lines.push(`Reply *${display}* to Check Order Status`);
+    actionMap[display++] = 5;
+  }
+  if (hasServices) {
+    lines.push(`Reply *${display}* to Check Booking Status`);
+    actionMap[display++] = 6;
+  }
 
   return { lines, actionMap, total: display - 1 };
 }
@@ -483,12 +493,18 @@ export async function sendWelcomeMenu(tenantId: string, phone: string): Promise<
     const { hasProducts, hasServices } = await getAvailableMenuOptions(tenantId);
     const { lines: menuLines, actionMap, total: totalOptions } = buildMenu(hasProducts, hasServices);
     
-    const menuMsg = `${welcomeText}\n\n` +
-      menuLines.join('\n') +
-      `${cartNote}\n\n` +
-      `*Reply with a number (1-${totalOptions})*`;
-    
-    await sendEvolutionMessage(tenantId, phone, menuMsg);
+    let menuMsg: string;
+    if (totalOptions === 0) {
+      // No products or services — just send welcome text without a menu
+      menuMsg = welcomeText + `${cartNote}`;
+      await sendEvolutionMessage(tenantId, phone, menuMsg);
+    } else {
+      menuMsg = `${welcomeText}\n\n` +
+        menuLines.join('\n') +
+        `${cartNote}\n\n` +
+        `*Reply with a number (1-${totalOptions})*`;
+      await sendEvolutionMessage(tenantId, phone, menuMsg);
+    }
     
     const adminDb = getAdminDb();
     await adminDb
@@ -566,7 +582,7 @@ function parseMenuSelection(message: string, actionMap?: (number | null)[]): num
 
 async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
   const response = `🔍 *Product Search*\n\n` +
-    `Please type the product you're looking for.\n\n` +
+    `Reply with what you're looking for (e.g., product name, brand, or type):\n\n` +
     `📝 *Examples:*\n` +
     `• "asus laptop"\n` +
     `• "red dress"\n` +
@@ -596,7 +612,7 @@ async function startSearchFlow(tenantId: string, phone: string): Promise<void> {
 
 async function startServiceSearchFlow(tenantId: string, phone: string): Promise<void> {
   const response = `🔍 *Service Search*\n\n` +
-    `Please type the service you're looking for.\n\n` +
+    `Reply with what you're looking for (e.g., service name or type):\n\n` +
     `📝 *Examples:*\n` +
     `• "haircut"\n` +
     `• "massage"\n` +

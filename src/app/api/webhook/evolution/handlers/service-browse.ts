@@ -142,7 +142,7 @@ export async function startServiceBrowseFlow(
       .join('\n');
     
     const response = `🛠️ *Browse Services*\n\n` +
-      `Choose a category:\n\n${categoryList}\n\n` +
+      `Reply with a number to choose a category:\n\n${categoryList}\n\n` +
       `0️⃣ Back to main menu`;
     
     await deps.stopTyping(tenantId, phone);
@@ -305,7 +305,7 @@ async function handleCategorySelection(
       .map((sub, idx) => `${idx + 1}️⃣ ${sub}`)
       .join('\n');
     
-    const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${formattedList}\n\n0️⃣ Back to categories`;
+    const response = `📂 *${selectedCategory.name}* - Subcategories\n\nReply with a number to choose:\n\n${formattedList}\n\n0️⃣ Back to categories`;
     
     // Store the actual subcategory names for selection
     await adminDb
@@ -424,13 +424,13 @@ async function showServicesForCategory(
   })) as Service[];
   
   if (services.length === 0) {
-    await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      `😔 No services found in ${categoryName}.\n\n` +
-      `0️⃣ Back to categories`
-    );
+    await deps.stopTyping(tenantId, phone);      await deps.sendMessage(
+        tenantId,
+        phone,
+        `😔 No services found in ${categoryName}.\n\n` +
+        `0️⃣ - Back to Categories\n\n` +
+        `_Reply with 0 or *MENU* for main menu_`
+      );
     return;
   }
   
@@ -518,13 +518,13 @@ async function showServicesForSubcategory(
   
   if (services.length === 0) {
     console.warn(`[ServiceBrowse] No active services found for ${categoryName} → ${subcategoryName}`);
-    await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(
-      tenantId,
-      phone,
-      `😔 No services found in ${categoryName} → ${subcategoryName}.\n\n` +
-      `0️⃣ Back to subcategories`
-    );
+    await deps.stopTyping(tenantId, phone);      await deps.sendMessage(
+        tenantId,
+        phone,
+        `😔 No services found in ${categoryName} → ${subcategoryName}.\n\n` +
+        `0️⃣ - Back to Subcategories\n\n` +
+        `_Reply with 0 to go back or *MENU* for main menu_`
+      );
     return;
   }
   
@@ -735,7 +735,8 @@ async function handleServiceListing(
         phone,
         "✅ You've seen all services.\n\n" +
         "0️⃣ - Go back\n" +
-        "*MENU* - Main menu"
+        "*MENU* - Main menu\n\n" +
+        "_Reply with 0 or MENU above_"
       );
       return;
     }

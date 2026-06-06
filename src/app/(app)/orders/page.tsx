@@ -304,9 +304,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
-  const loadMoreOrders = useCallback(async () => {
+  }, [user]);    const loadMoreOrders = useCallback(async () => {
     if (!user || !ordersCursorRef.current || isLoadingMoreOrders || !hasMoreOrders) return;
     setIsLoadingMoreOrders(true);
     try {
@@ -809,6 +807,32 @@ export default function OrdersPage() {
         await loadCancellationRequests();
         await loadOrders();
         await loadCounts();
+
+        // If the order was approved (refunded), ensure it's in the local orders array
+        // so it shows up when clicking the Refunded tab, even if paginated out
+        if (isApproving && orderDoc) {
+          const orderData = orderDoc.data();
+          setOrders(prev => {
+            const exists = prev.some(o => o.id === orderDoc.id);
+            if (!exists) {
+              return [{ ...orderData, id: orderDoc.id, status: 'refunded' }, ...prev];
+            }
+            return prev.map(o =>
+              o.id === orderDoc.id
+                ? { ...o, status: 'refunded' as const }
+                : o
+            );
+          });
+        } else if (!isApproving && orderDoc) {
+          // When rejected, the order goes back to 'confirmed'
+          setOrders(prev =>
+            prev.map(o =>
+              o.id === orderDoc.id
+                ? { ...o, status: 'confirmed' as const }
+                : o
+            )
+          );
+        }
       } catch (error) {
         console.error("Error handling cancellation:", error);
       }
@@ -1109,13 +1133,15 @@ export default function OrdersPage() {
 
       {/* Content */}
       {viewMode === "cancellations" ? (
-        <CancellationRequests
-          cancellationRequests={cancellationRequests}
-          cancellationFilter={cancellationFilter}
-          setCancellationFilter={setCancellationFilter}
-          onAction={handleCancellationAction}
-          isLoading={loading}
-        />
+        <div className="px-3 md:px-6">
+          <CancellationRequests
+            cancellationRequests={cancellationRequests}
+            cancellationFilter={cancellationFilter}
+            setCancellationFilter={setCancellationFilter}
+            onAction={handleCancellationAction}
+            isLoading={loading}
+          />
+        </div>
       ) : (
         <>
           {/* Stats */}

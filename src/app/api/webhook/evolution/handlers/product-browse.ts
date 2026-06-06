@@ -120,7 +120,7 @@ export async function startProductBrowseFlow(
       return;
     }
     
-    const response = `🛍️ *Browse Products*\n\nChoose a category:\n\n${categoryList}\n\n0️⃣ Back to main menu`;
+    const response = `🛍️ *Browse Products*\n\nChoose a category by replying with its number:\n\n${categoryList}\n\n0️⃣ Back to main menu`;
     
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
@@ -216,7 +216,7 @@ async function handleCategorySelection(
     }
     
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+    await deps.sendMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number from the list above.");
     return;
   }
   
@@ -228,7 +228,7 @@ async function handleCategorySelection(
       .map((sub: string, idx: number) => `${idx + 1}️⃣ ${sub}`)
       .join('\n');
     
-    const response = `📂 *${selectedCategory.name}* - Subcategories\n\n${subcategoryList}\n\n0️⃣ Back to categories\n*Or* send a brand name to search`;
+    const response = `📂 *${selectedCategory.name}* - Subcategories\n\nReply with a number to choose:\n\n${subcategoryList}\n\n0️⃣ Back to categories\n*Or* send a brand name to search`;
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
     
@@ -282,7 +282,7 @@ async function showBrandsForCategory(
     .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
     .join('\n');
   
-  const response = `🏷️ *${category.name}* - Brands\n\n${brandList}\n\n0️⃣ Back to categories\n*Or* send a brand name to search`;
+  const response = `🏷️ *${category.name}* - Brands\n\nReply with a number to choose a brand:\n\n${brandList}\n\n0️⃣ Back to categories\n*Or* send a brand name to search`;
   
   await deps.stopTyping(tenantId, phone);
   await deps.sendMessage(tenantId, phone, response);
@@ -363,7 +363,7 @@ async function handleBrandSelection(
     }
     
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(tenantId, phone, "❌ Invalid brand selection. Please choose a number from the list or type a brand name.");
+    await deps.sendMessage(tenantId, phone, "❌ Invalid brand selection. Please reply with a number from the list or type a brand name.");
     return;
   }
   
@@ -434,7 +434,7 @@ async function showProductsForBrand(
       .map((type: string, idx: number) => `${idx + 1}️⃣ ${type}`)
       .join('\n');
     
-    const response = `🏷️ *${selections.brand}* - Choose a type\n\n${typeList}\n\n0️⃣ Back to brands`;
+    const response = `🏷️ *${selections.brand}* - Choose a type\n\nReply with a number to choose:\n\n${typeList}\n\n0️⃣ Back to brands`;
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
     
@@ -515,7 +515,7 @@ async function handleSubcategorySelection(
     }
     
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+    await deps.sendMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number from the list above.");
     return;
   }
   
@@ -557,7 +557,7 @@ async function handleSubcategorySelection(
       .map((type: string, idx: number) => `${idx + 1}️⃣ ${type}`)
       .join('\n');
     
-    const response = `🏷️ *${selectedSubcategory}* - Choose a type\n\n${typeList}\n\n0️⃣ Back to subcategories\n*Or* send a brand name to search`;
+    const response = `🏷️ *${selectedSubcategory}* - Choose a type\n\nReply with a number to choose:\n\n${typeList}\n\n0️⃣ Back to subcategories\n*Or* send a brand name to search`;
     await deps.stopTyping(tenantId, phone);
     await deps.sendMessage(tenantId, phone, response);
     
@@ -600,7 +600,7 @@ async function handleSubcategorySelection(
         .map((brand: string, idx: number) => `${idx + 1}️⃣ ${brand}`)
         .join('\n');
       
-      const response = `🏷️ *${selectedSubcategory}* - Brands\n\n${brandList}\n\n0️⃣ Back to subcategories`;
+      const response = `🏷️ *${selectedSubcategory}* - Brands\n\nReply with a number to choose a brand:\n\n${brandList}\n\n0️⃣ Back to subcategories`;
       await deps.stopTyping(tenantId, phone);
       await deps.sendMessage(tenantId, phone, response);
       
@@ -698,7 +698,7 @@ async function handleTypeSelection(
     }
     
     await deps.stopTyping(tenantId, phone);
-    await deps.sendMessage(tenantId, phone, "❌ Invalid selection. Please choose a number from the list.");
+    await deps.sendMessage(tenantId, phone, "❌ Invalid selection. Please reply with a number from the list above.");
     return;
   }
   

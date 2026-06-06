@@ -93,7 +93,8 @@ export async function handleProductSearch(
       await deps.sendMessage(
         tenantId,
         phone,
-        ` Please enter at least 2 characters to search.\n\nExample: "laptop", "red shoes"`
+        ` Please enter at least 2 characters to search.\n\nExample: "laptop", "red shoes"\n\n` +
+        `0️⃣ - Back to main menu`
       );
       return;
     }

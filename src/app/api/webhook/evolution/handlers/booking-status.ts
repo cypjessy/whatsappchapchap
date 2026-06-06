@@ -186,7 +186,8 @@ async function showRecentBookings(
         `You haven't made any bookings yet.\n\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
         `0️⃣ - Back to Main Menu\n` +
-        `2️ - Browse Services`
+        `2️ - Browse Services\n\n` +
+        `_Reply with 0 or 2 above_`
       );
       return;
     }
@@ -301,7 +302,9 @@ async function showRecentBookings(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Error fetching bookings. Please try again.`
+      `❌ Error fetching bookings. Please try again.\n\n` +
+      `0️⃣ - Back to Main Menu\n\n` +
+      `_Reply 0 for main menu_`
     );
   }
 }
@@ -366,11 +369,12 @@ async function sendBookingDetails(
     message += `1️⃣ - Cancel Booking\n`;
   }
   
-  message += `━━━━━━━━━━━━━━━━━━━━\n\n` +
-  `0️ - Back to Main Menu`;
+  message += `0️ - Back to Main Menu\n\n`;
   
   if (canCancel) {
-    message += `\n1️ - Cancel Booking`;
+    message += `_Reply with 1 to cancel or 0 for main menu_`;
+  } else {
+    message += `_Reply 0 for main menu_`;
   }
   
   await deps.stopTyping(tenantId, phone);
@@ -666,7 +670,8 @@ async function processBookingCancellation(
       `Our team will review your request and confirm the cancellation shortly.\n\n` +
       `You will receive a confirmation once the cancellation is processed.\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `0️⃣ - Back to Main Menu`
+      `0️⃣ - Back to Main Menu\n\n` +
+      `_Reply 0 for main menu_`
     );
     
     // Clear flow state
@@ -685,7 +690,8 @@ async function processBookingCancellation(
     await deps.sendMessage(
       tenantId,
       phone,
-      `❌ Error processing cancellation request. Please try again or contact support.\n\n0️⃣ - Back to Main Menu`
+      `❌ Error processing cancellation request. Please try again or contact support.\n\n0️⃣ - Back to Main Menu\n\n` +
+      `_Reply 0 for main menu_`
     );
     
     // Clear flow state on error too

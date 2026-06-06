@@ -132,7 +132,8 @@ export async function handleServiceSearch(
       await deps.sendMessage(
         tenantId,
         phone,
-        `🔍 Please enter at least 2 characters to search.\n\nExample: "haircut", "massage", "consultation"`
+        `🔍 Please enter at least 2 characters to search.\n\nExample: "haircut", "massage", "consultation"\n\n` +
+        `0️⃣ - Back to main menu`
       );
       return;
     }

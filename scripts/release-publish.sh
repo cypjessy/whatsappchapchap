@@ -111,8 +111,8 @@ print_success "APK build complete!"
 # ─── Step 4: Commit and push to GitHub ────────────────────────────────────
 print_step "Step 4: Committing and pushing to GitHub"
 
-# Add changed files (version files only — APK is distributed via GitHub Releases)
-git add src/lib/app-version.ts android/app/build.gradle
+# Add changed files (Including the APK for Vercel hosting)
+git add src/lib/app-version.ts android/app/build.gradle public/whatsappchapchap.apk
 
 # Commit with version info
 COMMIT_MSG="Release v$VERSION_NAME (build $VERSION_CODE)"
