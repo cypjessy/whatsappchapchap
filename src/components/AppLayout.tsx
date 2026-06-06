@@ -395,11 +395,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Add Customer Modal */}
-      <AddCustomerModal
-        onClose={() => setAddCustomerModalOpen(false)}
-        onSave={handleSaveCustomer}
-        saving={savingCustomer}
-      />
+      {addCustomerModalOpen && (
+        <AddCustomerModal
+          onClose={() => setAddCustomerModalOpen(false)}
+          onSave={handleSaveCustomer}
+          saving={savingCustomer}
+        />
+      )}
     </div>
   );
 }
