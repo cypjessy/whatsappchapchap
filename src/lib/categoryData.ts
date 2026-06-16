@@ -98,6 +98,56 @@ const categoryData: Record<string, Category> = {
           color: { label: "Color", options: ["Black", "Silver", "Gold", "Blue", "Green", "Pink", "Starlight", "Midnight"], icon: "fa-palette" },
         }
       },
+      home_entertainment: {
+        name: "Home Entertainment",
+        icon: "fa-tv",
+        specs: {
+          type: { label: "Type", options: ["Smart TV", "LED TV", "4K Ultra HD TV", "Android TV", "Home Theater System", "Soundbar", "DVD & Blu-ray Player", "Projector"], icon: "fa-tv" },
+          brand: { label: "Brand", options: ["Samsung", "LG", "Sony", "Hisense", "TCL", "Sayona", "Vitron", "Skyworth", "Hifiman", "Generic"], icon: "fa-tag", allowCustom: true },
+          screen_size: { label: "Screen Size", options: ['24"', '32"', '40"', '43"', '50"', '55"', '65"', '75"', '85"'], icon: "fa-expand" },
+          features: { label: "Features", options: ["Smart (WiFi)", "4K Resolution", "Bluetooth", "HDMI ARC", "Dolby Atmos", "Curved Screen"], icon: "fa-star", multiple: true },
+          condition: { label: "Condition", options: ["Brand New", "Refurbished", "Used"], icon: "fa-star" },
+        }
+      },
+      household_appliances: {
+        name: "Household Appliances",
+        icon: "fa-plug",
+        specs: {
+          type: { label: "Type", options: ["Refrigerator", "Freezer", "Microwave Oven", "Washing Machine", "Electric Kettle", "Blender & Juicer", "Cooker/Oven", "Air Conditioner", "Water Dispenser"], icon: "fa-plug" },
+          brand: { label: "Brand", options: ["Ramtons", "Mika", "Samsung", "LG", "Armco", "Von Hotpoint", "Bruhm", "Sayona", "Generic"], icon: "fa-tag", allowCustom: true },
+          capacity: { label: "Capacity", options: ["Small/Compact", "Medium", "Large", "Double Door", "Side-by-Side", "1.7L (Kettle)", "20L (Microwave)"], icon: "fa-database" },
+          condition: { label: "Condition", options: ["Brand New", "Refurbished", "Used"], icon: "fa-star" },
+        }
+      },
+      mobile_accessories: {
+        name: "Mobile Accessories",
+        icon: "fa-charging-station",
+        specs: {
+          type: { label: "Type", options: ["Power Bank", "Charging Cable", "Wall Adapter", "Car Charger", "Phone Case", "Screen Protector", "Memory Card", "USB Flash Drive"], icon: "fa-plug" },
+          brand: { label: "Brand", options: ["Oraimo", "Anker", "Xiaomi", "Samsung", "Apple", "Generic", "Baseus"], icon: "fa-tag", allowCustom: true },
+          capacity: { label: "Capacity (if Power Bank)", options: ["5000mAh", "10000mAh", "20000mAh", "30000mAh", "40000mAh+"], icon: "fa-battery-full" },
+          cable_type: { label: "Cable Connector", options: ["USB-C", "Lightning (iPhone)", "Micro-USB", "3-in-1 Cable"], icon: "fa-link" },
+        }
+      },
+      audio_equipment: {
+        name: "Audio & Speakers",
+        icon: "fa-volume-up",
+        specs: {
+          type: { label: "Type", options: ["Subwoofer", "Bluetooth Speaker", "Home Theater", "Wireless Earbuds", "Headset/Headphones", "Soundbar", "PA System"], icon: "fa-music" },
+          brand: { label: "Brand", options: ["Sayona", "Ampex", "Sony", "JBL", "Samsung", "Oraimo", "Vitron", "Tagwood", "Generic"], icon: "fa-tag", allowCustom: true },
+          connectivity: { label: "Connectivity", options: ["Bluetooth", "Wired/AUX", "Optical", "USB/SD Card", "FM Radio"], icon: "fa-wifi", multiple: true },
+          power: { label: "Power Output", options: ["5W-20W", "30W-100W", "150W-500W", "1000W+"], icon: "fa-bolt" },
+        }
+      },
+      gaming_smart_home: {
+        name: "Gaming & Smart Home",
+        icon: "fa-gamepad",
+        specs: {
+          type: { label: "Type", options: ["Gaming Controller", "Gaming Headset", "Security Camera (CCTV)", "Smart Bulb", "Smart Plug", "Video Doorbell", "Gaming Console"], icon: "fa-gamepad" },
+          brand: { label: "Brand", options: ["Sony (PS)", "Microsoft (Xbox)", "Nintendo", "Hikvision (CCTV)", "Dahua", "TP-Link", "Generic"], icon: "fa-tag", allowCustom: true },
+          features: { label: "Features", options: ["Wireless", "Night Vision", "Motion Detection", "App Controlled", "RGB Lighting"], icon: "fa-star", multiple: true },
+        }
+      },
       tvs_audio: {
         name: "TVs & Audio",
         icon: "fa-tv",
@@ -309,6 +359,42 @@ const categoryData: Record<string, Category> = {
           occasion: { label: "Occasion", options: ["School", "Casual", "Party", "Traditional", "Sports", "Beach", "Sleepwear", "Formal"], icon: "fa-graduation-cap" },
           condition: { label: "Condition", options: ["Brand New", "New with Tags", "Like New", "Gently Used"], icon: "fa-star" },
           season: { label: "Season", options: ["Summer", "Winter", "Spring", "Autumn", "All Season"], icon: "fa-sun" },
+        }
+      },
+      formal_wear_premium: {
+        name: "Formal & Professional Wear",
+        icon: "fa-user-tie",
+        specs: {
+          type: { label: "Type", options: ["Three-Piece Suit", "Two-Piece Suit", "Tuxedo", "Blazer", "Official Shirt", "Official Trousers", "Evening Gown", "Silk Tie", "Leather Belt"], icon: "fa-user-tie" },
+          brand: { label: "Brand", options: ["Wajose", "Blessed Hands", "Tiankara", "Gucci", "Armani", "Generic"], icon: "fa-tag", allowCustom: true },
+          material: { label: "Material", options: ["Wool", "Silk", "Cotton Blend", "Polyester", "Linen", "Leather"], icon: "fa-layer-group" },
+          color: { label: "Color", options: ["Black", "Navy Blue", "Charcoal", "Grey", "White", "Maroon", "Beige"], icon: "fa-palette" },
+        }
+      },
+      african_print: {
+        name: "African Print & Custom",
+        icon: "fa-cut",
+        specs: {
+          type: { label: "Type", options: ["Ankara Dress", "Kitenge Shirt", "Tailored Gown", "Dashiki", "African Print Accessories", "Handmade Jewelry"], icon: "fa-cut" },
+          material: { label: "Print Style", options: ["Ankara (Cotton)", "Kitenge", "Kente", "Laso", "Batik", "Silk African Print"], icon: "fa-layer-group" },
+          occasion: { label: "Occasion", options: ["Wedding", "Traditional Ceremony", "Church", "Casual", "Gala/Event"], icon: "fa-glass-cheers" },
+        }
+      },
+      thrift_bales: {
+        name: "Thrift & Bales",
+        icon: "fa-recycle",
+        specs: {
+          type: { label: "Category", options: ["Grade A Thrift", "Vintage Pieces", "Baby Onesies", "Mixed Bale", "Unopened Bale", "Clearance Items"], icon: "fa-recycle" },
+          clothing_type: { label: "Clothing Type", options: ["T-Shirts", "Sweaters/Hoodies", "Jeans", "Jackets", "Dresses", "Mixed Clothes"], icon: "fa-tshirt" },
+          condition: { label: "Condition", options: ["Grade A (Like New)", "Grade B", "Vintage", "Unopened (Bale)"], icon: "fa-star" },
+        }
+      },
+      jewelry_accessories: {
+        name: "Jewelry & Accessories",
+        icon: "fa-gem",
+        specs: {
+          type: { label: "Type", options: ["Handmade Necklace", "Statement Earrings", "Bracelet", "Bangle", "Ring", "Tote Bag", "Clutch Bag", "Handbag"], icon: "fa-gem" },
+          material: { label: "Material", options: ["Gold Plated", "Silver", "Beaded", "Handmade Fabric", "Leather", "Brass"], icon: "fa-layer-group" },
         }
       },
       shoes: {
@@ -554,14 +640,19 @@ const categoryData: Record<string, Category> = {
         name: "Furniture",
         icon: "fa-couch",
         specs: {
-          type: { label: "Type", options: ["Sofa", "Chair", "Table", "Bed", "Wardrobe", "Bookshelf", "TV Stand", "Dining Set", "Office Desk", "Coffee Table", "Ottoman", "Nightstand", "Dresser", "Cabinet", "Sideboard", "Bench", "Stool", "Recliner", "Chaise Lounge", "Daybed", "Bunk Bed"], icon: "fa-couch" },
-          material: { label: "Material", options: ["Wood", "Metal", "Leather", "Fabric", "Velvet", "Rattan", "Glass", "MDF", "Plywood", "Particle Board", "Bamboo", "Plastic", "Marble"], icon: "fa-tree" },
-          color: { label: "Color", options: ["Brown", "Black", "White", "Grey", "Beige", "Blue", "Green", "Walnut", "Mahogany", "Oak", "Cherry", "Maple", "Natural", "Red", "Yellow"], icon: "fa-palette", allowCustom: true },
-          room: { label: "Room", options: ["Living Room", "Bedroom", "Dining Room", "Office", "Outdoor", "Kids Room", "Kitchen", "Bathroom", "Entryway"], icon: "fa-home" },
-          condition: { label: "Condition", options: ["Brand New", "New (Assembly Required)", "Like New", "Gently Used", "Used", "Vintage", "Refurbished"], icon: "fa-star" },
-          size: { label: "Size", options: ["Small", "Medium", "Large", "Extra Large", "2-Seater", "3-Seater", "L-Shape", "U-Shape", "Twin", "Full", "Queen", "King", "4x6", "5x6", "6x6"], icon: "fa-expand" },
-          assembly: { label: "Assembly Required", options: ["Yes", "No", "Partial"], icon: "fa-tools" },
-          delivery: { label: "Delivery Method", options: ["Self Pickup", "Local Delivery Only", "Nationwide Delivery", "International Shipping"], icon: "fa-truck" },
+          type: { label: "Type", options: ["L-Shaped Sofa", "Chesterfield Sofa", "3-Seater Sofa", "Accent Chair", "Recliner", "Velvet Ottoman", "6x6 King Bed", "4x6 Double Bed", "Bunk Bed", "Panel Bed", "4-Door Wardrobe", "Mahogany TV Stand", "Coffee Table", "Dressing Table", "Shoe Rack", "Chest of Drawers", "Dining Set (6-Seater)", "Wooden Bench"], icon: "fa-couch" },
+          material: { label: "Material", options: ["Solid Wood (Mahogany)", "Solid Wood (Mvule)", "Velvet", "Leather", "Fabric", "MDF", "Plywood", "Metal"], icon: "fa-tree" },
+          color: { label: "Color", options: ["Brown", "Grey", "Navy Blue", "Emerald Green", "Black", "White", "Beige"], icon: "fa-palette", allowCustom: true },
+          room: { label: "Room", options: ["Living Room", "Bedroom", "Dining Room", "Office", "Kitchen", "Entryway"], icon: "fa-home" },
+          condition: { label: "Condition", options: ["Brand New", "Custom Made", "Used"], icon: "fa-star" },
+        }
+      },
+      office_furniture: {
+        name: "Office Furniture",
+        icon: "fa-briefcase",
+        specs: {
+          type: { label: "Type", options: ["Ergonomic Chair", "Executive Desk", "Workstation", "Filing Cabinet", "Conference Table", "Reception Desk"], icon: "fa-briefcase" },
+          material: { label: "Material", options: ["Mesh", "Leather", "Metal", "Melamine", "Solid Wood"], icon: "fa-layer-group" },
         }
       },
       kitchen: {
@@ -1577,11 +1668,26 @@ const categoryData: Record<string, Category> = {
         name: "Building Materials",
         icon: "fa-hard-hat",
         specs: {
-          type: { label: "Material Type", options: ["Cement (Portland)", "Cement (White)", "Cement (Waterproof)", "Sand (River Sand)", "Sand (Ballast/Coarse)", "Sand (Sharp Sand)", "Ballast (Crushed Stone)", "Blocks (Cement)", "Blocks (Clay)", "Bricks (Fired Clay)", "Bricks (Interlocking)", "Timber (Plywood)", "Timber (Hardwood)", "Timber (Softwood)", "Timber (Treated)", "Roofing Sheets (Iron/Iron Sheets)", "Roofing Sheets (Polycarbonate)", "Roofing Sheets (Tile Effect)", "Roofing Tiles (Clay)", "Roofing Tiles (Concrete)", "Roofing Nails", "Roofing Screws", "Trusses (Wood)", "Trusses (Metal)", "Ridge Cap (Roof)", "Gutter (PVC)", "Gutter (Metal)", "Downpipe (Rainwater)", "Water Tank (Plastic)", "Water Tank (Stainless Steel)", "Water Tank (Concrete)", "Septic Tank (Plastic)", "Soak Pit (Concrete Rings)", "Manhole Cover (Cast Iron)", "Manhole Cover (Composite)", "Paving Blocks", "Pavers (Concrete)", "Pavers (Clay)", "Kerbstones", "Fencing Posts (Concrete)", "Fencing Posts (Metal)", "Barbed Wire", "Chain Link Fence", "Welded Mesh (Fence)", "Gabions (Wire Baskets)", "Geotextile Fabric", "Damp Proof Membrane (DPM)", "Rebar (Steel Reinforcement Bars)", "Mesh (Reinforcement Wire Mesh)", "Binding Wire", "Nails (Common)", "Nails (Concrete)", "Nails (Roofing)", "Screws (Wood)", "Screws (Metal)", "Anchor Bolts", "Foundation Bolts"], icon: "fa-hard-hat" },
-          unit: { label: "Unit", options: ["Per Bag (50kg)", "Per Tonne", "Per Cubic Meter (m³)", "Per Piece", "Per Sheet", "Per Meter (Length)", "Per Roll (Length)", "Per Bundle", "Per Pallet", "Per Square Meter (m²)", "Per Kg", "Per 100 pcs", "Per 1000 pcs"], icon: "fa-balance-scale" },
-          brand: { label: "Brand", options: ["Bamburi (Ndura)", "East African Portland Cement", "Mombasa Cement (Simba)", "Savanah Cement", "Rhino Cement", "Athi River Mining (ARM)", "Lafarge", "Generic", "Other"], icon: "fa-tag", allowCustom: true },
-          grade: { label: "Grade/Quality", options: ["Grade 32.5 (General)", "Grade 42.5 (High Strength)", "Grade 52.5 (Ultra High)", "Class 1", "Class 2", "Class 3", "Standard", "Premium", "First Quality", "Second Quality", "Recycled", "Treated (Timber)", "Untreated (Timber)"], icon: "fa-chart-line" },
-          condition: { label: "Condition", options: ["Brand New", "New (Warehouse)", "Surplus (Overstock)", "Used - Good", "Used - Fair (Scaffolding)", "Slightly Damaged (Discounted)"], icon: "fa-star" },
+          type: { label: "Material Type", options: ["Cement (Portland)", "Cement (Simba/Bamburi)", "TMT Steel Bars (D8/D10/D12)", "Foundation Stones", "Iron Sheets (Box/G30/G32)", "Wire Mesh", "Timber (Cypress/Plywood)", "Bricks (Interlocking)", "Roof Nails", "Gypsum Screws"], icon: "fa-hard-hat" },
+          unit: { label: "Unit", options: ["Per Bag (50kg)", "Per Tonne", "Per Piece", "Per Sheet", "Per Meter", "Per Kg"], icon: "fa-balance-scale" },
+          brand: { label: "Brand", options: ["Bamburi", "Simba", "Mache", "Devki Steel", "MRM", "Generic"], icon: "fa-tag", allowCustom: true },
+        }
+      },
+      masonry_supplies: {
+        name: "Masonry & Finishing",
+        icon: "fa-trowel",
+        specs: {
+          type: { label: "Type", options: ["Waterproofing Compound", "Tile Adhesive", "Grout", "Wall Filler", "Joint Compound", "Gypsum Board"], icon: "fa-trowel" },
+          brand: { label: "Brand", options: ["Bamburi", "Simba", "Sika", "Sajen", "Generic"], icon: "fa-tag", allowCustom: true },
+        }
+      },
+      glass_glazing: {
+        name: "Glass & Glazing",
+        icon: "fa-window-maximize",
+        specs: {
+          type: { label: "Type", options: ["Tinted Window Glass", "Clear Shower Screen", "Mirror Glass", "Reflective Glass", "Aluminum Casement", "Window Latch"], icon: "fa-window-maximize" },
+          thickness: { label: "Thickness", options: ["3mm", "4mm", "5mm", "6mm", "8mm", "10mm", "12mm"], icon: "fa-ruler-combined" },
+          condition: { label: "Condition", options: ["Brand New", "Custom Cut"], icon: "fa-star" },
         }
       },
       paint_supplies: {
