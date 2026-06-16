@@ -148,6 +148,23 @@ const categoryData: Record<string, Category> = {
           features: { label: "Features", options: ["Wireless", "Night Vision", "Motion Detection", "App Controlled", "RGB Lighting"], icon: "fa-star", multiple: true },
         }
       },
+      solar_energy: {
+        name: "Solar & Power Backup",
+        icon: "fa-sun",
+        specs: {
+          type: { label: "Type", options: ["Solar Panel (Monocrystalline)", "Solar Panel (Polycrystalline)", "Solar Battery (Gel)", "Solar Battery (Lithium)", "Solar Inverter", "Charge Controller (MPPT)", "Charge Controller (PWM)", "Solar Water Heater", "Solar Floodlight", "Solar Lantern/Lamp", "UPS (Backup)", "Power Inverter"], icon: "fa-sun" },
+          brand: { label: "Brand", options: ["Luminous", "Victron", "Jinko Solar", "Trina Solar", "Chloride Exide", "Generic", "Other"], icon: "fa-tag", allowCustom: true },
+          capacity: { label: "Capacity (Watts/Ah/kVA)", options: ["10W-50W", "100W-200W", "300W-500W", "100Ah", "200Ah", "1kVA", "3kVA", "5kVA+"], icon: "fa-bolt" },
+        }
+      },
+      electronics_repair_parts: {
+        name: "Repair Parts & Components",
+        icon: "fa-tools",
+        specs: {
+          type: { label: "Type", options: ["Phone Screen (LCD/OLED)", "Phone Battery", "Charging Port Flex", "Laptop Keyboard", "Laptop Battery", "Laptop Screen", "Desktop Motherboard", "RAM Stick", "Internal SSD/HDD", "Power Supply Unit (PSU)"], icon: "fa-tools" },
+          compatibility: { label: "Compatible Model", options: ["Universal", "iPhone (Specific)", "Samsung (Specific)", "HP (Specific)", "Dell (Specific)", "Generic"], icon: "fa-check-circle", allowCustom: true },
+        }
+      },
       tvs_audio: {
         name: "TVs & Audio",
         icon: "fa-tv",
@@ -397,6 +414,24 @@ const categoryData: Record<string, Category> = {
           material: { label: "Material", options: ["Gold Plated", "Silver", "Beaded", "Handmade Fabric", "Leather", "Brass"], icon: "fa-layer-group" },
         }
       },
+      uniforms_workwear: {
+        name: "Uniforms & Workwear",
+        icon: "fa-user-shield",
+        specs: {
+          type: { label: "Type", options: ["School Uniform (Primary)", "School Uniform (Secondary)", "Medical Scrubs", "Chef Jacket", "Security Uniform", "Overalls/Dustcoat", "High-Visibility Vest", "Industrial Apron"], icon: "fa-user-shield" },
+          size: { label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL", "Kids S", "Kids M", "Kids L"], icon: "fa-ruler" },
+          material: { label: "Material", options: ["Cotton", "Polyester Blend", "Heavy Duty Canvas", "Nylon"], icon: "fa-layer-group" },
+        }
+      },
+      fabrics_textiles: {
+        name: "Fabrics & Textiles",
+        icon: "fa-scroll",
+        specs: {
+          type: { label: "Fabric Type", options: ["Ankara/Kitenge Roll", "Cotton Fabric", "Linen", "Wool/Suiting", "Silk/Satin", "Upholstery Fabric", "Net/Tulle", "Curtain Material"], icon: "fa-scroll" },
+          unit: { label: "Unit of Sale", options: ["Per Meter", "Per Yard", "Per Roll", "Per Piece"], icon: "fa-balance-scale" },
+          color: { label: "Color/Pattern", options: ["Solid Color", "Floral", "Geometric", "Traditional Print", "Multicolor"], icon: "fa-palette", allowCustom: true },
+        }
+      },
       shoes: {
         name: "Shoes & Footwear",
         icon: "fa-shoe-prints",
@@ -623,7 +658,31 @@ const categoryData: Record<string, Category> = {
           aluminum_free: { label: "Aluminum Free", options: ["Yes", "No"], icon: "fa-ban" },
           condition: { label: "Condition", options: ["Brand New", "New (Sealed)", "Used"], icon: "fa-star" },
         }
-      }
+      },
+      oral_care: {
+        name: "Oral Care",
+        icon: "fa-tooth",
+        specs: {
+          type: { label: "Type", options: ["Toothpaste", "Toothbrush (Manual)", "Toothbrush (Electric)", "Mouthwash", "Dental Floss", "Teeth Whitening Kit", "Tongue Scraper"], icon: "fa-tooth" },
+          brand: { label: "Brand", options: ["Colgate", "Aquafresh", "Oral-B", "Sensodyne", "Close-Up", "Pepsodent", "Generic", "Other"], icon: "fa-tag", allowCustom: true },
+        }
+      },
+      nail_care: {
+        name: "Nail Care",
+        icon: "fa-hand-sparkles",
+        specs: {
+          type: { label: "Type", options: ["Nail Polish", "Gel Polish", "Nail Polish Remover", "Manicure/Pedicure Set", "Artificial Nails/Press-ons", "UV/LED Nail Lamp", "Nail Treatment (Hardener)"], icon: "fa-hand-sparkles" },
+          color: { label: "Color", options: ["Clear", "Red", "Pink", "Nude", "Black", "White", "Blue", "Green", "Multicolor"], icon: "fa-palette", allowCustom: true },
+        }
+      },
+      beauty_appliances: {
+        name: "Beauty Tools & Appliances",
+        icon: "fa-wind",
+        specs: {
+          type: { label: "Type", options: ["Hair Dryer", "Hair Straightener", "Curling Iron", "Hair Clipper/Trimmer", "Epilator", "Electric Shaver", "Facial Cleansing Brush"], icon: "fa-wind" },
+          brand: { label: "Brand", options: ["Philips", "Panasonic", "Remington", "Braun", "BaByliss", "Wahl", "Generic", "Other"], icon: "fa-tag", allowCustom: true },
+        }
+      },
     }
   },
 
@@ -760,7 +819,23 @@ const categoryData: Record<string, Category> = {
           washable: { label: "Machine Washable", options: ["Yes", "No", "Spot Clean Only"], icon: "fa-tshirt" },
           condition: { label: "Condition", options: ["Brand New", "New", "Like New", "Gently Used", "Used", "Vintage"], icon: "fa-star" },
         }
-      }
+      },
+      garden_outdoor: {
+        name: "Garden & Outdoor",
+        icon: "fa-leaf",
+        specs: {
+          type: { label: "Type", options: ["Live Plants", "Flower Pots/Planters", "Garden Tools", "Lawn Mower", "Garden Hose", "Outdoor Lighting", "Seeds/Fertilizer (Small Pack)"], icon: "fa-leaf" },
+          category: { label: "Category", options: ["Indoor Plants", "Outdoor Plants", "Succulents", "Herbs", "Vegetables"], icon: "fa-seedling" },
+        }
+      },
+      bathroom_accessories: {
+        name: "Bathroom Accessories",
+        icon: "fa-bath",
+        specs: {
+          type: { label: "Type", options: ["Shower Curtain", "Soap Dispenser", "Toothbrush Holder", "Bath Towel Set", "Bathroom Mirror", "Toilet Paper Holder", "Bathroom Rack/Shelf"], icon: "fa-bath" },
+          material: { label: "Material", options: ["Plastic", "Ceramic", "Stainless Steel", "Bamboo", "Glass"], icon: "fa-layer-group" },
+        }
+      },
     }
   },
 
@@ -1096,7 +1171,15 @@ const categoryData: Record<string, Category> = {
           condition: { label: "Condition", options: ["Brand New", "New (Assembly Required)", "Used - Like New", "Used - Good", "Used - Fair", "For Parts"], icon: "fa-star" },
           material: { label: "Material", options: ["Aluminum", "Carbon Fiber", "Steel", "Titanium", "Chromeoly", "Alloy"], icon: "fa-layer-group" },
         }
-      }
+      },
+      indoor_games: {
+        name: "Indoor Games & Hobbies",
+        icon: "fa-chess",
+        specs: {
+          type: { label: "Type", options: ["Chess Set", "Darts Board/Darts", "Table Tennis (Bat/Ball)", "Pool/Snooker Cue", "Board Games", "Playing Cards", "Musical Instrument (Guitar/Keyboard)"], icon: "fa-chess" },
+          condition: { label: "Condition", options: ["Brand New", "Used"], icon: "fa-star" },
+        }
+      },
     }
   },
 
@@ -1773,7 +1856,32 @@ const categoryData: Record<string, Category> = {
           quantity: { label: "Quantity", options: ["50 pcs", "100 pcs", "200 pcs", "250 pcs", "500 pcs", "1000 pcs (1K)", "2500 pcs (2.5K)", "5000 pcs (5K)", "10000 pcs (10K)", "20000 pcs (20K)", "50000 pcs (50K)", "100000 pcs (100K)", "1 kg", "2 kg", "5 kg", "10 kg", "20 kg", "25 kg", "50 kg", "Small Box (100g)", "Medium Box (250g)", "Large Box (500g)", "1 lb (454g)", "5 lb (2.27kg)"], icon: "fa-hashtag" },
           condition: { label: "Condition", options: ["Brand New (Sealed Box)", "New (Bulk Loose)", "Used - Good (Removed)", "Rusty (Discounted)"], icon: "fa-star" },
         }
-      }
+      },
+      tiles_flooring: {
+        name: "Tiles & Flooring",
+        icon: "fa-th-large",
+        specs: {
+          type: { label: "Type", options: ["Ceramic Floor Tile", "Porcelain Floor Tile", "Wall Tile", "Granite/Marble Slab", "Laminate Flooring", "Vinyl Plank (LVP)", "Wood Parquet", "Epoxy Coating"], icon: "fa-th-large" },
+          size: { label: "Dimensions", options: ["30x30 cm", "40x40 cm", "60x60 cm", "80x80 cm", "15x60 cm (Wood look)", "30x60 cm"], icon: "fa-expand" },
+          finish: { label: "Finish", options: ["Glossy", "Matte", "Anti-slip (Rough)", "Polished", "Satin"], icon: "fa-star" },
+        }
+      },
+      security_locks: {
+        name: "Security & Lock Systems",
+        icon: "fa-lock",
+        specs: {
+          type: { label: "Type", options: ["Padlock (Heavy Duty)", "Padlock (Combination)", "Shutter Lock", "Mortise Lock Set", "Digital/Smart Lock", "Gate Lock", "Cash Safe", "Fireproof Box", "CCTV Camera System", "Electric Fence Energizer"], icon: "fa-lock" },
+          brand: { label: "Brand", options: ["Yale", "Tri-Circle", "Union", "Solex", "Viro", "Generic", "Other"], icon: "fa-tag", allowCustom: true },
+        }
+      },
+      industrial_equipment: {
+        name: "Industrial & Heavy Equipment",
+        icon: "fa-industry",
+        specs: {
+          type: { label: "Type", options: ["Concrete Mixer", "Plate Compactor", "Generator (Industrial)", "Water Pump (High Capacity)", "Welding Machine (Heavy Duty)", "Air Compressor (Industrial)", "Scaffolding Set"], icon: "fa-industry" },
+          brand: { label: "Brand", options: ["Honda", "Lister Petter", "Pramac", "Atlas Copco", "Generic", "Other"], icon: "fa-tag", allowCustom: true },
+        }
+      },
     }
   },
 
