@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { tenantService } from "@/lib/db";
 import WhatsAppConnect from "@/components/WhatsAppConnect";
 import { Step1Account, Step2Business } from "@/components/auth/steps";
 import RegisterSidebar from "@/components/auth/RegisterSidebar";
+import { useAuth } from "@/context/AuthContext";
 
 interface AddTenantDialogProps {
   isOpen: boolean;
@@ -34,7 +32,8 @@ export default function AddTenantDialog({ isOpen, onClose, onSuccess }: AddTenan
   });
   const [termsAccepted, setTermsAccepted] = useState(true); // Auto-accept for admin-created accounts
   const [instanceName, setInstanceName] = useState<string | null>(null);
-  const [createdUser, setCreatedUser] = useState<any>(null);
+  const [createdUid, setCreatedUid] = useState<string | null>(null);
+  const { user: adminUser } = useAuth();
 
   const currencyMap: Record<string, string> = {
     KE: "KES (Kenyan Shilling)",
@@ -91,16 +90,42 @@ export default function AddTenantDialog({ isOpen, onClose, onSuccess }: AddTenan
     setError("");
 
     try {
-      // Create user with Firebase Auth
-      const credential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = credential.user;
-      if (!user) {
-        throw new Error("Unable to create user account");
+      // Get the admin's current ID token for authorization
+      if (!adminUser) {
+        throw new Error("You must be logged in as admin to create a tenant");
+      }
+      const idToken = await adminUser.getIdToken();
+
+      // Create the tenant via server API (uses Firebase Admin SDK — no client auth switch)
+      const response = await fetch("/api/admin/create-tenant", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          businessName: formData.businessName || `${formData.firstName}'s Business`,
+          businessType: selectedBusinessType,
+          category: formData.category,
+          country: formData.country,
+          currency: formData.currency,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create tenant");
       }
 
-      const tenantId = `tenant_${user.uid}`;
+      const tenantId = result.tenantId;
       setInstanceName(tenantId);
-      setCreatedUser(user);
+      setCreatedUid(result.uid);
 
       setCurrentStep(2);
       setIsLoading(false);
@@ -117,19 +142,20 @@ export default function AddTenantDialog({ isOpen, onClose, onSuccess }: AddTenan
   };
 
   const handleSaveBusiness = async () => {
-    if (!createdUser) return;
+    if (!createdUid) return;
 
     try {
-      const tenantId = `tenant_${createdUser.uid}`;
-      await tenantService.createTenant(createdUser, formData.businessName);
-      await tenantService.updateTenant(createdUser, {
+      // Tenant doc was already created by the API — just update additional business info
+      const tenantId = `tenant_${createdUid}`;
+      await setDoc(doc(db, "tenants", tenantId), {
         businessName: formData.businessName,
         businessType: selectedBusinessType,
         category: formData.category,
         country: formData.country,
         currency: formData.currency,
         status: "active",
-      });
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
       setCurrentStep(3);
     } catch (err: any) {
       setError(err.message || "Failed to save business info");
@@ -137,9 +163,9 @@ export default function AddTenantDialog({ isOpen, onClose, onSuccess }: AddTenan
   };
 
   const handleWhatsAppConnected = async (data?: { instanceId: string; evolutionUrl: string; evolutionKey: string; evolutionUUID?: string }) => {
-    if (!createdUser || !instanceName) return;
+    if (!createdUid || !instanceName) return;
 
-    const tenantId = `tenant_${createdUser.uid}`;
+    const tenantId = `tenant_${createdUid}`;
     const tenantUpdate = {
       evolutionServerUrl: data?.evolutionUrl || "http://evo-xi7da27bck86s6jwe25w0zt4.173.249.50.98.sslip.io",
       evolutionInstanceId: data?.instanceId || instanceName,
@@ -174,7 +200,7 @@ export default function AddTenantDialog({ isOpen, onClose, onSuccess }: AddTenan
       currency: "KES (Kenyan Shilling)",
     });
     setInstanceName(null);
-    setCreatedUser(null);
+    setCreatedUid(null);
     onClose();
   };
 

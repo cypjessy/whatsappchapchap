@@ -33,12 +33,6 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    title: "Payments",
-    items: [
-      { id: "pricing-plans", label: "Pricing Plans", icon: "fa-tags", href: "/all-tenants?tab=plans" },
-    ],
-  },
-  {
     title: "Overview",
     items: [
       { id: "dashboard", label: "Dashboard", icon: "fa-home", href: "/dashboard" },
@@ -201,6 +195,7 @@ export default function Sidebar({ onClose, isExpanded = false }: SidebarProps) {
     title: "Admin",
     items: [
       { id: "all-tenants", label: "All Tenants", icon: "fa-building", href: "/all-tenants" },
+      { id: "pricing-plans", label: "Pricing Plans", icon: "fa-tags", href: "/all-tenants?tab=plans" },
     ],
   };
 

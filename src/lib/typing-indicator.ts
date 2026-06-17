@@ -31,6 +31,8 @@ const failureCount = new Map<string, number>();
  * @param phoneNumber - The phone number to send typing indicator to
  * @param action - The typing action: "composing" (typing), "paused" (stopped), or "recording"
  */
+import { getAdminDb } from "@/lib/firebase-admin";
+
 export async function sendTypingIndicator(
   tenantId: string,
   phoneNumber: string,
@@ -47,7 +49,24 @@ export async function sendTypingIndicator(
       return false;
     }
 
-    const response = await fetch(`${evolutionApiUrl}/chat/sendPresence/${tenantId}`, {
+    // Use the correct Evolution instance name from the tenant's stored data
+    let instanceName = tenantId;
+    try {
+      const adminDb = getAdminDb();
+      if (adminDb) {
+        const tenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+        if (tenantDoc.exists) {
+          const data = tenantDoc.data();
+          if (data?.evolutionInstanceId) {
+            instanceName = data.evolutionInstanceId;
+          }
+        }
+      }
+    } catch {
+      // Fall back to tenantId if we can't look up the instance name
+    }
+
+    const response = await fetch(`${evolutionApiUrl}/chat/sendPresence/${instanceName}`, {
       method: "POST",
       headers: {
         apikey: evolutionApiKey,

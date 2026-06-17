@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useHaptics } from '@/hooks/useNativeAndroid';
-import { logoutInstance, getConnectionState } from '@/lib/evolution';
+import { logoutInstance, deleteInstance, getConnectionState } from '@/lib/evolution';
 import { apiFetch, getApiBaseUrl } from '@/lib/api-config';
 import WhatsAppDialog from './WhatsAppDialog';
 
@@ -56,10 +56,17 @@ export default function WhatsAppConnectionManager({
 
   const handleReconnect = useCallback(async () => {
     await impactLight();
+    // Fully disconnect: logout WhatsApp session, then delete the Evolution instance
+    // so the dialog creates a fresh one and shows a new QR code
     try {
       await logoutInstance(instanceName);
     } catch {
       // Ignore logout errors
+    }
+    try {
+      await deleteInstance(instanceName);
+    } catch {
+      // Ignore delete errors (instance may not exist)
     }
     setShowConnectDialog(true);
   }, [instanceName, impactLight]);

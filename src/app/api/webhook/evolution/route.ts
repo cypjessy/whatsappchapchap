@@ -1516,10 +1516,28 @@ async function sendEvolutionMessage(
       return;
     }
 
-    debugLog(`[Webhook] Sending response to ${phoneNumber}`);
+    // Use the correct Evolution instance name from the tenant's stored data
+    // (fall back to tenantId if lookup fails)
+    let evolutionInstanceName = tenantId;
+    try {
+      const adminDb = getAdminDb();
+      if (adminDb) {
+        const evolutionTenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+        if (evolutionTenantDoc.exists) {
+          const data = evolutionTenantDoc.data();
+          if (data?.evolutionInstanceId) {
+            evolutionInstanceName = data.evolutionInstanceId;
+          }
+        }
+      }
+    } catch {
+      // Fall back to tenantId
+    }
+
+    debugLog(`[Webhook] Sending response to ${phoneNumber} via instance ${evolutionInstanceName}`);
 
     const response = await fetch(
-      `${evolutionApiUrl}/message/sendText/${tenantId}`,
+      `${evolutionApiUrl}/message/sendText/${evolutionInstanceName}`,
       {
         method: "POST",
         headers: {
@@ -1559,10 +1577,28 @@ async function sendEvolutionMedia(
       return;
     }
 
-    debugLog(`[Webhook] Sending media to ${phoneNumber}: ${mediaUrl}`);
+    // Use the correct Evolution instance name from the tenant's stored data
+    // (fall back to tenantId if lookup fails)
+    let evolutionInstanceName = tenantId;
+    try {
+      const adminDb = getAdminDb();
+      if (adminDb) {
+        const evolutionTenantDoc = await adminDb.collection("tenants").doc(tenantId).get();
+        if (evolutionTenantDoc.exists) {
+          const data = evolutionTenantDoc.data();
+          if (data?.evolutionInstanceId) {
+            evolutionInstanceName = data.evolutionInstanceId;
+          }
+        }
+      }
+    } catch {
+      // Fall back to tenantId
+    }
+
+    debugLog(`[Webhook] Sending media to ${phoneNumber} via instance ${evolutionInstanceName}: ${mediaUrl}`);
 
     const response = await fetch(
-      `${evolutionApiUrl}/message/sendMedia/${tenantId}`,
+      `${evolutionApiUrl}/message/sendMedia/${evolutionInstanceName}`,
       {
         method: "POST",
         headers: {
@@ -1909,7 +1945,17 @@ export async function POST(req: NextRequest) {
 
     const adminDb = getAdminDb();
     
-    if (!instanceName.startsWith("tenant_")) {
+    // ALWAYS try to look up tenant by evolutionInstanceId first
+    // This handles cases where instance name doesn't match the tenant document ID
+    const instanceIdQuery = await adminDb.collection("tenants")
+      .where("evolutionInstanceId", "==", instanceName)
+      .limit(1)
+      .get();
+    
+    if (!instanceIdQuery.empty) {
+      tenantId = instanceIdQuery.docs[0].id;
+      console.log("[Webhook] Found tenant by evolutionInstanceId:", tenantId);
+    } else if (!instanceName.startsWith("tenant_")) {
       console.log("[Webhook] Instance is UUID, searching for tenant...");
       const tenantsQuery = await adminDb.collection("tenants")
         .where("evolutionUUID", "==", instanceName)
@@ -1919,16 +1965,6 @@ export async function POST(req: NextRequest) {
       if (!tenantsQuery.empty) {
         tenantId = tenantsQuery.docs[0].id;
         console.log("[Webhook] Found tenant by UUID:", tenantId);
-      } else {
-        const tenantsQuery2 = await adminDb.collection("tenants")
-          .where("evolutionInstanceId", "==", instanceName)
-          .limit(1)
-          .get();
-        
-        if (!tenantsQuery2.empty) {
-          tenantId = tenantsQuery2.docs[0].id;
-          console.log("[Webhook] Found tenant by instanceId:", tenantId);
-        }
       }
     }
     
